@@ -1,0 +1,17 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.directory
+docs/
+.lintr
+docs/
+README.html
+local_build/
+.Renviron
+auto_app/
+.vscode/
+.Rprofile
+Makefile
+vignettes/*\.html
+vignettes/*\.R
