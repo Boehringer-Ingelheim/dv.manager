@@ -1,0 +1,86 @@
+---
+title: "Passing data between modules"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Passing data between modules}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  tidy = "styler"
+)
+```
+
+You can use the output of one module as the input of another module. 
+
+In the following app you can select a value in one the modules and use its value in another module.
+
+```{r, eval=FALSE}
+com_test_UI <- function(id, choices = c(1, 2, 3), message) { # nolint
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    shiny::selectizeInput(ns("select"), label = "Select a number", choices = choices),
+    shiny::p(message),
+    shiny::textOutput(ns("output"))
+  )
+}
+
+com_test_server <- function(id, value) {
+  module <- function(input, output, session) {
+    output$output <- shiny::renderText({
+      shiny::req(value())
+    })
+
+    return(shiny::reactive(input$select))
+  }
+
+  return(
+    shiny::moduleServer(
+      id,
+      module
+    )
+  )
+}
+
+mod_com_test <- function(choices, message, value, mod_id) {
+  mod <- list(
+    ui = function(id) {
+      com_test_UI(id, choices, message)
+    },
+    server = function(server_args) {
+      com_test_server(id = mod_id, value = server_args[["module_output"]]()[[value]])
+    },
+    module_id = mod_id
+  )
+}
+
+run_app(
+  data = list(),
+  module_list = list(
+    "Send and Receive 1" = mod_com_test(
+      choices = 1:3,
+      message = "The other module has selected",
+      value = "mod_2",
+      mod_id = "mod_1"
+    ),
+    "Send and Receive 2" = mod_com_test(
+      choices = c("a", "b", "c"),
+      message = "The other module has selected",
+      value = "mod_1",
+      mod_id = "mod_2"
+    ),
+    "Simple" = mod_simple("adsl", "modSimp")
+  ),
+  filter_data = "adsl",
+  filter_key = "USUBJID"
+)
+```
+
+Notice how in the mod_table wrapper we call `afmm[["module_output"]]()` by adding the two parenthesis at the end. In this case it is not because `afmm[["module_output"]]()` is a reactive object, we are calling it outside a reactive environment, but because it is a function that returns the list of values returned by the modules.
+
+# IMPORTANT NOTE
+If the element returned, by `afmm[["module_output"]]()[[selection]]` is not a reactive, it must be transformed into a reactive (usually a metaReactive) in the wrapper `metaReactive(afmm[["module_output"]]()[[selection]])`. This is done this way because at the moment the modules are invoked, module_output does not exist yet and its value should be retrieved after all the server functions have run and the variable exists inside the app_server environment.

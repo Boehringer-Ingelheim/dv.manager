@@ -1,0 +1,11 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^README\.Rmd$
+^.directory$
+^docs$
+^.lintr$
+^man/figures/raw_figures$
+^lintr.R$
+^.vscode$
+^_pkgdown.yml$
+^LICENSE$

@@ -1,0 +1,78 @@
+---
+title: "Add timestamp to app data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Add timestamp to app data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Data timestamp
+
+`dv.manager` shows the last time of modification of the data used in the application. To do this it checks the `meta` attribute of each of the datasets loaded in the app. Specifically,
+it expects that `meta` is a list and that it has an entry `mtime` which contains a POSIXct date time.
+
+```{r eval=FALSE}
+data <- list(
+  dummy = list(
+    adsl = tibble::tibble(
+      USUBJID = c(1, 2, 3),
+      AGE = c(1, 2, 3)
+    )
+  )
+)
+
+# This attribute is automatically set when using dv.loader
+attr(data[["dummy"]][["adsl"]], "meta") <- list(mtime = as.POSIXct("2023-02-28 12:00:00 CET"))
+
+# This app shows the date specified in the previous step.
+dv.manager::run_app(
+  data = data,
+  module_list = list(),
+  filter_data = "adsl"
+)
+```
+
+Usually, `dv.loader` sets this attribute automatically when loading the data and  no further action is needed. Nonetheless, when the data is modified after loading, this
+attribute is deleted in some cases, see an example below, and it is necessary to keep track of it and reset it when needed.
+
+```{r eval=FALSE}
+data <- list(
+  dummy = list(
+    adsl = tibble::tibble(
+      USUBJID = c(1, 2, 3),
+      AGE = c(1, 2, 3)
+    )
+  )
+)
+
+# Normally set by dv.loader
+attr(data[["dummy"]][["adsl"]], "meta") <- list(mtime = as.POSIXct("2023-02-28 12:00:00 CET"))
+
+adsl2 <- tibble::tibble(
+  USUBJID = c(1, 2, 3),
+  COUNTRY = c("A", "B", "C")
+)
+
+# Save the date of the original dataset
+adsl_date <- attr(data[["dummy"]][["adsl"]], "meta")
+
+# Attribute is lost by the left_join
+data[["dummy"]][["adsl"]] <- dplyr::left_join(adsl2, data[["dummy"]][["adsl"]])
+
+# Reset date attribute afterwards
+attr(data[["dummy"]][["adsl"]], "meta") <- adsl_date
+
+dv.manager::run_app(
+  data = data,
+  module_list = list(),
+  filter_data = "adsl"
+)
+```

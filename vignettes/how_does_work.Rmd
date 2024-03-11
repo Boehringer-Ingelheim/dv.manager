@@ -1,0 +1,99 @@
+---
+title: "How does it work (Technic/Develop)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{How does it work (Technic/Develop)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  tidy = "styler"
+)
+```
+
+**dv.manager** has three main goals:
+
+  1. Act as a front end container for **dv.filter** and the modules included in the app
+  1. Dispatch data from the loaded datasets to each of the modules (either filtered or unfiltered)
+  1. Manage communication between modules (**Not available yet**)
+
+# Anatomy of DaVinci Modules
+
+Opposed to pure Shiny modules, DaVinci modules are defined in a single call such as the one created in the main example of this documentation.
+
+```{r, eval = FALSE}
+data <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
+
+module_list <- list(
+  "My First Data table" = dv.general::mod_data_table(
+    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+    module_id = "mod1"
+  )
+)
+
+dv.manager::run_app(
+  data = list("DS" = data),
+  module_list = module_list,
+  filter_data = "adsl"
+)
+```
+
+These modules are simple wrappers around pure Shiny modules that return a list containing:
+
+  1. A UI function with a single argument, its shiny id.
+  1. A function with a single parameter that will call the server function.
+  1. A module ID, that will act in the same way as the ID in pure [shiny modules](https://shiny.rstudio.com/articles/modules.html).
+  
+See below an example with a simple module
+
+```{r, eval = FALSE}
+table_UI <- function(id) { # nolint
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    DT::DTOutput(ns("table"))
+  )
+}
+
+table_server <- function(id, dataset) {
+  shiny::moduleServer(
+    id,
+    function(input, output, session) {
+      output$table <- DT::renderDT(
+        {
+          dataset()
+        },
+        selection = "single"
+      )
+      returned_rows <- shiny::reactive({
+        shiny::req(!is.null(input$table_rows_selected))
+        dataset()[[input$table_rows_selected, "USUBJID"]]
+      })
+      return(returned_rows)
+    }
+  )
+}
+
+mod_table <- function(dataset, mod_id) {
+  mod <- list(
+    ui = function(id) {
+      table_UI(id)
+    },
+    server = function(afmm) {
+      table_server(
+        id = mod_id,
+        dataset = reactive(afmm[["filtered_dataset"]]())[[table_name]]
+      )
+    },
+    module_id = mod_id
+  )
+}
+```
+
+### An explanation of the code above:
+
+The most relevant part of this module is the server entry of the list of returned by the module function: a function with a single argument. See `vignette("arguments_from_module_manager")` for a longer explanation on this topic.
+

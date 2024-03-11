@@ -1,0 +1,39 @@
+---
+title: "Installing DaVinci module packages"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Installing DaVinci module packages}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Here you will find instructions in how to install other DaVinci packages containing modules to use in your application
+
+At the moment there are 5 additional packages developed within the DaVinci project:
+
+  - dv.loader
+  - dv.filter
+  - dv.general
+
+## How to install
+
+```{r, eval=FALSE}
+# TODO
+repos <- options("repos")
+
+install.packages(c("dv.loader", "dv.manager", "dv.filter"),
+  repos = c(repos, repos_dvcd)
+)
+```
+

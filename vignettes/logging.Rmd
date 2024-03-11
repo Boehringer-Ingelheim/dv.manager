@@ -1,0 +1,183 @@
+---
+title: "logging"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{logging}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# How to use it
+
+You can start using the logger simply by activating it and sending a message.
+
+```{r, eval=FALSE}
+dv.manager::log_activate()
+rlang::inform("Logged message")
+dv.manager::log_deactivate()
+```
+
+In its default state, the logger will capture and decorate any 'message' or 'warning' condition. Simply put,
+any message you send using `message`, `warning`, `rlang::inform` and `rlang::warn`. Usually we will favour
+the `rlang` functions as adding fields to use in our logger is simpler.
+
+# Using logging levels
+
+The logger can have different print granularities depending on the logging level selected. A different level can be specified in each
+of the logging messages sent by including a logging level field in it.
+
+```{r, eval=FALSE}
+dv.manager::log_activate(dv.manager:::log_default_handlers(level = "info"))
+rlang::inform("This will be printed", level = "info")
+rlang::inform("This will not", level = "debug")
+dv.manager::log_deactivate()
+```
+
+The logging levels and their numerical value can be checked with:
+
+```{r, eval=FALSE}
+dv.manager::log_get_levels()
+```
+
+# Logging messages sent from your module
+
+A common use case will be using the logger to send messages from inside your module. To do this you can include the package name
+as an argument when you send the message. This can be done in a simple way using `rlang`
+
+```{r, eval=FALSE}
+dv.manager::log_activate()
+rlang::inform("An inform with package name", package = "my_package")
+dv.manager::log_deactivate()
+```
+
+You can use the `packageName` function to dynamically get the name of your package.
+
+You can also call `log_use_log` from `dv.manager` in the root of the package containing the module. This will add a file to your `R/`
+directory with two convenience functions that automatically add the package name.
+
+```{r, eval=FALSE}
+# Will create an R/utils_logging.R file with two convenience functions
+dv.manager::log_use_log()
+devtools::load_all()
+dv.manager::log_activate()
+log_inform("An inform with package name")
+log_warning("A warning with package name")
+dv.manager::log_deactivate()
+```
+
+# Advanced logging
+
+`dv.manager` logging system is based on [R's condition system](https://adv-r.hadley.nz/conditions.html).
+This logging system simply specifies a set of `globalCallingHandlers` that will capture and log the messages,
+warnings and/or errors as specified by the handlers.
+
+## The default handlers
+
+This is a low level logging and that makes it very flexible.
+
+By default, the condition will contain the same fields as any standard `rlang::inform` or `rlang::warn` being the most important:
+
+  - message: [character(1)] The message to be logged
+
+It expects that the module developer has added the fields:
+
+  - package: [character(1)] The name of the package that sent the condition (added automatically if `log_info` and `log_warn` were used).
+  - level: [numeric(1)] a level for logging granularity.
+
+The handlers will try to add the following fields to the condition before formatting:
+
+  - date: [character(1)] A timestamp for the message.
+  - ns: [character(1)] The namespace of the module that sent the condition.
+  - sess_id: [character(1)] The Shiny session id that sent the condition.
+  - short_sess_id: [character(1)] A truncated version of the sess_id to improve human-readibility.
+
+The default handlers present and format this information.
+
+```{r, eval = FALSE}
+library(magrittr)
+
+log_default_handlers <- function(level = 999) {
+  format_str <- "[{date}][{package}|{short_sess_id}|{ns}]:{message}"
+
+  cnd_to_str <- function(cnd) {
+    cnd %>%
+      dv.manager::log_add_date() %>%
+      dv.manager::log_add_ns() %>%
+      dv.manager::log_add_sess_id() %>%
+      dv.manager::log_add_short_sess_id() %>%
+      dv.manager::log_format(format_str)
+  }
+
+  list(
+    message = function(cnd) {
+      if (dv.manager::log_check_print(cnd, level)) cli::cli_alert_info(cnd_to_str(cnd))
+
+      rlang::cnd_muffle(cnd)
+    },
+    warning = function(cnd) {
+      if (log_check_print(cnd, level)) cli::cli_alert_warning(cnd_to_str(cnd))
+      rlang::cnd_muffle(cnd)
+    }
+  )
+}
+```
+
+The `log_add*` functions add extra fields to the condition that can be used later by `log_format()` to create a logging message. To print these messages we use the [`cli`](https://cli.r-lib.org/) package.
+The `log_format` function is a convenience function that allows quick formatting of the condition. It allows using a [`glue`](https://glue.tidyverse.org/)-like string where the parameters are fields in the condition.
+If a field used in the format is not present an `NA` value is returned instead.
+
+## Creating custom handlers
+
+The default handlers are convenient, but the logging behavior can be modified by using a different set of handlers...
+
+```{r, eval=FALSE}
+library(magrittr)
+
+my_handlers <- function() {
+  format_str <- "Date:{date}|Pkg:{package}|{custom_field}:{message}"
+
+  cnd_to_str <- function(cnd) {
+    cnd %>%
+      dv.manager::log_add_date() %>%
+      dv.manager::log_format(format_str)
+  }
+
+  list(
+    message = function(cnd) {
+      if (cnd[["print_me"]]) cli::cli_alert_info(cnd_to_str(cnd))
+      rlang::cnd_muffle(cnd)
+    },
+    warning = function(cnd) {
+      cli::cli_alert_warning(cnd_to_str(cnd))
+      rlang::cnd_muffle(cnd)
+    }
+  )
+}
+
+dv.manager::log_activate(my_handlers())
+dv.manager:::log_inform("I will print this and its custom_field will be 1", print_me = TRUE, custom_field = "1")
+dv.manager:::log_inform("I will print this and its custom_field will be NA", print_me = TRUE)
+dv.manager:::log_inform("I will not print this", print_me = FALSE)
+dv.manager::log_deactivate()
+```
+
+As you can see we can add new fields for logging, we can supress some messages depending on the fields, etc. This allows filtering logging messages
+by package, session, logging level, etc. So it adapts to our particular need during development.
+
+# Troubleshooting
+
+- When `log_activate` is called, an error similar to the following appears:
+
+> Error in globalCallingHandlers(...) : should not be called with handlers on the stack
+
+ The error above means you are activating the logger from an environment that already has defined some calling handlers,
+ usually with `withCallingHandlers`. `shiny` in particular does this when an app starts, therefore you cannot activate logging once you are inside
+ the application. The logger is based on setting `globalCallingHandlers` and setting those is tricky within other functions. The recommendation is to make the call to `log_activate` in your root
+ session and not within functions. 
