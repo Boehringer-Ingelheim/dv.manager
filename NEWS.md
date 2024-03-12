@@ -1,3 +1,9 @@
+# dv.manager 2.1.1
+
+- General code housekeeping
+
+- Move all tests from `shinytest` to `shinytest2`
+
 # dv.manager 2.1.0
 
 - `dispatchers` now include a flatten argument. When selection length is 1 it flattens the list if TRUE. If selection length is greater than 1 flatten must be FALSE.
@@ -34,14 +40,7 @@ Documentation about this can be found [here](articles/developing_module.html) an
     
 - A set of dispatcher functions that facilitate the access are included. Documentation can be found
 [here](../articles/arguments_from_module_manager.html#dispatchers-1).
-    
-A basic exporting functionality is now available. Articles explaining this functionality are available in the package documentation [here](../articles/export_func.html) and [here](../articles/export_func_dev.html):
-
--   The exported report includes now: Title, Summary, a sessionInfo dump and a section including the hash of each loaded data table (SHA256).
--   The rendered document in the exported report can now be an HTML, PDF or a Word document.
--   The exported report have the option to not include a rendered document. This allows easier debugging in case the Rmarkdown file does not run.
--   The exported report now have the option to not show the code when rendering. An additional annex with the data loading function is added.
-    
+        
 dv.manager isolates custom CSS styling for loaded modules. This ensures CSS styles are applied where they are intended.
 
 dv.manager allows including an startup message
