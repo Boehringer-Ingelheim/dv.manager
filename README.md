@@ -18,5 +18,6 @@ and deploy Shiny applications using the modules from DaVinci.
 # Installation
 
 ``` r
-install.packages("dv.manager", repos = TODO)
+if (!require("remotes")) install.packages("remotes")
+remotes::install_github("Boehringer-Ingelheim/dv.listings")
 ```
