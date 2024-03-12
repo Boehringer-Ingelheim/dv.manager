@@ -30,7 +30,7 @@ data <- list(
 )
 
 module_list <- list(
-  "My First Data table" = dv.general::mod_data_table(
+  "My First Data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   )
@@ -58,11 +58,11 @@ data <- list(
 )
 
 module_list <- list(
-  "My First Data table" = dv.general::mod_data_table(
+  "My First Data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   ),
-  "My Second Data table" = dv.general::mod_data_table(
+  "My Second Data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod2"
   )
@@ -86,11 +86,11 @@ Both must be **unique** across modules!
 ```{r, eval=FALSE}
 ### Repeated module_id
 module_list <- list(
-  "My First Data table" = dv.general::mod_data_table(
+  "My First Data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   ),
-  "My Second Data table" = dv.general::mod_data_table(
+  "My Second Data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   )
@@ -98,11 +98,11 @@ module_list <- list(
 
 ### Repeated module name
 module_list <- list(
-  "My First Data table" = dv.general::mod_data_table(
+  "My First Data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   ),
-  "My First Data table" = dv.general::mod_data_table(
+  "My First Data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod2"
   )
@@ -119,11 +119,11 @@ If we want to change the module named "My Second Data table" to "Cool-named modu
 data <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 
 module_list <- list(
-  "My First Data table" = dv.general::mod_data_table(
+  "My First Data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   ),
-  "Cool-named module" = dv.general::mod_data_table(
+  "Cool-named module" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod2"
   )
@@ -149,11 +149,11 @@ data <- list(
 )
 
 module_list <- list(
-  "ADSL data table" = dv.general::mod_data_table(
+  "ADSL data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   ),
-  "ADAE data table" = dv.general::mod_data_table(
+  "ADAE data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adae"),
     module_id = "mod2"
   )
@@ -182,11 +182,11 @@ data1 <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 data2 <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 
 module_list <- list(
-  "ADSL data table" = dv.general::mod_data_table(
+  "ADSL data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   ),
-  "ADAE data table" = dv.general::mod_data_table(
+  "ADAE data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adae"),
     module_id = "mod2"
   )
@@ -241,11 +241,11 @@ attr(data[["adsl_filter"]][["AGE"]], "label") <- "Age (Years)"
 
 
 module_list <- list(
-  "ADSL data table" = dv.general::mod_data_table(
+  "ADSL data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   ),
-  "ADAE data table" = dv.general::mod_data_table(
+  "ADAE data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adae"),
     module_id = "mod2"
   )
@@ -290,11 +290,11 @@ attr(data[["adsl_mod"]][["AGE_M"]], "label") <- "Age (Months)"
 
 
 module_list <- list(
-  "ADSL data table" = dv.general::mod_data_table(
+  "ADSL data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   ),
-  "ADSL_mod data table" = dv.general::mod_data_table(
+  "ADSL_mod data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl_mod"),
     module_id = "mod2"
   )

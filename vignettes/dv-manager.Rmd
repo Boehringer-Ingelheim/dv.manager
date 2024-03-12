@@ -33,24 +33,23 @@ We can optionally preprocess the loaded data by: computing derived variables, re
 
 ## Module selection
 
-Now, we have to select which modules will be included in our application. As mentioned before, **dv.manager** does not contain any modules, therefore we will install the *dv.general* package (see how to install *dv.general* an other modules in: `vignette("installing_module_packages")`).
+Now, we have to select which modules will be included in our application. As mentioned before, **dv.manager** does not contain any modules, therefore we will install the *dv.listings* package (see how to install *dv.listings* an other modules in: `vignette("installing_module_packages")`).
 
-If you already have **dv.general** installed you can skip this step.
+If you already have **dv.listings** installed you can skip this step.
 
 ```{r, eval=FALSE}
 # TODO
-repos <- options("repos")
-
-install.packages("dv.general", repos = repos)
+if (!require("remotes")) install.packages("remotes")
+remotes::install_github("Boehringer-Ingelheim/dv.listings")
 ```
 
-We can now include in our application or the modules included in the **dv.general** package.
+We can now include in our application or the modules included in the **dv.listings** package.
 
-For example, we can use the *data table* from the **dv.general** package.
+For example, we can use the *data table* from the **dv.listings** package.
 
 ```{r, eval=FALSE}
 module_list <- list(
-  "My First Data table" = dv.general::mod_data_table(
+  "My First Data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   )

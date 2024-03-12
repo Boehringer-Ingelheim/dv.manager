@@ -29,7 +29,7 @@ Opposed to pure Shiny modules, DaVinci modules are defined in a single call such
 data <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 
 module_list <- list(
-  "My First Data table" = dv.general::mod_data_table(
+  "My First Data table" = dv.listings::mod_data_table(
     dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
     module_id = "mod1"
   )
