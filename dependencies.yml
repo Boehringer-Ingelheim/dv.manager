@@ -2,5 +2,9 @@
 # https://pak.r-lib.org/reference/pak_package_sources.html
 
 dependencies:
-  dv.loader:
+  dv.manager:
+    repo: github::boehringer-ingelheim/dv.manager@main
+  dv.filter:
     repo: github::boehringer-ingelheim/dv.filter@main
+  dv.loader:
+    repo: github::boehringer-ingelheim/dv.loader@main
