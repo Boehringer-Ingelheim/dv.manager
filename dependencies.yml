@@ -1,0 +1,6 @@
+# use pak source reference to define fluid dependencies
+# https://pak.r-lib.org/reference/pak_package_sources.html
+
+dependencies:
+  dv.loader:
+    repo: github::boehringer-ingelheim/dv.filter@main
