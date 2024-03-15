@@ -9,5 +9,4 @@
 ^.vscode$
 ^_pkgdown.yml$
 ^LICENSE$
-dependencies.yml
 ^\.github

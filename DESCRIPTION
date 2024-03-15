@@ -18,6 +18,7 @@ Imports:
     purrr (>= 0.3.4),
     dplyr (>= 1.0.3),
     dv.filter (>= 1.0.0),
+    dv.loader (>= 1.0.0),
     lubridate (>= 1.7.9.2),
     shinymeta (>= 0.2.0.1),
     shinyjs (>= 2.0.0),
@@ -45,4 +46,5 @@ Suggests:
 Config/testthat/edition: 3
 Config/testthat/parallel: false
 Depends: R (>= 4.0.0)
+Remotes: boehringer-ingelheim/dv.filter@main, boehringer-ingelheim/dv.loader@main    
 VignetteBuilder: knitr
