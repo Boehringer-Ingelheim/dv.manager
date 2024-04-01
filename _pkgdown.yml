@@ -28,7 +28,6 @@ articles:
   desc: How to create Shiny apps with dv.manager
   contents:
   - customizing_application
-  - installing_module_packages
   - timestamp
 
 - title: Developer
