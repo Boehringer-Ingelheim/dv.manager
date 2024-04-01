@@ -3,15 +3,9 @@
 .RData
 .Ruserdata
 .directory
-docs/
-.lintr
+.Renviron
+.Rprofile
 docs/
 README.html
-local_build/
-.Renviron
-auto_app/
-.vscode/
-.Rprofile
-Makefile
 vignettes/*\.html
 vignettes/*\.R
