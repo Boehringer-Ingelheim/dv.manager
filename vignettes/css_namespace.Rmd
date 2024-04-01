@@ -80,6 +80,7 @@ ui <- function(id) {
     stylesheet = "custom.css",
     package = "package_name" # needed when the src parameter is relative
   )
+  dependency
 }
 ```
 

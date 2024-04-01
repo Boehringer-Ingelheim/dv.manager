@@ -1,6 +1,6 @@
 test_that(
   "app should show an startup message
-  
+
   ",
   {
     skip_if_not_running_shiny_tests()
@@ -328,14 +328,12 @@ local({
 
 
 
-test_that("Bookmarking",
-  {    
-    skip("Untestable from development without selenium/Manual testing")
-    # should display a bookmarking button
-    #   Bookmarking will include:
-    #   the identity of the loaded dataset,
-    #   the set of filters applied to the loaded dataset,
-    #   the inner state of all modules included in the app,
-    #   which module is active
-  }
-)
+test_that("Bookmarking", {
+  skip("Untestable from development without selenium/Manual testing")
+  # should display a bookmarking button
+  #   Bookmarking will include:
+  #   the identity of the loaded dataset,
+  #   the set of filters applied to the loaded dataset,
+  #   the inner state of all modules included in the app,
+  #   which module is active
+})

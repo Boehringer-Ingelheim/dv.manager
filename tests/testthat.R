@@ -3,6 +3,6 @@
 pkg_name <- "dv.manager"
 
 library(testthat)
-library(pkg_name, character.only = T)
+library(pkg_name, character.only = TRUE)
 
 test_check(pkg_name)

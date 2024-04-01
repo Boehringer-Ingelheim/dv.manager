@@ -4,7 +4,7 @@ test_that(
   paste(
     component,
     "should return true when the list is empty
-    
+
     "
   ),
   {
@@ -16,7 +16,7 @@ test_that(
   paste(
     component,
     "should return true when the list is not empty and named
-    
+
     "
   ),
   {
@@ -29,7 +29,7 @@ test_that(
   paste(
     component,
     "should return false when at least one elements is not named
-    
+
     "
   ),
   {

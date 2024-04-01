@@ -1,6 +1,6 @@
 test_that(
   "dataset selector is removed when only one dataset is passed
-  
+
   ",
   {
     skip_if_not_running_shiny_tests()

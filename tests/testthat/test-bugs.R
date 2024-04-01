@@ -12,7 +12,7 @@ test_that("values are returned when datafilter returns are false (DVCD-2246)", {
     filter_key = "mpg" # This filter key is not really good as it is not unique!
   )
 
-  
+
   shiny::testServer(app_server_test(testing_options), {
     session$setInputs(selector = "DS1")
     var <- "global_filter-cyl"

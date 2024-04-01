@@ -3,7 +3,7 @@ library(shiny)
 run_shiny_tests <- !isFALSE(as.logical(Sys.getenv("SKIP_SHINY_TESTS")))
 suspect_check <- any(names(Sys.getenv()) == "_R_CHECK_CRAN_INCOMING_")
 
-skip_if_not_running_shiny_tests <- function() testthat::skip_if_not(run_shiny_tests, message = "Skip tests")
+skip_if_not_running_shiny_tests <- function() testthat::skip_if_not(run_shiny_tests, message = "Skip tests") # nolint
 skip_if_suspect_check <- function() testthat::skip_if(suspect_check, message = "Suspected check")
 
 # `expr` must be a quosure or a regular call, in both cases they must be self-contained as they will be deparsed
@@ -30,7 +30,7 @@ start_app_driver <- function(expr, defer = TRUE) {
           )
         )
         app$wait_for_idle()
-        if(defer) withr::defer_parent(app$stop())
+        if (defer) withr::defer_parent(app$stop())
         app
       },
       condition = function(e) {
@@ -42,4 +42,5 @@ start_app_driver <- function(expr, defer = TRUE) {
   } else {
     NULL
   }
+  root_app
 }

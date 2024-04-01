@@ -52,7 +52,7 @@ Firstly, we will declare a simple module that creates a table, and a dataset. Th
 
 ```{r, eval = FALSE}
 # Module
-table_UI <- function(id) {
+table_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
     DT::DTOutput(ns("table"))
@@ -83,12 +83,13 @@ Below we can see a wrapper that allow us to access the filtered dataset.
 ```{r, eval = FALSE}
 mod_table <- function(table_name, mod_id) {
   mod <- list(
-    ui = table_UI,
+    ui = table_ui,
     server = function(afmm) {
       table_server(id = mod_id, dataset = shiny::reactive(afmm[["filtered_dataset"]]()[[table_name]]))
     },
     module_id = mod_id
   )
+  mod
 }
 
 
@@ -116,7 +117,7 @@ just a design choice of the module developer. See below another possible example
 ```{r, eval = FALSE}
 mod_table <- function(table_name, filtered = FALSE, mod_id) {
   mod <- list(
-    ui = table_UI,
+    ui = table_ui,
     server = function(afmm) {
       if (filtered) {
         source <- "filtered_dataset"
@@ -127,14 +128,15 @@ mod_table <- function(table_name, filtered = FALSE, mod_id) {
     },
     module_id = mod_id
   )
+  mod
 }
 
 
 data_list <- list("D1" = list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae))
 
 module_list <- list(
-  "Table adsl" <- mod_table(mod_id = "mod_1", "adsl"),
-  "Table adae" <- mod_table(mod_id = "mod_1", "adae")
+  "Table adsl" = mod_table(mod_id = "mod_1", "adsl"),
+  "Table adae" = mod_table(mod_id = "mod_1", "adae")
 )
 
 run_app(
@@ -183,6 +185,7 @@ mod_dataset_name <- function(module_id) {
     },
     module_id = module_id
   )
+  mod
 }
 
 run_app(
@@ -238,10 +241,11 @@ mod_com_test <- function(choices, message, value, mod_id) {
       com_UI(id, choices, message)
     },
     server = function(afmm) {
-      com_server(id = mod_id, value = reactive(afmm[["module_output"]]()[[value]]))
+      com_server(id = mod_id, value = shiny::reactive(afmm[["module_output"]]()[[value]]))
     },
     module_id = mod_id
   )
+  mod
 }
 
 run_app(
@@ -307,6 +311,7 @@ mod_switch <- function(name, selected, module_id) {
     },
     module_id = module_id
   )
+  mod
 }
 
 run_app(
@@ -329,12 +334,13 @@ Lets see it with our first example.
 ```{r, eval = FALSE}
 mod_table <- function(dataset, mod_id) {
   mod <- list(
-    ui = table_UI,
+    ui = table_ui,
     server = function(afmm) {
       table_server(id = mod_id, dataset = mm_resolve_dispatcher(dataset, afmm))
     },
     module_id = mod_id
   )
+  mod
 }
 
 data_list <- list(

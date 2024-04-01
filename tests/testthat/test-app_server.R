@@ -25,7 +25,7 @@ test_that(
     )
 
 
-    shiny::testServer(app_server_test(testing_options),{
+    shiny::testServer(app_server_test(testing_options), {
       session$setInputs(selector = "DS1")
       expect_equal(output$dataset_name, "Dataset name: DS1")
     }) %>%
@@ -56,7 +56,7 @@ test_that(
       module_list = list(),
       filter_key = "mpg"
     )
-    
+
     shiny::testServer(app_server_test(testing_options), {
       session$setInputs(selector = "DS1")
       expect_equal(output$dataset_name, "Dataset name: DS1")
@@ -69,15 +69,15 @@ test_that(
 
 test_that(
   paste(component, "should accept a list of modules and display them in the application
-       
+
        "),
   {
     testing_options <- list(
       data = list(),
       module_list = list("mod_1" = mod_identity(1, "mod_1"), "mod_2" = mod_identity(2, "mod_2"))
     )
-    
-    shiny::testServer(app_server_test(testing_options), {    
+
+    shiny::testServer(app_server_test(testing_options), {
       expect_equal(module_output[["mod_1"]], 1)
       expect_equal(module_output[["mod_2"]], 2)
     })
@@ -98,7 +98,7 @@ test_that(
       module_list = list(),
       filter_key = "mpg"
     )
-    
+
     shiny::testServer(app_server_test(testing_options), {
       session$setInputs(selector = "DS1")
       expect_equal(output$dataset_name, "Dataset name: DS1")
@@ -119,7 +119,7 @@ test_that(
       module_list = list("mod_1" = mod_identity(1, mod_id = "mod_1")),
       filter_key = NULL
     )
-    
+
     testServer(app_server_test(testing_options), {
       expect_equal(module_output[["mod_1"]], 1)
     })
@@ -128,8 +128,8 @@ test_that(
 
 test_that(
   paste(component, "should accept an empty list of datasets and an empty list of modules
-        
-        
+
+
        "),
   {
     testing_options <- list(
@@ -137,7 +137,7 @@ test_that(
       module_list = list(),
       filter_key = NULL
     )
-        shiny::testServer(app_server_test(testing_options), {
+    shiny::testServer(app_server_test(testing_options), {
     }) %>%
       expect_error(regexp = NA)
   }
@@ -176,7 +176,7 @@ test_that(
       module_list = list(),
       filter_key = "mpg"
     )
-    
+
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
 
     shiny::testServer(app_server_test(testing_options), {
@@ -215,7 +215,7 @@ test_that(
       module_list = list(),
       filter_key = "mpg"
     )
-    
+
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
 
     shiny::testServer(app_server_test(testing_options), {
@@ -260,7 +260,7 @@ test_that(
       module_list = list(),
       filter_key = "mpg"
     )
-    
+
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
 
     shiny::testServer(app_server_test(testing_options), {
@@ -279,7 +279,7 @@ test_that(
   paste(
     component,
     "restart.txt time is altered when being touched
-    
+
     "
   ),
   {
@@ -302,7 +302,7 @@ test_that(
       system2(command = "touch", args = c("restart.txt"), stdout = TRUE)
       time_pre_touch <- lubridate::as_datetime(file.info("restart.txt")[["mtime"]])
       Sys.sleep(1)
-      
+
       shiny::testServer(app_server_test(testing_options), {
         time_post_touch <- lubridate::as_datetime(file.info("restart.txt")[["mtime"]])
         expect_true(time_pre_touch != time_post_touch)

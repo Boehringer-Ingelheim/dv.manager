@@ -155,7 +155,7 @@ Notice that in this case, the only parameter in the UI function is the ID. The `
 ```{r, eval=FALSE}
 library(shiny)
 
-module_UI <- function(id) {
+module_ui <- function(id) {
   ns <- NS(id)
   tagList(
     textOutput(ns("num_rows")),
@@ -184,7 +184,7 @@ module_server <- function(id, dataset_list) {
           choices = names(dataset_list())
         )
       },
-      once = T
+      once = TRUE
     )
 
     observeEvent(input$data_select, {
@@ -229,7 +229,7 @@ This allows us to remove all parameters from the `mod_uniq_values()` function de
 # Now, only the module_id parameter is needed
 mod_uniq_values <- function(module_id) {
   mod <- list(
-    ui = module_UI,
+    ui = module_ui,
     server = function(afmm) {
       module_server(
         module_id,
@@ -238,6 +238,7 @@ mod_uniq_values <- function(module_id) {
     },
     module_id = module_id
   )
+  mod
 }
 ```
 

@@ -32,7 +32,10 @@ load_data <- {
       })
     }
     create_dummy <- function(dataset) {
-      list(mpg = dplyr::select(tibble::as_tibble(dataset, rownames = "car"), car, mpg), carb = dplyr::select(tibble::as_tibble(dataset, rownames = "car"), car, carb))
+      list(
+        mpg = dplyr::select(tibble::as_tibble(dataset, rownames = "car"), car, mpg),
+        carb = dplyr::select(tibble::as_tibble(dataset, rownames = "car"), car, carb)
+      )
     }
     add_date(create_dummy(mtcars[5:10, ]), list(NULL))
   }

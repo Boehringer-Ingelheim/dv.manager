@@ -1,7 +1,6 @@
-
 test_that(
   "css from a module should not affect another module when css namespacing is activated
-  
+
   ",
   {
     skip_if_not_running_shiny_tests()
@@ -26,7 +25,7 @@ test_that(
 
 test_that(
   "css from a module should not affect another module when css namespacing is activated
-  
+
   ",
   {
     skip_if_not_running_shiny_tests()

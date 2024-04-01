@@ -56,6 +56,7 @@ mod_com_test <- function(choices, message, value, mod_id) {
     },
     module_id = mod_id
   )
+  mod
 }
 
 run_app(

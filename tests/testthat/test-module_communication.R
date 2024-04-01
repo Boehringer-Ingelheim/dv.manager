@@ -31,9 +31,10 @@ test_that(
       )
     )
 
-    
+
     shiny::testServer(
-      app_server_test(testing_options), { # Expect warning because no date is provided supressed as it is not interesting
+      app_server_test(testing_options),
+      { # Expect warning because no date is provided supressed as it is not interesting
         session$setInputs(selector = "DS1")
         expect_equal(module_output[["mod_2"]](), domain_list[c("a", "b")])
       }
@@ -65,9 +66,10 @@ test_that(
       )
     )
 
-    
+
     shiny::testServer(
-      app_server_test(testing_options), { # Expect warning because no date is provided supressed as it is not interesting
+      app_server_test(testing_options),
+      { # Expect warning because no date is provided supressed as it is not interesting
         session$setInputs(selector = "DS1")
         expect_equal(module_output[["mod_2"]](), 2)
       }
@@ -103,9 +105,10 @@ test_that(
       )
     )
 
-    
+
     shiny::testServer(
-      app_server_test(testing_options), { # Expect warning because no date is provided supressed as it is not interesting
+      app_server_test(testing_options),
+      { # Expect warning because no date is provided supressed as it is not interesting
         session$setInputs(selector = "DS1")
         expect_equal(module_output[["mod_2"]]()[["mod_3"]], 3)
         expect_equal(module_output[["mod_2"]]()[["mod_1"]](), domain_list)

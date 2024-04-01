@@ -4,7 +4,7 @@ test_that(
   paste(
     component,
     "should return the earliest and latest date from a vector
-    
+
     "
   ),
   {
@@ -28,7 +28,7 @@ test_that(
   paste(
     component,
     "should warn when the list contains a NULL entry
-    
+
     "
   ),
   {
@@ -52,7 +52,7 @@ test_that(
   paste(
     component,
     "should add date_range attribute to a dataset based on the dates of the data tables
-    
+
     "
   ),
   {

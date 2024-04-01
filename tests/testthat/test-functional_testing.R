@@ -56,7 +56,7 @@ local({
     filter_key = "car"
   )
 
-  
+
   # Tests ----
 
   test_that(
@@ -209,7 +209,7 @@ local({
         ),
         filter_key = "car"
       )
-      
+
 
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb")

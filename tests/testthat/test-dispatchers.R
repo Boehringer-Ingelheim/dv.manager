@@ -8,7 +8,7 @@ test_that(
   paste(
     component,
     "should return a list with two entries from and selection with class \"mm_dispatcher\"
-    
+
     "
   ),
   {
@@ -45,7 +45,7 @@ test_that(
   paste(
     component,
     "should return the same object if the object is not of type mm_dispatcher
-    
+
     "
   ),
   {
@@ -59,7 +59,7 @@ test_that(
   paste(
     component,
     "should return the 'selection' entry from mock_afmm[[from]], reactive-single case
-    
+
     "
   ),
   {
@@ -84,7 +84,7 @@ test_that(
   paste(
     component,
     "should return the 'selection' entry from mock_afmm[[from]], reactive-multi case
-    
+
     "
   ),
   {
@@ -98,7 +98,7 @@ test_that(
   paste(
     component,
     "should return the 'selection' entry from mock_afmm[[from]], reactive-all case
-    
+
     "
   ),
   {
@@ -113,7 +113,7 @@ test_that(
   paste(
     component,
     "should return the 'selection' entry from mock_afmm[[from]], metareactive-single case
-    
+
     "
   ),
   {
@@ -137,11 +137,12 @@ test_that(
   paste(
     component,
     "should return the 'selection' entry from mock_afmm[[from]], metareactive-multi case
-    
+
     "
   ),
   {
-    val <- mm_resolve_dispatcher(mm_dispatch("metareact", c("A", "B")), mock_afmm, flatten = FALSE) # Check flatten has no effect)
+    # Check flatten has no effect
+    val <- mm_resolve_dispatcher(mm_dispatch("metareact", c("A", "B")), mock_afmm, flatten = FALSE)
     expect_true(is.metareactive(val))
     expect_equal(shiny::isolate(val()), list(A = 1, B = 2))
   }
@@ -151,7 +152,7 @@ test_that(
   paste(
     component,
     "should return the 'selection' entry from mock_afmm[[from]], reactive-all case
-    
+
     "
   ),
   {
@@ -166,7 +167,7 @@ test_that(
   paste(
     component,
     "should return the 'selection' entry from mock_afmm[[from]], metareactive-single case
-    
+
     "
   ),
   {
@@ -182,7 +183,7 @@ test_that(
   paste(
     component,
     "should return the 'selection' entry from mock_afmm[[from]], reactive-multi case
-    
+
     "
   ),
   {
@@ -196,7 +197,7 @@ test_that(
   paste(
     component,
     "should return the 'selection' entry from mock_afmm[[from]], reactive-all case
-    
+
     "
   ),
   {
@@ -210,7 +211,7 @@ test_that(
   paste(
     component,
     "should throw an error when selection length is greater than one and flatten is TRUE
-    
+
     "
   ),
   {

@@ -8,9 +8,9 @@ test_that(
   paste(
     component,
     "should pass the check when all data tables contain the filter key
-    
+
     should return the checked element
-    
+
     "
   ),
   {
@@ -29,7 +29,7 @@ test_that(
   paste(
     component,
     "should error the check when no data table contain the filter key
-    
+
     "
   ),
   {
@@ -47,7 +47,7 @@ test_that(
   paste(
     component,
     "should error the check when not all data tables contain the filter key
-    
+
     "
   ),
   {
@@ -65,7 +65,7 @@ test_that(
   paste(
     component,
     "should pass the check when the filter key is present in all datasets
-    
+
     "
   ),
   {
@@ -84,9 +84,9 @@ test_that(
   paste(
     component,
     "should pass the check when data is empty
-    
+
     should return the checked element
-    
+
     "
   ),
   {
@@ -100,7 +100,7 @@ test_that(
   paste(
     component,
     "should error the check when the filter key is NULL
-    
+
     "
   ),
   {
@@ -118,7 +118,7 @@ test_that(
   paste(
     component,
     "should error the check when the filter key is a numeric value and not a name
-    
+
     "
   ),
   {
@@ -140,9 +140,9 @@ test_that(
   paste(
     component,
     "should pass the check when all data tables in all datasets have a date
-    
+
     should return the checked element
-    
+
     "
   ),
   {
@@ -223,9 +223,9 @@ test_that(
   paste(
     component,
     "should pass when all datasets contain the filter_data field
-    
+
     should return the checked element
-    
+
     "
   ),
   {
@@ -245,7 +245,7 @@ test_that(
   paste(
     component,
     "should pass when data is empty
-    
+
     "
   ),
   {
@@ -259,7 +259,7 @@ test_that(
   paste(
     component,
     "should fail when at least 1 dataset does not contain the filter_data field
-    
+
     "
   ),
   {
@@ -277,7 +277,7 @@ test_that(
   paste(
     component,
     "should fail when filter_data is NULL
-    
+
     "
   ),
   {
@@ -299,7 +299,7 @@ test_that(
   paste(
     component,
     "should error when the data is NULL
-    
+
     "
   ),
   {
@@ -314,7 +314,7 @@ test_that(
   paste(
     component,
     "should error when we do not pass a list of lists of dataframes or a list of functions.
-    
+
     "
   ),
   {
@@ -327,7 +327,7 @@ test_that(
   paste(
     component,
     "should error when any of the entries are not named
-    
+
     "
   ),
   {
@@ -340,9 +340,9 @@ test_that(
   paste(
     component,
     "should pass the check when a named list of lists of dataframes or a list of functions is passed
-    
+
     should return the checked element
-    
+
     "
   ),
   {
@@ -370,9 +370,9 @@ test_that(
   paste(
     component,
     "should pass when a list with all entries is provided
-    
+
     should return the checked element
-    
+
     "
   ),
   {
@@ -395,7 +395,7 @@ test_that(
   paste(
     component,
     "should error when the list does not have all entries
-    
+
     "
   ),
   {
@@ -422,7 +422,7 @@ test_that(
   paste(
     component,
     "should error when the any of the module_list entries are not named
-    
+
     "
   ),
   {
@@ -435,9 +435,9 @@ test_that(
   paste(
     component,
     "should pass the check when a named list with non-repeated names
-    
+
     should return the checked element
-    
+
     "
   ),
   {
@@ -452,7 +452,7 @@ test_that(
   paste(
     component,
     "should warn when the module_list is empty
-    
+
     "
   ),
   {
@@ -465,7 +465,7 @@ test_that(
   paste(
     component,
     "should error when the names in the list are repeated
-    
+
     "
   ),
   {
@@ -481,7 +481,7 @@ test_that(
   paste(
     component,
     "should error when the module_id in the list are repeated
-    
+
     "
   ),
   {

@@ -26,11 +26,11 @@ We include below an example of such an app.
 # - name: a title to display inside the module
 # - id: shiny id
 
-switch_UI <- function(id, name) {
-  ns <- NS(id)
-  tagList(
-    h1(name),
-    actionButton(ns("switch"), "Switch tab")
+switch_ui <- function(id, name) {
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    shiny::h1(name),
+    shiny::actionButton(ns("switch"), "Switch tab")
   )
 }
 
@@ -39,10 +39,10 @@ switch_UI <- function(id, name) {
 # - switch_func the switching function
 
 switch_server <- function(id, selected, switch_func) {
-  moduleServer(
+  shiny::moduleServer(
     id,
     function(input, output, session) {
-      observeEvent(input$switch, {
+      shiny::observeEvent(input$switch, {
         switch_func(selected)
       })
     }
@@ -56,13 +56,14 @@ switch_server <- function(id, selected, switch_func) {
 mod_switch <- function(name, selected, module_id) {
   mod <- list(
     ui = function(module_id) {
-      switch_UI(module_id, name)
+      switch_ui(module_id, name)
     },
     server = function(afmm) {
       switch_server(module_id, selected, afmm[["utils"]][["switch_function"]])
     },
     module_id = module_id
   )
+  mod
 }
 
 app <- function() {
@@ -71,7 +72,9 @@ app <- function() {
     module_list = list(
       "Mod 1" = mod_switch(
         name = "Mod 1",
-        selected = "Mod 2", # Note that in this case we make reference to the name of the entry in the list and not to the module_id. This functionality is based on updateTabsetpanel that works with the tab titles.
+        # Note that in this case we make reference to the name of the entry in the list and not to the module_id.
+        # This functionality is based on updateTabsetpanel that works with the tab titles.
+        selected = "Mod 2",
         module_id = "mod1"
       ),
       "Mod 2" = mod_switch(

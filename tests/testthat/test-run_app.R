@@ -4,7 +4,7 @@ test_that(
   paste(
     component,
     "should throw an error when not all datasets contain the filter_data field
-    
+
     "
   ),
   {
@@ -270,7 +270,7 @@ test_that(
   paste(
     component,
     "should error when we pass a NULL dataset
-    
+
     "
   ),
   {
@@ -289,7 +289,7 @@ test_that(
   paste(
     component,
     "should error when we pass something that is not a shiny.tag or modal as startup_msg
-     
+
      "
   ),
   {
@@ -317,7 +317,7 @@ test_that(
   paste(
     component,
     "should pass when we pass something a shiny.tag modal as startup_msg
-     
+
      "
   ),
   {

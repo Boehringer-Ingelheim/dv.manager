@@ -1,6 +1,4 @@
-test_that("tabs can be switched from modules
-          
-          ", {
+test_that("tabs can be switched from modules", {
   skip_if_not_running_shiny_tests()
   skip_if_suspect_check()
 

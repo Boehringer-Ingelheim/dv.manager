@@ -32,9 +32,18 @@ load_data <- {
       })
     }
     create_dummy <- function(dataset) {
-      list(mpg = dplyr::select(tibble::as_tibble(dataset, rownames = "car"), car, mpg), carb = dplyr::select(tibble::as_tibble(dataset, rownames = "car"), car, carb))
+      list(
+        mpg = dplyr::select(tibble::as_tibble(dataset, rownames = "car"), car, mpg),
+        carb = dplyr::select(tibble::as_tibble(dataset, rownames = "car"), car, carb)
+      )
     }
-    add_date(create_dummy(mtcars[1:4, ]), list(lubridate::ymd_hms("2021-01-13 00:00:00"), lubridate::ymd_hms("2021-01-14 00:00:00")))
+    add_date(
+      create_dummy(mtcars[1:4, ]),
+      list(
+        lubridate::ymd_hms("2021-01-13 00:00:00"),
+        lubridate::ymd_hms("2021-01-14 00:00:00")
+      )
+    )
   }
 }
 unfiltered_dataset <- load_data()

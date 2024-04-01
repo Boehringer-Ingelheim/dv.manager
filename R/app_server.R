@@ -271,6 +271,7 @@ app_server_ <- function(input, output, session, opts) {
 # Convoluted way of having a testable server function
 # TestServer reads the caller environment
 # Therefore, when running a wrapped function like
+# nolint start
 # function(opts){
 #    function(input,output,session){
 #     # This environment is returned not the one inside
@@ -278,6 +279,7 @@ app_server_ <- function(input, output, session, opts) {
 #   }
 # }
 # No instropection of the internals of app_server_ is possible
+# nolint end
 
 app_server_test <- function(opts) {
   # Remove opts argument. It will be taken from this closure
