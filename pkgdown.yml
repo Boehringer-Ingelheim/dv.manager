@@ -1,0 +1,18 @@
+pandoc: 3.1.12.2
+pkgdown: 2.0.7
+pkgdown_sha: ~
+articles:
+  arguments_from_module_manager: arguments_from_module_manager.html
+  css_namespace: css_namespace.html
+  customizing_application: customizing_application.html
+  data_filtering: data_filtering.html
+  data_reloading: data_reloading.html
+  developing_module: developing_module.html
+  dv-manager: dv-manager.html
+  how_does_work: how_does_work.html
+  logging: logging.html
+  manager_utils: manager_utils.html
+  passing_data: passing_data.html
+  timestamp: timestamp.html
+last_built: 2024-04-03T11:18Z
+
