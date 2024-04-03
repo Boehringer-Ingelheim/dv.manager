@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="arguments_from_module_manager_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Arguments from Module Manager</h1>
             
@@ -95,49 +94,27 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">dv.manager</span><span class="op">)</span></span></code></pre></div>
-<p>When developing a module we create a wrapper function that returns a
-list that is used to instantiate a given module inside module manager.
-Within this list the <code>server</code> is a function with a single
-parameter provided by module manager when the server function is called.
-This parameter by convention usually called <code>afmm</code>, an
-acronym of <strong>a</strong>rguments <strong>f</strong>rom
-<strong>m</strong>odule <strong>manager</strong>. <code>afmm</code> is a
-list with the following entries:</p>
+<p>When developing a module we create a wrapper function that returns a list that is used to instantiate a given module inside module manager. Within this list the <code>server</code> is a function with a single parameter provided by module manager when the server function is called. This parameter by convention usually called <code>afmm</code>, an acronym of <strong>a</strong>rguments <strong>f</strong>rom <strong>m</strong>odule <strong>manager</strong>. <code>afmm</code> is a list with the following entries:</p>
 <ol style="list-style-type: decimal">
-<li><p><strong>unfiltered_dataset</strong>: a metaReactive list
-containing the tables inside the selected dataset before filtering
-them.</p></li>
-<li><p><strong>filtered_dataset</strong>: a metaReactive list containing
-the tables inside the selected dataset after filtering them.</p></li>
-<li><p><strong>url_parameters</strong>: a reactive list of the
-parameters passed in the url.</p></li>
-<li><p><strong>dataset_name</strong>: a reactive string containing the
-name of the selected dataset. (Deprecated)</p></li>
-<li><p><strong>dataset_metadata</strong>: a list with following
-entries:</p></li>
-<li><p><strong>name</strong>: a reactive string with the name of the
-selected dataset</p></li>
-<li><p><strong>date_range</strong>: a reactive character vector with two
-entries earliest and latest modification date in the dataset.</p></li>
-<li><p><strong>module_output</strong>: a function that when called
-returns a list of all the values returned by the different modules
-indexed by the module_id.</p></li>
-<li><p><strong>module_names</strong>: a non-reactive named list
-containing as values the names of the module entries as displayed on the
-tab and as names the ids of the module entries as used by
-Shiny.</p></li>
+<li><p><strong>unfiltered_dataset</strong>: a metaReactive list containing the tables inside the selected dataset before filtering them.</p></li>
+<li><p><strong>filtered_dataset</strong>: a metaReactive list containing the tables inside the selected dataset after filtering them.</p></li>
+<li><p><strong>url_parameters</strong>: a reactive list of the parameters passed in the url.</p></li>
+<li><p><strong>dataset_name</strong>: a reactive string containing the name of the selected dataset. (Deprecated)</p></li>
+<li><p><strong>dataset_metadata</strong>: a list with following entries:</p></li>
+<li><p><strong>name</strong>: a reactive string with the name of the selected dataset</p></li>
+<li><p><strong>date_range</strong>: a reactive character vector with two entries earliest and latest modification date in the dataset.</p></li>
+<li><p><strong>module_output</strong>: a function that when called returns a list of all the values returned by the different modules indexed by the module_id.</p></li>
+<li><p><strong>module_names</strong>: a non-reactive named list containing as values the names of the module entries as displayed on the tab and as names the ids of the module entries as used by Shiny.</p></li>
 <li>
 <p><strong>utils</strong>: a list of convenience functions:</p>
 <ol style="list-style-type: lower-alpha">
 <li>
-<strong>switch2</strong>: a function that allows switching between
-tabs programatically.</li>
+<strong>switch2</strong>: a function that allows switching between tabs programatically.</li>
 </ol>
 </li>
 </ol>
 <p>Lets see some example recipes to use all these fields.</p>
-<p>Firstly, we will declare a simple module that creates a table, and a
-dataset. These will be the basis for our examples.</p>
+<p>Firstly, we will declare a simple module that creates a table, and a dataset. These will be the basis for our examples.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Module</span></span>
 <span><span class="va">table_ui</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span><span class="op">)</span> <span class="op">{</span></span>
@@ -166,8 +143,7 @@ dataset. These will be the basis for our examples.</p>
 <div class="section level3">
 <h3 id="accessing-the-unfiltered_dataset">Accessing the un/filtered_dataset<a class="anchor" aria-label="anchor" href="#accessing-the-unfiltered_dataset"></a>
 </h3>
-<p>Below we can see a wrapper that allow us to access the filtered
-dataset.</p>
+<p>Below we can see a wrapper that allow us to access the filtered dataset.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mod_table</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">table_name</span>, <span class="va">mod_id</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -197,10 +173,7 @@ dataset.</p>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span>,</span>
 <span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>When creating the module list we can select which of the tables
-inside the dataset we will access. Nonetheless, this is just a design
-choice of the module developer. See below another possible example in
-which we can also select</p>
+<p>When creating the module list we can select which of the tables inside the dataset we will access. Nonetheless, this is just a design choice of the module developer. See below another possible example in which we can also select</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mod_table</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">table_name</span>, <span class="va">filtered</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">mod_id</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -233,19 +206,8 @@ which we can also select</p>
 <span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>A note on reactives</strong></p>
-<p>The call to afmm is included in a reactive, because
-<code>afmm[["unfiltered_dataset]]</code> and
-<code>afmm[["filtered_dataset]]</code> are metaReactives, therefore,
-they can only be accessed inside a reactive environment. Also note the
-parenthesis resolving the reactive before doing the subsetting. This
-does not differ from usual reactive programming.</p>
-<p><strong>A note on metaReactives</strong> In this example we are using
-simple reactive to not overwhelm readers with no experience using the
-<code>shinymeta</code> package. To make use of the export functionality
-provided in modulemanager, this reactive should be replaced by
-<code><a href="https://rstudio.github.io/shinymeta/reference/metaReactive.html" class="external-link">shinymeta::metaReactive</a></code>. Please see
-<code>vignette("export_func_dev")</code> for a longer explanation on
-metaReactivity that escapes the scope of this vignette.</p>
+<p>The call to afmm is included in a reactive, because <code>afmm[["unfiltered_dataset]]</code> and <code>afmm[["filtered_dataset]]</code> are metaReactives, therefore, they can only be accessed inside a reactive environment. Also note the parenthesis resolving the reactive before doing the subsetting. This does not differ from usual reactive programming.</p>
+<p><strong>A note on metaReactives</strong> In this example we are using simple reactive to not overwhelm readers with no experience using the <code>shinymeta</code> package. To make use of the export functionality provided in modulemanager, this reactive should be replaced by <code><a href="https://rstudio.github.io/shinymeta/reference/metaReactive.html" class="external-link">shinymeta::metaReactive</a></code>. Please see <code>vignette("export_func_dev")</code> for a longer explanation on metaReactivity that escapes the scope of this vignette.</p>
 </div>
 <div class="section level3">
 <h3 id="accessing-dataset_name">Accessing dataset_name<a class="anchor" aria-label="anchor" href="#accessing-dataset_name"></a>
@@ -289,28 +251,14 @@ metaReactivity that escapes the scope of this vignette.</p>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span>,</span>
 <span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Note how in this case we did not manipulate the dataset_name and
-therefore it is not included in a reactive call, as it can be passed “as
-is”.</p>
+<p>Note how in this case we did not manipulate the dataset_name and therefore it is not included in a reactive call, as it can be passed “as is”.</p>
 </div>
 <div class="section level3">
 <h3 id="accessing-the-module_output">Accessing the module_output<a class="anchor" aria-label="anchor" href="#accessing-the-module_output"></a>
 </h3>
-<p><code>afmm[["module_output"]]</code> behavior slightly differs from
-the other entries in the <code>afmm</code> list. In this case it is a
-function that when called returns a list containing all the values
-returned by the different modules indexed by the <code>module_id</code>.
-Returning a function call instead of a list is based on the fact that we
-are passing as an argument something that is not yet created, as we are
-creating the list at the same time we are calling the server
-functions.</p>
-<p>This also forces us to wrap all <code>afmm[["module_output"]]</code>
-calls in a metaReactive/reactive call, regardless of the object used
-being a reactive or not, as we need to delay the evaluation until the
-app has started.</p>
-<p>Lets see an example of this. In this case we have created a module
-that receives a value and displays it. In this case we will receive that
-value from another module.</p>
+<p><code>afmm[["module_output"]]</code> behavior slightly differs from the other entries in the <code>afmm</code> list. In this case it is a function that when called returns a list containing all the values returned by the different modules indexed by the <code>module_id</code>. Returning a function call instead of a list is based on the fact that we are passing as an argument something that is not yet created, as we are creating the list at the same time we are calling the server functions.</p>
+<p>This also forces us to wrap all <code>afmm[["module_output"]]</code> calls in a metaReactive/reactive call, regardless of the object used being a reactive or not, as we need to delay the evaluation until the app has started.</p>
+<p>Lets see an example of this. In this case we have created a module that receives a value and displays it. In this case we will receive that value from another module.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">com_UI</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span>, <span class="va">choices</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="va">message</span><span class="op">)</span> <span class="op">{</span> <span class="co"># nolint</span></span>
 <span>  <span class="va">ns</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/NS.html" class="external-link">NS</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span></span>
@@ -369,21 +317,16 @@ value from another module.</p>
 <span>  <span class="op">)</span>,</span>
 <span>  filter_data <span class="op">=</span> <span class="st">""</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>See how, we wrap everything in a reactive, make the call to
-module_output and then resolve the reactive once we have subsetted. Note
-that it is the module/app developer how to treat that output value.</p>
+<p>See how, we wrap everything in a reactive, make the call to module_output and then resolve the reactive once we have subsetted. Note that it is the module/app developer how to treat that output value.</p>
 </div>
 <div class="section level3">
 <h3 id="accessing-util-functions">Accessing util functions<a class="anchor" aria-label="anchor" href="#accessing-util-functions"></a>
 </h3>
-<p>The <code>utils</code> field contains a list of utility functions for
-actions that need module manager. In this case the access is the
-simplest of all cases as it is just a list of functions.</p>
+<p>The <code>utils</code> field contains a list of utility functions for actions that need module manager. In this case the access is the simplest of all cases as it is just a list of functions.</p>
 <div class="section level4">
 <h4 id="switch2">switch2<a class="anchor" aria-label="anchor" href="#switch2"></a>
 </h4>
-<p><code>switch2</code> allows switching from tab to another in a
-programmatic manner.</p>
+<p><code>switch2</code> allows switching from tab to another in a programmatic manner.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">########### Switch module</span></span>
 <span></span>
@@ -434,9 +377,7 @@ programmatic manner.</p>
 <div class="section level2">
 <h2 id="dispatchers">Dispatchers<a class="anchor" aria-label="anchor" href="#dispatchers"></a>
 </h2>
-<p>Module manager inclue a couple of convenience functions that deal
-with all the nuances described providing a uniform of accessing all
-fields above.</p>
+<p>Module manager inclue a couple of convenience functions that deal with all the nuances described providing a uniform of accessing all fields above.</p>
 <p>Lets see it with our first example.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mod_table</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">dataset</span>, <span class="va">mod_id</span><span class="op">)</span> <span class="op">{</span></span>
@@ -466,11 +407,8 @@ fields above.</p>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span>,</span>
 <span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>In this case we let <code>mm_resolve_dispatcher</code> take care of
-all the nuances, including reactive or metareactive nature of the
-inputs, for us.</p>
-<p>This also allows to quickly change the source without modifying the
-wrapper function.</p>
+<p>In this case we let <code>mm_resolve_dispatcher</code> take care of all the nuances, including reactive or metareactive nature of the inputs, for us.</p>
+<p>This also allows to quickly change the source without modifying the wrapper function.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">module_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Table adsl"</span> <span class="op">=</span> <span class="fu">mod_table</span><span class="op">(</span>mod_id <span class="op">=</span> <span class="st">"mod_1"</span>, <span class="fu"><a href="../reference/mm_dispatch.html">mm_dispatch</a></span><span class="op">(</span><span class="st">"unfiltered_dataset"</span>, <span class="st">"adsl"</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -478,13 +416,8 @@ wrapper function.</p>
 <span>  <span class="st">"Return table"</span> <span class="op">=</span> <span class="fu">mod_return_table</span><span class="op">(</span><span class="va">...</span>, mod_id <span class="op">=</span> <span class="st">"mod_return_table"</span><span class="op">)</span>,</span>
 <span>  <span class="st">"Table independent data"</span> <span class="op">=</span> <span class="fu">mod_table</span><span class="op">(</span>mod_id <span class="op">=</span> <span class="st">"mod_indp"</span>, <span class="va">mtcars</span><span class="op">)</span>,</span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>In the above example we can quickly change the source just by
-changing the first parameter of the dispatcher. Or even pass an argument
-non related to <code>afmm</code> as <code>mm_resolve_dispatcher</code>
-will ignore objects that do not come from an <code>mm_dispatch</code>
-function.</p>
-<p>This dispatcher also works for <code>utils</code> given the proper
-adjustments in the wrapper:</p>
+<p>In the above example we can quickly change the source just by changing the first parameter of the dispatcher. Or even pass an argument non related to <code>afmm</code> as <code>mm_resolve_dispatcher</code> will ignore objects that do not come from an <code>mm_dispatch</code> function.</p>
+<p>This dispatcher also works for <code>utils</code> given the proper adjustments in the wrapper:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">module_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Mod 1"</span> <span class="op">=</span> <span class="fu"><a href="../reference/mod_switch.html">mod_switch</a></span><span class="op">(</span><span class="st">"Mod 1"</span>, <span class="st">"Mod 2"</span>, <span class="fu"><a href="../reference/mm_dispatch.html">mm_dispatch</a></span><span class="op">(</span><span class="st">"utils"</span>, <span class="st">"switch2"</span><span class="op">)</span>, <span class="st">"mod1"</span><span class="op">)</span>,</span>

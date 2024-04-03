@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="timestamp_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Add timestamp to app data</h1>
             
@@ -96,11 +95,7 @@
 <div class="section level2">
 <h2 id="data-timestamp">Data timestamp<a class="anchor" aria-label="anchor" href="#data-timestamp"></a>
 </h2>
-<p><code>dv.manager</code> shows the last time of modification of the
-data used in the application. To do this it checks the <code>meta</code>
-attribute of each of the datasets loaded in the app. Specifically, it
-expects that <code>meta</code> is a list and that it has an entry
-<code>mtime</code> which contains a POSIXct date time.</p>
+<p><code>dv.manager</code> shows the last time of modification of the data used in the application. To do this it checks the <code>meta</code> attribute of each of the datasets loaded in the app. Specifically, it expects that <code>meta</code> is a list and that it has an entry <code>mtime</code> which contains a POSIXct date time.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  dummy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -120,11 +115,7 @@ expects that <code>meta</code> is a list and that it has an entry
 <span>  module_list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Usually, <code>dv.loader</code> sets this attribute automatically
-when loading the data and no further action is needed. Nonetheless, when
-the data is modified after loading, this attribute is deleted in some
-cases, see an example below, and it is necessary to keep track of it and
-reset it when needed.</p>
+<p>Usually, <code>dv.loader</code> sets this attribute automatically when loading the data and no further action is needed. Nonetheless, when the data is modified after loading, this attribute is deleted in some cases, see an example below, and it is necessary to keep track of it and reset it when needed.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  dummy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>

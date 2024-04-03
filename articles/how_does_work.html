@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="how_does_work_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>How does it work (Technic/Develop)</h1>
             
@@ -95,19 +94,14 @@
     
 <p><strong>dv.manager</strong> has three main goals:</p>
 <ol style="list-style-type: decimal">
-<li>Act as a front end container for <strong>dv.filter</strong> and the
-modules included in the app</li>
-<li>Dispatch data from the loaded datasets to each of the modules
-(either filtered or unfiltered)</li>
-<li>Manage communication between modules (<strong>Not available
-yet</strong>)</li>
+<li>Act as a front end container for <strong>dv.filter</strong> and the modules included in the app</li>
+<li>Dispatch data from the loaded datasets to each of the modules (either filtered or unfiltered)</li>
+<li>Manage communication between modules (<strong>Not available yet</strong>)</li>
 </ol>
 <div class="section level2">
 <h2 id="anatomy-of-davinci-modules">Anatomy of DaVinci Modules<a class="anchor" aria-label="anchor" href="#anatomy-of-davinci-modules"></a>
 </h2>
-<p>Opposed to pure Shiny modules, DaVinci modules are defined in a
-single call such as the one created in the main example of this
-documentation.</p>
+<p>Opposed to pure Shiny modules, DaVinci modules are defined in a single call such as the one created in the main example of this documentation.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>, adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span><span class="op">)</span></span>
 <span></span>
@@ -123,14 +117,11 @@ documentation.</p>
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>These modules are simple wrappers around pure Shiny modules that
-return a list containing:</p>
+<p>These modules are simple wrappers around pure Shiny modules that return a list containing:</p>
 <ol style="list-style-type: decimal">
 <li>A UI function with a single argument, its shiny id.</li>
-<li>A function with a single parameter that will call the server
-function.</li>
-<li>A module ID, that will act in the same way as the ID in pure <a href="https://shiny.rstudio.com/articles/modules.html" class="external-link">shiny
-modules</a>.</li>
+<li>A function with a single parameter that will call the server function.</li>
+<li>A module ID, that will act in the same way as the ID in pure <a href="https://shiny.rstudio.com/articles/modules.html" class="external-link">shiny modules</a>.</li>
 </ol>
 <p>See below an example with a simple module</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -178,10 +169,7 @@ modules</a>.</li>
 <div class="section level4">
 <h4 id="an-explanation-of-the-code-above">An explanation of the code above:<a class="anchor" aria-label="anchor" href="#an-explanation-of-the-code-above"></a>
 </h4>
-<p>The most relevant part of this module is the server entry of the list
-of returned by the module function: a function with a single argument.
-See <code><a href="../articles/arguments_from_module_manager.html">vignette("arguments_from_module_manager")</a></code> for a longer
-explanation on this topic.</p>
+<p>The most relevant part of this module is the server entry of the list of returned by the module function: a function with a single argument. See <code><a href="../articles/arguments_from_module_manager.html">vignette("arguments_from_module_manager")</a></code> for a longer explanation on this topic.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

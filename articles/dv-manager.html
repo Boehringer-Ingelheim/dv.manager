@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="dv-manager_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Getting started</h1>
             
@@ -93,49 +92,31 @@
 
     
     
-<p>Here, we will follow some simple steps to create an application using
-<strong>dv.manager</strong>. Note that that <strong>dv.manager</strong>
-does not include any module it just serves as a container therefore
-along these steps we will install the <em>app</em> package from the
-DaVinci project that contains several exploratory modules.</p>
+<p>Here, we will follow some simple steps to create an application using <strong>dv.manager</strong>. Note that that <strong>dv.manager</strong> does not include any module it just serves as a container therefore along these steps we will install the <em>app</em> package from the DaVinci project that contains several exploratory modules.</p>
 <div class="section level2">
 <h2 id="data-loading">Data loading<a class="anchor" aria-label="anchor" href="#data-loading"></a>
 </h2>
-<p><strong>dv.manager</strong> has been developed to work with DaVinci
-modules whose main purpose is to explore clinical trial data. The main
-input for this modules is data loaded from SDTM or ADAM datasets. We
-will use two dummy datasets in the dv.manager for illustration
-purposes.</p>
+<p><strong>dv.manager</strong> has been developed to work with DaVinci modules whose main purpose is to explore clinical trial data. The main input for this modules is data loaded from SDTM or ADAM datasets. We will use two dummy datasets in the dv.manager for illustration purposes.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>, adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span><span class="op">)</span></span></code></pre></div>
-<p><strong>Notice</strong> that datasets are all packed together in a
-single list.</p>
+<p><strong>Notice</strong> that datasets are all packed together in a single list.</p>
 </div>
 <div class="section level2">
 <h2 id="preprocessing-the-data-optional">Preprocessing the data (optional)<a class="anchor" aria-label="anchor" href="#preprocessing-the-data-optional"></a>
 </h2>
-<p>We can optionally preprocess the loaded data by: computing derived
-variables, rename variables, select a subset of the variables or a
-subset of the population,…</p>
+<p>We can optionally preprocess the loaded data by: computing derived variables, rename variables, select a subset of the variables or a subset of the population,…</p>
 </div>
 <div class="section level2">
 <h2 id="module-selection">Module selection<a class="anchor" aria-label="anchor" href="#module-selection"></a>
 </h2>
-<p>Now, we have to select which modules will be included in our
-application. As mentioned before, <strong>dv.manager</strong> does not
-contain any modules, therefore we will install the <em>dv.listings</em>
-package (see how to install <em>dv.listings</em> an other modules in:
-<code>vignette("installing_module_packages")</code>).</p>
-<p>If you already have <strong>dv.listings</strong> installed you can
-skip this step.</p>
+<p>Now, we have to select which modules will be included in our application. As mentioned before, <strong>dv.manager</strong> does not contain any modules, therefore we will install the <em>dv.listings</em> package (see how to install <em>dv.listings</em> an other modules in: <code>vignette("installing_module_packages")</code>).</p>
+<p>If you already have <strong>dv.listings</strong> installed you can skip this step.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># TODO</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://remotes.r-lib.org" class="external-link">"remotes"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"Boehringer-Ingelheim/dv.listings"</span><span class="op">)</span></span></code></pre></div>
-<p>We can now include in our application or the modules included in the
-<strong>dv.listings</strong> package.</p>
-<p>For example, we can use the <em>data table</em> from the
-<strong>dv.listings</strong> package.</p>
+<p>We can now include in our application or the modules included in the <strong>dv.listings</strong> package.</p>
+<p>For example, we can use the <em>data table</em> from the <strong>dv.listings</strong> package.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">module_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="st">"My First Data table"</span> <span class="op">=</span> <span class="fu">dv.listings</span><span class="fu">::</span><span class="fu">mod_data_table</span><span class="op">(</span></span>
@@ -143,18 +124,12 @@ skip this step.</p>
 <span>    module_id <span class="op">=</span> <span class="st">"mod1"</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Please notice that in the dataset parameter we do not directly pass a
-dataset (e.g. a data.frame or a tibble), but just a string indicating
-which of the datasets we loaded before we want to display in this table.
-Please refer to these vignettes
-<strong>`vignette(“how_does_work”)`</strong> for the explanation on how
-data is dispatched to the different modules.</p>
+<p>Please notice that in the dataset parameter we do not directly pass a dataset (e.g. a data.frame or a tibble), but just a string indicating which of the datasets we loaded before we want to display in this table. Please refer to these vignettes <strong>`vignette(“how_does_work”)`</strong> for the explanation on how data is dispatched to the different modules.</p>
 </div>
 <div class="section level2">
 <h2 id="launching-our-first-application">Launching our first application<a class="anchor" aria-label="anchor" href="#launching-our-first-application"></a>
 </h2>
-<p>To launch our the application we now just need to call the run_app
-function in <strong>dv.manager</strong>.</p>
+<p>To launch our the application we now just need to call the run_app function in <strong>dv.manager</strong>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"DS"</span> <span class="op">=</span> <span class="va">data</span><span class="op">)</span>,</span>

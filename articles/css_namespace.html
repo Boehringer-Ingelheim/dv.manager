@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="css_namespace_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Adding custom CSS styles to a module</h1>
             
@@ -96,8 +95,7 @@
 <div class="section level2">
 <h2 id="adding-custom-css-styles-to-a-module">Adding custom CSS styles to a module<a class="anchor" aria-label="anchor" href="#adding-custom-css-styles-to-a-module"></a>
 </h2>
-<p>There are multiple ways of adding custom CSS styles to a Shiny
-module:</p>
+<p>There are multiple ways of adding custom CSS styles to a Shiny module:</p>
 <ol style="list-style-type: decimal">
 <li>Inline styles</li>
 </ol>
@@ -107,8 +105,7 @@ module:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">p</span><span class="op">(</span>style <span class="op">=</span> <span class="st">"color:red;"</span>, <span class="st">"Red text"</span><span class="op">)</span></span></code></pre></div>
 <ol start="2" style="list-style-type: lower-alpha">
-<li>insert the style at the <code>head</code> level, through the style
-tag</li>
+<li>insert the style at the <code>head</code> level, through the style tag</li>
 </ol>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu">fluidPage</span><span class="op">(</span></span>
@@ -138,22 +135,14 @@ tag</li>
 <code class="sourceCode R"><span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu">fluidPage</span><span class="op">(</span></span>
 <span>  <span class="fu">includeCSS</span><span class="op">(</span><span class="st">"www/custom_file.css"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>These are <strong>general</strong> options and can be used in all
-Shiny applications. See <a href="https://shiny.rstudio.com/articles/css.html" class="external-link">Using custom CSS in
-your app</a> and <a href="http://shiny.rstudio-staging.com/articles/css.html" class="external-link">Style your
-apps with CSS</a> for more examples and in-depth explanations.</p>
-<p>However, for the purposes of working with <strong>dv.manager</strong>
-we recommend using a 3rd alternative in order to avoid
-<code>CSS leaking</code> (your specific CSS style being applied to other
-parts/modules of a larger Shiny application unintentionally).</p>
+<p>These are <strong>general</strong> options and can be used in all Shiny applications. See <a href="https://shiny.rstudio.com/articles/css.html" class="external-link">Using custom CSS in your app</a> and <a href="http://shiny.rstudio-staging.com/articles/css.html" class="external-link">Style your apps with CSS</a> for more examples and in-depth explanations.</p>
+<p>However, for the purposes of working with <strong>dv.manager</strong> we recommend using a 3rd alternative in order to avoid <code>CSS leaking</code> (your specific CSS style being applied to other parts/modules of a larger Shiny application unintentionally).</p>
 <div class="section level3">
 <h3 id="add-custom-css-reference-as-an-html-dependency">Add custom CSS reference as an HTML dependency<a class="anchor" aria-label="anchor" href="#add-custom-css-reference-as-an-html-dependency"></a>
 </h3>
 <ol style="list-style-type: decimal">
-<li><p>Define your CSS styles in a separate file and place it inside the
-<code>www</code> folder of your package</p></li>
-<li><p>Inside the UI of your Shiny module, define an HTML dependency
-pointing to that file</p></li>
+<li><p>Define your CSS styles in a separate file and place it inside the <code>www</code> folder of your package</p></li>
+<li><p>Inside the UI of your Shiny module, define an HTML dependency pointing to that file</p></li>
 </ol>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span><span class="op">)</span> <span class="op">{</span></span>
@@ -167,11 +156,9 @@ pointing to that file</p></li>
 <span>  <span class="op">)</span></span>
 <span>  <span class="va">dependency</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>For more options, please check
-<code><a href="https://rstudio.github.io/htmltools/reference/htmlDependency.html" class="external-link">htmltools::htmlDependency()</a></code> documentation page.</p>
+<p>For more options, please check <code><a href="https://rstudio.github.io/htmltools/reference/htmlDependency.html" class="external-link">htmltools::htmlDependency()</a></code> documentation page.</p>
 <ol start="3" style="list-style-type: decimal">
-<li>Attach the dependency variable to the UI structure. For
-example:</li>
+<li>Attach the dependency variable to the UI structure. For example:</li>
 </ol>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span><span class="op">)</span> <span class="op">{</span></span>
@@ -184,9 +171,7 @@ example:</li>
 <span>    <span class="va">dependency</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>For other options of attaching an HTML dependency to a UI element,
-please consult <code><a href="https://rstudio.github.io/htmltools/reference/htmlDependencies.html" class="external-link">htmltools::attachDependencies</a></code>
-documentation.</p>
+<p>For other options of attaching an HTML dependency to a UI element, please consult <code><a href="https://rstudio.github.io/htmltools/reference/htmlDependencies.html" class="external-link">htmltools::attachDependencies</a></code> documentation.</p>
 </div>
 <div class="section level3">
 <h3 id="css-namespacing-in-module-manager">CSS namespacing in module manager<a class="anchor" aria-label="anchor" href="#css-namespacing-in-module-manager"></a>
@@ -194,21 +179,13 @@ documentation.</p>
 <p>Advantages:</p>
 <ul>
 <li>Custom CSS module dependencies impact only that module.</li>
-<li>The <code>dv.manager</code> can still change the styles of all other
-modules if desired (for example with a custom Shiny theme)</li>
-<li>However the modules cannot impact the <code>dv.manager</code> CSS
-styles even with the use of <code>!important</code> keyword</li>
+<li>The <code>dv.manager</code> can still change the styles of all other modules if desired (for example with a custom Shiny theme)</li>
+<li>However the modules cannot impact the <code>dv.manager</code> CSS styles even with the use of <code>!important</code> keyword</li>
 </ul>
 <p>Limitation:</p>
 <ul>
-<li>This approach only prevents <strong>unintentional</strong> CSS style
-overflow. It cannot work against JavaScript libraries (like the ones
-contained in styling packages: <code>shinydashboard</code>,
-<code>flexdashboard</code> and similar) which <strong>actively</strong>
-and <strong>purposefully </strong> change and overwrite class names and
-CSS styles at runtime.</li>
-<li>Dependency name must begin with the prefix
-<strong>“custom-”</strong> otherwise it will not be namespaced.</li>
+<li>This approach only prevents <strong>unintentional</strong> CSS style overflow. It cannot work against JavaScript libraries (like the ones contained in styling packages: <code>shinydashboard</code>, <code>flexdashboard</code> and similar) which <strong>actively</strong> and <strong>purposefully </strong> change and overwrite class names and CSS styles at runtime.</li>
+<li>Dependency name must begin with the prefix <strong>“custom-”</strong> otherwise it will not be namespaced.</li>
 </ul>
 </div>
 </div>

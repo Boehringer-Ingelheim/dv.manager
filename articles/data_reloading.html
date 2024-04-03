@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="data_reloading_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Data reloading</h1>
             
@@ -93,27 +92,17 @@
 
     
     
-<p><strong>dv.manager</strong> allows periodical reloading of the
-datasets.</p>
-<p>In the <code><a href="../reference/run_app.html">run_app()</a></code> call we specify the duration after
-which the datasets should be reloaded via the <code>reload_period</code>
-parameter.</p>
+<p><strong>dv.manager</strong> allows periodical reloading of the datasets.</p>
+<p>In the <code><a href="../reference/run_app.html">run_app()</a></code> call we specify the duration after which the datasets should be reloaded via the <code>reload_period</code> parameter.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"DS"</span> <span class="op">=</span> <span class="va">data</span><span class="op">)</span>,</span>
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
 <span>  reload_period <span class="op">=</span> <span class="fu">lubridate</span><span class="fu">::</span><span class="fu"><a href="https://lubridate.tidyverse.org/reference/duration.html" class="external-link">duration</a></span><span class="op">(</span><span class="fl">12</span>, <span class="st">"hours"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The <code>reload_data</code> parameter is specified as either a
-lubridate object to specify a duration or a positive numeric value which
-then is interpreted as a lubridate duration object in days.<br>
-By default the <strong>dv.manager</strong> does not reload the datasets
-after a specific time, as the <code>reload_data</code> parameter is
-NULL.</p>
-<p>The functionality to reload the datasets has been implemented via
-<code>"touching"</code> an <code>"restart.txt"</code> file and therefore
-the <code>"shiny-server"</code> will then cover the reloading of the
-application and therefore a reloading of the datasets.</p>
+<p>The <code>reload_data</code> parameter is specified as either a lubridate object to specify a duration or a positive numeric value which then is interpreted as a lubridate duration object in days.<br>
+By default the <strong>dv.manager</strong> does not reload the datasets after a specific time, as the <code>reload_data</code> parameter is NULL.</p>
+<p>The functionality to reload the datasets has been implemented via <code>"touching"</code> an <code>"restart.txt"</code> file and therefore the <code>"shiny-server"</code> will then cover the reloading of the application and therefore a reloading of the datasets.</p>
   </main>
 </div>
 

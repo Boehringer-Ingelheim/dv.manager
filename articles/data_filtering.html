@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="data_filtering_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Sidebar filter implementation</h1>
             
@@ -93,36 +92,19 @@
 
     
     
-<p><strong>dv.manager</strong> include in all applications a filter for
-the input data.</p>
+<p><strong>dv.manager</strong> include in all applications a filter for the input data.</p>
 <p><img src="../reference/figures/mod_manager_filter.png" style="width:100.0%"></p>
-<p>In the <code><a href="../reference/run_app.html">run_app()</a></code> call we specify which dataset will be
-passed to dv.filter in the <code>filter_data</code> parameter. The
-fields of this dataset will be displayed in the filter.</p>
+<p>In the <code><a href="../reference/run_app.html">run_app()</a></code> call we specify which dataset will be passed to dv.filter in the <code>filter_data</code> parameter. The fields of this dataset will be displayed in the filter.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"DS"</span> <span class="op">=</span> <span class="va">data</span><span class="op">)</span>,</span>
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span></span>
 <span><span class="op">)</span> <span class="co"># Dataset used to filter other datasets</span></span></code></pre></div>
-<p>All datasets passed in the the <code>data</code> parameter will also
-be affected by this filtering. The <strong>dv.manager</strong>, by
-default, assumes that all datasets in <code>data</code> and
-<code>filter_data</code> have a common field “<em>USUBJID</em>”. This
-field will be used as a common key to allow the filtering of all
-datasets in <code>data</code> based on the <code>filter_data</code>
-dataset. This filtering key can be modified in the
-<code><a href="../reference/run_app.html">run_app()</a></code> call by modifying the parameter
-<code>filter_key</code>.</p>
-<p>The figure below depicts the steps of the filtering process when
-using the default filtering key “USUBJID”:</p>
+<p>All datasets passed in the the <code>data</code> parameter will also be affected by this filtering. The <strong>dv.manager</strong>, by default, assumes that all datasets in <code>data</code> and <code>filter_data</code> have a common field “<em>USUBJID</em>”. This field will be used as a common key to allow the filtering of all datasets in <code>data</code> based on the <code>filter_data</code> dataset. This filtering key can be modified in the <code><a href="../reference/run_app.html">run_app()</a></code> call by modifying the parameter <code>filter_key</code>.</p>
+<p>The figure below depicts the steps of the filtering process when using the default filtering key “USUBJID”:</p>
 <p><img src="../reference/figures/mod_manager_filter_cartoon.png" style="width:100.0%"></p>
-<p>In a first step (1), <code>filter_data</code> makes a subselection of
-all subjects in the study according to the criteria selected by the user
-(in the case of the figure only female participants above 30 years). In
-a second step (2), we filter the rest of the datasets in
-<code>data</code> and only those subjects that survived the filtering in
-step 1 will remain.</p>
+<p>In a first step (1), <code>filter_data</code> makes a subselection of all subjects in the study according to the criteria selected by the user (in the case of the figure only female participants above 30 years). In a second step (2), we filter the rest of the datasets in <code>data</code> and only those subjects that survived the filtering in step 1 will remain.</p>
   </main>
 </div>
 

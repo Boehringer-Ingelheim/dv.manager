@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="customizing_application_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Customizing our application</h1>
             
@@ -93,9 +92,7 @@
 
     
     
-<p><strong>dv.manager</strong> offers a lot of options to customize our
-application. Here we present examples of these options. For this
-example, we will use as a base the application below.</p>
+<p><strong>dv.manager</strong> offers a lot of options to customize our application. Here we present examples of these options. For this example, we will use as a base the application below.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>,</span>
@@ -115,15 +112,11 @@ example, we will use as a base the application below.</p>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="../reference/figures/custom_basic.png" style="width:50.0%"></p>
-<p>The effect of the changes can be visualized by comparing the output
-before the customization (block above) and after the customization
-(blocks inside each example).</p>
+<p>The effect of the changes can be visualized by comparing the output before the customization (block above) and after the customization (blocks inside each example).</p>
 <div class="section level2">
 <h2 id="adding-a-new-module">Adding a new module<a class="anchor" aria-label="anchor" href="#adding-a-new-module"></a>
 </h2>
-<p>To add a new module we just have to add a new entry to the
-<code>module_list</code>, specifying which module we want to include in
-the application.</p>
+<p>To add a new module we just have to add a new entry to the <code>module_list</code>, specifying which module we want to include in the application.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>,</span>
@@ -147,11 +140,8 @@ the application.</p>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="../reference/figures/custom_add_tab.png" style="width:50.0%"></p>
-<p>The name of the entry in the list will serve as an external
-(i.e. human readable) identifier and <code>module_id</code> will act as
-an internal identifier.</p>
-<p>Notice how we modified the <code>module_id</code> to
-<code>"mod2"</code> and also the name of the entry in the list.</p>
+<p>The name of the entry in the list will serve as an external (i.e. human readable) identifier and <code>module_id</code> will act as an internal identifier.</p>
+<p>Notice how we modified the <code>module_id</code> to <code>"mod2"</code> and also the name of the entry in the list.</p>
 <p>Both must be <strong>unique</strong> across modules!</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">### Repeated module_id</span></span>
@@ -181,11 +171,8 @@ an internal identifier.</p>
 <div class="section level2">
 <h2 id="renaming-a-module">Renaming a module<a class="anchor" aria-label="anchor" href="#renaming-a-module"></a>
 </h2>
-<p>If we want to change the display of a module we just have to modify
-the name of the appropriate entry.</p>
-<p>If we want to change the module named “My Second Data table” to
-“Cool-named module”, we just have to change the name of the entry in the
-module_list.</p>
+<p>If we want to change the display of a module we just have to modify the name of the appropriate entry.</p>
+<p>If we want to change the module named “My Second Data table” to “Cool-named module”, we just have to change the name of the entry in the module_list.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>, adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span><span class="op">)</span></span>
 <span></span>
@@ -210,8 +197,7 @@ module_list.</p>
 <div class="section level2">
 <h2 id="changing-the-data-source">Changing the data source<a class="anchor" aria-label="anchor" href="#changing-the-data-source"></a>
 </h2>
-<p>To modify a module so it has a different data source, we just have to
-modify the <code>dataset</code> parameter.</p>
+<p>To modify a module so it has a different data source, we just have to modify the <code>dataset</code> parameter.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>,</span>
@@ -234,20 +220,14 @@ modify the <code>dataset</code> parameter.</p>
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Notice how both data tables are affected by the filter located in the
-sidebar.</p>
-<p>This example contains modules that only need a single dataset. More
-complex modules may need more datasets, please refer to the
-documentation of each particular module.</p>
+<p>Notice how both data tables are affected by the filter located in the sidebar.</p>
+<p>This example contains modules that only need a single dataset. More complex modules may need more datasets, please refer to the documentation of each particular module.</p>
 <p><img src="../reference/figures/custom_change_source_tab.png" style="width:50.0%"></p>
 </div>
 <div class="section level2">
 <h2 id="loading-several-datasets-in-a-single-application">Loading several datasets in a single application<a class="anchor" aria-label="anchor" href="#loading-several-datasets-in-a-single-application"></a>
 </h2>
-<p>dv.manager offers the possibility of accessing several datasets in a
-single application. To add a new dataset we just have to add a new entry
-to the list passed to the data parameter. This entry can be a list of
-dataframes, or a function that will return a list of dataframes.</p>
+<p>dv.manager offers the possibility of accessing several datasets in a single application. To add a new dataset we just have to add a new entry to the list passed to the data parameter. This entry can be a list of dataframes, or a function that will return a list of dataframes.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>, adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span><span class="op">)</span></span>
 <span><span class="va">data2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>, adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span><span class="op">)</span></span>
@@ -275,16 +255,14 @@ dataframes, or a function that will return a list of dataframes.</p>
 <div class="section level2">
 <h2 id="data-preprocessing-before-app-is-launched">Data preprocessing before app is launched<a class="anchor" aria-label="anchor" href="#data-preprocessing-before-app-is-launched"></a>
 </h2>
-<p>The application is not limited to load data directly. We can modify
-those datasets so we can explore our data in a more efficient way.</p>
+<p>The application is not limited to load data directly. We can modify those datasets so we can explore our data in a more efficient way.</p>
 <p>Lets imagine we want to:</p>
 <ol style="list-style-type: decimal">
 <li><p>limit the filtering possibilities to just SEX and AGE</p></li>
 <li><p>treat SEX as a factor during filtering</p></li>
 <li><p>change the labels of some variables</p></li>
 </ol>
-<p>Please visit the <code><a href="../articles/data_filtering.html">vignette("data_filtering")</a></code> to
-understand why USUBJID is kept within the dataset.</p>
+<p>Please visit the <code><a href="../articles/data_filtering.html">vignette("data_filtering")</a></code> to understand why USUBJID is kept within the dataset.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>,</span>
@@ -324,17 +302,13 @@ understand why USUBJID is kept within the dataset.</p>
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl_filter"</span></span>
 <span><span class="op">)</span> <span class="co"># We have changed the data source for the filtering</span></span></code></pre></div>
-<p>Notice how the filter only shows the selected data, and how the
-filtering differs depending on the data type. Please refer to
-<strong>dv.filter</strong></p>
+<p>Notice how the filter only shows the selected data, and how the filtering differs depending on the data type. Please refer to <strong>dv.filter</strong></p>
 <p>The same approach can be used to, for example:</p>
 <ol style="list-style-type: decimal">
-<li><p>reduce the number of variable presented in the data
-table</p></li>
+<li><p>reduce the number of variable presented in the data table</p></li>
 <li><p>recalculate a new variable age in months.</p></li>
 </ol>
-<p>Notice at the bottom of the code block below we use the modified
-dataset for filtering.</p>
+<p>Notice at the bottom of the code block below we use the modified dataset for filtering.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>,</span>

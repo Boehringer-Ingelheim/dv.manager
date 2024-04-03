@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="developing_module_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Developing a new module</h1>
             
@@ -93,36 +92,22 @@
 
     
     
-<p>Before starting to develop a DaVinci package you should be familiar
-with how it works as explained in
-<code><a href="../articles/how_does_work.html">vignette("how_does_work")</a></code>.</p>
+<p>Before starting to develop a DaVinci package you should be familiar with how it works as explained in <code><a href="../articles/how_does_work.html">vignette("how_does_work")</a></code>.</p>
 <div class="section level2">
 <h2 id="developing-a-new-module">Developing a new module<a class="anchor" aria-label="anchor" href="#developing-a-new-module"></a>
 </h2>
-<p>Developing modules compatible with the <strong>dv.manager</strong>
-follow a very similar process as developing them in pure Shiny. The only
-consideration we must have is that:</p>
+<p>Developing modules compatible with the <strong>dv.manager</strong> follow a very similar process as developing them in pure Shiny. The only consideration we must have is that:</p>
 <ol style="list-style-type: decimal">
-<li>After programming the module, we must include a “wrapper” function
-compatible with <strong>dv.manager</strong> requirements. You can think
-of this as an adapter so that your module plays nicely with ours. These
-requirements are explained in this vignette.</li>
+<li>After programming the module, we must include a “wrapper” function compatible with <strong>dv.manager</strong> requirements. You can think of this as an adapter so that your module plays nicely with ours. These requirements are explained in this vignette.</li>
 <li>
-<strong>dv.manager</strong> is prepared to work with ADAM or SDTM
-datasets and will be filtered using the a common key across all datasets
-specified by the user, by default “USUBJID”, see
-<code><a href="../articles/data_filtering.html">vignette("data_filtering")</a></code>.</li>
+<strong>dv.manager</strong> is prepared to work with ADAM or SDTM datasets and will be filtered using the a common key across all datasets specified by the user, by default “USUBJID”, see <code><a href="../articles/data_filtering.html">vignette("data_filtering")</a></code>.</li>
 </ol>
 <div class="section level3">
 <h3 id="program-a-module-with-shiny">1. Program a module with Shiny<a class="anchor" aria-label="anchor" href="#program-a-module-with-shiny"></a>
 </h3>
-<p>First we will program a Shiny module in the usual way (see: <a href="https://shiny.rstudio.com/articles/modules.html" class="external-link">Modularizing
-Shiny app code</a>):</p>
-<p>For this example, we will create a module that displays the number of
-rows in the data set as well as the number of unique entries in a
-variable that is selected by the user in a drop-down menu.</p>
-<p>Of course, this module is not very useful, but for the purposes of
-explaining how <strong>dv.manager</strong> works, it will suffice.</p>
+<p>First we will program a Shiny module in the usual way (see: <a href="https://shiny.rstudio.com/articles/modules.html" class="external-link">Modularizing Shiny app code</a>):</p>
+<p>For this example, we will create a module that displays the number of rows in the data set as well as the number of unique entries in a variable that is selected by the user in a drop-down menu.</p>
+<p>Of course, this module is not very useful, but for the purposes of explaining how <strong>dv.manager</strong> works, it will suffice.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span></span>
@@ -156,12 +141,8 @@ explaining how <strong>dv.manager</strong> works, it will suffice.</p>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/moduleServer.html" class="external-link">moduleServer</a></span><span class="op">(</span><span class="va">id</span>, <span class="va">module</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>In the code chunk below, notice how we wrap the data set in a
-reactive expression, this is done because our module expect the dataset
-to be a reactive value. As it will be the case inside
-module.manager.</p>
-<p>We could run this module in an application without using
-dv.manager.</p>
+<p>In the code chunk below, notice how we wrap the data set in a reactive expression, this is done because our module expect the dataset to be a reactive value. As it will be the case inside module.manager.</p>
+<p>We could run this module in an application without using dv.manager.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dataset</span> <span class="op">&lt;-</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span></span>
 <span></span>
@@ -181,8 +162,7 @@ dv.manager.</p>
 <div class="section level3">
 <h3 id="wrap-this-module">2. Wrap this module<a class="anchor" aria-label="anchor" href="#wrap-this-module"></a>
 </h3>
-<p>To use this module inside <strong>dv.manager</strong> we must first
-wrap it in a function that will receive:</p>
+<p>To use this module inside <strong>dv.manager</strong> we must first wrap it in a function that will receive:</p>
 <ol style="list-style-type: decimal">
 <li>All parameters needed to start the module</li>
 <li>A module id</li>
@@ -190,12 +170,10 @@ wrap it in a function that will receive:</p>
 <p>And it will return a list with the following fields:</p>
 <ol style="list-style-type: decimal">
 <li>ui: A function that will be invoked to create the UI</li>
-<li>server: A one argument function that will call the module
-server</li>
+<li>server: A one argument function that will call the module server</li>
 <li>module_id</li>
 </ol>
-<p>We name the function <code>mod_uniq_values</code> to indicate that it
-is a module and what it does.</p>
+<p>We name the function <code>mod_uniq_values</code> to indicate that it is a module and what it does.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mod_uniq_values</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">table_name</span>, <span class="va">column_names</span>, <span class="va">module_id</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -217,9 +195,7 @@ is a module and what it does.</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">mod</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>The function defined in the server element will be later evaluated by
-module manager and it will receive a set of arguments as defined
-explained in <code><a href="../articles/arguments_from_module_manager.html">vignette("arguments_from_module_manager")</a></code>.</p>
+<p>The function defined in the server element will be later evaluated by module manager and it will receive a set of arguments as defined explained in <code><a href="../articles/arguments_from_module_manager.html">vignette("arguments_from_module_manager")</a></code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dataset</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span><span class="op">)</span></span>
 <span><span class="va">module_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"First module"</span> <span class="op">=</span> <span class="fu">mod_uniq_values</span><span class="op">(</span></span>
@@ -232,21 +208,14 @@ explained in <code><a href="../articles/arguments_from_module_manager.html">vign
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Also notice how <strong>dv.manager</strong> provides us with a
-<strong>dv.filter</strong> on the left-hand side and a module selection
-bar on the top. These come standard with every application created using
-<strong>dv.manager</strong>.</p>
+<p>Also notice how <strong>dv.manager</strong> provides us with a <strong>dv.filter</strong> on the left-hand side and a module selection bar on the top. These come standard with every application created using <strong>dv.manager</strong>.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="an-alternative-way-of-developing-this-example-module">An alternative way of developing this example module<a class="anchor" aria-label="anchor" href="#an-alternative-way-of-developing-this-example-module"></a>
 </h2>
-<p>We can pass not only one data set, but a list of them to the module
-and update the inputs in the UI based on this list.</p>
-<p>Notice that in this case, the only parameter in the UI function is
-the ID. The <code>selectInput</code> UI elements are defined, but the
-<code>choices</code> option is not specified. These choices will be
-updated at run-time in the server function.</p>
+<p>We can pass not only one data set, but a list of them to the module and update the inputs in the UI based on this list.</p>
+<p>Notice that in this case, the only parameter in the UI function is the ID. The <code>selectInput</code> UI elements are defined, but the <code>choices</code> option is not specified. These choices will be updated at run-time in the server function.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span></span>
@@ -259,12 +228,8 @@ updated at run-time in the server function.</p>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">textOutput</a></span><span class="op">(</span><span class="fu">ns</span><span class="op">(</span><span class="st">"num_unique"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>Here, two <code>observeEvent</code> functions have been added that
-will update the choices in the input. The first will update the names in
-the <code>dataset_list</code>. The second will update the names of the
-columns in the selected data set.</p>
-<p>Here two <code>observeEvent</code> has been added that will update
-the choices in the input to the:</p>
+<p>Here, two <code>observeEvent</code> functions have been added that will update the choices in the input. The first will update the names in the <code>dataset_list</code>. The second will update the names of the columns in the selected data set.</p>
+<p>Here two <code>observeEvent</code> has been added that will update the choices in the input to the:</p>
 <ul>
 <li><p>names in the dataset_list</p></li>
 <li><p>names of the columns in the selected dataset</p></li>
@@ -310,18 +275,10 @@ the choices in the input to the:</p>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/moduleServer.html" class="external-link">moduleServer</a></span><span class="op">(</span><span class="va">id</span>, <span class="va">module</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>Next, we modify the wrapper that allows our example module to be used
-by <strong>dv.manager</strong>.</p>
-<p>First, we remove the extra parameter from the UI function. Notice
-that this allows us to directly pass the function name instead of
-wrapping it in a anonymous function (see previous example).</p>
-<p>Then, we pass the whole <code>filtered_dataset</code> list to the
-<code>dataset</code> parameter in the server function because we are no
-longer specifying just one data set - in this way, we can allow the user
-to select the data set inside the application at run-time.</p>
-<p>This allows us to remove all parameters from the
-<code>mod_uniq_values()</code> function definition with the exception of
-<code>module_id</code>.</p>
+<p>Next, we modify the wrapper that allows our example module to be used by <strong>dv.manager</strong>.</p>
+<p>First, we remove the extra parameter from the UI function. Notice that this allows us to directly pass the function name instead of wrapping it in a anonymous function (see previous example).</p>
+<p>Then, we pass the whole <code>filtered_dataset</code> list to the <code>dataset</code> parameter in the server function because we are no longer specifying just one data set - in this way, we can allow the user to select the data set inside the application at run-time.</p>
+<p>This allows us to remove all parameters from the <code>mod_uniq_values()</code> function definition with the exception of <code>module_id</code>.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Now, only the module_id parameter is needed</span></span>
 <span><span class="va">mod_uniq_values</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">module_id</span><span class="op">)</span> <span class="op">{</span></span>
@@ -337,9 +294,7 @@ to select the data set inside the application at run-time.</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="va">mod</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>Finally, we set up <strong>dv.manager</strong> in a similar way, but
-now we have modified the call in <code>module_list</code> and added a
-new data set to the data set list.</p>
+<p>Finally, we set up <strong>dv.manager</strong> in a similar way, but now we have modified the call in <code>module_list</code> and added a new data set to the data set list.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">datasets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>,</span>
@@ -355,10 +310,7 @@ new data set to the data set list.</p>
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Please, notice that the module resets its interface whenever we
-change the data table. This occurs because we observe a change in the
-dataset. A different technique, that escapes the scope of this vignette,
-should be used to control this issue.</p>
+<p>Please, notice that the module resets its interface whenever we change the data table. This occurs because we observe a change in the dataset. A different technique, that escapes the scope of this vignette, should be used to control this issue.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

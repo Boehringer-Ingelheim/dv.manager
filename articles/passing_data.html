@@ -81,8 +81,7 @@
 
 
 
-
-<div class="row">
+<script src="passing_data_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Passing data between modules</h1>
             
@@ -93,10 +92,8 @@
 
     
     
-<p>You can use the output of one module as the input of another
-module.</p>
-<p>In the following app you can select a value in one the modules and
-use its value in another module.</p>
+<p>You can use the output of one module as the input of another module.</p>
+<p>In the following app you can select a value in one the modules and use its value in another module.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">com_test_UI</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span>, <span class="va">choices</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="va">message</span><span class="op">)</span> <span class="op">{</span> <span class="co"># nolint</span></span>
 <span>  <span class="va">ns</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/NS.html" class="external-link">NS</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span></span>
@@ -157,24 +154,11 @@ use its value in another module.</p>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span>,</span>
 <span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Notice how in the mod_table wrapper we call
-<code>afmm[["module_output"]]()</code> by adding the two parenthesis at
-the end. In this case it is not because
-<code>afmm[["module_output"]]()</code> is a reactive object, we are
-calling it outside a reactive environment, but because it is a function
-that returns the list of values returned by the modules.</p>
+<p>Notice how in the mod_table wrapper we call <code>afmm[["module_output"]]()</code> by adding the two parenthesis at the end. In this case it is not because <code>afmm[["module_output"]]()</code> is a reactive object, we are calling it outside a reactive environment, but because it is a function that returns the list of values returned by the modules.</p>
 <div class="section level2">
 <h2 id="important-note">IMPORTANT NOTE<a class="anchor" aria-label="anchor" href="#important-note"></a>
 </h2>
-<p>If the element returned, by
-<code>afmm[["module_output"]]()[[selection]]</code> is not a reactive,
-it must be transformed into a reactive (usually a metaReactive) in the
-wrapper
-<code>metaReactive(afmm[["module_output"]]()[[selection]])</code>. This
-is done this way because at the moment the modules are invoked,
-module_output does not exist yet and its value should be retrieved after
-all the server functions have run and the variable exists inside the
-app_server environment.</p>
+<p>If the element returned, by <code>afmm[["module_output"]]()[[selection]]</code> is not a reactive, it must be transformed into a reactive (usually a metaReactive) in the wrapper <code>metaReactive(afmm[["module_output"]]()[[selection]])</code>. This is done this way because at the moment the modules are invoked, module_output does not exist yet and its value should be retrieved after all the server functions have run and the variable exists inside the app_server environment.</p>
 </div>
   </main>
 </div>
