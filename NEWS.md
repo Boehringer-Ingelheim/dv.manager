@@ -11,7 +11,7 @@
 - It no longer hardcodes the `enableBookmarking` as `"url"`. The argument passed to the `enableBookmarking` parameter is forwarded to shiny runApp. Therefore, bookmarking is delegated to `Shiny` and no special implementacion happens inside dv.manager.    
     - When `"server"` bookmarking is selected and the app is running in shiny-server we refer the user to: https://docs.rstudio.com/shiny-server/#bookmark_state_dir forbookmark storage configuration.
     - For local or other approaches: https://community.rstudio.com/t/changing-bookmark-state-directory-when-saving-to-disk/37877 (Undocumented)
-- It now includes a simple logging system described in: [here](../articles/logging.html)
+- It now includes a simple logging system described in: [here](./docs/articles/logging.html)
 - The arguments from module manager will now include an entry `dataset_metadata` entry that will contain the name and date of the selected dataset.
     - `dataset_name` entry will be deprecated in following versions.
 - Allows periodical reloading of the datasets via the `reload_period` parameter.
@@ -20,8 +20,8 @@
 
 ## Major changes
 Instantiating modules is no longer done by means of an rlang expression but with a function with a single argument. 
-Documentation about this can be found [here](../articles/developing_module.html) and 
-[here](../articles/arguments_from_module_manager.html) This argument contains a list with:
+Documentation about this can be found [here](./docs/articles/developing_module.html) and 
+[here](./docs/articles/arguments_from_module_manager.html) This argument contains a list with:
 
 -   `unfiltered_dataset`: a metaReactive list containing the tables inside the selected dataset before filtering them.
 
@@ -39,7 +39,7 @@ Documentation about this can be found [here](../articles/developing_module.html)
     - `switch2`: a function that allows switching between tabs programatically
     
 - A set of dispatcher functions that facilitate the access are included. Documentation can be found
-[here](../articles/arguments_from_module_manager.html#dispatchers-1).
+[here](./docs/articles/arguments_from_module_manager.html#dispatchers-1).
         
 dv.manager isolates custom CSS styling for loaded modules. This ensures CSS styles are applied where they are intended.
 

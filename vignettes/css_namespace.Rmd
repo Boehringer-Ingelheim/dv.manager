@@ -60,7 +60,7 @@ ui <- fluidPage(
 )
 ```
 
-These are **general** options and can be used in all Shiny applications. See [Using custom CSS in your app](https://shiny.rstudio.com/articles/css.html) and [Style your apps with CSS](http://shiny.rstudio-staging.com/articles/css.html) for more examples and in-depth explanations.
+These are **general** options and can be used in all Shiny applications. See [Using custom CSS in your app](https://shiny.rstudio.com/articles/css.html) and [Style your apps with CSS](https://shiny.posit.co/r/articles/build/css/) for more examples and in-depth explanations.
 
 However, for the purposes of working with **dv.manager** we recommend using a 3rd alternative in order to avoid `CSS leaking` (your specific CSS style being applied to other parts/modules of a larger Shiny application unintentionally).
 
