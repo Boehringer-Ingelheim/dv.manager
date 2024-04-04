@@ -20,8 +20,8 @@
 
 ## Major changes
 Instantiating modules is no longer done by means of an rlang expression but with a function with a single argument. 
-Documentation about this can be found [here](articles/developing_module.html) and 
-[here](articles/arguments_from_module_manager.html) This argument contains a list with:
+Documentation about this can be found [here](../articles/developing_module.html) and 
+[here](../articles/arguments_from_module_manager.html) This argument contains a list with:
 
 -   `unfiltered_dataset`: a metaReactive list containing the tables inside the selected dataset before filtering them.
 
