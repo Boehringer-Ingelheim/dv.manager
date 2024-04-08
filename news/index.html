@@ -77,7 +77,7 @@
 <li>It no longer hardcodes the <code>enableBookmarking</code> as <code>"url"</code>. The argument passed to the <code>enableBookmarking</code> parameter is forwarded to shiny runApp. Therefore, bookmarking is delegated to <code>Shiny</code> and no special implementacion happens inside dv.manager.<ul><li>When <code>"server"</code> bookmarking is selected and the app is running in shiny-server we refer the user to: <a href="https://docs.rstudio.com/shiny-server/#bookmark_state_dir" class="external-link uri">https://docs.rstudio.com/shiny-server/#bookmark_state_dir</a> forbookmark storage configuration.</li>
 <li>For local or other approaches: <a href="https://community.rstudio.com/t/changing-bookmark-state-directory-when-saving-to-disk/37877" class="external-link uri">https://community.rstudio.com/t/changing-bookmark-state-directory-when-saving-to-disk/37877</a> (Undocumented)</li>
 </ul></li>
-<li>It now includes a simple logging system described in: <a href="../articles/logging.html">here</a>
+<li>It now includes a simple logging system described in: <a href="https://boehringer-ingelheim.github.io/dv.manager/articles/logging.html" class="external-link">here</a>
 </li>
 <li>The arguments from module manager will now include an entry <code>dataset_metadata</code> entry that will contain the name and date of the selected dataset.<ul><li>
 <code>dataset_name</code> entry will be deprecated in following versions.</li></ul></li>
@@ -87,7 +87,7 @@
 <h2 class="pkg-version" data-toc-text="2.0.0" id="dvmanager-200">dv.manager 2.0.0<a class="anchor" aria-label="anchor" href="#dvmanager-200"></a></h2>
 <div class="section level3">
 <h3 id="major-changes-2-0-0">Major changes<a class="anchor" aria-label="anchor" href="#major-changes-2-0-0"></a></h3>
-<p>Instantiating modules is no longer done by means of an rlang expression but with a function with a single argument. Documentation about this can be found <a href="../articles/developing_module.html">here</a> and <a href="../articles/arguments_from_module_manager.html">here</a> This argument contains a list with:</p>
+<p>Instantiating modules is no longer done by means of an rlang expression but with a function with a single argument. Documentation about this can be found <a href="https://boehringer-ingelheim.github.io/dv.manager/articles/developing_module.html" class="external-link">here</a> and <a href="https://boehringer-ingelheim.github.io/dv.manager/articles/arguments_from_module_manager.html" class="external-link">here</a> This argument contains a list with:</p>
 <ul><li><p><code>unfiltered_dataset</code>: a metaReactive list containing the tables inside the selected dataset before filtering them.</p></li>
 <li><p><code>filtered_dataset</code>: a metaReactive list containing the tables inside the selected dataset after filtering them.</p></li>
 <li><p><code>url_parameters</code>: a reactive list of the parameters passed in the url.</p></li>
@@ -98,7 +98,7 @@
 <p><code>utils</code>: a list of convenience functions:</p>
 <ul><li>
 <code>switch2</code>: a function that allows switching between tabs programatically</li></ul></li>
-<li><p>A set of dispatcher functions that facilitate the access are included. Documentation can be found <a href="../articles/arguments_from_module_manager.html#dispatchers-1">here</a>.</p></li>
+<li><p>A set of dispatcher functions that facilitate the access are included. Documentation can be found <a href="https://boehringer-ingelheim.github.io/dv.manager/articles/arguments_from_module_manager.html#dispatchers-1" class="external-link">here</a>.</p></li>
 </ul><p>dv.manager isolates custom CSS styling for loaded modules. This ensures CSS styles are applied where they are intended.</p>
 <p>dv.manager allows including an startup message</p>
 <p>dv.manager now includes the possibility of SSO using Azure Active Directory</p>
