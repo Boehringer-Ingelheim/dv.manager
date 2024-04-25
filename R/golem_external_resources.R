@@ -13,8 +13,7 @@ golem_add_external_resources <- function() {
     golem::bundle_resources(
       path = bundle_path,
       app_title = golem::get_golem_options("title")
-    ),
-    shiny::tags$link(rel = "shortcut icon", href = "www/DaVinci-Logo.png"),
+    ),    
     shinyjs::useShinyjs()
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
