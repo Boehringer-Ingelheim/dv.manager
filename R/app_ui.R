@@ -79,7 +79,6 @@ app_ui <- function(id) {
     ),
     shiny::div(
       class = "sidebar",
-      shiny::tags$img(src = "www/DaVinci-Logo.png", class = "logo"),
       shiny::tags$span(class = "logo-text", "DaVinci"),
       shiny::tags$label(
         `for` = "click",
