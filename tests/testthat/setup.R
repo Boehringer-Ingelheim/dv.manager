@@ -1,4 +1,14 @@
-library(shiny)
+package_name <- "dv.manager"
+
+# validation (S)
+vdoc <- source(
+  system.file("validation", "utils-validation.R", package = package_name, mustWork = TRUE),
+  local = TRUE
+)[["value"]]
+specs <- vdoc[["specs"]]
+#  validation (F)
+
+# -----
 
 run_shiny_tests <- !isFALSE(as.logical(Sys.getenv("SKIP_SHINY_TESTS")))
 suspect_check <- any(names(Sys.getenv()) == "_R_CHECK_CRAN_INCOMING_")

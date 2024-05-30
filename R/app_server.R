@@ -45,7 +45,6 @@
 #' @keywords internal
 
 app_server <- function(input = NULL, output = NULL, session = NULL) {
-
   opts <- list(
     "module_list" = get_config("module_list"),
     "data" = get_config("data"),
@@ -55,7 +54,7 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
     "reload_period" = get_config("reload_period")
   )
 
-   app_server_(input, output, session, opts)
+  app_server_(input, output, session, opts)
 }
 
 app_server_module <- function(id) {
@@ -67,7 +66,7 @@ app_server_module <- function(id) {
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period")
   )
-  shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))  
+  shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
 }
 
 app_server_ <- function(input, output, session, opts) {

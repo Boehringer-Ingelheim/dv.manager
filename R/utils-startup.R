@@ -42,3 +42,13 @@ add_scoper_dependency <- function() {
     script = "scoper.min.js"
   )
 }
+
+#' Access files in the current app
+#'
+#' @param ... Character vector specifying directory and or file to
+#'     point to inside the current package.
+#'
+#' @noRd
+app_sys <- function(...) {
+  system.file(..., package = "dv.manager")
+}

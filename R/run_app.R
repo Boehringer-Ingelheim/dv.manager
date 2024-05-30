@@ -50,7 +50,7 @@ run_app <- function(data = NULL,
                     .launch = TRUE) {
   check_deprecated_calls(filter_data)
 
-   if (is.null(azure_options)) {
+  if (is.null(azure_options)) {
     app_args <- list(
       ui_func = app_ui,
       srv_func = app_server,
