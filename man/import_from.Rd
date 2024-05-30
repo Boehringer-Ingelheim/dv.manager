@@ -2,11 +2,8 @@
 % Please edit documentation in R/utils_importFrom.R
 \name{.data}
 \alias{.data}
-\alias{get_golem_options}
 \title{.data from dplyr}
 \description{
 .data from dplyr
-
-get_golem_options from golem
 }
 \keyword{internal}

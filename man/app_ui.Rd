@@ -8,7 +8,7 @@ app_ui(id)
 }
 \arguments{
 \item{id}{This parameter can be either an string id if the app_ui is being used as a module or
-a request if the app_ui is being used as an standalone application created in golem then it becomes
+a request if the app_ui is being used as an standalone application then it becomes
 a Internal parameter for \code{{shiny}}
 DO NOT REMOVE.}
 }
