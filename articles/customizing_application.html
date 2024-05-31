@@ -95,8 +95,8 @@
 <p><strong>dv.manager</strong> offers a lot of options to customize our application. Here we present examples of these options. For this example, we will use as a base the application below.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>,</span>
-<span>  adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span></span>
+<span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adsl.html" class="external-link">adsl</a></span>,</span>
+<span>  adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adae.html" class="external-link">adae</a></span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">module_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -119,8 +119,8 @@
 <p>To add a new module we just have to add a new entry to the <code>module_list</code>, specifying which module we want to include in the application.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>,</span>
-<span>  adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span></span>
+<span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adsl.html" class="external-link">adsl</a></span>,</span>
+<span>  adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adae.html" class="external-link">adae</a></span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">module_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -174,7 +174,7 @@
 <p>If we want to change the display of a module we just have to modify the name of the appropriate entry.</p>
 <p>If we want to change the module named “My Second Data table” to “Cool-named module”, we just have to change the name of the entry in the module_list.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>, adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adsl.html" class="external-link">adsl</a></span>, adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adae.html" class="external-link">adae</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">module_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="st">"My First Data table"</span> <span class="op">=</span> <span class="fu">dv.listings</span><span class="fu">::</span><span class="fu">mod_data_table</span><span class="op">(</span></span>
@@ -200,8 +200,8 @@
 <p>To modify a module so it has a different data source, we just have to modify the <code>dataset</code> parameter.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>,</span>
-<span>  adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span></span>
+<span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adsl.html" class="external-link">adsl</a></span>,</span>
+<span>  adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adae.html" class="external-link">adae</a></span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">module_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -229,8 +229,8 @@
 </h2>
 <p>dv.manager offers the possibility of accessing several datasets in a single application. To add a new dataset we just have to add a new entry to the list passed to the data parameter. This entry can be a list of dataframes, or a function that will return a list of dataframes.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">data1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>, adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span><span class="op">)</span></span>
-<span><span class="va">data2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>, adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">data1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adsl.html" class="external-link">adsl</a></span>, adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adae.html" class="external-link">adae</a></span><span class="op">)</span></span>
+<span><span class="va">data2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adsl.html" class="external-link">adsl</a></span>, adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adae.html" class="external-link">adae</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">module_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="st">"ADSL data table"</span> <span class="op">=</span> <span class="fu">dv.listings</span><span class="fu">::</span><span class="fu">mod_data_table</span><span class="op">(</span></span>
@@ -265,8 +265,8 @@
 <p>Please visit the <code><a href="../articles/data_filtering.html">vignette("data_filtering")</a></code> to understand why USUBJID is kept within the dataset.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>,</span>
-<span>  adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span></span>
+<span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adsl.html" class="external-link">adsl</a></span>,</span>
+<span>  adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adae.html" class="external-link">adae</a></span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># We will use dplyr to modify our data.</span></span>
@@ -311,8 +311,8 @@
 <p>Notice at the bottom of the code block below we use the modified dataset for filtering.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adsl.html" class="external-link">adsl</a></span>,</span>
-<span>  adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/main/reference/adae.html" class="external-link">adae</a></span></span>
+<span>  adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adsl.html" class="external-link">adsl</a></span>,</span>
+<span>  adae <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/pharmaverseadam/man/adae.html" class="external-link">adae</a></span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>

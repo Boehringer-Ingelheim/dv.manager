@@ -93,7 +93,7 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>data</dt>
 <dd><p>the list of datasets to be used in the Shiny application. This data parameter can be defined as:</p><ul><li><p>a named list of lists in which each of the lists will be a list of data.frames. Each of the lists of data.frames
-contains a domain, a structure similar to that returned in a <code><a href="https://rdrr.io/pkg/dv.loader/man/load_data.html" class="external-link">dv.loader::load_data</a></code> call.</p></li>
+contains a domain, a structure similar to that returned in a <code>dv.loader::load_data</code> call.</p></li>
 <li><p>a named list of functions in which each of the functions will return a list of data.frames.</p></li>
 </ul></dd>
 
@@ -123,7 +123,10 @@ message defined with shiny::modalDialog.</p></dd>
 <dt>azure_options</dt>
 <dd><p>A named vector/list containing the options for the Azure Authentication:
 Required fields: redirect, resource, tenant, app, version, password.
-See AzureAuth::build_authorization_uri for these. If NULL then application will not be secure.</p></dd>
+See AzureAuth::build_authorization_uri for these. If NULL then application will not be secure.
+Note that azure_options is only required when the applications handles the authentication by itself. It is not
+required in other environments such as POSIT Connect or other environments where the authentication is handled
+externally.</p></dd>
 
 
 <dt>reload_period</dt>
