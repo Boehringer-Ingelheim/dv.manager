@@ -1,7 +1,7 @@
 #' The application User-Interface using an HTML template
 #'
 #' @param id This parameter can be either an string id if the app_ui is being used as a module or
-#' a request if the app_ui is being used as an standalone application created in golem then it becomes
+#' a request if the app_ui is being used as an standalone application then it becomes
 #' a Internal parameter for `{shiny}`
 #'     DO NOT REMOVE.
 #'
@@ -20,8 +20,8 @@ app_ui <- function(id) {
     stop("Unknown value type in id")
   }
 
-  data <- golem::get_golem_options("data")
-  module_list <- golem::get_golem_options("module_list")
+  data <- get_config("data")
+  module_list <- get_config("module_list")
 
   log_inform("Initializing HTML template UI")
   log_inform(glue::glue(
@@ -99,8 +99,8 @@ app_ui <- function(id) {
     )))))
 
   shiny::fluidPage(
-    golem_add_external_resources(),
-    theme = get_app_theme(), # "bgc-color" = "#002f62"),
+    insert_header_add_resources(app_title = get_config("title")),
+    theme = get_app_theme(),
     class = "display-grid",
     sidebar,
     do.call(shiny::tabsetPanel, c(

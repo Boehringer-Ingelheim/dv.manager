@@ -8,7 +8,6 @@ Authors@R: c(person("Boehringer-Ingelheim Pharma GmbH & Co.KG", role = c("cph", 
 Description: DaVinci Module Manager.
 License: Apache License (>= 2)
 Imports: 
-    golem (>= 0.3.1),
     shiny (>= 1.7.0),
     glue (>= 1.4.2),
     htmltools (>= 0.5.2),
@@ -18,7 +17,6 @@ Imports:
     purrr (>= 0.3.4),
     dplyr (>= 1.0.3),
     dv.filter (>= 1.0.0),
-    dv.loader (>= 1.0.0),
     lubridate (>= 1.7.9.2),
     shinymeta (>= 0.2.0.1),
     shinyjs (>= 2.0.0),
@@ -28,7 +26,7 @@ Imports:
     cli (>= 3.3.0)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.0
+RoxygenNote: 7.3.1
 Roxygen: list(markdown = TRUE)
 Suggests: 
     testthat (>= 3.0.1),

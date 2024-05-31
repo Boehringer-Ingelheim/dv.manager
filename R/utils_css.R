@@ -93,14 +93,14 @@ get_app_theme <- function(custom = FALSE, version = 3) {
     if (isFALSE(custom)) {
       theme <- bslib::bs_theme(version = version) %>%
         bslib::bs_add_variables("brand-primary" = "#002f62") %>%
-        bslib::bs_add_rules(sass::sass_file(app_sys("app/www/css/custom.scss")))
+        bslib::bs_add_rules(sass::sass_file(app_sys("www/css/custom.scss")))
     } else {
       theme <- bslib::bs_theme(version = version) %>%
         sass::sass_bundle(sass::sass_layer(
           defaults = list(sass::sass_file(app_sys("app/www/themes/_variables.scss"))),
           rules = list(
-            sass::sass_file(app_sys("app/www/themes/_dark.scss")),
-            sass::sass_file(app_sys("app/www/css/custom.scss"))
+            sass::sass_file(app_sys("www/themes/_dark.scss")),
+            sass::sass_file(app_sys("www/css/custom.scss"))
           )
         )) %>%
         structure(class = class(bslib::bs_theme(version = version)))

@@ -131,7 +131,7 @@ test_that(
       module_list = list("Simple" = dv.manager:::mod_simple("adsl", "mod1")),
       filter_data = "DD1",
       .launch = FALSE
-    )[["golem_opts"]][["filter_key"]] %>%
+    )[["config"]][["filter_key"]] %>%
       expect_equal("USUBJID") %>%
       expect_warning(regexp = "Check date: Not passed") %>%
       expect_warning(regexp = "D1 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) %>%

@@ -4,7 +4,7 @@
 \alias{app_server}
 \title{Server side of the dv.manager}
 \usage{
-app_server(input = NULL, output = NULL, session = NULL, id = NULL)
+app_server(input = NULL, output = NULL, session = NULL)
 }
 \arguments{
 \item{input, output, session}{Internal parameters for {shiny}.
@@ -15,13 +15,6 @@ DO NOT REMOVE.}
 \description{
 Server side of the dv.manager
 }
-\section{golem}{
-
-This server side is built as a golem application. Therefore it will make use of the \link[golem:get_golem_options]{golem::get_golem_options}
-functionality. Particularly, it will receive three variables through this channel: module_list, data and filter_data.
-All this variables are specified in the \code{\link[=run_app]{run_app()}} call.
-}
-
 \section{data}{
 
 \emph{data} is the fundamental data source for the application launched by the dv.manager

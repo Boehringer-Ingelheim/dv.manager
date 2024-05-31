@@ -1,10 +1,5 @@
 #' Server side of the dv.manager
 #'
-#' @section golem:
-#' This server side is built as a golem application. Therefore it will make use of the [golem::get_golem_options]
-#' functionality. Particularly, it will receive three variables through this channel: module_list, data and filter_data.
-#' All this variables are specified in the [dv.manager::run_app()] call.
-#'
 #' @section data:
 #' *data* is the fundamental data source for the application launched by the dv.manager
 #'   - This data source is a named list of:
@@ -49,34 +44,30 @@
 #'
 #' @keywords internal
 
-app_server <- function(input = NULL, output = NULL, session = NULL, id = NULL) {
-  if (is.null(id)) {
-    log_inform("As app")
-    return(app_server_golem(input, output, session)) # If id is null then I am calling it as a base app
-  } else { # Otherwise I am calling it as a module inside another app
-    return(
-      shiny::moduleServer(
-        id,
-        app_server_golem
-      )
-    )
-  }
-}
-
-# Used for future decoupling from golem in the future
-app_server_golem <- function(input, output, session) {
+app_server <- function(input = NULL, output = NULL, session = NULL) {
   opts <- list(
-    "module_list" = golem::get_golem_options("module_list"),
-    "data" = golem::get_golem_options("data"),
-    "filter_data" = golem::get_golem_options("filter_data"),
-    "filter_key" = golem::get_golem_options("filter_key"),
-    "startup_msg" = golem::get_golem_options("startup_msg"),
-    "reload_period" = golem::get_golem_options("reload_period")
+    "module_list" = get_config("module_list"),
+    "data" = get_config("data"),
+    "filter_data" = get_config("filter_data"),
+    "filter_key" = get_config("filter_key"),
+    "startup_msg" = get_config("startup_msg"),
+    "reload_period" = get_config("reload_period")
   )
 
   app_server_(input, output, session, opts)
 }
 
+app_server_module <- function(id) {
+  opts <- list(
+    "module_list" = get_config("module_list"),
+    "data" = get_config("data"),
+    "filter_data" = get_config("filter_data"),
+    "filter_key" = get_config("filter_key"),
+    "startup_msg" = get_config("startup_msg"),
+    "reload_period" = get_config("reload_period")
+  )
+  shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
+}
 
 app_server_ <- function(input, output, session, opts) {
   ns <- session[["ns"]]

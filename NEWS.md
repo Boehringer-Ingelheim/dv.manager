@@ -1,3 +1,7 @@
+# dv.manager 2.1.1-9000
+
+- Removes `golem` dependency
+
 # dv.manager 2.1.1
 
 - General code housekeeping

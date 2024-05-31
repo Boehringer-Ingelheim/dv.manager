@@ -60,16 +60,14 @@ run_app <- function(data = NULL,
     app_args <- build_secure_arguments(azure_options, app_ui, app_server)
   }
 
-
-
-  golem_opts <- list()
-  golem_opts[["module_list"]] <- check_modules(module_list)
-  golem_opts[["data"]] <- check_data(data)
-  golem_opts[["filter_data"]] <- check_filter_data(filter_data, data)
-  golem_opts[["filter_key"]] <- check_filter_key(filter_key, data)
-  golem_opts[["startup_msg"]] <- check_startup_msg(startup_msg)
-  golem_opts[["title"]] <- title
-  golem_opts[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
+  config <- list()
+  config[["module_list"]] <- check_modules(module_list)
+  config[["data"]] <- check_data(data)
+  config[["filter_data"]] <- check_filter_data(filter_data, data)
+  config[["filter_key"]] <- check_filter_key(filter_key, data)
+  config[["startup_msg"]] <- check_startup_msg(startup_msg)
+  config[["title"]] <- title
+  config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
 
   check_meta_mtime_attribute(data)
 
@@ -87,12 +85,11 @@ run_app <- function(data = NULL,
   )
 
   if (.launch) {
-    golem::with_golem_options(
-      app = do.call(shiny::shinyApp, call_args),
-      golem_opts = golem_opts
-    )
+    app <- do.call(shiny::shinyApp, call_args)
+    app <- set_config(app, config)
+    app
   } else {
-    c(app_args, list(golem_opts = golem_opts))
+    c(app_args, list(config = config))
   }
 }
 
