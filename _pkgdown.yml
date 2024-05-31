@@ -2,7 +2,13 @@ template:
   bootstrap: 5
   
 navbar:
-  type: inverse
+  type: inverted
+  structure:
+    left: [intro, reference, articles, tutorials, news, qc]
+  components:
+    qc:
+      text: Quality Control
+      href: articles/qc.html  
 
 home:
   title: Build complex Shiny apps in a simple way  
@@ -53,3 +59,8 @@ articles:
   desc: Common errors
   contents:
   - dv-manager
+
+- title: Quality Control
+  desc: Quality Control
+  contents:
+  - qc

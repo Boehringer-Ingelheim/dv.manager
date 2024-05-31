@@ -1,0 +1,32 @@
+---
+title: "Quality Control"
+output:
+  rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Quality Control}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE
+)
+```
+
+```{r, params, echo = FALSE, include = FALSE}
+val_param_rds <- "../inst/validation/results/val_param.rds"
+val_param_rds_exists <- file.exists(val_param_rds)
+if (file.exists(val_param_rds)) params <- readRDS(val_param_rds)
+```
+
+```{r, results = "asis", echo = FALSE}
+if (val_param_rds_exists) {
+  res <- knitr::knit_child("../inst/validation/val_report_child.Rmd", quiet = TRUE, envir = environment())
+  cat(res, sep = "\n")
+} else {
+  "No quality control results found"
+}
+```

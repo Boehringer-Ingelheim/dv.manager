@@ -40,7 +40,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]](specs[["a_spec"]], "my test description"),
+  vdoc[["add_spec"]]("my test description", specs$a_spec),
   {
     expect_true(TRUE)
   }
