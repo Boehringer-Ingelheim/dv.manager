@@ -4,4 +4,4 @@ linters: linters_with_defaults(
   indentation_linter = NULL,
   trailing_whitespace_linter = NULL
   )
-exclusions: as.list(setdiff(list.files(".", recursive = T),list.files("R", recursive = T, full.names = T)))
+

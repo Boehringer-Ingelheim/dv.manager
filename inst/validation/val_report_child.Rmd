@@ -34,8 +34,8 @@ tests[["spec_paste"]] <- vapply(tests[["spec"]], function(x) paste(x, collapse =
 tests[["desc"]] <- paste0("(#", seq_len(nrow(tests)), "): ", tests[["test"]])
 tests[["with_spec"]] <- vapply(tests[["spec_id"]], Negate(is.null), FUN.VALUE = logical(1))
 
-spec_tests <- tests[tests[["with_spec"]],]
-no_spec_tests <- tests[!tests[["with_spec"]],]
+spec_tests <- tests[tests[["with_spec"]], ]
+no_spec_tests <- tests[!tests[["with_spec"]], ]
 
 declared_spec <- vdoc[["spec_id_list"]]
 tested_spec <- unique(unlist(tests[["spec_id"]]))
@@ -55,19 +55,19 @@ n_skip_dec <- sum(mask_skipped & mask_declared)
 n_uncov <- length(uncovered_spec)
 n_undec <- sum(!mask_declared)
 
-render_spec_table <- function(t){
+render_spec_table <- function(t) {
   t <- t[trac_matrix_col]
   colnames(t) <- names(trac_matrix_col)
-  t <- t[order(t[["Spec ID"]]),]
-  DT::datatable(t,  options = list(dom = "ltp"), filter = list(position = "top"))
+  t <- t[order(t[["Spec ID"]]), ]
+  DT::datatable(t, options = list(dom = "ltp"), filter = list(position = "top"))
 }
 
-data_frame_by_row <- function(colnames, data){
+data_frame_by_row <- function(colnames, data) {
   n <- length(data)
   n_cols <- length(colnames)
   stopifnot(n %% n_cols == 0)
   columns <- vector("list", length = n_cols)
-  for(i in 1:n_cols) columns[[i]] <- unlist(data[seq(i, n, n_cols)])
+  for (i in 1:n_cols) columns[[i]] <- unlist(data[seq(i, n, n_cols)])
   do.call(data.frame, setNames(columns, colnames))
 }
 
@@ -75,7 +75,7 @@ data_frame_by_row <- function(colnames, data){
 trac_matrix_col <- c("Spec ID" = "spec_id_paste", "Spec" = "spec_paste", "Test Desc" = "desc", "File" = "file")
 
 # Check that validation passes and set title ----
-VALIDATION_PASSED <- n_fail_dec == 0 && n_uncov == 0 && n_undec == 0 && n_uncov == 0
+VALIDATION_PASSED <- n_fail_dec == 0 && n_uncov == 0 && n_undec == 0 && n_uncov == 0 # nolint
 
 result_symbol <- if (VALIDATION_PASSED) "\U02705" else "\U274C"
 title <- paste(result_symbol, params[["package"]], params[["version"]])
