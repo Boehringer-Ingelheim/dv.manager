@@ -1,0 +1,17 @@
+---
+title: "Quality Control"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    code_folding: hide
+toc-title: "----\nIndex"
+
+params:
+  package: NULL
+  tests: NULL
+  version: NULL
+---
+
+```{r, child = "val_report_child.Rmd"}
+```

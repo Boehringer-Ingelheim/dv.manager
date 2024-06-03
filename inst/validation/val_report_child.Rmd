@@ -1,0 +1,205 @@
+<style>
+.infobox {
+  border: 1px solid;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.warning {
+  border-color: #FFA07A;
+  background-color: #FFE4E1;
+}
+</style>
+
+
+```{r setup, message = FALSE}
+# Import vdoc functions ----
+vdoc <- source(
+  system.file("validation", "utils-validation.R", package = params[["package"]], mustWork = TRUE),
+  local = TRUE
+)[["value"]]
+
+# Set required packages ----
+suppressPackageStartupMessages(stopifnot(requireNamespace("DT")))
+suppressPackageStartupMessages(stopifnot(requireNamespace("devtools")))
+
+# Parse tests ----
+
+tests <- as.data.frame(params[["tests"]])
+tests[["validation_data"]] <- vdoc[["get_spec"]](tests[["result"]])
+tests[["spec_id"]] <- sapply(tests[["validation_data"]], function(x) x[["spec_id"]])
+tests[["spec"]] <- sapply(tests[["validation_data"]], function(x) x[["spec"]])
+tests[["spec_id_paste"]] <- vapply(tests[["spec_id"]], function(x) paste(x, collapse = "\n"), FUN.VALUE = character(1))
+tests[["spec_paste"]] <- vapply(tests[["spec"]], function(x) paste(x, collapse = "\n"), FUN.VALUE = character(1))
+tests[["desc"]] <- paste0("(#", seq_len(nrow(tests)), "): ", tests[["test"]])
+tests[["with_spec"]] <- vapply(tests[["spec_id"]], Negate(is.null), FUN.VALUE = logical(1))
+
+spec_tests <- tests[tests[["with_spec"]], ]
+no_spec_tests <- tests[!tests[["with_spec"]], ]
+
+declared_spec <- vdoc[["spec_id_list"]]
+tested_spec <- unique(unlist(tests[["spec_id"]]))
+uncovered_spec <- declared_spec[!declared_spec %in% tested_spec]
+undeclared_spec <- tested_spec[!tested_spec %in% declared_spec]
+
+spec_tests[["are_declared"]] <- sapply(spec_tests[["spec_id"]], function(x) all(x %in% declared_spec))
+
+# Count tests in the different categories ----
+
+mask_failed <- !!spec_tests[["failed"]]
+mask_skipped <- !!spec_tests[["skipped"]]
+mask_declared <- spec_tests[["are_declared"]]
+n_pass_dec <- sum(!mask_failed & !mask_skipped & mask_declared)
+n_fail_dec <- sum(mask_failed & mask_declared)
+n_skip_dec <- sum(mask_skipped & mask_declared)
+n_uncov <- length(uncovered_spec)
+n_undec <- sum(!mask_declared)
+
+render_spec_table <- function(t) {
+  t <- t[trac_matrix_col]
+  colnames(t) <- names(trac_matrix_col)
+  t <- t[order(t[["Spec ID"]]), ]
+  DT::datatable(t, options = list(dom = "ltp"), filter = list(position = "top"))
+}
+
+data_frame_by_row <- function(colnames, data) {
+  n <- length(data)
+  n_cols <- length(colnames)
+  stopifnot(n %% n_cols == 0)
+  columns <- vector("list", length = n_cols)
+  for (i in 1:n_cols) columns[[i]] <- unlist(data[seq(i, n, n_cols)])
+  do.call(data.frame, setNames(columns, colnames))
+}
+
+# Select columns to be included in the tables ----
+trac_matrix_col <- c("Spec ID" = "spec_id_paste", "Spec" = "spec_paste", "Test Desc" = "desc", "File" = "file")
+
+# Check that validation passes and set title ----
+VALIDATION_PASSED <- n_fail_dec == 0 && n_uncov == 0 && n_undec == 0 && n_uncov == 0 # nolint
+
+result_symbol <- if (VALIDATION_PASSED) "\U02705" else "\U274C"
+title <- paste(result_symbol, params[["package"]], params[["version"]])
+```
+
+## `r title`
+
+The following document generates a report for R packages, to satisfy the criteria of a "Released" status under the **Non-GxP** project. The QC report contains the following information:
+
+- **Specifications (specs):** These can be attached to every test that the user adds.
+- **Traceability matrix:** Contains test cases with passed, failed, or skipped expectations.
+- **Uncovered or undeclared specs**
+- **Session Info and System Configuration**
+
+::: {.infobox .warning}
+Please be advised that the QC report generated for this module does not imply validation according to any other GxP criteria. 
+The QC report only satisfies our internally developed quality checks for non-GxP criteria.
+For clinical reporting purposes, it is essential to note that any outputs generated using this module must be checked and verified within a validated system that adheres to the appropriate GxP guidelines.
+:::
+
+----
+# Traceability matrix
+
+In this traceability matrix only those tests that point to an specification are included.
+
+Test cases can contain several expectations a test is considered:
+
+  - **passed** if all expectations in the test pass.
+
+  - **failed** if at least one expectation in the test fails.
+
+  - **skipped** if at least one expectation in the test is skipped.
+
+A test can be both **failed** and **skipped**.
+
+## Summary
+
+```{r summary}
+data_frame_by_row(
+  colnames = c("Spec Exists", "Test", "Count", "color"),
+  data = list(
+    "Yes", "Pass", n_pass_dec, "white",
+    "Yes", "Failed", n_fail_dec, if (n_fail_dec > 0) "red" else "green",
+    "Yes", "Skipped", n_skip_dec, if (n_skip_dec > 0) "red" else "green",
+    "Yes", "No Test", n_uncov, if (n_uncov > 0) "red" else "green",
+    "No", "NA", n_undec, if (n_undec > 0) "red" else "green"
+  )
+) |>
+  DT::datatable(
+    rownames = FALSE,
+    options = list(columnDefs = list(list(visible = FALSE, targets = c(3))), dom = "tp"),
+    filter = list(position = "top")
+  ) |>
+  DT::formatStyle(
+    c("Count"),
+    valueColumns = "color",
+    backgroundColor = DT::JS("value")
+  )
+```
+
+## Passed tests
+
+```{r passed_test}
+render_spec_table(spec_tests[!mask_failed & !mask_skipped & mask_declared, ])
+```
+
+## Failed tests
+
+```{r failed_test}
+render_spec_table(spec_tests[mask_failed & mask_declared, ])
+```
+
+## Skipped tests
+
+```{r skipped_test}
+render_spec_table(spec_tests[mask_skipped & mask_declared, ])
+```
+
+## Uncovered specifications
+
+```{r uncovered_spec, echo=FALSE}
+data.frame("Uncovered Specifications" = uncovered_spec) |>
+  DT::datatable(
+    options = list(dom = "ltp"),
+    filter = list(position = "top")
+  )
+```
+
+## Undeclared specifications
+
+This should always be empty, as non existant specs are controlled during test execution.
+
+```{r undeclared_spec, echo=FALSE, results = "asis"}
+render_spec_table(spec_tests[!mask_declared, ])
+```
+
+# Session Info and System Configuration
+
+```{r system_conf}
+devtools::session_info()
+```
+
+# List of specifications
+```{r spec_list}
+j <- vapply(
+  vdoc[["spec_id_list"]],
+  function(x) {
+    eval(
+      str2expression(
+        paste0("vdoc[[\"specs\"]]$", x)
+      )
+    )
+  },
+  FUN.VALUE = character(1)
+) |>
+  gsub("\n", "</br>", x = _, fixed = TRUE)
+
+data.frame(spec_id = names(j), spec = j) |>
+  DT::datatable(
+    rownames = FALSE,
+    options = list(
+      dom = "ltp"
+    ),
+    filter = list(position = "top"),
+    escape = FALSE
+  )
+```
