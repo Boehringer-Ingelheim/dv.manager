@@ -1,12 +1,7 @@
-component <- "get_range_date"
+# nolint start
 
 test_that(
-  paste(
-    component,
-    "should return the earliest and latest date from a vector
-
-    "
-  ),
+  vdoc[["add_spec"]]("get_range_date should return the earliest and latest date from a vector", c(specs$modification_date_display)),
   {
     get_date_range(
       list(
@@ -25,12 +20,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should warn when the list contains a NULL entry
-
-    "
-  ),
+  vdoc[["add_spec"]]("get_range_date should warn when the list contains a NULL entry", c(specs$data_table_meta_check)),
   {
     get_date_range(
       list(
@@ -46,15 +36,8 @@ test_that(
 
 # Testing add_date_range ----
 
-component <- "add_date_range"
-
 test_that(
-  paste(
-    component,
-    "should add date_range attribute to a dataset based on the dates of the data tables
-
-    "
-  ),
+  vdoc[["add_spec"]]("add_date_range should add date_range attribute to a dataset based on the dates of the data tables", c(specs$modification_date_display)),
   {
     domain_list <- setNames(rep(list(mtcars), 3), c("a", "b", "c")) %>%
       purrr::map2(
@@ -76,3 +59,5 @@ test_that(
       )
   }
 )
+
+# nolint end

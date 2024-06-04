@@ -1,7 +1,5 @@
+# nolint start
 # Testing app_server ----
-
-component <- "app_server_"
-
 domain_list <- list(
   a = mtcars,
   b = mtcars,
@@ -9,9 +7,7 @@ domain_list <- list(
 )
 
 test_that(
-  paste(component, "
-        should set as output the selected dataset name
-       "),
+  vdoc[["add_spec"]]("app_server_ should set as output the selected dataset name", c(specs$selected_dataset_name)),
   {
     datasets <- list(
       DS1 = domain_list,
@@ -36,11 +32,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should work with a functions that return datasets
-       "
-  ),
+  vdoc[["add_spec"]]("app_server_ should work with a functions that return datasets", c(specs$data_list_structure)),
   {
     datasets <- list(
       DS1 = function() {
@@ -68,9 +60,7 @@ test_that(
 )
 
 test_that(
-  paste(component, "should accept a list of modules and display them in the application
-
-       "),
+  vdoc[["add_spec"]]("app_server_ should accept a list of modules and display them in the application", c(specs$display_modules, specs$module_list_structure)),
   {
     testing_options <- list(
       data = list(),
@@ -85,8 +75,7 @@ test_that(
 )
 
 test_that(
-  paste(component, "should accept an empty list of modules
-       "),
+  vdoc[["add_spec"]]("app_server_ should accept an empty list of modules", c(specs$module_list_check)),
   {
     datasets <- list(
       DS1 = domain_list,
@@ -110,8 +99,7 @@ test_that(
 )
 
 test_that(
-  paste(component, "should accept an empty list of datasets
-       "),
+  vdoc[["add_spec"]]("app_server_ should accept an empty list of datasets", c(specs$data_structure_check)),
   {
     testing_options <- list(
       data = list(),
@@ -127,10 +115,7 @@ test_that(
 )
 
 test_that(
-  paste(component, "should accept an empty list of datasets and an empty list of modules
-
-
-       "),
+  vdoc[["add_spec"]]("app_server_ should accept an empty list of datasets and an empty list of modules", c(specs$data_structure_check, specs$module_list_check)),
   {
     testing_options <- list(
       data = list(),
@@ -148,8 +133,7 @@ test_that(
 component <- "date output"
 
 test_that(
-  paste(component, "should output the earliest and latest date of the selected dataset if not all are equal
-         "),
+  vdoc[["add_spec"]]("date output should output the earliest and latest date of the selected dataset if not all are equal", c(specs$modification_date_display)),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -187,8 +171,7 @@ test_that(
 )
 
 test_that(
-  paste(component, "should output only one date of the selected dataset if all are equal
-         "),
+  vdoc[["add_spec"]]("date output should output only one date of the selected dataset if all are equal", c(specs$modification_date_display)),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -226,11 +209,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should output 'date unavailable' when at least one date is not available
-         "
-  ),
+  vdoc[["add_spec"]]("date output should output 'date unavailable' when at least one date is not available", c(specs$modification_date_display)),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -276,12 +255,7 @@ test_that(
 # Testing reload_period ----
 
 test_that(
-  paste(
-    component,
-    "restart.txt time is altered when being touched
-
-    "
-  ),
+  vdoc[["add_spec"]]("date output restart.txt time is altered when being touched", c(specs$data_reloading)),
   {
     datasets <- list(
       DS1 = function() {
@@ -310,3 +284,5 @@ test_that(
     })
   }
 )
+
+# nolint end

@@ -38,10 +38,3 @@ test_that(
     expect_false(has_all_items_named(list(a = 1, 2)))
   }
 )
-
-test_that(
-  vdoc[["add_spec"]]("my test description", specs$a_spec),
-  {
-    expect_true(TRUE)
-  }
-)

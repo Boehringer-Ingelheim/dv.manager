@@ -1,7 +1,7 @@
-test_that(
-  "app should show an startup message
+# nolint start
 
-  ",
+test_that(
+  vdoc[["add_spec"]]("app should show an startup message", c(specs$startup_message)),
   {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
@@ -141,7 +141,7 @@ local({
 
 
 
-  test_that("dataset name and date are present in the UI", {
+  test_that(vdoc[["add_spec"]]("dataset name and date are present in the UI", c(specs$modification_date_display, specs$selected_dataset_name)), {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
 
@@ -195,7 +195,7 @@ local({
     expect_equal(mpg_no_date[["current"]], mpg_no_date[["expected"]])
   })
 
-  test_that("filtering and dataset switching", {
+  test_that(vdoc[["add_spec"]]("filtering and dataset switching", c(specs$filtering_menu, specs$dataset_selector)), {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
 
@@ -337,3 +337,5 @@ test_that("Bookmarking", {
   #   the inner state of all modules included in the app,
   #   which module is active
 })
+
+# nolint end

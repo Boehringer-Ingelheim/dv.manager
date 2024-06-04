@@ -1,16 +1,11 @@
-component <- "dv.manager"
+# nolint start
+
+
 test_that(
-  paste(
-    component,
-    "
-    should provide SSO login
-
-
-
-
-    "
-  ),
+  vdoc[["add_spec"]]("dv.manager should provide SSO login", c(specs$azure_options, specs$SSO_login_option, specs$AzureAuth_integration, specs$SSO_authentication_option)),
   {
     skip("Untestable from development/Manual testing")
   }
 )
+
+# nolint end

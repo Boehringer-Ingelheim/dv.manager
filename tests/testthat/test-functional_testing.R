@@ -1,6 +1,6 @@
-local({
-  component <- "dv.manager"
+# nolint start
 
+local({
   # Common code for all tests ----
   datasets <- list(
     mpg_carb = list(
@@ -60,11 +60,7 @@ local({
   # Tests ----
 
   test_that(
-    paste(
-      component,
-      "should receive a list of datasets that is available for the modules of the application
-       "
-    ),
+    vdoc[["add_spec"]]("dv.manager should receive a list of datasets that is available for the modules of the application", c(specs$dataset_list_availability)),
     {
       testServer(app_server_test(testing_options), {
         # Test we can select one
@@ -82,11 +78,7 @@ local({
   )
 
   test_that(
-    paste(
-      component,
-      "should allow datasets to be labelled
-       "
-    ),
+    vdoc[["add_spec"]]("dv.manager should allow datasets to be labelled", c(specs$dataset_label_display)),
     {
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb") # Test we can select one using the label provided
@@ -98,11 +90,7 @@ local({
   )
 
   test_that(
-    paste(
-      component,
-      "should display datasets labels in the application
-       "
-    ),
+    vdoc[["add_spec"]]("dv.manager should display datasets labels in the application", c(specs$dataset_label_display)),
     {
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb") # Test we can select one
@@ -112,11 +100,7 @@ local({
   )
 
   test_that(
-    paste(
-      component,
-      "should allow datasets switching in the application
-       "
-    ),
+    vdoc[["add_spec"]]("dv.manager should allow datasets switching in the application", c(specs$dataset_switching)),
     {
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb") # Test we can select one
@@ -132,11 +116,7 @@ local({
   )
 
   test_that(
-    paste(
-      component,
-      "should only one dataset is displayed in the application at any given time
-       "
-    ),
+    vdoc[["add_spec"]]("dv.manager should only one dataset is displayed in the application at any given time", c(specs$single_dataset_display)),
     {
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb") # Test we can select one
@@ -152,12 +132,7 @@ local({
   )
 
   test_that(
-    paste(
-      component,
-      "should show the earliest and latest modification date
-       of all data tables from the selected dataset
-       "
-    ),
+    vdoc[["add_spec"]]("dv.manager should show the earliest and latest modification date of all data tables from the selected dataset", c(specs$modification_dates_display)),
     {
       withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
 
@@ -169,11 +144,7 @@ local({
   )
 
   test_that(
-    paste(
-      component,
-      "should show the 'Date unavailable' if no date is available in any of the data table
-       "
-    ),
+    vdoc[["add_spec"]]("dv.manager should show the 'Date unavailable' if no date is available in any of the data table", c(specs$date_unavailability_message)),
     {
       datasets <- list(
         mpg_carb = list(
@@ -235,19 +206,16 @@ local({
   # nolint end
 
   test_that(
-    paste(
-      component,
-      "should display a bookmarking button
-       /
+    vdoc[["add_spec"]]("dv.manager should display a bookmarking button
        Bookmarking will include:
        the identity of the loaded dataset,
        the set of filters applied to the loaded dataset,
        the inner state of all modules included in the app,
-       which module is active
-       "
-    ),
+       which module is active", c(specs$bookmarking_button_display)),
     {
       skip("Untestable from development without selenium/Manual testing")
     }
   )
 })
+
+# nolint end
