@@ -26,16 +26,19 @@ start_app_driver <- function(expr, defer = TRUE) {
       "tests/testthat/app/app.R"
     }
 
-    call <- if (rlang::is_quosure(expr)) rlang::get_expr(expr) else substitute(expr)
+    call <- if (rlang::is_quosure(expr) || rlang::is_expression(expr)) expr else substitute(expr)
 
     # tryCatch to avoid snapshots being deleted when the app cannot be started
     tryCatch(
       {
+        temp <- tempfile()
+        saveRDS(expr, temp)
+
         app <- shinytest2::AppDriver$new(
           app_dir = app_dir,
           seed = 1,
           options = list(
-            "__test_fn_expr" = deparse1(call, collapse = "\n"),
+            "__quo_file" = temp,
             "__use_load_all" = isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
           )
         )
