@@ -5,7 +5,6 @@ domain_list <- list(
   b = mtcars,
   c = mtcars
 )
-
 test_that(
   vdoc[["add_spec"]]("app_server_ should set as output the selected dataset name", c(specs$selected_dataset_name)),
   {
@@ -255,7 +254,7 @@ test_that(
 # Testing reload_period ----
 
 test_that(
-  vdoc[["add_spec"]]("date output restart.txt time is altered when being touched", c(specs$data_reloading)),
+  vdoc[["add_spec"]]("date output restart.txt time is altered when being touched", c(specs$data_reloading, specs$data_reload)),
   {
     datasets <- list(
       DS1 = function() {

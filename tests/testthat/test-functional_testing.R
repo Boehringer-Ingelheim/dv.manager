@@ -204,18 +204,6 @@ local({
   #   }
   # )
   # nolint end
-
-  test_that(
-    vdoc[["add_spec"]]("dv.manager should display a bookmarking button
-       Bookmarking will include:
-       the identity of the loaded dataset,
-       the set of filters applied to the loaded dataset,
-       the inner state of all modules included in the app,
-       which module is active", c(specs$bookmarking_button_display)),
-    {
-      skip("Untestable from development without selenium/Manual testing")
-    }
-  )
 })
 
 # nolint end

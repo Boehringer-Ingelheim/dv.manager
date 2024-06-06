@@ -29,7 +29,7 @@ test_that(
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
 
-    app <- start_app_driver({
+    app <- start_app_driver(rlang::quo({
       options("dv.manager.disable_css_namespacing" = TRUE)
 
       dv.manager::run_app(
@@ -41,8 +41,7 @@ test_that(
         filter_data = "",
         filter_key = ""
       )
-    })
-
+    }))
 
     expect_identical(app$get_js("$('#mod1-button').css('color')"), "rgb(255, 0, 0)")
     expect_identical(app$get_js("$('#mod2-button').css('color')"), "rgb(255, 0, 0)")

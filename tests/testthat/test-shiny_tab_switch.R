@@ -1,4 +1,5 @@
-test_that("tabs can be switched from modules", {
+test_that("modules can switch between tabs" |>
+  vdoc[["add_spec"]](c(specs$module_tab_switching)), {
   skip_if_not_running_shiny_tests()
   skip_if_suspect_check()
 
