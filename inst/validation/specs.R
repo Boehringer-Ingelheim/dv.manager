@@ -32,8 +32,7 @@ fs_spec <- specs_list(
   "selected_dataset_name_access" = "Modules will have access to the name of the selected dataset",
   "module_name_access" = "Modules will have access to its name and the name of the other modules",
   "modification_dates_access" = "Modules will have access to the earliest and latest modification dates of all the data tables.",
-  "module_tab_switching" = "dv.manager allows programatically switching from one module tab to another",
-  "theme_switching" = "dv.manager allows switching between two themes in runtime.",
+  "module_tab_switching" = "dv.manager allows programatically switching from one module tab to another",  
   "SSO_authentication_option" = "Modulemanager provides the option to enable the authentication of App Users with SSO to access the app."
 )
 
@@ -76,17 +75,13 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
 - ids of the modules in module_list are not repeated. Otherwise it throws an informative error.",
   "startup_message_check" = "- startup_message is null or a shiny::modalDialog. Otherwise it throws an informative error.",
   "azure_options_check" = "-azure_options: must be a list with all the required fields or NULL. Otherwise an error is thrown.",
-  "sidebar_content" = "A sidebar on the left-hand side that contains:",
   "filtering_menu" = "- A filtering menu that is an instance of datafilter",
   "dataset_selector" = "- A dataset selector that:
     - contains one entry per entry in the data parameters list
     - when changed will load the selected dataset in the application
     - When one or none dataset are loaded this selector will not be displayed",
-  "top_navigation_bar_content" = "A top navigation bar that contains:",
   "tab_selector" = "- a tab selector with one entry per entry in the module_list parameter",
   "bookmark_button" = "- A bookmark button that starts the bookmarking process",
-  "change_theme_button" = "- A change theme button",
-  "footer_content" = "A footer that contains:",
   "modification_date_display" = "- The date of modification of the selected dataset as specified by the mtime entry in the meta attribute of the data tables:
     - The format for the dates is 'Year-Month-Day (UTC)' similar to '2022-Jan-14 (UTC)'
     - If all data tables have the same modification time only one data is presented
@@ -94,22 +89,8 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
     - If no date is available for any of the data tables in the loaded dataset the system    displays a 'Date unavailable' message
     - If no date is available for any of the data tables in any of the datasets, active or not,  an informative log will be provided for the correction of the offending data tables",
   "selected_dataset_name" = "- The name of the selected dataset",
-  "tab_content" = "The content of each tab as specified by the UI function of the corresponding module",
-  "theme_switching" = "Module manager allows switching between two themes while the application is running. By providing a theme switch button.",
   "css_namespacing" = "Module manager by default adds a namespace to the css rules that can be included by the modules. This namespacing can be deactivated by using the option `options('dv.manager.disable_css_namespacing')`",
-  "module_server_instantiation" = "Module server are instantiated by calling the one argument function in the ['server'] entry of each of the entries ion the module_list parameter. The argument to this function is a list containing the following entries:",
-  "unfiltered_dataset" = "- unfiltered_dataset is a metaReactive variable that contains the unfiltered loaded dataset",
-  "filtered_dataset" = "- filtered_dataset is a metaReactive variable that contains the filtered loaded dataset",
   "module_output" = "- module_output is a named list. Each entry of this list contains the output of a module and the name of each entry is the module_id of each module. The nature of the returned values is specified by each module",
-  "switch_function" = "- switch_function: a function that allows tab switching",
-  "dataset_metadata" = "- dataset_metadata: a list with the following entries:
- 	 - name: a reactive string containg the name of the dataset
-	  - date_range: a reactive character vector containing the earliest and latest modification date of the dataset.
-",
-  "module_names" = "- module_names: a non-reactive named list containing as values the names of the module entries as displayed on the tab and as names the ids of the module entries as used by Shiny",
-  "dataset_filtering" = "The loaded dataset will be filtered via the data.filter. Data.filter will receive the filter_data table from the dataset. The other data tables will be filtered based on the rows from the filtered filter_data table using as a common key the field filter_key.",
-  "bookmarking_implementation" = "Modulemanager will save the view of the data but not the data itself. Bookmarking will be implemented by using the R/Shiny bookmarking functionality. This means that modulemanager will offer the button for bookmarking but it is the modules themselves responsibility to be compatible with the bookmarking functionality.",
-  "tab_switch_function" = "- switch_function allows switching to another tab in the main tabset panel by providing the name of the new panel.",
   "dispatchers" = "- dispatchers: A dispatcher function that simplifies the acces to datasets from the module invocation in the module list.",
   "SSO_login_option" = "module manager offers the option of providing an SSO login. For this the app uses the AzureAuth package.",
   "AzureAuth_integration" = "module manager just passes the information to AzureAuth therefore no development testing is done at this level, as it requires an Azure AD in place and it is not available at build time in Jenkins.",
