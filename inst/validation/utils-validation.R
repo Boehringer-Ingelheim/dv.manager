@@ -1,32 +1,18 @@
 #' Setting up the validation
-#'
-#' 1. Add package_name
-#' 2. Copy that variable and the contents of if block to tests/testthat/setup.R
-#' (If you are using the template this may already be in place for you)
 
-package_name <- "dv.manager"
+if (!exists("package_name")) stop("package name must be in the environment when this script is sourced")
 
-if (FALSE) {
-  # validation (S)
-  vdoc <- source(
-    system.file("validation", "utils-validation.R", package = package_name, mustWork = TRUE),
-    local = TRUE
-  )[["value"]]
-  specs <- vdoc[["specs"]]
-  # validation (F)
-}
-
-#' 2. For those tests that cover an specific spec
+#' How to link tests and specs
 
 if (FALSE) {
   test_that(
-    vdoc[["add_spec"]]("my test description", specs[["a_spec"]]),
+    vdoc[["add_spec"]]("my test description", specs$a_spec),
     {
       expect_true(TRUE)
     }
   )
 }
-#' The specs variable on the call references the one declared in point 1
+#' The specs variable on the call references the one declared in specs.R
 
 #' 3. For those tests covering more than one spec.
 #' NOTE: It must be c() and not list()
@@ -47,7 +33,11 @@ if (FALSE) {
 
 if (FALSE) {
   my_spec <- specs$my$hier$spec
-  test_that(vdoc$parse_spec(my_spec, "my test_description"), {
+  test_that(vdoc[["add_spec"]]("my test_description", my_spec), {
+    ...
+  })
+  
+  test_that(vdoc[["add_spec"]]("my test_description", specs[["my"]][["hier"]][["spec"]]), {
     ...
   })
 }

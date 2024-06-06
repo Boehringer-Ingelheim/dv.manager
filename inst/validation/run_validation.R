@@ -1,4 +1,8 @@
-local({
+pkg_name <- read.dcf("DESCRIPTION")[, "Package"]
+pkg_version <- read.dcf("DESCRIPTION")[, "Version"]
+test_results <- tibble::as_tibble(devtools::test(stop_on_failure = FALSE))
+
+v <- local({
   # This is evaluated inside a local because, otherwise, all the variables created in the chunks of the rendered
   # document leak into the environment
 
@@ -34,7 +38,5 @@ local({
     output_file = validation_report_html
   )
 
-  # We use one of the leaked variables, created inside the validation report to asses if the validation is
-  # succesful or not
-  VALIDATION_PASSED
+  uncovered_spec
 })

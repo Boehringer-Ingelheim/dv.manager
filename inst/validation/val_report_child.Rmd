@@ -14,10 +14,14 @@
 
 ```{r setup, message = FALSE}
 # Import vdoc functions ----
-vdoc <- source(
-  system.file("validation", "utils-validation.R", package = params[["package"]], mustWork = TRUE),
-  local = TRUE
-)[["value"]]
+vdoc <- local({
+  #                      ##########
+  # package_name is used # INSIDE # the sourced file below
+  #                      ##########  
+  package_name <- params[["package"]]
+  utils_file_path <- system.file("validation", "utils-validation.R", package = package_name, mustWork = TRUE)
+  source(utils_file_path, local = TRUE)[["value"]]
+})
 
 # Set required packages ----
 suppressPackageStartupMessages(stopifnot(requireNamespace("DT")))
@@ -82,6 +86,7 @@ title <- paste(result_symbol, params[["package"]], params[["version"]])
 ```
 
 ## `r title`
+Date: `r format(Sys.time(), "%Y-%b-%d %H:%M:%S")`
 
 The following document generates a report for R packages, to satisfy the criteria of a "Released" status under the **Non-GxP** project. The QC report contains the following information:
 
