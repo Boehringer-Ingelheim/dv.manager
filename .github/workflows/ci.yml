@@ -15,9 +15,6 @@ on:
       - main
   workflow_dispatch:
 
-env:
-  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-  
 jobs:
   run-shared-ci:
     name: Shared
