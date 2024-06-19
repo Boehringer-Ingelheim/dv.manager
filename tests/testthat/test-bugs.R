@@ -1,4 +1,4 @@
-test_that("values are returned when datafilter returns are false (DVCD-2246)", {
+test_that("values are returned when datafilter returns are false", {
   datasets <- list(
     DS1 = list(
       a = mtcars

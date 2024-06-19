@@ -1,4 +1,4 @@
-component <- "module_communication"
+# nolint start
 
 domain_list <- list(
   a = tibble::tibble(A = 1:3, B = 4:6),
@@ -10,10 +10,7 @@ datasets <- list(
 )
 
 test_that(
-  paste(
-    component,
-    "should allow passing reactive values between modules"
-  ),
+  vdoc[["add_spec"]]("module_communication should allow passing reactive values between modules", c(specs$module_output)),
   {
     testing_options <- list(
       data = datasets,
@@ -45,10 +42,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should allow passing non-reactive values between modules"
-  ),
+  vdoc[["add_spec"]]("module_communication should allow passing non-reactive values between modules", c(specs$module_output)),
   {
     testing_options <- list(
       data = datasets,
@@ -80,10 +74,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should allow passing reactive and non-reactive values between modules"
-  ),
+  vdoc[["add_spec"]]("module_communication should allow passing reactive and non-reactive values between modules{did:MM-SO-675;tid:NA;WB:WB;NOR:N;}", c(specs$module_output)),
   {
     testing_options <- list(
       data = datasets,
@@ -118,3 +109,5 @@ test_that(
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )
+
+# nolint end

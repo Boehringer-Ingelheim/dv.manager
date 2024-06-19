@@ -1,12 +1,7 @@
-component <- "run_app"
+# nolint start
 
 test_that(
-  paste(
-    component,
-    "should throw an error when not all datasets contain the filter_data field
-
-    "
-  ),
+  vdoc[["add_spec"]]("run_app should throw an error when not all datasets contain the filter_data field", c(specs$filter_data_check)),
   {
     run_app(
       data = list(
@@ -24,11 +19,7 @@ test_that(
 
 
 test_that(
-  paste(
-    component,
-    "should pass when all datasets contain the filter_data field
-    "
-  ),
+  vdoc[["add_spec"]]("run_app should pass when all datasets contain the filter_data field", c(specs$filter_data_check)),
   {
     run_app(
       data = list(
@@ -50,11 +41,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should throw an error when no filter_data is specified
-    "
-  ),
+  vdoc[["add_spec"]]("run_app should throw an error when no filter_data is specified", c(specs$filter_data_check)),
   {
     run_app(
       data = list(
@@ -70,11 +57,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should throw an error when there filter key is not present in any dataset
-     "
-  ),
+  vdoc[["add_spec"]]("run_app should throw an error when there filter key is not present in any dataset", c(specs$filter_key_check)),
   {
     run_app(
       data = list(
@@ -91,11 +74,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should not throw an error when filter key is present in all data tables
-     "
-  ),
+  vdoc[["add_spec"]]("run_app should not throw an error when filter key is present in all data tables", c(specs$filter_key_check)),
   {
     run_app(
       data = list(
@@ -117,11 +96,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should use USUBJID as the default filter key
-    "
-  ),
+  vdoc[["add_spec"]]("run_app should use USUBJID as the default filter key", c(specs$filter_key_check)),
   {
     run_app(
       data = list(
@@ -142,11 +117,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should return an S3 class object representing an app
-       "
-  ),
+  vdoc[["add_spec"]]("run_app should return an S3 class object representing an app", c(specs$primary_interface_run_app)),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -182,11 +153,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should error when the filter key is not present in any data table
-       "
-  ),
+  vdoc[["add_spec"]]("run_app should error when the filter key is not present in any data table", c(specs$filter_key_check)),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -223,11 +190,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should warn when a date is missing in any data table
-    "
-  ),
+  vdoc[["add_spec"]]("run_app should warn when a date is missing in any data table", c(specs$data_table_meta_check)),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -267,12 +230,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should error when we pass a NULL dataset
-
-    "
-  ),
+  vdoc[["add_spec"]]("run_app should error when we pass a NULL dataset", c(specs$data_structure_check)),
   {
     run_app(
       data = NULL,
@@ -286,12 +244,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should error when we pass something that is not a shiny.tag or modal as startup_msg
-
-     "
-  ),
+  vdoc[["add_spec"]]("run_app should error when we pass something that is not a shiny.tag or modal as startup_msg", c(specs$startup_message_check)),
   {
     run_app(
       data = list(),
@@ -314,12 +267,7 @@ test_that(
 )
 
 test_that(
-  paste(
-    component,
-    "should pass when we pass something a shiny.tag modal as startup_msg
-
-     "
-  ),
+  vdoc[["add_spec"]]("run_app should pass when we pass something a shiny.tag modal as startup_msg", c(specs$startup_message_check)),
   {
     run_app(
       data = list(),
@@ -331,3 +279,5 @@ test_that(
       expect_error(regexp = NA)
   }
 )
+
+# nolint end

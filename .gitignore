@@ -9,3 +9,6 @@ docs/
 README.html
 vignettes/*\.html
 vignettes/*\.R
+inst/validation/results/val_param.rds
+inst/validation/results/val_report.html
+tests/testthat/app/shiny_bookmarks

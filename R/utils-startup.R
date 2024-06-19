@@ -17,7 +17,7 @@ get_raw_config <- function(app) {
 
 insert_header_add_resources <- function(app_title = NULL, ...) {
   shiny::tags$head(
-    title = app_title,
+    shiny::tags$title(app_title),
     shinyjs::useShinyjs(),
     add_manager_dependency(),
     add_scoper_dependency(),

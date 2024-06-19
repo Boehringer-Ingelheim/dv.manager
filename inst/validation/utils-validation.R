@@ -1,32 +1,18 @@
 #' Setting up the validation
-#'
-#' 1. Add package_name
-#' 2. Copy that variable and the contents of if block to tests/testthat/setup.R
-#' (If you are using the template this may already be in place for you)
 
-package_name <- "dv.manager"
+if (!exists("package_name")) stop("package name must be in the environment when this script is sourced")
 
-if (FALSE) {
-  # validation (S)
-  vdoc <- source(
-    system.file("validation", "utils-validation.R", package = package_name, mustWork = TRUE),
-    local = TRUE
-  )[["value"]]
-  specs <- vdoc[["specs"]]
-  # validation (F)
-}
-
-#' 2. For those tests that cover an specific spec
+#' How to link tests and specs
 
 if (FALSE) {
   test_that(
-    vdoc[["add_spec"]]("my test description", specs[["a_spec"]]),
+    vdoc[["add_spec"]]("my test description", specs$a_spec),
     {
       expect_true(TRUE)
     }
   )
 }
-#' The specs variable on the call references the one declared in point 1
+#' The specs variable on the call references the one declared in specs.R
 
 #' 3. For those tests covering more than one spec.
 #' NOTE: It must be c() and not list()
@@ -47,7 +33,11 @@ if (FALSE) {
 
 if (FALSE) {
   my_spec <- specs$my$hier$spec
-  test_that(vdoc$parse_spec(my_spec, "my test_description"), {
+  test_that(vdoc[["add_spec"]]("my test_description", my_spec), {
+    ...
+  })
+  
+  test_that(vdoc[["add_spec"]]("my test_description", specs[["my"]][["hier"]][["spec"]]), {
     ...
   })
 }
@@ -66,7 +56,7 @@ if (FALSE) {
 }
 
 # Validation code
-
+# nolint start cyclocomp_linter
 local({
   specs <- source(
     system.file("validation", "specs.R", package = package_name, mustWork = TRUE),
@@ -122,27 +112,44 @@ local({
         } # This should be covered by pack of constants but just in case
       } else {
         spec_id_chr <- spec_id
-      }
-      structure(desc, spec_id = spec_id_chr, spec = spec)
+      }      
+      paste0(desc, "__spec_ids{", paste0(spec_id_chr, collapse = ";"), "}")
     },
-    get_spec = function(result) {
-      lapply(
-        result,
-        function(x) {
-          first_result <- try(
-            x[[1]][["test"]],
-            silent = TRUE
-          )
-          if (inherits(first_result, "try-error")) {
-            list(spec_id = NULL, desc = NULL)
-          } else {
-            list(
-              spec_id = attr(first_result, "spec_id", exact = TRUE),
-              spec = attr(first_result, "spec", exact = TRUE)
-            )
-          }
+    get_spec = function(test, specs) {
+      spec_ids <- utils::strcapture(
+            pattern = "__spec_ids\\{(.*)\\}",
+            x = test,
+            proto = list(spec = character())
+          )[["spec"]]
+      
+      spec_ids <- strsplit(spec_ids, split = ";")
+
+      specs_and_id <- list()
+
+      for (idx in seq_along(spec_ids)){        
+        ids <- spec_ids[[idx]]        
+        if (all(!is.na(ids))) {
+          this_specs <- list()
+        for (sub_idx in seq_along(ids)) {
+          id <- ids[[sub_idx]]       
+          this_specs[[sub_idx]] <- eval(str2expression(paste0("specs$", id)))
         }
-      )
+        specs_and_id[[idx]] <- list(
+          spec_id = ids,
+          spec = this_specs
+        )
+        } else {
+          specs_and_id[[idx]] <- list(
+          spec_id = NULL,
+          spec = NULL
+        )          
+        }        
+      }      
+      specs_and_id
     }
+
+    
   )
 })
+
+# nolint end cyclocomp_linter

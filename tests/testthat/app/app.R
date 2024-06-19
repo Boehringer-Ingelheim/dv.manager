@@ -12,5 +12,6 @@ if (use_load_all) {
   devtools::load_all(pkg_path, quiet = TRUE)
 }
 
-fn_expr <- getOption("__test_fn_expr")
-eval(parse(text = fn_expr))
+temp <- getOption("__quo_file")
+fn_expr <- readRDS(temp)
+rlang::eval_tidy(fn_expr)

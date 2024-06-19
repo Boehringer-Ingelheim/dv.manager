@@ -1,7 +1,5 @@
 test_that(
-  "dataset selector is removed when only one dataset is passed
-
-  ",
+  vdoc[["add_spec"]]("dataset selector is removed when only one dataset is passed", c(specs$dataset_selector)),
   {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()

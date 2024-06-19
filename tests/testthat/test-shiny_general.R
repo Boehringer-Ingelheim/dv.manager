@@ -1,7 +1,7 @@
-test_that(
-  "app should show an startup message
+# nolint start
 
-  ",
+test_that(
+  vdoc[["add_spec"]]("app should show an startup message", c(specs$startup_message, specs$custom_startup_message)),
   {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
@@ -22,110 +22,90 @@ test_that(
 
 
 # General E2E test
+
 local({
-  expr_generator <- function(dataset, date) {
-    rlang::expr({
-      function() {
-        add_date <- (!!add_date)
-        create_dummy <- (!!create_dummy)
-        add_date(
-          create_dummy(!!rlang::enexpr(dataset)),
-          !!rlang::enexpr(date)
-        )
-      }
-    })
+  create_dummy <- function(dataset) {
+    list(
+      mpg = dplyr::select(
+        tibble::as_tibble(dataset, rownames = "car"),
+        car, mpg
+      ),
+      carb = dplyr::select(
+        tibble::as_tibble(dataset, rownames = "car"),
+        car, carb
+      )
+    )
   }
+
+  add_date <- function(dataset, date) {
+    purrr::map2(
+      dataset,
+      date,
+      function(.x, .y) {
+        attr(.x, "meta") <- list(mtime = .y)
+        .x
+      }
+    )
+  }
+
+  create_dataset <- function(dataset, date) {
+    add_date(
+      create_dummy(dataset),
+      date
+    )
+  }
+
+  mpg_two_date_expr <- create_dataset(
+    mtcars[1:4, ],
+    list(
+      lubridate::ymd_hms("2021-01-13 00:00:00"),
+      lubridate::ymd_hms("2021-01-14 00:00:00")
+    )
+  )
+  mpg_one_date_expr <- create_dataset(
+    mtcars[5:10, ],
+    list(
+      lubridate::ymd_hms("2021-01-13 00:00:00"),
+      lubridate::ymd_hms("2021-01-13 00:00:00")
+    )
+  )
+  mpg_no_date_expr <- create_dataset(
+    mtcars[5:10, ],
+    list(NULL)
+  )
+
+  module_list <- list(
+    "Filtered Tab" = dv.manager:::mod_simple(
+      dv.manager::mm_dispatch("filtered_dataset", "mpg"),
+      "mod1"
+    ),
+    "Returned Filtered" = dv.manager:::mod_identity(
+      dv.manager::mm_dispatch("filtered_dataset", "mpg"),
+      "mod2"
+    ),
+    "Read Output" = dv.manager:::mod_simple(
+      dv.manager::mm_dispatch("module_output", "mod2"),
+      "mod3"
+    ),
+    "Unfiltered Tab" = dv.manager:::mod_simple(
+      dv.manager::mm_dispatch("unfiltered_dataset", "mpg"),
+      "mod4"
+    ),
+    "Name And Dataset" = dv.manager:::mod_dataset_name_date("mod_dataset_name_date")
+  )
+
+  datasets <- list(
+    mpg_two_date = mpg_two_date_expr,
+    mpg_one_date = mpg_one_date_expr,
+    mpg_no_date = mpg_no_date_expr
+  )
+
+  args <- list(data = datasets, module_list = module_list, filter_data = "mpg", filter_key = "car", title = "Custom title")
 
   app_expr <- rlang::quo({
     Sys.setenv("LC_TIME" = "en_US.UTF-8")
-
-    create_dummy <- function(dataset) {
-      list(
-        mpg = dplyr::select(
-          tibble::as_tibble(dataset, rownames = "car"),
-          car, mpg
-        ),
-        carb = dplyr::select(
-          tibble::as_tibble(dataset, rownames = "car"),
-          car, carb
-        )
-      )
-    }
-
-
-    add_date <- function(dataset, date) {
-      purrr::map2(
-        dataset,
-        date,
-        function(.x, .y) {
-          attr(.x, "meta") <- list(mtime = .y)
-          .x
-        }
-      )
-    }
-
-
-    # Otherwise !! operators missbehave
-    expr_generator <- !!expr_generator
-
-    mpg_two_date_expr <- expr_generator(
-      mtcars[1:4, ],
-      list(
-        lubridate::ymd_hms("2021-01-13 00:00:00"),
-        lubridate::ymd_hms("2021-01-14 00:00:00")
-      )
-    )
-    mpg_one_date_expr <- expr_generator(
-      mtcars[5:10, ],
-      list(
-        lubridate::ymd_hms("2021-01-13 00:00:00"),
-        lubridate::ymd_hms("2021-01-13 00:00:00")
-      )
-    )
-    mpg_no_date_expr <- expr_generator(
-      mtcars[5:10, ],
-      list(NULL)
-    )
-
-
-    datasets <- list(
-      mpg_two_date = structure(rlang::eval_tidy(mpg_two_date_expr)(),
-        code = mpg_two_date_expr
-      ),
-      mpg_one_date = structure(rlang::eval_tidy(mpg_one_date_expr)(),
-        code = mpg_one_date_expr
-      ),
-      mpg_no_date = structure(rlang::eval_tidy(mpg_no_date_expr)(),
-        code = mpg_no_date_expr
-      )
-    )
-
-    dv.manager::run_app(
-      data = datasets,
-      module_list = list(
-        "Filtered Tab" = dv.manager:::mod_simple(
-          dv.manager::mm_dispatch("filtered_dataset", "mpg"),
-          "mod1"
-        ),
-        "Returned Filtered" = dv.manager:::mod_identity(
-          dv.manager::mm_dispatch("filtered_dataset", "carb"),
-          "mod2"
-        ),
-        "Read Output" = dv.manager:::mod_simple(
-          dv.manager::mm_dispatch("module_output", "mod2"),
-          "mod3"
-        ),
-        "Unfiltered Tab" = dv.manager:::mod_simple(
-          dv.manager::mm_dispatch("unfiltered_dataset", "mpg"),
-          "mod4"
-        ),
-        "Name and dataset" = dv.manager:::mod_dataset_name_date("mod_dataset_name_date")
-      ),
-      filter_data = "mpg",
-      filter_key = "car"
-    )
+    do.call(dv.manager::run_app, !!args)
   })
-
 
   root_app <- start_app_driver(app_expr)
 
@@ -139,15 +119,282 @@ local({
   on.exit(expr = Sys.setenv("LC_TIME" = old_locale), add = TRUE, after = TRUE)
   Sys.setenv("LC_TIME" = "en_US.UTF-8")
 
+  local({
+    # all tests can be run in a single app as there is no interaction with it
+    app <- shinytest2::AppDriver$new(root_app$get_url())
+
+    test_that(
+      "sidebar is present in the application" |>
+        vdoc[["add_spec"]](c(specs$sidebar_menu_display)),
+      {
+        skip_if_not_running_shiny_tests()
+        skip_if_suspect_check()
 
 
-  test_that("dataset name and date are present in the UI", {
+        expect_gt(nchar(app$get_html("div.sidebar")), 1)
+      }
+    )
+
+    test_that(
+      "modules appear in navbar in correct order" |>
+        vdoc[["add_spec"]](c(specs$top_navigation_bar_module_list, specs$tab_selector)),
+      {
+        skip_if_not_running_shiny_tests()
+        skip_if_suspect_check()
+
+        # Get all navbar elements elements
+        tabs <- app$get_js("
+          const ulElement = document.getElementById('main_tab_panel');
+          const liElements = ulElement.getElementsByTagName('li');
+          const liTexts = [];
+          for (let i = 0; i < liElements.length; i++) {
+            const aElement = liElements[i].getElementsByTagName('a')[0];
+            if (aElement) {
+              liTexts.push(aElement.textContent);
+            }
+          }
+          liTexts
+        ")
+
+        tabs <- as.character(tabs)
+
+        expect_identical(tabs, names(module_list))
+      }
+    )
+
+    test_that(
+      "content of modules is displayed" |>
+        vdoc[["add_spec"]](c(specs$module_content_display)),
+      {
+        skip_if_not_running_shiny_tests()
+        skip_if_suspect_check()
+
+        # Get all navbar elements elements
+
+        expect_identical(app$get_values(output = "mod1-text")[["output"]][["mod1-text"]], "4")
+      }
+    )
+
+    test_that(
+      "custom title is displayed" |>
+        vdoc[["add_spec"]](c(specs$custom_title_display, specs$app_title)),
+      {
+        skip_if_not_running_shiny_tests()
+        skip_if_suspect_check()
+
+        expect_identical(app$get_js("document.title"), args[["title"]])
+      }
+    )
+
+    test_that(
+      "filtering menu is displayed" |>
+        vdoc[["add_spec"]](c(specs$filtering_menu_display)),
+      {
+        skip_if_not_running_shiny_tests()
+        skip_if_suspect_check()
+
+        # TODO: brittle, too coupled with dv.filter
+        expect_gt(nchar(app$get_html("#global_filter-text")), 1)
+      }
+    )
+  })
+
+  test_that(
+    "can select between different datasets" |>
+      vdoc[["add_spec"]](c(specs$dataset_selection_sidebar_menu)),
+    {
+      skip_if_not_running_shiny_tests()
+      skip_if_suspect_check()
+
+      app <- shinytest2::AppDriver$new(root_app$get_url())
+
+      datasets <- names(args[["data"]])
+
+      app$set_inputs(selector = datasets[[2]])
+      app$wait_for_idle()
+      expect_true(endsWith(app$get_values(output = "dataset_name")[["output"]][["dataset_name"]], datasets[[2]]))
+
+      app$set_inputs(selector = datasets[[1]])
+      app$wait_for_idle()
+      expect_true(endsWith(app$get_values(output = "dataset_name")[["output"]][["dataset_name"]], datasets[[1]]))
+    }
+  )
+
+  test_that(
+    "active dataset can be filtered using the filtered menu" |>
+      vdoc[["add_spec"]](c(specs$active_dataset_filtering, specs$filter_key)),
+    {
+      skip_if_not_running_shiny_tests()
+      skip_if_suspect_check()
+
+      app <- shinytest2::AppDriver$new(root_app$get_url())
+
+      # TODO: brittle too coupled with dv.filters
+
+      app$set_inputs("global_filter-vars" = "car")
+      app$wait_for_idle()
+      app$set_inputs("global_filter-car" = "Datsun 710")
+      app$wait_for_idle()
+      val <- app$wait_for_value(output = "mod1-text", ignore = list("4"), timeout = 10000)
+      expect_identical(val, "1")
+    }
+  )
+
+  test_that(
+    "dv.manager can bookmark identity of loaded dataset" |>
+      vdoc[["add_spec"]](c(specs$bookmarking_features, specs$bookmark_button, specs$bookmarking_button_display)),
+    {
+      skip_if_not_running_shiny_tests()
+      skip_if_suspect_check()
+
+      # TODO: brittle too coupled with dv.filters
+
+      app <- shinytest2::AppDriver$new(root_app$get_url())
+
+      selected_dataset <- names(args[["data"]])[[2]]
+      app$set_inputs(selector = selected_dataset)
+      app$set_inputs("global_filter-vars" = "car")
+      app$wait_for_idle()
+      app$set_inputs("global_filter-car" = "Duster 360")
+      app$wait_for_idle()
+      app$set_inputs("main_tab_panel" = "Unfiltered Tab")
+      app_input_values <- app$get_values()[["input"]]
+
+      app$run_js("document.getElementById('._bookmark_').click()")
+
+      tries <- 10
+      while (is.null(app$get_js("document.querySelector('.modal-dialog textarea').value")) && tries > 0) {
+        tries <- tries - 1
+        Sys.sleep(1)
+      }
+
+      bmk_url <- app$get_js("document.querySelector('.modal-dialog textarea').value")
+
+      bookmark_app <- shinytest2::AppDriver$new(bmk_url)
+      bookmark_app$wait_for_idle()
+
+      app_input_values <- app$get_values()[["input"]]
+      # Explicitely exclude click
+      bmk_input_values <- bookmark_app$get_values()[["input"]]
+      excluded_inputs <- "._bookmark_"
+      app_input_values[excluded_inputs] <- NULL
+      bmk_input_values[excluded_inputs] <- NULL
+      expect_identical(app_input_values, bmk_input_values)
+    }
+  )
+
+  local({
+    app <- shinytest2::AppDriver$new(root_app$get_url())
+
+    # TODO: brittle too coupled with dv.filters
+
+    selected_dataset <- names(args[["data"]])[[2]]
+    app$set_inputs(selector = selected_dataset)
+    app$set_inputs("global_filter-vars" = "car")
+    app$wait_for_idle()
+    app$set_inputs("global_filter-car" = "Duster 360")
+    app$wait_for_idle()
+
+    test_that(
+      "modules can access the unfiltered dataset" |>
+        vdoc[["add_spec"]](c(specs$unfiltered_dataset_access)),
+      {
+        skip_if_not_running_shiny_tests()
+        skip_if_suspect_check()
+        app$set_inputs("main_tab_panel" = "Unfiltered Tab")
+
+        tries <- 10
+        while (!identical(app$get_values(output = "mod4-text")[["output"]][["mod4-text"]], "6") && tries > 0) {
+          tries <- tries - 1
+          Sys.sleep(1)
+        }
+
+        expect_identical(app$get_values(output = "mod4-text")[["output"]][["mod4-text"]], "6")
+      }
+    )
+
+    test_that(
+      "modules can access the filtered dataset" |>
+        vdoc[["add_spec"]](c(specs$filtered_dataset_access)),
+      {
+        skip_if_not_running_shiny_tests()
+        skip_if_suspect_check()
+        app$set_inputs("main_tab_panel" = "Filtered Tab")
+
+        tries <- 10
+        while (!identical(app$get_values(output = "mod1-text")[["output"]][["mod1-text"]], "1") && tries > 0) {
+          tries <- tries - 1
+          Sys.sleep(1)
+        }
+
+        expect_identical(app$get_values(output = "mod1-text")[["output"]][["mod1-text"]], "1")
+      }
+    )
+
+    test_that(
+      "other_module_output_access" |>
+        vdoc[["add_spec"]](c(specs$other_module_output_access)),
+      {
+        skip_if_not_running_shiny_tests()
+        skip_if_suspect_check()
+        app$set_inputs("main_tab_panel" = "Read Output")
+        app$wait_for_idle()
+
+        tries <- 10
+        while (!identical(app$get_values(output = "mod3-text")[["output"]][["mod3-text"]], "1") && tries > 0) {
+          tries <- tries - 1
+          Sys.sleep(1)
+        }
+
+        val <- app$get_values(output = "mod3-text")[["output"]][["mod3-text"]]
+
+        expect_identical(val, "1")
+      }
+    )
+
+    test_that(
+      "modules can access the selected dataset name
+       modules can access its name and other module names
+       modules can access its dataset modification dates
+      " |>
+        vdoc[["add_spec"]](c(specs$selected_dataset_name_access, specs$modification_dates_access, specs$module_name_access)),
+      {
+        skip_if_not_running_shiny_tests()
+        skip_if_suspect_check()
+
+        app$set_inputs("main_tab_panel" = "Name And Dataset")
+        app$wait_for_idle()
+
+        tries <- 10
+        while (
+          !(
+            length(app$get_values(output = "mod_dataset_name_date-text")[["output"]][["mod_dataset_name_date-text"]]) > 0 &&
+              nchar(app$get_values(output = "mod_dataset_name_date-text")[["output"]][["mod_dataset_name_date-text"]]) > 0
+          ) &&
+            tries > 0
+        ) {
+          tries <- tries - 1
+          Sys.sleep(1)
+        }
+
+        val <- app$get_values(output = "mod_dataset_name_date-text")[["output"]][["mod_dataset_name_date-text"]]
+
+        # TODO: Improved hardcoded test value
+        # TODO: Split test
+        expect_identical(
+          val <- app$get_values(output = "mod_dataset_name_date-text")[["output"]][["mod_dataset_name_date-text"]],
+          "dataset_name: mpg_one_date ; dataset_date_range: 2021-01-13 2021-01-13 ; module_name: Filtered Tab,Returned Filtered,Read Output,Unfiltered Tab,Name And Dataset"
+        )
+      }
+    )
+  })
+
+
+  test_that(vdoc[["add_spec"]]("dataset name and date are present in the UI", c(specs$modification_date_display, specs$selected_dataset_name)), {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
 
     app <- shinytest2::AppDriver$new(root_app$get_url())
-
-
 
     # Collapse sidebar so dataset name and date are visible
     app$run_js("document.getElementById('click').checked = false;")
@@ -195,7 +442,7 @@ local({
     expect_equal(mpg_no_date[["current"]], mpg_no_date[["expected"]])
   })
 
-  test_that("filtering and dataset switching", {
+  test_that(vdoc[["add_spec"]]("filtering and dataset switching", c(specs$filtering_menu, specs$dataset_selector)), {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
 
@@ -337,3 +584,5 @@ test_that("Bookmarking", {
   #   the inner state of all modules included in the app,
   #   which module is active
 })
+
+# nolint end
