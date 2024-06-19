@@ -112,27 +112,42 @@ local({
         } # This should be covered by pack of constants but just in case
       } else {
         spec_id_chr <- spec_id
-      }
-      structure(desc, spec_id = spec_id_chr, spec = spec)
+      }      
+      paste0(desc, "__spec_ids{", paste0(spec_id_chr, collapse = ";"), "}")
     },
-    get_spec = function(result) {
-      lapply(
-        result,
-        function(x) {
-          first_result <- try(
-            x[[1]][["test"]],
-            silent = TRUE
-          )
-          if (inherits(first_result, "try-error")) {
-            list(spec_id = NULL, desc = NULL)
-          } else {
-            list(
-              spec_id = attr(first_result, "spec_id", exact = TRUE),
-              spec = attr(first_result, "spec", exact = TRUE)
-            )
-          }
+    get_spec = function(test, specs) {
+      spec_ids <- utils::strcapture(
+            pattern = "__spec_ids\\{(.*)\\}",
+            x = test,
+            proto = list(spec = character())
+          )[["spec"]]
+      
+      spec_ids <- strsplit(spec_ids, split = ";")
+
+      specs_and_id <- list()
+
+      for (idx in seq_along(spec_ids)){        
+        ids <- spec_ids[[idx]]        
+        if(all(!is.na(ids))){
+          this_specs <- list()
+        for (sub_idx in seq_along(ids)) {
+          id <- ids[[sub_idx]]       
+          this_specs[[sub_idx]] <- eval(str2expression(paste0("specs$", id)))
         }
-      )
+        specs_and_id[[idx]] <- list(
+          spec_id = ids,
+          spec = this_specs
+        )
+        } else {
+          specs_and_id[[idx]] <- list(
+          spec_id = NULL,
+          spec = NULL
+        )          
+        }        
+      }      
+      specs_and_id
     }
+
+    
   )
 })

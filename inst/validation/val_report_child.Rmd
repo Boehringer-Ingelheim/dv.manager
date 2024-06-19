@@ -30,7 +30,7 @@ suppressPackageStartupMessages(stopifnot(requireNamespace("devtools")))
 # Parse tests ----
 
 tests <- as.data.frame(params[["tests"]])
-tests[["validation_data"]] <- vdoc[["get_spec"]](tests[["result"]])
+tests[["validation_data"]] <- vdoc[["get_spec"]](tests[["test"]], vdoc[["specs"]])
 tests[["spec_id"]] <- sapply(tests[["validation_data"]], function(x) x[["spec_id"]])
 tests[["spec"]] <- sapply(tests[["validation_data"]], function(x) x[["spec"]])
 tests[["spec_id_paste"]] <- vapply(tests[["spec_id"]], function(x) paste(x, collapse = "\n"), FUN.VALUE = character(1))
@@ -49,8 +49,7 @@ undeclared_spec <- tested_spec[!tested_spec %in% declared_spec]
 spec_tests[["are_declared"]] <- sapply(spec_tests[["spec_id"]], function(x) all(x %in% declared_spec))
 
 # Count tests in the different categories ----
-
-mask_failed <- !!spec_tests[["failed"]]
+mask_failed <- !!spec_tests[["failed"]] | spec_tests[["error"]]
 mask_skipped <- !!spec_tests[["skipped"]]
 mask_declared <- spec_tests[["are_declared"]]
 n_pass_dec <- sum(!mask_failed & !mask_skipped & mask_declared)
