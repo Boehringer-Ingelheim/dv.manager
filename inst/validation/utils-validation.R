@@ -56,7 +56,7 @@ if (FALSE) {
 }
 
 # Validation code
-
+# nolint start cyclocomp_linter
 local({
   specs <- source(
     system.file("validation", "specs.R", package = package_name, mustWork = TRUE),
@@ -128,7 +128,7 @@ local({
 
       for (idx in seq_along(spec_ids)){        
         ids <- spec_ids[[idx]]        
-        if(all(!is.na(ids))){
+        if (all(!is.na(ids))) {
           this_specs <- list()
         for (sub_idx in seq_along(ids)) {
           id <- ids[[sub_idx]]       
@@ -151,3 +151,5 @@ local({
     
   )
 })
+
+# nolint end cyclocomp_linter
