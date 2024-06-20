@@ -1,5 +1,7 @@
 # dv.manager 2.1.1-9000
 
+- Tab titles are no longer capitalized
+
 - Removes `golem` dependency
 
 # dv.manager 2.1.1
