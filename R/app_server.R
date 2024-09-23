@@ -90,6 +90,8 @@ app_server_ <- function(input, output, session, opts) {
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
 
+  datasets_filters_info <- get_dataset_filters_info(data, filter_data)
+
   # Check if dataset must be reloaded in the next session
   check_data_reload(reload_period)
 
@@ -121,20 +123,62 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  filtered_values <- dv.filter::data_filter_server(
+  global_filtered_values <- dv.filter::data_filter_server(
     "global_filter",
     shiny::reactive(unfiltered_dataset()[[filter_data]])
   )
 
+  dataset_filters <- local({
+    l <- vector(mode = "list", length = length(datasets_filters_info))
+    names(l) <- names(datasets_filters_info)
+    for (idx in seq_along(datasets_filters_info)) {
+      l[[idx]] <- local({
+        curr_dataset_filter_info <- datasets_filters_info[[idx]]        
+        dv.filter::data_filter_server(
+          curr_dataset_filter_info[["id"]],        
+          shiny::reactive({unfiltered_dataset()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()})
+        )        
+      })
+    }
+
+    l
+  })
+
   filtered_dataset <- shinymeta::metaReactive({
     # dv.filter returns a logical vector. This contemplates the case of empty lists
-    shiny::req(is.logical(filtered_values()))
+    shiny::req(is.logical(global_filtered_values()))
+
+    # Check dataset filters check all datafilters are initialized
+    purrr::walk(
+      dataset_filters, ~shiny::req(is.logical(.x()))
+    )
+
+    curr_dataset_filters <- dataset_filters[intersect(names(dataset_filters), names(unfiltered_dataset()))]    
+    
+    # Current dataset must be logical with length above 0
+    purrr::walk(curr_dataset_filters, ~shiny::req(checkmate::test_logical(.x(), min.len = 1)))
+    
     log_inform("New filter applied")
-    filtered_key_values <- unfiltered_dataset()[[filter_data]][[filter_key]][filtered_values()] # nolint
-    purrr::map(
-      unfiltered_dataset(),
+    filtered_key_values <- unfiltered_dataset()[[filter_data]][[filter_key]][global_filtered_values()] # nolint
+
+    filtered_dataset <- unfiltered_dataset()
+
+    # First we apply filtered datasets
+    filtered_dataset[names(curr_dataset_filters)] <- purrr::imap(
+      filtered_dataset[names(curr_dataset_filters)],
+      function(val, nm) {
+        filtered_dataset[[nm]][dataset_filters[[nm]](), , drop = FALSE]
+      }
+    )
+
+    
+    # Then we apply global
+    global_filtered <- purrr::map(
+      filtered_dataset,
       ~ dplyr::filter(.x, .data[[filter_key]] %in% filtered_key_values) # nolint
     )
+
+
   })
 
 

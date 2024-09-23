@@ -22,6 +22,7 @@ app_ui <- function(id) {
 
   data <- get_config("data")
   module_list <- get_config("module_list")
+  filter_data <- get_config("filter_data")
 
   log_inform("Initializing HTML template UI")
   log_inform(glue::glue(
@@ -29,6 +30,20 @@ app_ui <- function(id) {
   ))
   log_inform(glue::glue("Available modules (N): {length(module_list)}"))
   log_inform(glue::glue("Dataset options (N): {length(data)}"))
+
+  
+  dataset_filters_ui <- local({
+    datasets_filters_info <- get_dataset_filters_info(data, filter_data)
+    purrr::map(
+      datasets_filters_info,
+      function(entry) {        
+        shiny::div(
+          entry[["name"]],
+          dv.filter::data_filter_ui(ns(entry[["id"]]))
+        )        
+      }      
+    )
+  })
 
   collapsable_ui <-
     shiny::div(
@@ -43,11 +58,15 @@ app_ui <- function(id) {
           ),
           shiny::selectInput(ns("selector"), label = NULL, choices = names(data))
         )),
-        shiny::div(
-          id = ns("shiny_filter"),
-          class = "c-well",
-          shiny::tags$label("Filters", class = "text-primary"),
+        shiny::div(          
+          class = "c-well shiny_filter",
+          shiny::tags$label("Global Filter", class = "text-primary"),
           dv.filter::data_filter_ui(ns("global_filter"))
+        ),
+        shiny::div(          
+          class = "c-well shiny_filter",
+          shiny::tags$label("Dataset Filters", class = "text-primary"),
+          dataset_filters_ui                
         )
       )
     )

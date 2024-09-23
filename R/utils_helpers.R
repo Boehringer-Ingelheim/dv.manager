@@ -51,3 +51,30 @@ create_options_modal <- function(session, input, ns) {
     easyClose = TRUE
   )
 }
+
+#' Get the set of all possible data table names for filtering
+get_data_tables_names <- function(data) {
+  nm <- character(0)
+  for (idx in seq_along(data)) {
+    curr_data <- if (is.function(data[[idx]])) data[[idx]]() else data[[idx]]
+    nm <- union(nm, names(curr_data))      
+  }
+  return(nm)
+}
+
+get_dataset_filters_info <- function(data, filter_data) {
+  dataset_filter_names <- setdiff(get_data_tables_names(data), filter_data)  
+  purrr::map(
+    dataset_filter_names,
+    function(nm) {
+      name <- nm
+      hash <- digest::digest(nm, "murmur32")
+      id <- sprintf("dataset_filter_%s", hash)
+      list(name = nm, id = id, hash = hash)
+    }
+  ) |> purrr::set_names(dataset_filter_names)
+}
+
+`%||%` <- function(x,y){
+  if (!is.null(x)) x else y
+}
