@@ -70,7 +70,8 @@ get_dataset_filters_info <- function(data, filter_data) {
       name <- nm
       hash <- digest::digest(nm, "murmur32")
       id <- sprintf("dataset_filter_%s", hash)
-      list(name = nm, id = id, hash = hash)
+      cont_id <- paste0(id, "_cont")
+      list(name = nm, id = id, hash = hash, id_cont = cont_id)
     }
   ) |> purrr::set_names(dataset_filter_names)
 }

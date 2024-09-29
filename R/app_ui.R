@@ -38,8 +38,11 @@ app_ui <- function(id) {
       datasets_filters_info,
       function(entry) {        
         shiny::div(
-          entry[["name"]],
-          dv.filter::data_filter_ui(ns(entry[["id"]]))
+          id = entry[["id_cont"]],
+          class = "filter-control  filter-filters",
+          shiny::tags[["label"]](entry[["name"]]),
+          dv.filter::data_filter_ui(ns(entry[["id"]])),
+          shiny::hr(style = "border-top: 2px solid gray; height: 10px;")
         )        
       }      
     )
@@ -61,12 +64,23 @@ app_ui <- function(id) {
         shiny::div(          
           class = "c-well shiny_filter",
           shiny::tags$label("Global Filter", class = "text-primary"),
-          dv.filter::data_filter_ui(ns("global_filter"))
+          # shiny::tags$button(
+          #   id = ns("global_button"),
+          #   class = "btn btn-primary filter_button",
+          #   shiny::span("Global Filter"),
+          #   # shiny::span("TAG", class = "dv_hidden badge"),
+          #   # shiny::span(class = "caret"),
+          #   # onclick = sprintf("dv_manager.hide_filters('%s')", ns("global_button"))
+          # ),
+          shiny::div(
+            class = "filter-control  filter-filters",            
+            dv.filter::data_filter_ui(ns("global_filter"))
+          )
         ),
-        shiny::div(          
+        shiny::div(
           class = "c-well shiny_filter",
-          shiny::tags$label("Dataset Filters", class = "text-primary"),
-          dataset_filters_ui                
+          shiny::tags$label("Dataset Filter", class = "text-primary"),          
+          dataset_filters_ui
         )
       )
     )
@@ -129,4 +143,4 @@ app_ui <- function(id) {
     )),
     dataset_name
   )
-}
+}   
