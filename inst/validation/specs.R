@@ -18,8 +18,10 @@ fs_spec <- specs_list(
   "modification_dates_display" = "The earliest and latest modification dates of all the data tables are displayed for the active dataset",
   "date_unavailability_message" = "If no date is available for any of the data tables in the loaded dataset the system displays a 'Date unavailable' message",
   "data_reloading" = "dv.manager allows the reloading of the data after a specific amount of time.",
-  "filtering_menu_display" = "The sidebar menu will display a filtering menu using the datafilter module (GUI).",
-  "active_dataset_filtering" = "The active dataset can be filtered through the datafilter module.",
+  "filtering_menu_display" = "The sidebar menu will display a filtering menu/s using the datafilter module (GUI).",
+  "active_dataset_filtering" = "The active dataset can be filtered.",
+  "global_filtering" = "A global filter will be available in dv.manager. One table of the dataset will be used to filter all other tables in the dataset and itself by using a common field among them.",
+  "single_filtering" = "All data tables, with exception of the one used in the global filter, will have its own independent filter that only affects itself. These filters will not influence other datasets.",  
   "bookmarking_features" = "Bookmarking will include:
 - the identity of the loaded dataset
 - the set of filters applied to the loaded dataset
@@ -75,7 +77,7 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
 - ids of the modules in module_list are not repeated. Otherwise it throws an informative error.",
   "startup_message_check" = "- startup_message is null or a shiny::modalDialog. Otherwise it throws an informative error.",
   "azure_options_check" = "-azure_options: must be a list with all the required fields or NULL. Otherwise an error is thrown.",
-  "filtering_menu" = "- A filtering menu that is an instance of datafilter",
+  "filtering_menus" = "- A filtering menu that is an/several instances of datafilter",
   "dataset_selector" = "- A dataset selector that:
     - contains one entry per entry in the data parameters list
     - when changed will load the selected dataset in the application
