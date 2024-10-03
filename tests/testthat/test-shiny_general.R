@@ -407,7 +407,7 @@ local({
         # TODO: Split test
         expect_identical(
           val <- app$get_values(output = "mod_dataset_name_date-text")[["output"]][["mod_dataset_name_date-text"]],
-          "dataset_name: mpg_one_date ; dataset_date_range: 2021-01-13 2021-01-13 ; module_name: Filtered Tab,Returned Filtered,Read Output,Unfiltered Tab,Name And Dataset"
+          "dataset_name: mpg_one_date ; dataset_date_range: 2021-01-13 2021-01-13 ; module_name: Filtered Tab,Returned Filtered,Read Output,Unfiltered Tab,Name And Dataset,Filtered Carb"
         )
       }
     )
