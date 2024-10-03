@@ -16,7 +16,7 @@ Imports:
     bslib (>= 0.3.0),
     purrr (>= 0.3.4),
     dplyr (>= 1.0.3),
-    dv.filter (>= 1.0.0),
+    dv.filter (>= 3.0.1),
     lubridate (>= 1.7.9.2),
     shinymeta (>= 0.2.0.1),
     shinyjs (>= 2.0.0),
