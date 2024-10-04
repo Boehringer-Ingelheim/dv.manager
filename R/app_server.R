@@ -144,10 +144,6 @@ app_server_ <- function(input, output, session, opts) {
     l
   })
 
-  shiny::observeEvent(global_filtered_values(),{
-    message(length(global_filtered_values()))
-  })
-
   filtered_dataset <- shinymeta::metaReactive({  
     # dv.filter returns a logical vector. This contemplates the case of empty lists    
     shiny::req(is.logical(global_filtered_values()))
