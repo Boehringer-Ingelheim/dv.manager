@@ -149,9 +149,7 @@ app_server_ <- function(input, output, session, opts) {
     shiny::req(is.logical(global_filtered_values()))
 
     # Depend on all datasets
-    purrr::walk(
-      dataset_filters, ~shiny::req(is.logical(.x()))
-    )
+    purrr::walk(dataset_filters, ~.x())
 
     # We do not react to changed in unfiltered dataset, otherwise when a dataset changes
     # We filter the previous dataset which in the best case produces and extra reactive beat
@@ -160,7 +158,6 @@ app_server_ <- function(input, output, session, opts) {
     ufds <- shiny::isolate(unfiltered_dataset())
 
     curr_dataset_filters <- dataset_filters[intersect(names(dataset_filters), names(ufds))]    
-    shiny::req(all(purrr::map_lgl(curr_dataset_filters, ~is.logical(.x()))))
     
     # Current dataset must be logical with length above 0
     # Check dataset filters check all datafilters are initialized
