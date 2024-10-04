@@ -163,13 +163,11 @@ app_server_ <- function(input, output, session, opts) {
     # Check dataset filters check all datafilters are initialized
     purrr::walk(curr_dataset_filters, ~shiny::req(checkmate::test_logical(.x(), min.len = 1)))
     
-    log_inform("New filter applied")
-    filtered_key_values <- ufds[[filter_data]][[filter_key]][global_filtered_values()] # nolint
+    filtered_key_values <- ufds[[filter_data]][[filter_key]][global_filtered_values()]
 
     fds <- ufds
     
-    # First we apply filtered datasets
-
+    # Single dataset filtering
     fds[names(curr_dataset_filters)] <- purrr::imap(
       fds[names(curr_dataset_filters)],
        function(val, nm) {
@@ -178,13 +176,11 @@ app_server_ <- function(input, output, session, opts) {
       }
     )
     
-    # Then we apply global
+    # Global dataset filtering
     global_filtered <- purrr::map(
       fds,
       ~ dplyr::filter(.x, .data[[filter_key]] %in% filtered_key_values) # nolint
     )
-
-
   })
 
 
