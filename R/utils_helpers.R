@@ -57,13 +57,13 @@ get_data_tables_names <- function(data) {
   nm <- character(0)
   for (idx in seq_along(data)) {
     curr_data <- if (is.function(data[[idx]])) data[[idx]]() else data[[idx]]
-    nm <- union(nm, names(curr_data))      
+    nm <- union(nm, names(curr_data))
   }
   return(nm)
 }
 
 get_dataset_filters_info <- function(data, filter_data) {
-  dataset_filter_names <- setdiff(get_data_tables_names(data), filter_data)  
+  dataset_filter_names <- setdiff(get_data_tables_names(data), filter_data)
   purrr::map(
     dataset_filter_names,
     function(nm) {
@@ -76,6 +76,6 @@ get_dataset_filters_info <- function(data, filter_data) {
   ) |> purrr::set_names(dataset_filter_names)
 }
 
-`%||%` <- function(x,y){
+`%||%` <- function(x, y) {
   if (!is.null(x)) x else y
 }

@@ -255,11 +255,11 @@ local({
 
       app$set_inputs("dataset_filter_46ab8635-vars" = "carb")
       app$wait_for_idle()
-      app$set_inputs("dataset_filter_46ab8635-carb" = c(1,1))
+      app$set_inputs("dataset_filter_46ab8635-carb" = c(1, 1))
       app$wait_for_idle()
       app$set_inputs("main_tab_panel" = "Filtered Carb")
       app$wait_for_idle()
-      val <- app$wait_for_value(output = "mod5-text", ignore = list("4"), timeout = 10000)      
+      val <- app$wait_for_value(output = "mod5-text", ignore = list("4"), timeout = 10000)
       expect_identical(val, "2")
     }
   )
