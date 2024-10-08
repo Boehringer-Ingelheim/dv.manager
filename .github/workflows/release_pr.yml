@@ -1,0 +1,57 @@
+name: Create a PR link for release issues
+on:
+  issues:
+    types: [opened, labeled, edited]
+
+jobs:
+  create-pr:
+    if: contains(github.event.issue.labels.*.name, 'Release')  # This ensures the job only runs if the 'Release' label is present
+    runs-on: ubuntu-latest    
+    permissions:
+      issues: write      
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+          
+      - name: Create PR link and post in comment
+        id: pr-link-creation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ github.event.issue.html_url }}        
+        run: |
+          version=$(echo "${{ github.event.issue.title }}" | sed -n 's/.*rc\/\(v[0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p')
+
+          # Early return if issue name is not correct
+          if [ -z "$version" ]; then
+            gh issue comment ${{ github.event.issue.number }} --body "Version number is not present or incorrect."                        
+            exit 1
+          fi          
+
+          branch_name="rc/$version"
+          
+          # Check if the branch exists on the remote
+          if git ls-remote --heads origin "$branch_name" | grep "$branch_name"; then
+            echo "Branch already exists: $branch_name"
+            branch_text="A branch named \`$branch_name\` was already present in the repository."            
+          else
+            git checkout -b "$branch_name"
+            git push origin "$branch_name"            
+            echo "Creating branch: $branch_name"
+            branch_text="A new branch named \`$branch_name\` has been created.\n"            
+          fi
+          
+          echo "Creating PR link"          
+          title=$(echo ${{ github.event.issue.title }} | jq -sRr @uri)
+          pr_url_text="https://github.com/${{github.repository}}/compare/main...${branch_name}?quick_pull=1&template=pull_request_template.md&title=${title}&labels=release"
+          body_url="A link to create a pull request into main is available in [pull request](<${pr_url_text}>)."
+
+          body="$branch_text $body_url"          
+          
+          echo "Creating comment"
+          gh issue comment ${{ github.event.issue.number }} --body "$body"
+
+          
+          
+
+            
