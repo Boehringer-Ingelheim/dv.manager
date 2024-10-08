@@ -125,10 +125,33 @@ mod_simple <- function(dataset, module_id) {
 
 run_mock_app <- function() {
   run_app(
-    data = list("D1" = list(adsl = get_pharmaverse_data("adsl"))),
+    data = list("D1" = list(adsl = get_pharmaverse_data("adsl"), adae = get_pharmaverse_data("adae"))),
     module_list = list(
       "Simple" = mod_simple(mm_dispatch("filtered_dataset", "adsl"), "mod1"),
       "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2")
+    ),
+    filter_data = "adsl",
+    filter_key = "USUBJID"
+  )
+}
+
+run_mock_app_two_datasets <- function() {
+  run_app(
+    data = list(
+      "D1" = list(
+        adsl = get_pharmaverse_data("adsl"),
+        adae = get_pharmaverse_data("adae")
+      ),
+      "D2" = list(
+        adsl = get_pharmaverse_data("adsl"),
+        adae = get_pharmaverse_data("adae"),
+        adlb = get_pharmaverse_data("adlb")
+      )
+    ),
+    module_list = list(
+      "Simple" = mod_simple(mm_dispatch("filtered_dataset", "adsl"), "mod1"),
+      "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
+      "Simple3" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod3")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
