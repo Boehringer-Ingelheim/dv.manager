@@ -1,4 +1,6 @@
-# dv.manager 2.1.2-900
+# dv.manager 2.1.3
+
+- dv.manager includes the option to filter using several datasets
 
 # dv.manager 2.1.2
 
