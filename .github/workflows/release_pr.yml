@@ -1,4 +1,4 @@
-name: Create a PR for release issues
+name: Create a PR link for release issues
 on:
   issues:
     types: [opened, labeled, edited]
@@ -14,8 +14,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
           
-      - name: Create PR and comment
-        id: branch-creation
+      - name: Create PR link and post in comment
+        id: pr-link-creation
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE: ${{ github.event.issue.html_url }}        
