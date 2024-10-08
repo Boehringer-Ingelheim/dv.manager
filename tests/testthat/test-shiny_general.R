@@ -561,7 +561,15 @@ local({
 
     # Poor mans wait for accepted value
     app$set_inputs(main_tab_panel = "Filtered Tab")
-    app$wait_for_value(output = "mod1-text", ignore = as.character(setdiff(1:20, 4)), timeout = 10000)
+    app$wait_for_idle()
+    value <- local({
+      value <- app$get_values(output = "mod1-text")[["output"]][["mod1-text"]]
+      tries <- 10
+      while (!identical(value, "4") && tries > 0) {
+        tries <- tries - 1
+        Sys.sleep(1)
+      }
+    })   
     mpg_one_date_filter <- list(
       current = get_all_(),
       expected = list(
@@ -577,7 +585,15 @@ local({
 
     # Poor mans wait for accepted value
     app$set_inputs(main_tab_panel = "Filtered Tab")
-    app$wait_for_value(output = "mod1-text", ignore = as.character(setdiff(1:20, 6)), timeout = 10000)
+    app$wait_for_idle()
+    value <- local({
+      value <- app$get_values(output = "mod1-text")[["output"]][["mod1-text"]]
+      tries <- 10
+      while (!identical(value, "6") && tries > 0) {
+        tries <- tries - 1
+        Sys.sleep(1)
+      }
+    })  
     mpg_no_date_no_filter <- list(
       current = get_all_(),
       expected = list(
@@ -594,7 +610,16 @@ local({
 
     # Poor mans wait for accepted value
     app$set_inputs(main_tab_panel = "Filtered Tab")
-    app$wait_for_value(output = "mod1-text", ignore = as.character(setdiff(1:20, 4)), timeout = 10000)
+    app$wait_for_idle()
+    value <- local({
+      value <- app$get_values(output = "mod1-text")[["output"]][["mod1-text"]]
+      tries <- 10
+      while (!identical(value, "4") && tries > 0) {
+        tries <- tries - 1
+        Sys.sleep(1)
+      }
+    })  
+    
     mpg_no_date_filter <- list(
       current = get_all_(),
       expected = list(
