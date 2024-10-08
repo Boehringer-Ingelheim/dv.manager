@@ -63,7 +63,7 @@ app_ui <- function(id) {
         )),
         shiny::div(
           class = "c-well shiny_filter",
-          shiny::tags$label("Global Filter", class = "text-primary"),           
+          shiny::tags$label("Global Filter", class = "text-primary"),
           shiny::div(
             class = "filter-control  filter-filters",
             dv.filter::data_filter_ui(ns("global_filter"))
