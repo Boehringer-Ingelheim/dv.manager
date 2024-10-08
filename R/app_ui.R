@@ -63,15 +63,7 @@ app_ui <- function(id) {
         )),
         shiny::div(
           class = "c-well shiny_filter",
-          shiny::tags$label("Global Filter", class = "text-primary"),
-          # shiny::tags$button(
-          #   id = ns("global_button"),
-          #   class = "btn btn-primary filter_button",
-          #   shiny::span("Global Filter"),
-          #   # shiny::span("TAG", class = "dv_hidden badge"),
-          #   # shiny::span(class = "caret"),
-          #   # onclick = sprintf("dv_manager.hide_filters('%s')", ns("global_button"))
-          # ),
+          shiny::tags$label("Global Filter", class = "text-primary"),           
           shiny::div(
             class = "filter-control  filter-filters",
             dv.filter::data_filter_ui(ns("global_filter"))
