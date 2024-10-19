@@ -220,22 +220,10 @@ app_server_ <- function(input, output, session, opts) {
     )
   )
 
-  module_ids <- purrr::map(module_list, "module_id")
-  module_output <- module_list %>% # nolint module output is used above and lintr assumes it is not used
-    purrr::set_names(nm = module_ids) %>% # Set names to access module outputs with `module_output[module_id]`
-    purrr::map(function(module) {
-      if (rlang::is_expression(module[["server"]])) {
-        .Defunct(
-          "server = function(args) {...}",
-          msg = "Passing the server as an expression is going to be deprecated soon."
-        )
-        return(rlang::eval_tidy(module[["server"]]))
-      }
-      if (is.function(module[["server"]])) {
-        return(module[["server"]](module_args))
-      }
-    })
-
+  module_output <- list()
+  for (srv in flatten_srv_module_list(module_list)) {
+    module_output[[srv[["module_id"]]]] <- srv[["server"]](module_args)
+  }
 
   #### Report modal
 
@@ -306,7 +294,6 @@ app_server_ <- function(input, output, session, opts) {
   )
 }
 
-
 # Convoluted way of having a testable server function
 # TestServer reads the caller environment
 # Therefore, when running a wrapped function like
@@ -324,4 +311,54 @@ app_server_test <- function(opts) {
   # Remove opts argument. It will be taken from this closure
   f <- rlang::new_function(rlang::exprs(input = , output = , session = ), rlang::fn_body(app_server_))
   f
+}
+
+#' Flatten a List of Server Modules
+#'
+#' This function recursively flattens a nested list structure of server modules into a single-level list.
+#' It retains only the `server` and `module_id` for each entry that is not a server collection.
+#'
+#' @param x A list of server modules, which may contain nested lists of server collections.
+#' @return A flattened list containing the `server` and `module_id` of each module.
+#'
+#' @examples
+#' input_list <- list(
+#'   list(server = "server1", module_id = "module1"),
+#'   list(server = "server_collection", module_id = "collection1", server = list(
+#'     list(server = "server2", module_id = "module2"),
+#'     list(server = "server3", module_id = "module3")
+#'   ))
+#' )
+#' 
+#' flatten_srv_module_list(input_list)
+#' # Output: list(
+#' #   list(server = "server1", module_id = "module1"),
+#' #   list(server = "server2", module_id = "module2"),
+#' #   list(server = "server3", module_id = "module3")
+#' # )
+#'
+flatten_srv_module_list <- function(x) {
+  if (!is.list(x)) {
+    stop("Input must be a list")
+  }
+
+  flattened_list <- list()
+  next_idx <- 1
+
+  flatten <- function(x) {
+    for (el in x) {
+      if (!inherits(el[["server"]], "server_collection")) {
+        flattened_list[[next_idx]] <<- list(
+          server = el[["server"]],
+          module_id = el[["module_id"]]
+        )
+        next_idx <<- next_idx + 1
+      } else {
+        flatten(el[["server"]])
+      }
+    }
+  }
+  
+  flatten(x)
+  return(flattened_list)
 }

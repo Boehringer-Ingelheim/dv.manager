@@ -33,7 +33,6 @@ app_ui <- function(request_id) {
   log_inform(glue::glue("Available modules (N): {length(module_list)}"))
   log_inform(glue::glue("Dataset options (N): {length(data)}"))
 
-
   dataset_filters_ui <- local({
     datasets_filters_info <- get_dataset_filters_info(data, filter_data)
     purrr::map(
