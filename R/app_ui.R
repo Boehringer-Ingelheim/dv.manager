@@ -12,9 +12,9 @@
 app_ui <- function(request_id) {
   if (is.environment(request_id)) {
     log_inform("I am the ui of an app")
-    id <- character(0)    
+    id <- character(0)
   } else if (is.character(id)) {
-    id <- request_id    
+    id <- request_id
     log_inform(glue::glue("I am the ui of the module: {ns('')}"))
   } else {
     stop("Unknown value type in request_id")
@@ -129,7 +129,6 @@ app_ui <- function(request_id) {
   # unnamed because tabset does not admit named list there
   tabs <- unname(
     purrr::imap(module_list, function(mod, nm) {
-
       ui_fn <- mod[["ui"]]
 
       # Offer the option of getting the namespaced id or the namespace function

@@ -214,8 +214,10 @@ app_server_ <- function(input, output, session, opts) {
     module_output = module_output_func,
     module_names = module_names,
     utils = list(
-      switch2 = function(selected) {        
-        if(!checkmate::test_character(selected, min.len = 1)) log_warn("switch2 called with no elements or non character element")
+      switch2 = function(selected) {
+        if (!checkmate::test_character(selected, min.len = 1)) {
+          log_warn("switch2 called with no elements or non character element")
+        }
         main_selection <- selected[[1]]
         shiny::updateTabsetPanel(session, "main_tab_panel", main_selection)
 
@@ -339,7 +341,7 @@ app_server_test <- function(opts) {
 #'     list(server = "server3", module_id = "module3")
 #'   ))
 #' )
-#' 
+#'
 #' flatten_srv_module_list(input_list)
 #' # Output: list(
 #' #   list(server = "server1", module_id = "module1"),
@@ -368,7 +370,7 @@ flatten_srv_module_list <- function(x) {
       }
     }
   }
-  
+
   flatten(x)
   return(flattened_list)
 }
