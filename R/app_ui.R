@@ -128,10 +128,24 @@ app_ui <- function(request_id) {
   )
 
   # unnamed because tabset does not admit named list there
-  tabs <-
-    unname(purrr::imap(module_list, ~ shiny::tabPanel(title = .y, ns_css(.x[["ui"]](
-      ns(.x$module_id)
-    )))))
+  tabs <- unname(
+    purrr::imap(module_list, function(mod, nm) {
+
+      ui_fn <- mod[["ui"]]
+
+      # Offer the option of getting the namespaced id or the namespace function
+
+      if (length(formals(ui_fn)) == 2) {
+        ui <- ui_fn(ns(mod$module_id), id)
+      } else {
+        ui <- ui_fn(ns(mod$module_id))
+      }
+
+      ui_css <- ns_css(ui)
+
+      shiny::tabPanel(title = nm, ui_css)
+    })
+  )
 
   shiny::fluidPage(
     insert_header_add_resources(app_title = get_config("title")),
