@@ -9,16 +9,18 @@
 
 
 
-app_ui <- function(id) {
-  if (is.environment(id)) {
+app_ui <- function(request_id) {
+  if (is.environment(request_id)) {
     log_inform("I am the ui of an app")
-    ns <- base::identity
+    id <- character(0)    
   } else if (is.character(id)) {
-    ns <- shiny::NS(id)
+    id <- request_id    
     log_inform(glue::glue("I am the ui of the module: {ns('')}"))
   } else {
-    stop("Unknown value type in id")
+    stop("Unknown value type in request_id")
   }
+
+  ns <- shiny::NS(id)
 
   data <- get_config("data")
   module_list <- get_config("module_list")
