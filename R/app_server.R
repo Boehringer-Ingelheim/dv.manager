@@ -214,8 +214,18 @@ app_server_ <- function(input, output, session, opts) {
     module_output = module_output_func,
     module_names = module_names,
     utils = list(
-      switch2 = function(selected) {
-        shiny::updateTabsetPanel(session, "main_tab_panel", selected)
+      switch2 = function(selected) {        
+        if(!checkmate::test_character(selected, min.len = 1)) log_warn("switch2 called with no elements or non character element")
+        main_selection <- selected[[1]]
+        shiny::updateTabsetPanel(session, "main_tab_panel", main_selection)
+
+        non_main_selection <- selected[-1]
+        names_non_main_selection <- names(non_main_selection)
+        for (idx in seq_along(non_main_selection)) {
+          tabset_id <- names_non_main_selection[[idx]]
+          tabname <- non_main_selection[[idx]]
+          shiny::updateTabsetPanel(session, tabset_id, tabname)
+        }
       }
     )
   )

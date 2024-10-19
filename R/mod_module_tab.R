@@ -70,6 +70,7 @@ run_mock_app_module_tab <- function() {
       ),
       module_list = list(
         "Separate tab" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod1"),
+        "Switch to nest" = mod_switch("Mod 1", selected = c("Module Tab", mod_tab = "Nested modules", nested_mod_tab = "Simple5"), mm_dispatch("utils", "switch2"), "mod_switch"),
         "Module Tab" = mod_module_tab(
           module_list = list(
             "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
