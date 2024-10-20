@@ -4,7 +4,7 @@
 \alias{app_ui}
 \title{The application User-Interface using an HTML template}
 \usage{
-app_ui(id)
+app_ui(request_id)
 }
 \arguments{
 \item{id}{This parameter can be either an string id if the app_ui is being used as a module or
