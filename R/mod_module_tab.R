@@ -1,4 +1,31 @@
-mod_module_tab <- function(module_list, tab_id, ...) {
+#' Create a Tabbed Shiny Module Collection
+#'
+#' @description
+#' `mod_module_tab` is a function that groups dv modules in tabsets (see [shiny::tabsetPanel]).
+#' This function is designed to simplify the process of organizing multiple Shiny modules into a single,
+#' visually organized tabset. It allows nested modules.
+#'
+#' @param module_list A list of modules.
+#' @param tab_id A string representing the `tab_id` of the new module. This must be unique among all IDs
+#'
+#' @return A list representing a Shiny module that contains:
+#'   - `ui`: A function to generate the user interface for the tabset containing all the provided modules.
+#'   - `server`: A list of server functions with their corresponding module IDs.
+#'   - `module_id`: The ID for the module (provided by `tab_id` parameter).
+#'
+#' @details
+#' The function does not make use of `namespace` (`NS()`) or `shiny::moduleServer` to implement traditional Shiny
+#' modules, but creates a tab-like UI structure, making it an aesthetic modification.
+#'
+#' Outputs of grouped modules are accessible by using the module id, there is no special change required.
+#'
+#' When switching to grouped outputs the full hierarchy of grouped modules should be specified:adae
+#' `selected = c("Module Tab", mod_tab = "Nested modules", nested_mod_tab = "Single nested module")`.
+#'
+#'
+#' @export
+#'
+mod_module_tab <- function(module_list, tab_id) {
   # We will mimic a module although we will not
   # No namespaces or shiny::moduleServer functions will be done
   # The change will be purely aesthetic but inner workings will remain the same
