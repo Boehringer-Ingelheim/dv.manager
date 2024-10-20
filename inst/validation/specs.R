@@ -99,6 +99,13 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
   "data_reloading" = "Module Manager allows reloading the data after a given amount of time. The data_reload parameter will be specified by the App Creator."
 )
 
+mod_module_tab <- list(
+  "group_modules" = "module allows grouping a set of modules under a single tab in module manager",
+  "allows_nesting" = "module allows nesting",
+  "output_accesible" = "module output can be accesed by other modules in module.manager",
+  "allows_switching" = "module can switch to/from other modules"
+)
+
 specs <- c(
   fs_spec,
   sds_spec
