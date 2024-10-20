@@ -333,21 +333,7 @@ app_server_test <- function(opts) {
 #' @param x A list of server modules, which may contain nested lists of server collections.
 #' @return A flattened list containing the `server` and `module_id` of each module.
 #'
-#' @examples
-#' input_list <- list(
-#'   list(server = "server1", module_id = "module1"),
-#'   list(server = "server_collection", module_id = "collection1", server = list(
-#'     list(server = "server2", module_id = "module2"),
-#'     list(server = "server3", module_id = "module3")
-#'   ))
-#' )
-#'
-#' flatten_srv_module_list(input_list)
-#' # Output: list(
-#' #   list(server = "server1", module_id = "module1"),
-#' #   list(server = "server2", module_id = "module2"),
-#' #   list(server = "server3", module_id = "module3")
-#' # )
+#' @keywords internal
 #'
 flatten_srv_module_list <- function(x) {
   if (!is.list(x)) {
