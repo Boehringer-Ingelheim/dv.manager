@@ -63,7 +63,11 @@ app_ui <- function(id) {
         )),
         shiny::div(
           class = "c-well shiny_filter",
-          shiny::tags$label("Subject Level Filter", class = "text-primary"),
+          shiny::tags$label(
+            "Subject Level Filter",
+            shiny::icon("circle-info", title = TT[["SUBJECT_LEVEL_FILTER"]]),
+            class = "text-primary"
+          ),
           shiny::div(
             class = "filter-control  filter-filters",
             dv.filter::data_filter_ui(ns("global_filter"))
@@ -71,7 +75,11 @@ app_ui <- function(id) {
         ),
         shiny::div(
           class = "c-well shiny_filter",
-          shiny::tags$label("Dataset Filter(s)", class = "text-primary"),
+          shiny::tags$label(
+            "Dataset Filter(s)",
+            shiny::icon("circle-info", title = TT[["DATASET_FILTER"]]),
+            class = "text-primary"
+          ),
           dataset_filters_ui
         )
       )
