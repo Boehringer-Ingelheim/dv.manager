@@ -50,10 +50,12 @@ local({
   skip_if_not_running_shiny_tests()
   skip_if_suspect_check()
 
-  app_expr <- rlang::quo({dv.manager:::run_mock_app_module_tab()})
+  app_expr <- rlang::quo({
+    dv.manager:::run_mock_app_module_tab()
+  })
   root_app <- start_app_driver(app_expr)
   test_that("mod_module_tab allows grouping of modules" |>
-        vdoc[["add_spec"]](c(specs$mod_module_tab$group_modules)), {
+    vdoc[["add_spec"]](c(specs$mod_module_tab$group_modules)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
@@ -77,11 +79,10 @@ local({
     expect_equal(
       v2, "306"
     )
-
   })
 
   test_that("mod_module_tab allows nesting of modules" |>
-        vdoc[["add_spec"]](c(specs$mod_module_tab$allows_nesting)), {
+    vdoc[["add_spec"]](c(specs$mod_module_tab$allows_nesting)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
@@ -98,7 +99,7 @@ local({
     )
     expect_true(
       grepl("Simple5", html_code)
-    )    
+    )
 
     v4 <- app$get_values(output = "mod4-text")[["output"]][["mod4-text"]]
     expect_equal(
@@ -107,7 +108,7 @@ local({
   })
 
   test_that("mod_module_tab output of grouped modules can be accesed by other modules" |>
-        vdoc[["add_spec"]](c(specs$mod_module_tab$output_accesible)), {
+    vdoc[["add_spec"]](c(specs$mod_module_tab$output_accesible)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
@@ -127,13 +128,13 @@ local({
   })
 
   test_that("mod_module_tab other modules can switch into nested tabs" |>
-        vdoc[["add_spec"]](c(specs$mod_module_tab$allows_switching)), {
+    vdoc[["add_spec"]](c(specs$mod_module_tab$allows_switching)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
     app$set_inputs("main_tab_panel" = "Switch to nest")
     app$wait_for_idle()
-    app$click("mod_switch-switch")  
+    app$click("mod_switch-switch")
     app$wait_for_idle()
 
     top <- app$get_values(input = TRUE)[["input"]][["main_tab_panel"]]
@@ -142,10 +143,6 @@ local({
 
     expect_equal(top, "Module Tab")
     expect_equal(first, "Nested modules")
-    expect_equal(second, "Simple5")    
+    expect_equal(second, "Simple5")
   })
-
-
-
-
 })
