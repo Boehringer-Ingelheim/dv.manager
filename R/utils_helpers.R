@@ -52,7 +52,6 @@ create_options_modal <- function(session, input, ns) {
   )
 }
 
-#' Get the set of all possible data table names for filtering
 get_data_tables_names <- function(data) {
   nm <- character(0)
   for (idx in seq_along(data)) {
