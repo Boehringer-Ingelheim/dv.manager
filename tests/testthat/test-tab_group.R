@@ -51,11 +51,11 @@ local({
   skip_if_suspect_check()
 
   app_expr <- rlang::quo({
-    dv.manager:::run_mock_app_module_tab()
+    dv.manager:::run_mock_app_tab_group()
   })
   root_app <- start_app_driver(app_expr)
-  test_that("mod_module_tab allows grouping of modules" |>
-    vdoc[["add_spec"]](c(specs$mod_module_tab$group_modules)), {
+  test_that("tab_group allows grouping of modules" |>
+    vdoc[["add_spec"]](c(specs$tab_group$group_modules)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
@@ -81,8 +81,8 @@ local({
     )
   })
 
-  test_that("mod_module_tab allows nesting of modules" |>
-    vdoc[["add_spec"]](c(specs$mod_module_tab$allows_nesting)), {
+  test_that("tab_group allows nesting of modules" |>
+    vdoc[["add_spec"]](c(specs$tab_group$allows_nesting)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
@@ -107,8 +107,8 @@ local({
     )
   })
 
-  test_that("mod_module_tab output of grouped modules can be accesed by other modules" |>
-    vdoc[["add_spec"]](c(specs$mod_module_tab$output_accesible)), {
+  test_that("tab_group output of grouped modules can be accesed by other modules" |>
+    vdoc[["add_spec"]](c(specs$tab_group$output_accesible)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
@@ -127,8 +127,8 @@ local({
     expect_equal(v2, "1")
   })
 
-  test_that("mod_module_tab other modules can switch into nested tabs" |>
-    vdoc[["add_spec"]](c(specs$mod_module_tab$allows_switching)), {
+  test_that("tab_group other modules can switch into nested tabs" |>
+    vdoc[["add_spec"]](c(specs$tab_group$allows_switching)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab

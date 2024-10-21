@@ -1,7 +1,7 @@
 #' Create a Tabbed Shiny Module Collection
 #'
 #' @description
-#' `mod_module_tab` is a function that groups dv modules in tabsets (see [shiny::tabsetPanel]).
+#' `tab_group` is a function that groups dv modules in tabsets (see [shiny::tabsetPanel]).
 #' This function is designed to simplify the process of organizing multiple Shiny modules into a single,
 #' visually organized tabset. It allows nested modules.
 #'
@@ -25,7 +25,7 @@
 #'
 #' @export
 #'
-mod_module_tab <- function(module_list, tab_id) {
+tab_group <- function(module_list, tab_id) {
   # We will mimic a module although we will not
   # No namespaces or shiny::moduleServer functions will be done
   # The change will be purely aesthetic but inner workings will remain the same
@@ -81,7 +81,7 @@ mod_module_tab <- function(module_list, tab_id) {
   return(mod)
 }
 
-run_mock_app_module_tab <- function() {
+run_mock_app_tab_group <- function() {
   module_list <-
     run_app(
       data = list(
@@ -103,7 +103,7 @@ run_mock_app_module_tab <- function() {
           mm_dispatch("utils", "switch2"),
           "mod_switch"
         ),
-        "Module Tab" = mod_module_tab(
+        "Module Tab" = tab_group(
           module_list = list(
             "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
             "Simple3" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod3"),
@@ -113,7 +113,7 @@ run_mock_app_module_tab <- function() {
               value = mm_dispatch("module_output", "mod_rec_1"),
               mod_id = "mod_rec_2"
             ),
-            "Nested modules" = mod_module_tab(
+            "Nested modules" = tab_group(
               module_list = list(
                 "Simple4" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod4"),
                 "Simple5" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod5"),
