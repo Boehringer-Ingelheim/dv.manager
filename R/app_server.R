@@ -90,6 +90,8 @@ app_server_ <- function(input, output, session, opts) {
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
 
+  datasets_filters_info <- get_dataset_filters_info(data, filter_data)
+
   # Check if dataset must be reloaded in the next session
   check_data_reload(reload_period)
 
@@ -121,18 +123,64 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  filtered_values <- dv.filter::data_filter_server(
+  global_filtered_values <- dv.filter::data_filter_server(
     "global_filter",
     shiny::reactive(unfiltered_dataset()[[filter_data]])
   )
 
+  dataset_filters <- local({
+    l <- vector(mode = "list", length = length(datasets_filters_info))
+    names(l) <- names(datasets_filters_info)
+    for (idx in seq_along(datasets_filters_info)) {
+      l[[idx]] <- local({
+        curr_dataset_filter_info <- datasets_filters_info[[idx]]
+        dv.filter::data_filter_server(
+          curr_dataset_filter_info[["id"]],
+          shiny::reactive({
+            unfiltered_dataset()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()
+          })
+        )
+      })
+    }
+
+    l
+  })
+
   filtered_dataset <- shinymeta::metaReactive({
     # dv.filter returns a logical vector. This contemplates the case of empty lists
-    shiny::req(is.logical(filtered_values()))
-    log_inform("New filter applied")
-    filtered_key_values <- unfiltered_dataset()[[filter_data]][[filter_key]][filtered_values()] # nolint
-    purrr::map(
-      unfiltered_dataset(),
+    shiny::req(is.logical(global_filtered_values()))
+
+    # Depend on all datasets
+    purrr::walk(dataset_filters, ~ .x())
+
+    # We do not react to changed in unfiltered dataset, otherwise when a dataset changes
+    # We filter the previous dataset which in the best case produces and extra reactive beat
+    # and in the worst case produces an error in (mvbc)
+    # We don't want to control the error in (mvbc) because filtered dataset only changes when filter changes
+    ufds <- shiny::isolate(unfiltered_dataset())
+
+    curr_dataset_filters <- dataset_filters[intersect(names(dataset_filters), names(ufds))]
+
+    # Current dataset must be logical with length above 0
+    # Check dataset filters check all datafilters are initialized
+    purrr::walk(curr_dataset_filters, ~ shiny::req(checkmate::test_logical(.x(), min.len = 1)))
+
+    filtered_key_values <- ufds[[filter_data]][[filter_key]][global_filtered_values()]
+
+    fds <- ufds
+
+    # Single dataset filtering
+    fds[names(curr_dataset_filters)] <- purrr::imap(
+      fds[names(curr_dataset_filters)],
+      function(val, nm) {
+        # (mvbc)
+        fds[[nm]][dataset_filters[[nm]](), , drop = FALSE]
+      }
+    )
+
+    # Global dataset filtering
+    global_filtered <- purrr::map(
+      fds,
       ~ dplyr::filter(.x, .data[[filter_key]] %in% filtered_key_values) # nolint
     )
   })
@@ -167,27 +215,27 @@ app_server_ <- function(input, output, session, opts) {
     module_names = module_names,
     utils = list(
       switch2 = function(selected) {
-        shiny::updateTabsetPanel(session, "main_tab_panel", selected)
+        if (!checkmate::test_character(selected, min.len = 1)) {
+          log_warn("switch2 called with no elements or non character element")
+        }
+        main_selection <- selected[[1]]
+        shiny::updateTabsetPanel(session, "main_tab_panel", main_selection)
+
+        non_main_selection <- selected[-1]
+        names_non_main_selection <- names(non_main_selection)
+        for (idx in seq_along(non_main_selection)) {
+          tabset_id <- names_non_main_selection[[idx]]
+          tabname <- non_main_selection[[idx]]
+          shiny::updateTabsetPanel(session, tabset_id, tabname)
+        }
       }
     )
   )
 
-  module_ids <- purrr::map(module_list, "module_id")
-  module_output <- module_list %>% # nolint module output is used above and lintr assumes it is not used
-    purrr::set_names(nm = module_ids) %>% # Set names to access module outputs with `module_output[module_id]`
-    purrr::map(function(module) {
-      if (rlang::is_expression(module[["server"]])) {
-        .Defunct(
-          "server = function(args) {...}",
-          msg = "Passing the server as an expression is going to be deprecated soon."
-        )
-        return(rlang::eval_tidy(module[["server"]]))
-      }
-      if (is.function(module[["server"]])) {
-        return(module[["server"]](module_args))
-      }
-    })
-
+  module_output <- list()
+  for (srv in flatten_srv_module_list(module_list)) {
+    module_output[[srv[["module_id"]]]] <- srv[["server"]](module_args)
+  }
 
   #### Report modal
 
@@ -258,7 +306,6 @@ app_server_ <- function(input, output, session, opts) {
   )
 }
 
-
 # Convoluted way of having a testable server function
 # TestServer reads the caller environment
 # Therefore, when running a wrapped function like
@@ -276,4 +323,40 @@ app_server_test <- function(opts) {
   # Remove opts argument. It will be taken from this closure
   f <- rlang::new_function(rlang::exprs(input = , output = , session = ), rlang::fn_body(app_server_))
   f
+}
+
+#' Flatten a List of Server Modules
+#'
+#' This function recursively flattens a nested list structure of server modules into a single-level list.
+#' It retains only the `server` and `module_id` for each entry that is not a server collection.
+#'
+#' @param x A list of server modules, which may contain nested lists of server collections.
+#' @return A flattened list containing the `server` and `module_id` of each module.
+#'
+#' @keywords internal
+#'
+flatten_srv_module_list <- function(x) {
+  if (!is.list(x)) {
+    stop("Input must be a list")
+  }
+
+  flattened_list <- list()
+  next_idx <- 1
+
+  flatten <- function(x) {
+    for (el in x) {
+      if (!inherits(el[["server"]], "server_collection")) {
+        flattened_list[[next_idx]] <<- list(
+          server = el[["server"]],
+          module_id = el[["module_id"]]
+        )
+        next_idx <<- next_idx + 1
+      } else {
+        flatten(el[["server"]])
+      }
+    }
+  }
+
+  flatten(x)
+  return(flattened_list)
 }

@@ -13,3 +13,23 @@ $(document).ready(function () {
     }
   });
 });
+
+// const dv_manager = {
+//   hide_filters: function(button_id) {
+//     var button = document.getElementById(button_id);
+//     var tag = button.querySelectorAll("span")[1];
+//     var container = button.nextElementSibling;
+//     var hidden = container.classList.toggle("dv_hidden");
+//     var controls_container = container.querySelectorAll(":scope > div")[2];
+//     var active_filters = controls_container.querySelectorAll(":scope > div").length;
+    
+//     tag.textContent=active_filters;
+
+//     if (hidden) {
+//       tag.classList.remove("dv_hidden");      
+//     } else {
+//       tag.classList.add("dv_hidden");
+//     }
+//   }
+// };
+
