@@ -128,7 +128,7 @@ app_ui <- function(request_id) {
 
   # unnamed because tabset does not admit named list there
   tabs <- unname(
-    purrr::imap(module_list, function(mod, nm) {
+    purrr::imap(module_list[["ui_list"]], function(mod, nm) {
       ui_fn <- mod[["ui"]]
 
       # Offer the option of getting the namespaced id or the namespace function

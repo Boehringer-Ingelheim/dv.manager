@@ -103,7 +103,7 @@ run_mock_app_tab_group <- function() {
           mm_dispatch("utils", "switch2"),
           "mod_switch"
         ),
-        "Module Tab" = tab_group(
+        "Module Tab" = tab_group2(
           module_list = list(
             "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
             "Simple3" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod3"),
@@ -113,7 +113,7 @@ run_mock_app_tab_group <- function() {
               value = mm_dispatch("module_output", "mod_rec_1"),
               mod_id = "mod_rec_2"
             ),
-            "Nested modules" = tab_group(
+            "Nested modules" = tab_group2(
               module_list = list(
                 "Simple4" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod4"),
                 "Simple5" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod5"),
@@ -133,4 +133,173 @@ run_mock_app_tab_group <- function() {
       filter_data = "adsl",
       filter_key = "USUBJID"
     )
+}
+
+run_mock_app_tab_group2 <- function() {
+  module_list <-
+    run_app(
+      data = list(
+        "D1" = list(
+          adsl = get_pharmaverse_data("adsl"),
+          adae = get_pharmaverse_data("adae")
+        ),
+        "D2" = list(
+          adsl = get_pharmaverse_data("adsl"),
+          adae = get_pharmaverse_data("adae"),
+          adlb = get_pharmaverse_data("adlb")
+        )
+      ),
+      module_list = list(
+        "Separate tab" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod1"),
+        "Switch to nest" = mod_switch(
+          "Mod 1",
+          selected = c("Module Tab", mod_tab = "Nested modules", nested_mod_tab = "Simple5"),
+          mm_dispatch("utils", "switch2"),
+          "mod_switch"
+        ),
+        "Module Tab" = tab_group2(
+          module_list = list(
+            "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
+            "Simple3" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod3"),
+            "Send and Receive 2" = mod_com_test(
+              choices = c("a", "b", "c"),
+              message = "The other module has selected",
+              value = mm_dispatch("module_output", "mod_rec_1"),
+              mod_id = "mod_rec_2"
+            )
+          ),
+          tab_id = "mod_tab"
+        )
+      ),
+      filter_data = "adsl",
+      filter_key = "USUBJID"
+    )
+}
+
+LAYOUT <- poc(
+  ATTRIBUTE = "layout",
+  TAB_GROUP = "tab_group"
+)
+
+tab_group2 <- function(module_list, tab_id) {
+  attr(module_list, LAYOUT$ATTRIBUTE) <- LAYOUT$TAB_GROUP
+  module_list
+}
+
+attr_identical_to <- function(x, attr, value) {
+  identical(value, attr(x, which = attr, exact = TRUE))
+}
+
+is_tab_group <- function(x) {
+  attr_identical_to(x, LAYOUT$ATTRIBUTE, LAYOUT$TAB_GROUP)
+}
+
+resolve_tab_group <- function(x, nm) {
+
+  r <- resolve_module_list(x)
+
+  ui <- function(namespaced_tab_id, parent_id) {
+    module_ns <- shiny::NS(parent_id)
+    tabs <- unname(
+      purrr::imap(
+        r[["ui_list"]],
+        function(mod, nm) {
+          ui_fn <- mod[["ui"]]
+
+          if (length(formals(ui_fn)) == 2) {
+            ui <- ui_fn(module_ns(mod$module_id), parent_id)
+          } else {
+            ui <- ui_fn(module_ns(mod$module_id))
+          }
+
+          ui_css <- ns_css(ui)
+
+          shiny::tabPanel(title = nm, ui_css)
+        }
+      )
+    )
+    do.call(shiny::tabsetPanel, c(
+      tabs,
+      type = "pills",
+      id = namespaced_tab_id
+    )) 
+  }
+
+  ui_list <- list()
+  ui_list[[nm]] <- list(
+    ui = ui,
+    module_id = x[["module_id"]]
+  )
+
+  return(
+    list(
+      ui_list = ui_list,
+      server_list = r[["server_list"]],
+      module_id_list = r[["module_id_list"]],
+      module_name_list = r[["module_name_list"]]
+      )
+    )
+}
+
+resolve_plain <- function(x, nm) {  
+      ui_list <- list()
+      ui_list[[nm]] <- list(
+        ui = x[["ui"]],
+        module_id = x[["module_id"]]
+      )
+      
+
+      server_list <- list(
+        list(
+          server = x[["server"]],
+          module_id = x[["module_id"]]
+        )
+      )
+
+      module_id_list <- character(0)
+      module_id_list[[nm]] <- x[["module_id"]]
+
+      module_name_list <- character(0)
+      module_name_list[[x[["module_id"]]]] <- nm
+
+      r <- list(
+        ui_list = ui_list,
+        server_list = server_list,
+        module_id_list = module_id_list,
+        module_name_list = module_name_list
+      )
+}
+
+resolve_module_list <- function(module_list) {
+  server_list <- list()
+  ui_list <- list()
+  module_id_list <- character(0)
+  module_name_list <- character(0)
+  tab_list <- list()
+  nm_module_list <- names(module_list)
+
+  for (idx in seq_along(module_list)) {
+    module <- module_list[[idx]]
+    nm <- nm_module_list[[idx]]
+
+    if (is_tab_group(module)) {
+      r <- resolve_tab_group(module, nm)      
+    } else {
+      r <- resolve_plain(module, nm)      
+    }
+
+    ui_list <- c(ui_list, r[["ui_list"]])
+    module_id_list <- c(module_id_list, r[["module_id_list"]])
+    server_list <- c(server_list, r[["server_list"]])
+    module_name_list <- c(module_name_list, r[["module_name_list"]])
+  }
+
+  return(
+    list(
+      ui_list = ui_list,
+      server_list = server_list,
+      module_id_list = module_id_list,
+      module_name_list = module_name_list
+      )
+    )  
 }

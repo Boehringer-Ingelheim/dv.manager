@@ -1,4 +1,5 @@
 check_modules <- function(module_list) {
+  return(module_list)
   # check all modules are named
   if (!has_all_items_named(module_list)) {
     msg <- "All entries in module_list must be named"

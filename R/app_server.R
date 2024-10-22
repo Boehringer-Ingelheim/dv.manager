@@ -83,7 +83,8 @@ app_server_ <- function(input, output, session, opts) {
     }
   )
 
-  module_list <- opts[["module_list"]]
+  module_list <- opts[["module_list"]][["server_list"]]
+  module_names <- opts[["module_list"]][["module_name_list"]]
   data <- opts[["data"]]
   filter_data <- opts[["filter_data"]]
   filter_key <- opts[["filter_key"]]
@@ -185,18 +186,10 @@ app_server_ <- function(input, output, session, opts) {
     )
   })
 
-
   # Prepare module_output argument
   module_output_env <- rlang::current_env()
   module_output_func <- function() {
     return(base::get("module_output", envir = module_output_env))
-  }
-
-  if (length(module_list) > 0) {
-    module_names <- names(module_list)
-    names(module_names) <- purrr::map_chr(module_list, "module_id")
-  } else {
-    module_names <- NULL
   }
 
   module_args <- list(
@@ -233,7 +226,7 @@ app_server_ <- function(input, output, session, opts) {
   )
 
   module_output <- list()
-  for (srv in flatten_srv_module_list(module_list)) {
+  for (srv in module_list) {
     module_output[[srv[["module_id"]]]] <- srv[["server"]](module_args)
   }
 
