@@ -1,32 +1,18 @@
-check_modules <- function(module_list) {
+check_resolved_modules <- function(module_list) {
   return(module_list)
-  # check all modules are named
-  if (!has_all_items_named(module_list)) {
-    msg <- "All entries in module_list must be named"
-    rlang::abort(msg)
-  }
-
-  if (length(module_list) == 0) {
+  
+  if (length(module_list[["module_id_list"]]) == 0) {
     msg <- "module_list has length 0. No modules are included in the app."
     log_warn(msg)
   }
 
-  # Warn when module[["server"]] is an expression
-  purrr::keep(module_list, ~ rlang::is_expression(.x[["server"]])) %>%
-    purrr::iwalk(~ {
-      msg <- glue::glue_safe("\"{.y}\" module server is an expression this will be deprecated soon.")
-      log_warn(msg)
-    })
-
-  # Check module_ids and names are not repeated
-
-  if (anyDuplicated(names(module_list)) > 0) {
-    msg <- "module_list has repeated names"
+  if (any(duplicated(module_list[["module_id_list"]]))) {
+    msg <- "module_list has repeated module_ids"
     rlang::abort(msg)
   }
 
-  if (anyDuplicated(purrr::map(module_list, "module_id")) > 0) {
-    msg <- "module_list has repeated module_ids"
+  if (any(duplicated(module_list[["module_name_list"]]))) {
+    msg <- "module_list has repeated module_names"
     rlang::abort(msg)
   }
 
