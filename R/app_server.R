@@ -318,38 +318,3 @@ app_server_test <- function(opts) {
   f
 }
 
-#' Flatten a List of Server Modules
-#'
-#' This function recursively flattens a nested list structure of server modules into a single-level list.
-#' It retains only the `server` and `module_id` for each entry that is not a server collection.
-#'
-#' @param x A list of server modules, which may contain nested lists of server collections.
-#' @return A flattened list containing the `server` and `module_id` of each module.
-#'
-#' @keywords internal
-#'
-flatten_srv_module_list <- function(x) {
-  if (!is.list(x)) {
-    stop("Input must be a list")
-  }
-
-  flattened_list <- list()
-  next_idx <- 1
-
-  flatten <- function(x) {
-    for (el in x) {
-      if (!inherits(el[["server"]], "server_collection")) {
-        flattened_list[[next_idx]] <<- list(
-          server = el[["server"]],
-          module_id = el[["module_id"]]
-        )
-        next_idx <<- next_idx + 1
-      } else {
-        flatten(el[["server"]])
-      }
-    }
-  }
-
-  flatten(x)
-  return(flattened_list)
-}
