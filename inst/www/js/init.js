@@ -1,6 +1,6 @@
 // handle the dataset info bar
 $(window).on("load", function () {
-  $(".grid_page_date").detach().appendTo($("#main_tab_panel").parent());
+  $(".grid_page_date").detach().appendTo($("#__tabset_0__").parent());
 });
 
 //toggle sidebar resize

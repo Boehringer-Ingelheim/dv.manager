@@ -23,14 +23,11 @@ app_ui <- function(request_id) {
   ns <- shiny::NS(id)
 
   data <- get_config("data")
-  module_list <- get_config("module_list")
+  module_info <- get_config("module_info")
   filter_data <- get_config("filter_data")
 
   log_inform("Initializing HTML template UI")
-  log_inform(glue::glue(
-    "Available modules: {paste(names(module_list), collapse=',')}"
-  ))
-  log_inform(glue::glue("Available modules (N): {length(module_list)}"))
+  log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
   log_inform(glue::glue("Dataset options (N): {length(data)}"))
 
   dataset_filters_ui <- local({
@@ -126,35 +123,12 @@ app_ui <- function(request_id) {
     btn_group # Location modified through css check custom.css
   )
 
-  # unnamed because tabset does not admit named list there
-  tabs <- unname(
-    purrr::imap(module_list[["ui_list"]], function(mod, nm) {
-      ui_fn <- mod[["ui"]]
-
-      # Offer the option of getting the namespaced id or the namespace function
-
-      if (length(formals(ui_fn)) == 2) {
-        ui <- ui_fn(ns(mod$module_id), id)
-      } else {
-        ui <- ui_fn(ns(mod$module_id))
-      }
-
-      ui_css <- ns_css(ui)
-
-      shiny::tabPanel(title = nm, ui_css)
-    })
-  )
-
   shiny::fluidPage(
     insert_header_add_resources(app_title = get_config("title")),
     theme = get_app_theme(),
     class = "display-grid",
     sidebar,
-    do.call(shiny::tabsetPanel, c(
-      tabs,
-      type = "pills",
-      id = ns("main_tab_panel")
-    )),
+    module_info[["ui"]](ns),
     dataset_name
   )
 }

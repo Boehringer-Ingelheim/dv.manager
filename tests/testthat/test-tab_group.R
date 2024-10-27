@@ -59,7 +59,7 @@ local({
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
-    app$set_inputs("main_tab_panel" = "Module Tab")
+    app$set_inputs("__tabset_0__" = "Module Tab")
     app$wait_for_idle()
     html_code <- app$get_html("#mod_tab")
     expect_true(
@@ -86,7 +86,7 @@ local({
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
-    app$set_inputs("main_tab_panel" = "Module Tab")
+    app$set_inputs("__tabset_0__" = "Module Tab")
     app$set_inputs("mod_tab" = "Nested modules")
     app$wait_for_idle()
     app$view()
@@ -112,7 +112,7 @@ local({
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
-    app$set_inputs("main_tab_panel" = "Module Tab")
+    app$set_inputs("__tabset_0__" = "Module Tab")
     app$set_inputs("mod_tab" = "Send and Receive 2")
     app$wait_for_idle()
     app$set_inputs("mod_tab" = "Nested modules")
@@ -132,12 +132,12 @@ local({
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
-    app$set_inputs("main_tab_panel" = "Switch to nest")
+    app$set_inputs("__tabset_0__" = "Switch to nest")
     app$wait_for_idle()
     app$click("mod_switch-switch")
     app$wait_for_idle()
 
-    top <- app$get_values(input = TRUE)[["input"]][["main_tab_panel"]]
+    top <- app$get_values(input = TRUE)[["input"]][["__tabset_0__"]]
     first <- app$get_values(input = TRUE)[["input"]][["mod_tab"]]
     second <- app$get_values(input = TRUE)[["input"]][["nested_mod_tab"]]
 

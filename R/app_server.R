@@ -46,7 +46,7 @@
 
 app_server <- function(input = NULL, output = NULL, session = NULL) {
   opts <- list(
-    "module_list" = get_config("module_list"),
+    "module_info" = get_config("module_info"),
     "data" = get_config("data"),
     "filter_data" = get_config("filter_data"),
     "filter_key" = get_config("filter_key"),
@@ -59,7 +59,7 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
 
 app_server_module <- function(id) {
   opts <- list(
-    "module_list" = get_config("module_list"),
+    "module_info" = get_config("module_info"),
     "data" = get_config("data"),
     "filter_data" = get_config("filter_data"),
     "filter_key" = get_config("filter_key"),
@@ -79,12 +79,13 @@ app_server_ <- function(input, output, session, opts) {
         "affm[[\"utils\"]][[\"switch_function\"]]",
         msg = "Switch function has been moved to the list of arguments passed to the module"
       )
-      shiny::updateTabsetPanel(session, "main_tab_panel", selected)
+      shiny::updateTabsetPanel(session, "__tabset_0__", selected)
     }
   )
 
-  module_list <- opts[["module_list"]][["server_list"]]
-  module_names <- opts[["module_list"]][["module_name_list"]]
+  module_server <- opts[["module_info"]][["server_list"]]
+  module_names <- opts[["module_info"]][["module_name_list"]]
+  module_hierarchy_list <- opts[["module_info"]][["hierarchy_list"]]
   data <- opts[["data"]]
   filter_data <- opts[["filter_data"]]
   filter_key <- opts[["filter_key"]]
@@ -208,25 +209,49 @@ app_server_ <- function(input, output, session, opts) {
     module_names = module_names,
     utils = list(
       switch2 = function(selected) {
-        if (!checkmate::test_character(selected, min.len = 1)) {
-          log_warn("switch2 called with no elements or non character element")
+        .Deprecated("switch2mod", "switch2 is being deprecated in favor of switch2mod. switch2mod directly works on module ids and supports switching to nested tabs.")
+        if (!checkmate::test_string(selected, min.chars = 1)) {
+          log_warn("selected must be a non-empty string")
+          return(NULL)
         }
-        main_selection <- selected[[1]]
-        shiny::updateTabsetPanel(session, "main_tab_panel", main_selection)
 
-        non_main_selection <- selected[-1]
-        names_non_main_selection <- names(non_main_selection)
-        for (idx in seq_along(non_main_selection)) {
-          tabset_id <- names_non_main_selection[[idx]]
-          tabname <- non_main_selection[[idx]]
-          shiny::updateTabsetPanel(session, tabset_id, tabname)
+        if (!checkmate::test_string(selected, min.chars = 1)) {          
+          log_warn("selected must be a non-empty string")
+          return(NULL)
+        }
+
+        if (!selected %in% module_names) {          
+          log_warn(paste0("\"", selected, "\"", " is not a module name. switch does not support switching to nested tabs"))
+          return(NULL)
+        }
+                
+        shiny::updateTabsetPanel(session, "__tabset_0__", module_names[module_names == selected])
+      },
+      switch2mod = function(selected) {
+        if (!checkmate::test_string(selected, min.chars = 1)) {
+          log_warn("selected must be a non-empty string")
+          return(NULL)
+        }
+
+        if (!selected %in% names(module_hierarchy_list)) {
+          log_warn("selected must be a module id")
+          return(NULL)
+        }
+
+        this_hierarchy_value <- module_hierarchy_list[[selected]]
+        this_hierarchy_names <- names(this_hierarchy_value)
+
+        for (idx in seq_along(this_hierarchy_value)) {
+          tab_value <- this_hierarchy_value[[idx]]
+          tabset_id <- this_hierarchy_names[[idx]]
+          shiny::updateTabsetPanel(session, tabset_id, tab_value)
         }
       }
     )
   )
 
   module_output <- list()
-  for (srv in module_list) {
+  for (srv in module_server) {
     module_output[[srv[["module_id"]]]] <- srv[["server"]](module_args)
   }
 

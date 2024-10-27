@@ -14,7 +14,7 @@ body {
 }
 
 /* navigation */
-#main_tab_panel {
+#__tabset_0__ {
   &.nav {
     display: flex;
     flex-wrap: wrap;
@@ -134,7 +134,7 @@ body > .container-fluid > .tabbable {
   padding-right: 1.6rem;
 }
 
-#main_tab_panel {
+#__tabset_0__ {
   grid-column: 1 / -1;
   grid-row: 1 / 2;
 }

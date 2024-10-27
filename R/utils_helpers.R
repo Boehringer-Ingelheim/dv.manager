@@ -78,3 +78,7 @@ get_dataset_filters_info <- function(data, filter_data) {
 `%||%` <- function(x, y) {
   if (!is.null(x)) x else y
 }
+
+assert <- function(expr, msg) {
+  if (!isTRUE(expr)) stop(msg)
+}
