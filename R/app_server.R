@@ -69,6 +69,7 @@ app_server_module <- function(id) {
   shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
 }
 
+# nolint start cyclocomp_linter
 app_server_ <- function(input, output, session, opts) {
   ns <- session[["ns"]]
 
@@ -209,22 +210,27 @@ app_server_ <- function(input, output, session, opts) {
     module_names = module_names,
     utils = list(
       switch2 = function(selected) {
-        .Deprecated("switch2mod", "switch2 is being deprecated in favor of switch2mod. switch2mod directly works on module ids and supports switching to nested tabs.")
+        .Deprecated(
+          "switch2mod",
+          "switch2 is being deprecated in favor of switch2mod. switch2mod directly works on module ids and supports switching to nested tabs." # nolint
+        )
         if (!checkmate::test_string(selected, min.chars = 1)) {
           log_warn("selected must be a non-empty string")
           return(NULL)
         }
 
-        if (!checkmate::test_string(selected, min.chars = 1)) {          
+        if (!checkmate::test_string(selected, min.chars = 1)) {
           log_warn("selected must be a non-empty string")
           return(NULL)
         }
 
-        if (!selected %in% module_names) {          
-          log_warn(paste0("\"", selected, "\"", " is not a module name. switch does not support switching to nested tabs"))
+        if (!selected %in% module_names) {
+          log_warn(
+            paste0("\"", selected, "\"", " is not a module name. switch does not support switching to nested tabs")
+          )
           return(NULL)
         }
-                
+
         shiny::updateTabsetPanel(session, "__tabset_0__", names(module_names)[module_names == selected])
       },
       switch2mod = function(selected) {
@@ -324,6 +330,8 @@ app_server_ <- function(input, output, session, opts) {
   )
 }
 
+# nolint end cyclocomp_linter
+
 # Convoluted way of having a testable server function
 # TestServer reads the caller environment
 # Therefore, when running a wrapped function like
@@ -342,4 +350,3 @@ app_server_test <- function(opts) {
   f <- rlang::new_function(rlang::exprs(input = , output = , session = ), rlang::fn_body(app_server_))
   f
 }
-

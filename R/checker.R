@@ -1,5 +1,4 @@
 check_resolved_modules <- function(resolved_module_list) {
-
   if (length(resolved_module_list[["module_id_list"]]) == 0) {
     msg <- "module_list has length 0. No modules are included in the app."
     log_warn(msg)

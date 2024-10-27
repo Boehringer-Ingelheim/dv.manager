@@ -56,7 +56,7 @@ LAYOUT <- poc( # nolint
 )
 
 tab_group <- function(module_list) {
-  attr(module_list, LAYOUT$ATTRIBUTE) <- LAYOUT$TAB_GROUP
+  attr(module_list, LAYOUT$ATTRIBUTE) <- LAYOUT$TAB_GROUP # nolint
   module_list
 }
 
@@ -68,7 +68,9 @@ resolve_tab_group <- function(x, nm, hierarchy, tab_group_count, nested_hierarch
   message(paste("Resolving tab", nm))
   new_tab_group_count <- tab_group_count + 1
   # The id of the new tabset is the same as the value of the tab in the parent tabset
+  # nolint start
   # shiny::tabSetPanel(id = parent, shiny::tabPanel(value = new_parent_tab_value, shiny::tabsetPanel(id = new_child_tabset_id)))
+  # nolint end
   new_tab_group_id <- paste0("__tabset_", new_tab_group_count, "__")
 
   assert(is.na(hierarchy[[length(hierarchy)]]))
@@ -140,7 +142,15 @@ resolve_plain <- function(x, nm, hierarchy, nested_hierarchy) {
   )
 }
 
-resolve_module_list <- function(module_list, hierarchy = list("__tabset_0__" = NA), tab_group_count = 0, nested_hierarchy = list(tabset_id = "__tabset_0__", tabset_name = NA, children = list())) {
+resolve_module_list <- function(
+    module_list,
+    hierarchy = list("__tabset_0__" = NA),
+    tab_group_count = 0,
+    nested_hierarchy = list(
+      tabset_id = "__tabset_0__",
+      tabset_name = NA,
+      children = list()
+    )) {
   server_list <- list()
   ui_list <- list()
   module_id_list <- character(0)
@@ -188,7 +198,7 @@ process_module_list <- function(module_list) {
   resolved_module_list <- resolve_module_list(module_list)
   # We need the ns to be able to invoke all ui functions
   # TODO: Consider removing namespacing it would make all these simpler
-  resolved_module_list[["ui"]] <- function(ns) {    
+  resolved_module_list[["ui"]] <- function(ns) {
     compose_ui(resolved_module_list[["nested_hierarchy"]], resolved_module_list[["ui_list"]], ns)
   }
 

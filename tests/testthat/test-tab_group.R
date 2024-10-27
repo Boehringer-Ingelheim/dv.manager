@@ -80,7 +80,7 @@ local({
   })
 
 
-  # 
+  #
   test_that("tab_group other modules can switch into nested tabs" |>
     vdoc[["add_spec"]](c(specs$tab_group$allows_switching)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())

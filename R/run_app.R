@@ -67,7 +67,7 @@ run_app <- function(data = NULL,
   config[["filter_key"]] <- check_filter_key(filter_key, data)
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
-  config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))  
+  config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
 
   check_meta_mtime_attribute(data)
 
