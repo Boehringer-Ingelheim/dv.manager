@@ -106,7 +106,8 @@ tab_group <- list(
 
 specs <- c(
   fs_spec,
-  sds_spec
+  sds_spec,
+  list(tab_group = tab_group)
 )
 
 #nolint end
