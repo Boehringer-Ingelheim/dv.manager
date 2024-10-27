@@ -44,7 +44,8 @@ the server function is called. This parameter by convention usually called `afmm
   
 1. **utils**: a list of convenience functions:
   
-    a. **switch2**: a function that allows switching between tabs programatically.
+    a. **switch2mod**: a function that allows switching between tabs programatically.
+    a. **switch2**: **DEPRECATED** a function that allows switching between tabs programatically.
     
 Lets see some example recipes to use all these fields.
 
@@ -275,7 +276,7 @@ Note that it is the module/app developer how to treat that output value.
 
 The `utils` field contains a list of utility functions for actions that need module manager. In this case the access is the simplest of all cases as it is just a list of functions.
 
-### switch2
+### switch2mod
 
 `switch2` allows switching from tab to another in a programmatic manner.
 
@@ -307,7 +308,7 @@ mod_switch <- function(name, selected, module_id) {
       switch_UI(module_id, name)
     },
     server = function(afmm) {
-      switch_server(module_id, selected, afmm[["utils"]][["switch2"]])
+      switch_server(module_id, selected, afmm[["utils"]][["switch2mod"]])
     },
     module_id = module_id
   )
@@ -317,17 +318,19 @@ mod_switch <- function(name, selected, module_id) {
 run_app(
   data = list(),
   module_list = list(
-    "Mod 1" = mod_switch("Mod 1", "Mod 2", "mod1"),
-    "Mod 2" = mod_switch("Mod 2", "Mod 1", "mod2")
+    "Mod 1" = mod_switch("Mod 1", "mod2", "mod1"),
+    "Mod 2" = mod_switch("Mod 2", "mod1", "mod2")
   ),
   filter_data = "",
   filter_key = "USUBJID"
 )
 ```
 
+Notice that as opposed to its predecessor `switch2`, `switch2mod` uses the module_id and not the name of the module tabs.
+
 # Dispatchers
 
-Module manager inclue a couple of convenience functions that deal with all the nuances described providing a uniform of accessing all fields above.
+Module manager include a couple of convenience functions that deal with all the nuances described providing a uniform of accessing all fields above.
 
 Lets see it with our first example.
 
