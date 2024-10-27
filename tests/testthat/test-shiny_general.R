@@ -257,7 +257,7 @@ local({
       app$wait_for_idle()
       app$set_inputs("dataset_filter_46ab8635-carb" = c(1, 1))
       app$wait_for_idle()
-      app$set_inputs("__tabset_0__" = "Filtered Carb")
+      app$set_inputs("__tabset_0__" = "mod5")
       app$wait_for_idle()
       val <- app$wait_for_value(output = "mod5-text", ignore = list("4"), timeout = 10000)
       expect_identical(val, "2")
@@ -281,7 +281,7 @@ local({
       app$wait_for_idle()
       app$set_inputs("global_filter-car" = "Duster 360")
       app$wait_for_idle()
-      app$set_inputs("__tabset_0__" = "Unfiltered Tab")
+      app$set_inputs("__tabset_0__" = "mod4")
       app_input_values <- app$get_values()[["input"]]
 
       app$run_js("document.getElementById('._bookmark_').click()")
@@ -325,7 +325,7 @@ local({
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
-        app$set_inputs("__tabset_0__" = "Unfiltered Tab")
+        app$set_inputs("__tabset_0__" = "mod4")
 
         tries <- 10
         while (!identical(app$get_values(output = "mod4-text")[["output"]][["mod4-text"]], "6") && tries > 0) {
@@ -343,7 +343,7 @@ local({
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
-        app$set_inputs("__tabset_0__" = "Filtered Tab")
+        app$set_inputs("__tabset_0__" = "mod1")
 
         tries <- 10
         while (!identical(app$get_values(output = "mod1-text")[["output"]][["mod1-text"]], "1") && tries > 0) {
@@ -361,7 +361,7 @@ local({
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
-        app$set_inputs("__tabset_0__" = "Read Output")
+        app$set_inputs("__tabset_0__" = "mod3")
         app$wait_for_idle()
 
         tries <- 10
@@ -386,7 +386,7 @@ local({
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
 
-        app$set_inputs("__tabset_0__" = "Name And Dataset")
+        app$set_inputs("__tabset_0__" = "mod_dataset_name_date")
         app$wait_for_idle()
 
         tries <- 10
@@ -473,7 +473,7 @@ local({
     app <- shinytest2::AppDriver$new((root_app$get_url()))
 
     # Just to avoid a warning message when we change the tab to the already active one
-    app$set_inputs(__tabset_0__ = "Read Output")
+    app$set_inputs("__tabset_0__" = "mod3")
 
     get_all_ <- function() {
       set_if_not <- function(tab) {
@@ -483,15 +483,15 @@ local({
       list(
         filt_tab = {
           # Tab may be set from the outside
-          if (app$get_value(input = "__tabset_0__") != "Filtered Tab") app$set_inputs(__tabset_0__ = "Filtered Tab")
+          if (app$get_value(input = "__tabset_0__") != "Filtered Tab") app$set_inputs("__tabset_0__" = "mod1")
           app$get_value(output = "mod1-text")
         },
         read_tab = {
-          app$set_inputs(__tabset_0__ = "Read Output")
+          app$set_inputs("__tabset_0__" = "mod3")
           app$get_value(output = "mod3-text")
         },
         unfilt_tab = {
-          app$set_inputs(__tabset_0__ = "Unfiltered Tab")
+          app$set_inputs("__tabset_0__" = "mod4")
           app$get_value(output = "mod4-text")
         }
       )
@@ -514,7 +514,7 @@ local({
     app$wait_for_idle()
 
     # Poor mans wait for accepted value
-    app$set_inputs(__tabset_0__ = "Filtered Tab")
+    app$set_inputs("__tabset_0__" = "mod1")
     app$wait_for_value(output = "mod1-text", ignore = as.character(setdiff(1:20, 2)), timeout = 10000)
     mpg_two_date_filter <- list(
       current = get_all_(),
@@ -530,7 +530,7 @@ local({
     app$wait_for_idle()
 
     # Poor mans wait for accepted value
-    app$set_inputs(__tabset_0__ = "Filtered Tab")
+    app$set_inputs("__tabset_0__" = "mod1")
     app$wait_for_idle()
     value <- local({
       value <- app$get_values(output = "mod1-text")[["output"]][["mod1-text"]]
@@ -560,7 +560,7 @@ local({
     app$wait_for_idle()
 
     # Poor mans wait for accepted value
-    app$set_inputs(__tabset_0__ = "Filtered Tab")
+    app$set_inputs("__tabset_0__" = "mod1")
     app$wait_for_idle()
     value <- local({
       value <- app$get_values(output = "mod1-text")[["output"]][["mod1-text"]]
@@ -584,7 +584,7 @@ local({
     app$wait_for_idle()
 
     # Poor mans wait for accepted value
-    app$set_inputs(__tabset_0__ = "Filtered Tab")
+    app$set_inputs("__tabset_0__" = "mod1")
     app$wait_for_idle()
     value <- local({
       value <- app$get_values(output = "mod1-text")[["output"]][["mod1-text"]]
@@ -609,7 +609,7 @@ local({
     app$wait_for_idle()
 
     # Poor mans wait for accepted value
-    app$set_inputs(__tabset_0__ = "Filtered Tab")
+    app$set_inputs("__tabset_0__" = "mod1")
     app$wait_for_idle()
     value <- local({
       value <- app$get_values(output = "mod1-text")[["output"]][["mod1-text"]]

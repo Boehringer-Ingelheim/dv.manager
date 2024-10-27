@@ -27,8 +27,8 @@ test_that("modules can switch between tabs" |>
 
   app$click("mod1-switch")
   app$wait_for_idle()
-  expect_equal(app$get_value(input = "__tabset_0__"), "Mod 2")
+  expect_equal(app$get_value(input = "__tabset_0__"), "mod2")
   app$click("mod2-switch")
   app$wait_for_idle()
-  expect_equal(app$get_value(input = "__tabset_0__"), "Mod 1")
+  expect_equal(app$get_value(input = "__tabset_0__"), "mod1")
 })
