@@ -55,6 +55,29 @@ LAYOUT <- poc( # nolint
   TAB_GROUP = "tab_group"
 )
 
+#' Create a Tabbed Shiny Module Collection
+#'
+#' @description
+#' `tab_group` is a function that groups dv modules in tabsets (see [shiny::tabsetPanel]).
+#' This function is designed to simplify the process of organizing multiple Shiny modules into a single,
+#' visually organized tabset. It allows nested modules.
+#'
+#' @param module_list A list of modules.
+#'
+#' @return The module list marked with an attribute.
+#'
+#' @details
+#' The function does not make use of `namespace` (`NS()`) or `shiny::moduleServer` to implement traditional Shiny
+#' modules, but creates a tab-like UI structure, making it an aesthetic modification.
+#'
+#' Outputs of grouped modules are accessible by using the module id, there is no special change required.
+#'
+#' When switching to grouped outputs the id of the module can be used directly. This approach is incompatible
+#' with the `switch2` function and must be used with `switch2mod`.
+#'
+#'
+#' @export
+#'
 tab_group <- function(module_list) {
   attr(module_list, LAYOUT$ATTRIBUTE) <- LAYOUT$TAB_GROUP # nolint
   module_list
