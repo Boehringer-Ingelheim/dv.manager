@@ -4,20 +4,13 @@
 \alias{tab_group}
 \title{Create a Tabbed Shiny Module Collection}
 \usage{
-tab_group(module_list, tab_id)
+tab_group(module_list)
 }
 \arguments{
 \item{module_list}{A list of modules.}
-
-\item{tab_id}{A string representing the \code{tab_id} of the new module. This must be unique among all IDs}
 }
 \value{
-A list representing a Shiny module that contains:
-\itemize{
-\item \code{ui}: A function to generate the user interface for the tabset containing all the provided modules.
-\item \code{server}: A list of server functions with their corresponding module IDs.
-\item \code{module_id}: The ID for the module (provided by \code{tab_id} parameter).
-}
+The module list marked with an attribute.
 }
 \description{
 \code{tab_group} is a function that groups dv modules in tabsets (see \link[shiny:tabsetPanel]{shiny::tabsetPanel}).
@@ -30,6 +23,6 @@ modules, but creates a tab-like UI structure, making it an aesthetic modificatio
 
 Outputs of grouped modules are accessible by using the module id, there is no special change required.
 
-When switching to grouped outputs the full hierarchy of grouped modules should be specified:adae
-\code{selected = c("Module Tab", mod_tab = "Nested modules", nested_mod_tab = "Single nested module")}.
+When switching to grouped outputs the id of the module can be used directly. This approach is incompatible
+with the \code{switch2} function and must be used with \code{switch2mod}.
 }
