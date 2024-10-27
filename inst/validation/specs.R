@@ -69,11 +69,9 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
     - throws an error if it not POSIXct or NULL
 ",
   "data_structure_check" = "- data is a list of lists of dataframes, or a list of functions. Otherwise throw an informative error.
-- data is not NULL. Otherwise it throws an informative error.
-- Elements in the list data are named. Otherwise it throws an informative error.",
-  "module_list_check" = "- Elements in module_list are named. Otherwise it throws an informative error.
+- data is not NULL. Otherwise it throws an informative error.",
+  "module_list_check" = "
 - module_list is not empty. Otherwise it throws an informative warning.
-- names in module_list are not repeated. Otherwise it throws an informative error.
 - ids of the modules in module_list are not repeated. Otherwise it throws an informative error.",
   "startup_message_check" = "- startup_message is null or a shiny::modalDialog. Otherwise it throws an informative error.",
   "azure_options_check" = "-azure_options: must be a list with all the required fields or NULL. Otherwise an error is thrown.",

@@ -305,49 +305,20 @@ test_that(
 ## Testing "check_module" ----
 
 test_that(
-  vdoc[["add_spec"]]("check_module should error when the any of the module_list entries are not named", c(specs$module_list_check)),
-  {
-    check_modules(list(1)) %>%
-      expect_error("All entries in module_list must be named")
-  }
-)
-
-test_that(
-  vdoc[["add_spec"]]("check_module should pass the check when a named list with non-repeated names. Should return the checked element", c(specs$module_list_check)),
-  {
-    check_modules(
-      list(a = list(ui = 1, server = function(x) x, module_id = 3))
-    ) %>%
-      expect_error(NA)
-  }
-)
-
-test_that(
   vdoc[["add_spec"]]("check_module should warn when the module_list is empty", c(specs$module_list_check)),
   {
-    check_modules(list()) %>%
+    check_resolved_modules(resolve_module_list(list())) %>%
       expect_warning(regexp = "module_list has length 0\\. No modules are included in the app\\.") # nolint
-  }
-)
-
-test_that(
-  vdoc[["add_spec"]]("check_module should error when the names in the list are repeated", c(specs$module_list_check)),
-  {
-    check_modules(list(
-      a = list(ui = 1, server = function(x) x, module_id = 3),
-      a = list(ui = 1, server = function(x) x, module_id = 4)
-    )) %>%
-      expect_error(regexp = "module_list has repeated names") # nolint
   }
 )
 
 test_that(
   vdoc[["add_spec"]]("check_module should error when the module_id in the list are repeated", c(specs$module_list_check)),
   {
-    check_modules(list(
+    check_resolved_modules(resolve_module_list(list(
       a = list(ui = 1, server = function(x) x, module_id = 3),
       b = list(ui = 1, server = function(x) x, module_id = 3)
-    )) %>%
+    ))) %>%
       expect_error(regexp = "module_list has repeated module_ids") # nolint
   }
 )
