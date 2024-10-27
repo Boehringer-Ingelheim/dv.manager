@@ -1,21 +1,21 @@
-check_resolved_modules <- function(module_list) {
-   
-  if (length(module_list[["module_id_list"]]) == 0) {
+check_resolved_modules <- function(resolved_module_list) {
+
+  if (length(resolved_module_list[["module_id_list"]]) == 0) {
     msg <- "module_list has length 0. No modules are included in the app."
     log_warn(msg)
   }
 
-  if (any(duplicated(module_list[["module_id_list"]]))) {
+  if (any(duplicated(resolved_module_list[["module_id_list"]]))) {
     msg <- "module_list has repeated module_ids"
     rlang::abort(msg)
   }
 
-  if (any(duplicated(module_list[["module_name_list"]]))) {
+  if (any(duplicated(resolved_module_list[["module_name_list"]]))) {
     msg <- "module_list has repeated module_names"
     rlang::abort(msg)
   }
 
-  return(module_list)
+  return(resolved_module_list)
 }
 
 check_data <- function(data) {
