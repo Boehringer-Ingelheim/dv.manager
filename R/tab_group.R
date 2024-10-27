@@ -20,12 +20,6 @@ run_mock_app_tab_group <- function() {
           mm_dispatch("utils", "switch2mod"),
           "mod_switch1"
         ),
-        "Switch to nest 2" = mod_switch(
-          "Mod 4",
-          selected = c("Module Tab"),
-          mm_dispatch("utils", "switch2"),
-          "mod_switch2"
-        ),
         "Module Tab" = tab_group(
           module_list = list(
             "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
@@ -49,47 +43,6 @@ run_mock_app_tab_group <- function() {
               )
             )
           )
-        )
-      ),
-      filter_data = "adsl",
-      filter_key = "USUBJID"
-    )
-}
-
-run_mock_app_tab_group2 <- function() {
-  module_list <-
-    run_app(
-      data = list(
-        "D1" = list(
-          adsl = get_pharmaverse_data("adsl"),
-          adae = get_pharmaverse_data("adae")
-        ),
-        "D2" = list(
-          adsl = get_pharmaverse_data("adsl"),
-          adae = get_pharmaverse_data("adae"),
-          adlb = get_pharmaverse_data("adlb")
-        )
-      ),
-      module_list = list(
-        "Separate tab" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod1"),
-        "Switch to nest" = mod_switch(
-          "Mod 1",
-          selected = c("Module Tab", mod_tab = "Nested modules", nested_mod_tab = "Simple5"),
-          mm_dispatch("utils", "switch2"),
-          "mod_switch"
-        ),
-        "Module Tab" = tab_group(
-          module_list = list(
-            "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
-            "Simple3" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod3"),
-            "Send and Receive 2" = mod_com_test(
-              choices = c("a", "b", "c"),
-              message = "The other module has selected",
-              value = mm_dispatch("module_output", "mod_rec_1"),
-              mod_id = "mod_rec_2"
-            )
-          ),
-          tab_id = "mod_tab"
         )
       ),
       filter_data = "adsl",
