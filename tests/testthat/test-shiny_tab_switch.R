@@ -1,4 +1,4 @@
-test_that("modules can switch between tabs" |>
+test_that("modules can switch between tabs using switch2 and switch2mod" |>
   vdoc[["add_spec"]](c(specs$module_tab_switching)), {
   skip_if_not_running_shiny_tests()
   skip_if_suspect_check()
@@ -15,8 +15,8 @@ test_that("modules can switch between tabs" |>
         ),
         "Mod 2" = dv.manager:::mod_switch(
           "Mod 2",
-          "Mod 1",
-          dv.manager::mm_dispatch("utils", "switch2"),
+          "mod1",
+          dv.manager::mm_dispatch("utils", "switch2mod"),
           "mod2"
         )
       ),

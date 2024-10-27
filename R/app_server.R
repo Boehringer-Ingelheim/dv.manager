@@ -225,7 +225,7 @@ app_server_ <- function(input, output, session, opts) {
           return(NULL)
         }
                 
-        shiny::updateTabsetPanel(session, "__tabset_0__", module_names[module_names == selected])
+        shiny::updateTabsetPanel(session, "__tabset_0__", names(module_names)[module_names == selected])
       },
       switch2mod = function(selected) {
         if (!checkmate::test_string(selected, min.chars = 1)) {
