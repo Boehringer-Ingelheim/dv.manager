@@ -16,7 +16,7 @@ test_that(
       data = datasets,
       filter_data = "a",
       filter_key = "A",
-      module_list = list(
+      module_info = resolve_module_list(list(
         "id 1" = mod_identity(
           value = mm_dispatch("filtered_dataset", c("a", "b")),
           mod_id = "mod_1"
@@ -26,7 +26,7 @@ test_that(
           mod_id = "mod_2"
         )
       )
-    )
+    ))
 
 
     shiny::testServer(
@@ -48,7 +48,7 @@ test_that(
       data = datasets,
       filter_data = "a",
       filter_key = "A",
-      module_list = list(
+      module_info = resolve_module_list(list(
         "id 1" = mod_identity(
           value = 2,
           mod_id = "mod_1"
@@ -58,7 +58,7 @@ test_that(
           mod_id = "mod_2"
         )
       )
-    )
+    ))
 
 
     shiny::testServer(
@@ -80,7 +80,7 @@ test_that(
       data = datasets,
       filter_data = "a",
       filter_key = "A",
-      module_list = list(
+      module_info = resolve_module_list(list(
         "id 1" = mod_identity(
           value = mm_dispatch("filtered_dataset", c("a", "b")),
           mod_id = "mod_1"
@@ -94,7 +94,7 @@ test_that(
           mod_id = "mod_2"
         )
       )
-    )
+    ))
 
 
     shiny::testServer(
