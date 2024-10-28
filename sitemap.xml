@@ -37,9 +37,6 @@
     <loc>/articles/logging.html</loc>
   </url>
   <url>
-    <loc>/articles/manager_utils.html</loc>
-  </url>
-  <url>
     <loc>/articles/passing_data.html</loc>
   </url>
   <url>
@@ -68,6 +65,9 @@
   </url>
   <url>
     <loc>/reference/build_secure_arguments.html</loc>
+  </url>
+  <url>
+    <loc>/reference/cash-.pack_of_constants.html</loc>
   </url>
   <url>
     <loc>/reference/get_date_range.html</loc>
@@ -109,9 +109,15 @@
     <loc>/reference/ns_css.html</loc>
   </url>
   <url>
+    <loc>/reference/pack_of_constants.html</loc>
+  </url>
+  <url>
     <loc>/reference/pipe.html</loc>
   </url>
   <url>
     <loc>/reference/run_app.html</loc>
+  </url>
+  <url>
+    <loc>/reference/tab_group.html</loc>
   </url>
 </urlset>
