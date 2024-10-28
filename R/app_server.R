@@ -46,7 +46,7 @@
 
 app_server <- function(input = NULL, output = NULL, session = NULL) {
   opts <- list(
-    "module_list" = get_config("module_list"),
+    "module_info" = get_config("module_info"),
     "data" = get_config("data"),
     "filter_data" = get_config("filter_data"),
     "filter_key" = get_config("filter_key"),
@@ -59,7 +59,7 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
 
 app_server_module <- function(id) {
   opts <- list(
-    "module_list" = get_config("module_list"),
+    "module_info" = get_config("module_info"),
     "data" = get_config("data"),
     "filter_data" = get_config("filter_data"),
     "filter_key" = get_config("filter_key"),
@@ -69,6 +69,7 @@ app_server_module <- function(id) {
   shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
 }
 
+# nolint start cyclocomp_linter
 app_server_ <- function(input, output, session, opts) {
   ns <- session[["ns"]]
 
@@ -79,16 +80,20 @@ app_server_ <- function(input, output, session, opts) {
         "affm[[\"utils\"]][[\"switch_function\"]]",
         msg = "Switch function has been moved to the list of arguments passed to the module"
       )
-      shiny::updateTabsetPanel(session, "main_tab_panel", selected)
+      shiny::updateTabsetPanel(session, "__tabset_0__", selected)
     }
   )
 
-  module_list <- opts[["module_list"]]
+  module_server <- opts[["module_info"]][["server_list"]]
+  module_names <- opts[["module_info"]][["module_name_list"]]
+  module_hierarchy_list <- opts[["module_info"]][["hierarchy_list"]]
   data <- opts[["data"]]
   filter_data <- opts[["filter_data"]]
   filter_key <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
+
+  datasets_filters_info <- get_dataset_filters_info(data, filter_data)
 
   # Check if dataset must be reloaded in the next session
   check_data_reload(reload_period)
@@ -121,34 +126,72 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  filtered_values <- dv.filter::data_filter_server(
+  global_filtered_values <- dv.filter::data_filter_server(
     "global_filter",
     shiny::reactive(unfiltered_dataset()[[filter_data]])
   )
 
+  dataset_filters <- local({
+    l <- vector(mode = "list", length = length(datasets_filters_info))
+    names(l) <- names(datasets_filters_info)
+    for (idx in seq_along(datasets_filters_info)) {
+      l[[idx]] <- local({
+        curr_dataset_filter_info <- datasets_filters_info[[idx]]
+        dv.filter::data_filter_server(
+          curr_dataset_filter_info[["id"]],
+          shiny::reactive({
+            unfiltered_dataset()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()
+          })
+        )
+      })
+    }
+
+    l
+  })
+
   filtered_dataset <- shinymeta::metaReactive({
     # dv.filter returns a logical vector. This contemplates the case of empty lists
-    shiny::req(is.logical(filtered_values()))
-    log_inform("New filter applied")
-    filtered_key_values <- unfiltered_dataset()[[filter_data]][[filter_key]][filtered_values()] # nolint
-    purrr::map(
-      unfiltered_dataset(),
+    shiny::req(is.logical(global_filtered_values()))
+
+    # Depend on all datasets
+    purrr::walk(dataset_filters, ~ .x())
+
+    # We do not react to changed in unfiltered dataset, otherwise when a dataset changes
+    # We filter the previous dataset which in the best case produces and extra reactive beat
+    # and in the worst case produces an error in (mvbc)
+    # We don't want to control the error in (mvbc) because filtered dataset only changes when filter changes
+    ufds <- shiny::isolate(unfiltered_dataset())
+
+    curr_dataset_filters <- dataset_filters[intersect(names(dataset_filters), names(ufds))]
+
+    # Current dataset must be logical with length above 0
+    # Check dataset filters check all datafilters are initialized
+    purrr::walk(curr_dataset_filters, ~ shiny::req(checkmate::test_logical(.x(), min.len = 1)))
+
+    filtered_key_values <- ufds[[filter_data]][[filter_key]][global_filtered_values()]
+
+    fds <- ufds
+
+    # Single dataset filtering
+    fds[names(curr_dataset_filters)] <- purrr::imap(
+      fds[names(curr_dataset_filters)],
+      function(val, nm) {
+        # (mvbc)
+        fds[[nm]][dataset_filters[[nm]](), , drop = FALSE]
+      }
+    )
+
+    # Global dataset filtering
+    global_filtered <- purrr::map(
+      fds,
       ~ dplyr::filter(.x, .data[[filter_key]] %in% filtered_key_values) # nolint
     )
   })
-
 
   # Prepare module_output argument
   module_output_env <- rlang::current_env()
   module_output_func <- function() {
     return(base::get("module_output", envir = module_output_env))
-  }
-
-  if (length(module_list) > 0) {
-    module_names <- names(module_list)
-    names(module_names) <- purrr::map_chr(module_list, "module_id")
-  } else {
-    module_names <- NULL
   }
 
   module_args <- list(
@@ -167,27 +210,56 @@ app_server_ <- function(input, output, session, opts) {
     module_names = module_names,
     utils = list(
       switch2 = function(selected) {
-        shiny::updateTabsetPanel(session, "main_tab_panel", selected)
+        .Deprecated(
+          "switch2mod",
+          "switch2 is being deprecated in favor of switch2mod. switch2mod directly works on module ids and supports switching to nested tabs." # nolint
+        )
+        if (!checkmate::test_string(selected, min.chars = 1)) {
+          log_warn("selected must be a non-empty string")
+          return(NULL)
+        }
+
+        if (!checkmate::test_string(selected, min.chars = 1)) {
+          log_warn("selected must be a non-empty string")
+          return(NULL)
+        }
+
+        if (!selected %in% module_names) {
+          log_warn(
+            paste0("\"", selected, "\"", " is not a module name. switch does not support switching to nested tabs")
+          )
+          return(NULL)
+        }
+
+        shiny::updateTabsetPanel(session, "__tabset_0__", names(module_names)[module_names == selected])
+      },
+      switch2mod = function(selected) {
+        if (!checkmate::test_string(selected, min.chars = 1)) {
+          log_warn("selected must be a non-empty string")
+          return(NULL)
+        }
+
+        if (!selected %in% names(module_hierarchy_list)) {
+          log_warn("selected must be a module id")
+          return(NULL)
+        }
+
+        this_hierarchy_value <- module_hierarchy_list[[selected]]
+        this_hierarchy_names <- names(this_hierarchy_value)
+
+        for (idx in seq_along(this_hierarchy_value)) {
+          tab_value <- this_hierarchy_value[[idx]]
+          tabset_id <- this_hierarchy_names[[idx]]
+          shiny::updateTabsetPanel(session, tabset_id, tab_value)
+        }
       }
     )
   )
 
-  module_ids <- purrr::map(module_list, "module_id")
-  module_output <- module_list %>% # nolint module output is used above and lintr assumes it is not used
-    purrr::set_names(nm = module_ids) %>% # Set names to access module outputs with `module_output[module_id]`
-    purrr::map(function(module) {
-      if (rlang::is_expression(module[["server"]])) {
-        .Defunct(
-          "server = function(args) {...}",
-          msg = "Passing the server as an expression is going to be deprecated soon."
-        )
-        return(rlang::eval_tidy(module[["server"]]))
-      }
-      if (is.function(module[["server"]])) {
-        return(module[["server"]](module_args))
-      }
-    })
-
+  module_output <- list()
+  for (srv in module_server) {
+    module_output[[srv[["module_id"]]]] <- srv[["server"]](module_args)
+  }
 
   #### Report modal
 
@@ -258,6 +330,7 @@ app_server_ <- function(input, output, session, opts) {
   )
 }
 
+# nolint end cyclocomp_linter
 
 # Convoluted way of having a testable server function
 # TestServer reads the caller environment

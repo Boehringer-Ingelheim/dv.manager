@@ -18,8 +18,10 @@ fs_spec <- specs_list(
   "modification_dates_display" = "The earliest and latest modification dates of all the data tables are displayed for the active dataset",
   "date_unavailability_message" = "If no date is available for any of the data tables in the loaded dataset the system displays a 'Date unavailable' message",
   "data_reloading" = "dv.manager allows the reloading of the data after a specific amount of time.",
-  "filtering_menu_display" = "The sidebar menu will display a filtering menu using the datafilter module (GUI).",
-  "active_dataset_filtering" = "The active dataset can be filtered through the datafilter module.",
+  "filtering_menu_display" = "The sidebar menu will display a filtering menu/s using the datafilter module (GUI).",
+  "active_dataset_filtering" = "The active dataset can be filtered.",
+  "global_filtering" = "A global filter will be available in dv.manager. One table of the dataset will be used to filter all other tables in the dataset and itself by using a common field among them.",
+  "single_filtering" = "All data tables, with exception of the one used in the global filter, will have its own independent filter that only affects itself. These filters will not influence other datasets.",  
   "bookmarking_features" = "Bookmarking will include:
 - the identity of the loaded dataset
 - the set of filters applied to the loaded dataset
@@ -67,15 +69,13 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
     - throws an error if it not POSIXct or NULL
 ",
   "data_structure_check" = "- data is a list of lists of dataframes, or a list of functions. Otherwise throw an informative error.
-- data is not NULL. Otherwise it throws an informative error.
-- Elements in the list data are named. Otherwise it throws an informative error.",
-  "module_list_check" = "- Elements in module_list are named. Otherwise it throws an informative error.
+- data is not NULL. Otherwise it throws an informative error.",
+  "module_list_check" = "
 - module_list is not empty. Otherwise it throws an informative warning.
-- names in module_list are not repeated. Otherwise it throws an informative error.
 - ids of the modules in module_list are not repeated. Otherwise it throws an informative error.",
   "startup_message_check" = "- startup_message is null or a shiny::modalDialog. Otherwise it throws an informative error.",
   "azure_options_check" = "-azure_options: must be a list with all the required fields or NULL. Otherwise an error is thrown.",
-  "filtering_menu" = "- A filtering menu that is an instance of datafilter",
+  "filtering_menus" = "- A filtering menu that is an/several instances of datafilter",
   "dataset_selector" = "- A dataset selector that:
     - contains one entry per entry in the data parameters list
     - when changed will load the selected dataset in the application
@@ -97,9 +97,17 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
   "data_reloading" = "Module Manager allows reloading the data after a given amount of time. The data_reload parameter will be specified by the App Creator."
 )
 
+tab_group <- list(
+  "group_modules" = "module allows grouping a set of modules under a single tab in module manager",
+  "allows_nesting" = "module allows nesting",
+  "output_accesible" = "module output can be accesed by other modules in module.manager",
+  "allows_switching" = "module can switch to/from other modules"
+)
+
 specs <- c(
   fs_spec,
-  sds_spec
+  sds_spec,
+  list(tab_group = tab_group)
 )
 
 #nolint end

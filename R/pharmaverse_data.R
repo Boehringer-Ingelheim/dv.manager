@@ -1,10 +1,16 @@
 get_pharmaverse_data <- function(dataset) {
   if (!rlang::is_installed("pharmaverseadam")) stop("Please, install.package('pharmaverseadam')")
-  if (dataset == "adsl") {
-    return(pharmaverseadam::adsl)
+
+  res <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae, adlb = pharmaverseadam::adlb)[[dataset]]
+  if (is.null(res)) stop("Unknown dataset")
+
+  for (col in names(res)) {
+    if (is.character(res[[col]]) || endsWith(col, "CD")) {
+      label <- attr(res[[col]], "label")
+      res[[col]] <- factor(res[[col]])
+      attr(res[[col]], "label") <- label
+    }
   }
-  if (dataset == "adae") {
-    return(pharmaverseadam::adae)
-  }
-  stop("Unknown dataset")
+
+  return(res)
 }

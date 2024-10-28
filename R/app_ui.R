@@ -9,26 +9,42 @@
 
 
 
-app_ui <- function(id) {
-  if (is.environment(id)) {
+app_ui <- function(request_id) {
+  if (is.environment(request_id)) {
     log_inform("I am the ui of an app")
-    ns <- base::identity
+    id <- character(0)
   } else if (is.character(id)) {
-    ns <- shiny::NS(id)
+    id <- request_id
     log_inform(glue::glue("I am the ui of the module: {ns('')}"))
   } else {
-    stop("Unknown value type in id")
+    stop("Unknown value type in request_id")
   }
 
+  ns <- shiny::NS(id)
+
   data <- get_config("data")
-  module_list <- get_config("module_list")
+  module_info <- get_config("module_info")
+  filter_data <- get_config("filter_data")
 
   log_inform("Initializing HTML template UI")
-  log_inform(glue::glue(
-    "Available modules: {paste(names(module_list), collapse=',')}"
-  ))
-  log_inform(glue::glue("Available modules (N): {length(module_list)}"))
+  log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
   log_inform(glue::glue("Dataset options (N): {length(data)}"))
+
+  dataset_filters_ui <- local({
+    datasets_filters_info <- get_dataset_filters_info(data, filter_data)
+    purrr::map(
+      datasets_filters_info,
+      function(entry) {
+        shiny::div(
+          id = entry[["id_cont"]],
+          class = "filter-control  filter-filters",
+          shiny::tags[["label"]](entry[["name"]]),
+          dv.filter::data_filter_ui(ns(entry[["id"]])),
+          shiny::hr(style = "border-top: 2px solid gray; height: 10px;")
+        )
+      }
+    )
+  })
 
   collapsable_ui <-
     shiny::div(
@@ -44,10 +60,25 @@ app_ui <- function(id) {
           shiny::selectInput(ns("selector"), label = NULL, choices = names(data))
         )),
         shiny::div(
-          id = ns("shiny_filter"),
-          class = "c-well",
-          shiny::tags$label("Filters", class = "text-primary"),
-          dv.filter::data_filter_ui(ns("global_filter"))
+          class = "c-well shiny_filter",
+          shiny::tags$label(
+            "Subject Level Filter",
+            shiny::icon("circle-info", title = TT[["SUBJECT_LEVEL_FILTER"]]),
+            class = "text-primary"
+          ),
+          shiny::div(
+            class = "filter-control  filter-filters",
+            dv.filter::data_filter_ui(ns("global_filter"))
+          )
+        ),
+        shiny::div(
+          class = "c-well shiny_filter",
+          shiny::tags$label(
+            "Dataset Filter(s)",
+            shiny::icon("circle-info", title = TT[["DATASET_FILTER"]]),
+            class = "text-primary"
+          ),
+          dataset_filters_ui
         )
       )
     )
@@ -92,22 +123,12 @@ app_ui <- function(id) {
     btn_group # Location modified through css check custom.css
   )
 
-  # unnamed because tabset does not admit named list there
-  tabs <-
-    unname(purrr::imap(module_list, ~ shiny::tabPanel(title = .y, ns_css(.x[["ui"]](
-      ns(.x$module_id)
-    )))))
-
   shiny::fluidPage(
     insert_header_add_resources(app_title = get_config("title")),
     theme = get_app_theme(),
     class = "display-grid",
     sidebar,
-    do.call(shiny::tabsetPanel, c(
-      tabs,
-      type = "pills",
-      id = ns("main_tab_panel")
-    )),
+    module_info[["ui"]](ns),
     dataset_name
   )
 }

@@ -15,7 +15,7 @@ test_that(
     testing_options <- list(
       data = datasets,
       filter_data = "a",
-      module_list = list(),
+      module_info = resolve_module_list(list()),
       filter_key = "mpg"
     )
 
@@ -44,7 +44,7 @@ test_that(
     testing_options <- list(
       data = datasets,
       filter_data = "a",
-      module_list = list(),
+      module_info = resolve_module_list(list()),
       filter_key = "mpg"
     )
 
@@ -63,7 +63,7 @@ test_that(
   {
     testing_options <- list(
       data = list(),
-      module_list = list("mod_1" = mod_identity(1, "mod_1"), "mod_2" = mod_identity(2, "mod_2"))
+      module_info = resolve_module_list(list("mod_1" = mod_identity(1, "mod_1"), "mod_2" = mod_identity(2, "mod_2")))
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -83,7 +83,7 @@ test_that(
     testing_options <- list(
       data = datasets,
       filter_data = "a",
-      module_list = list(),
+      module_info = resolve_module_list(list()),
       filter_key = "mpg"
     )
 
@@ -103,7 +103,7 @@ test_that(
     testing_options <- list(
       data = list(),
       filter_data = NULL,
-      module_list = list("mod_1" = mod_identity(1, mod_id = "mod_1")),
+      module_info = resolve_module_list(list("mod_1" = mod_identity(1, mod_id = "mod_1"))),
       filter_key = NULL
     )
 
@@ -118,7 +118,7 @@ test_that(
   {
     testing_options <- list(
       data = list(),
-      module_list = list(),
+      module_info = resolve_module_list(list()),
       filter_key = NULL
     )
     shiny::testServer(app_server_test(testing_options), {
@@ -156,7 +156,7 @@ test_that(
     testing_options <- list(
       data = datasets,
       filter_data = "a",
-      module_list = list(),
+      module_info = resolve_module_list(list()),
       filter_key = "mpg"
     )
 
@@ -194,7 +194,7 @@ test_that(
     testing_options <- list(
       data = datasets,
       filter_data = "a",
-      module_list = list(),
+      module_info = resolve_module_list(list()),
       filter_key = "mpg"
     )
 
@@ -235,7 +235,7 @@ test_that(
     testing_options <- list(
       data = datasets,
       filter_data = "a",
-      module_list = list(),
+      module_info = resolve_module_list(list()),
       filter_key = "mpg"
     )
 
@@ -267,7 +267,7 @@ test_that(
     testing_options <- list(
       data = datasets,
       filter_data = "a",
-      module_list = list(),
+      module_info = resolve_module_list(list()),
       filter_key = "mpg",
       reload_period = lubridate::duration(1, "seconds")
     )

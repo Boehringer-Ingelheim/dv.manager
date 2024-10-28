@@ -1,3 +1,8 @@
+# dv.manager 2.1.3
+
+- dv.manager includes the option to filter using several datasets
+- dv.manager includes `tab_group` that allows grouping of modules in TabSets.
+
 # dv.manager 2.1.2
 
 - Tab titles are no longer capitalized

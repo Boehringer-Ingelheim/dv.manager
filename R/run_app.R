@@ -61,7 +61,7 @@ run_app <- function(data = NULL,
   }
 
   config <- list()
-  config[["module_list"]] <- check_modules(module_list)
+  config[["module_info"]] <- check_resolved_modules(process_module_list(module_list))
   config[["data"]] <- check_data(data)
   config[["filter_data"]] <- check_filter_data(filter_data, data)
   config[["filter_key"]] <- check_filter_key(filter_key, data)

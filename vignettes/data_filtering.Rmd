@@ -15,11 +15,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-**dv.manager** include in all applications a filter for the input data.
+# Population filter
+
+**dv.manager** include in all applications a population filter for the input data.
 
 ![](../man/figures/mod_manager_filter.png){width=100%}
 
-In the `run_app()` call we specify which dataset will be passed to dv.filter in the `filter_data` parameter. The fields of this dataset will be displayed in the filter.
+In the `run_app()` call we specify which dataset will be used for filtering the population in the `filter_data` parameter. The fields of this dataset will be displayed in the filter.
 
 ```{r, eval=FALSE}
 dv.manager::run_app(
@@ -36,6 +38,11 @@ The figure below depicts the steps of the filtering process when using the defau
 ![](../man/figures/mod_manager_filter_cartoon.png){width=100%}
 
 In a first step (1), `filter_data` makes a subselection of all subjects in the study according to the criteria selected by the user (in the case of the figure only female participants above 30 years). In a second step (2), we filter the rest of the datasets in `data` and only those subjects that survived the filtering in step 1 will remain.
+
+# Single filter
+
+**dv.manager** includes a filter for each of the datasets, with the exception of the one used in the population filter, that allows filtering the rows in that specific dataset. As opposed to the population filter
+this filter only affects the dataset itself and not the other datasets in the input data.
 
 
 

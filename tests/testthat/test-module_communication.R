@@ -16,7 +16,7 @@ test_that(
       data = datasets,
       filter_data = "a",
       filter_key = "A",
-      module_list = list(
+      module_info = resolve_module_list(list(
         "id 1" = mod_identity(
           value = mm_dispatch("filtered_dataset", c("a", "b")),
           mod_id = "mod_1"
@@ -25,7 +25,7 @@ test_that(
           value = mm_dispatch("module_output", "mod_1"),
           mod_id = "mod_2"
         )
-      )
+      ))
     )
 
 
@@ -48,7 +48,7 @@ test_that(
       data = datasets,
       filter_data = "a",
       filter_key = "A",
-      module_list = list(
+      module_info = resolve_module_list(list(
         "id 1" = mod_identity(
           value = 2,
           mod_id = "mod_1"
@@ -57,7 +57,7 @@ test_that(
           value = mm_dispatch("module_output", "mod_1"),
           mod_id = "mod_2"
         )
-      )
+      ))
     )
 
 
@@ -80,7 +80,7 @@ test_that(
       data = datasets,
       filter_data = "a",
       filter_key = "A",
-      module_list = list(
+      module_info = resolve_module_list(list(
         "id 1" = mod_identity(
           value = mm_dispatch("filtered_dataset", c("a", "b")),
           mod_id = "mod_1"
@@ -93,7 +93,7 @@ test_that(
           value = mm_dispatch("module_output", c("mod_1", "mod_3")),
           mod_id = "mod_2"
         )
-      )
+      ))
     )
 
 

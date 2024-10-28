@@ -47,12 +47,12 @@ local({
   testing_options <- list(
     data = datasets,
     filter_data = "mpg",
-    module_list = list(
+    module_info = resolve_module_list(list(
       "identity" = mod_identity(
         mm_dispatch("unfiltered_dataset"),
         "id_1"
       )
-    ),
+    )),
     filter_key = "car"
   )
 

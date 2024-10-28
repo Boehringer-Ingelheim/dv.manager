@@ -19,6 +19,7 @@ reference:
   - run_app
 - title: Utils
 - contents:
+  - tab_group
   - add_date_range
   - mm_dispatch
   - mm_resolve_dispatcher
@@ -42,8 +43,7 @@ articles:
   contents:
   - developing_module
   - passing_data
-  - css_namespace
-  - manager_utils
+  - css_namespace  
   - logging
 
 - title: How does it work
