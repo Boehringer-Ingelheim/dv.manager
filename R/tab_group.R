@@ -21,26 +21,22 @@ run_mock_app_tab_group <- function() {
           "mod_switch1"
         ),
         "Module Tab" = tab_group(
-          module_list = list(
-            "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
-            "Simple3" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod3"),
-            "Send and Receive 2" = mod_com_test(
-              choices = c("a", "b", "c"),
+          "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
+          "Simple3" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod3"),
+          "Send and Receive 2" = mod_com_test(
+            choices = c("a", "b", "c"),
+            message = "The other module has selected",
+            value = mm_dispatch("module_output", "mod_rec_1"),
+            mod_id = "mod_rec_2"
+          ),
+          "Nested modules" = tab_group(
+            "Simple4" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod4"),
+            "Simple5" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod5"),
+            "Send and Receive 1" = mod_com_test(
+              choices = 1:3,
               message = "The other module has selected",
-              value = mm_dispatch("module_output", "mod_rec_1"),
-              mod_id = "mod_rec_2"
-            ),
-            "Nested modules" = tab_group(
-              module_list = list(
-                "Simple4" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod4"),
-                "Simple5" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod5"),
-                "Send and Receive 1" = mod_com_test(
-                  choices = 1:3,
-                  message = "The other module has selected",
-                  value = mm_dispatch("module_output", "mod_rec_2"),
-                  mod_id = "mod_rec_1"
-                )
-              )
+              value = mm_dispatch("module_output", "mod_rec_2"),
+              mod_id = "mod_rec_1"
             )
           )
         )
@@ -62,9 +58,9 @@ LAYOUT <- poc( # nolint
 #' This function is designed to simplify the process of organizing multiple Shiny modules into a single,
 #' visually organized tabset. It allows nested modules.
 #'
-#' @param module_list A list of modules.
+#' @param ... A set of davinci modules or tab groups
 #'
-#' @return The module list marked with an attribute.
+#' @return The set of of modules wrapped in a list marked with an attribute.
 #'
 #' @details
 #' The function does not make use of `namespace` (`NS()`) or `shiny::moduleServer` to implement traditional Shiny
@@ -78,7 +74,8 @@ LAYOUT <- poc( # nolint
 #'
 #' @export
 #'
-tab_group <- function(module_list) {
+tab_group <- function(...) {
+  module_list <- list(...)
   attr(module_list, LAYOUT$ATTRIBUTE) <- LAYOUT$TAB_GROUP # nolint
   module_list
 }
@@ -217,7 +214,7 @@ resolve_module_list <- function(
 }
 
 process_module_list <- function(module_list) {
-  module_list <- tab_group(module_list)
+  module_list <- do.call(tab_group, module_list)
   resolved_module_list <- resolve_module_list(module_list)
   # We need the ns to be able to invoke all ui functions
   # TODO: Consider removing namespacing it would make all these simpler
