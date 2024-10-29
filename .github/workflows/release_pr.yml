@@ -1,0 +1,48 @@
+name: Create a PR link for release issues
+on:
+  issues:
+    types: [opened, labeled, edited]
+
+jobs:
+  create-pr:
+    if: contains(github.event.issue.labels.*.name, 'release')  # This ensures the job only runs if the 'release' label is present
+    runs-on: ubuntu-latest    
+    permissions:
+      issues: write      
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+          
+      - name: Create PR link and post in comment
+        id: pr-link-creation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ github.event.issue.html_url }}        
+        run: |
+          version=$(echo "${{ github.event.issue.title }}" | sed -n 's/.*rc\/\(v[0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p')
+
+          # Early return if issue name is not correct
+          if [ -z "$version" ]; then
+            gh issue comment ${{ github.event.issue.number }} --body "Version number is not present or incorrect."                        
+            exit 1
+          fi          
+
+          branch_name="rc/$version"
+          
+          branch_text="Expected branch name: \`$branch_name\`"            
+                    
+          echo "Creating PR link"          
+          title=$(echo ${{ github.event.issue.title }} | jq -sRr @uri)hotfix
+          pr_url_text="https://github.com/${{github.repository}}/compare/main...${branch_name}?quick_pull=1&template=release_pull_request_template.md&title=${title}&labels=hotfix"
+          body_url="PR Link: [pull request](<${pr_url_text}>)."
+
+          body="$branch_text $body_url"
+          
+          echo "Creating comment"
+          gh issue comment ${{ github.event.issue.number }} --body "$body"
+
+          
+          
+
+            
