@@ -126,28 +126,12 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  global_filtered_values <- dv.filter::data_filter_server(
+  global_filtered_values <- get_subject_level_server(
     "global_filter",
     shiny::reactive(unfiltered_dataset()[[filter_data]])
   )
 
-  dataset_filters <- local({
-    l <- vector(mode = "list", length = length(datasets_filters_info))
-    names(l) <- names(datasets_filters_info)
-    for (idx in seq_along(datasets_filters_info)) {
-      l[[idx]] <- local({
-        curr_dataset_filter_info <- datasets_filters_info[[idx]]
-        dv.filter::data_filter_server(
-          curr_dataset_filter_info[["id"]],
-          shiny::reactive({
-            unfiltered_dataset()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()
-          })
-        )
-      })
-    }
-
-    l
-  })
+  dataset_filters <- get_dataset_filters_server(datasets_filters_info, unfiltered_dataset)
 
   filtered_dataset <- shinymeta::metaReactive({
     # dv.filter returns a logical vector. This contemplates the case of empty lists

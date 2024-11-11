@@ -30,22 +30,13 @@ app_ui <- function(request_id) {
   log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
   log_inform(glue::glue("Dataset options (N): {length(data)}"))
 
-  dataset_filters_ui <- local({
-    datasets_filters_info <- get_dataset_filters_info(data, filter_data)
-    purrr::map(
-      datasets_filters_info,
-      function(entry) {
-        shiny::div(
-          id = entry[["id_cont"]],
-          class = "filter-control  filter-filters",
-          shiny::tags[["label"]](entry[["name"]]),
-          dv.filter::data_filter_ui(ns(entry[["id"]])),
-          shiny::hr(style = "border-top: 2px solid gray; height: 10px;")
-        )
-      }
-    )
-  })
+  subject_filter_ui <- get_subject_level_ui(ns("global_filter"))
 
+  dataset_filters_ui <- get_dataset_filters_ui(
+    get_dataset_filters_info(data, filter_data),
+    ns
+  )
+  
   collapsable_ui <-
     shiny::div(
       class = "menu-contents",
@@ -68,7 +59,7 @@ app_ui <- function(request_id) {
           ),
           shiny::div(
             class = "filter-control  filter-filters",
-            dv.filter::data_filter_ui(ns("global_filter"))
+            subject_filter_ui
           )
         ),
         shiny::div(
