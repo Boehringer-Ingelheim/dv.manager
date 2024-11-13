@@ -168,3 +168,54 @@ mock_new_filter <- function() {
     enableBookmarking = "url"
   )
 }
+
+
+apply_filter <- function(data, filter_parameters) {
+    
+  type <- filter_parameters[["type"]]
+
+  if (type %in% c("integer", "double", "date")) {
+
+    column <- filter_parameters[["column"]]    
+    value <- filter_parameters[["value"]]
+    NAs <- filter_parameters[["NAs"]]
+
+    min_v <- if (!is.na(value[["min"]])) value[["min"]] else -Inf
+    max_v <- if (!is.na(value[["max"]])) value[["max"]] else Inf
+    mask <- min_v <= data[[column]] & data[[column]] <= max_v
+
+    if (NAs) {
+      mask <- mask | is.na(data[[column]])
+    } else {
+      mask <- mask & !is.na(data[[column]])
+    }    
+  } else if (type == "category") {
+
+    column <- filter_parameters[["column"]]
+    value <- as.character(filter_parameters[["value"]]) # Force as.character in case JSON conversion fails
+    NAs <- filter_parameters[["NAs"]]
+    
+    mask <- data[[column]] %in% c(value)
+    if (NAs) {
+      mask <- mask | is.na(data[[column]])
+    } else {
+      mask <- mask & !is.na(data[[column]])
+    }      
+  } else if (type == "and") {
+    filter_list <- filter_parameters[["filter_list"]]
+    mask <- TRUE # Neutral element for &
+    for (this_filter_parameters in filter_list) {
+      mask <- mask & apply_filter(data, this_filter_parameters)
+    }
+  } else if (type == "or") {
+    filter_list <- filter_parameters[["filter_list"]]
+    mask <- FALSE # Neutral element for |
+    for (this_filter_parameters in filter_list) {
+      mask <- mask | apply_filter(data, this_filter_parameters)
+    }
+  } else {
+    stop("Filter type unknown")
+  }
+
+  return(mask)
+}
