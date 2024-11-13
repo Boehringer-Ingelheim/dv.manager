@@ -30,9 +30,9 @@ app_ui <- function(request_id) {
   log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
   log_inform(glue::glue("Dataset options (N): {length(data)}"))
 
-  subject_filter_ui <- get_subject_level_ui(ns("global_filter"))
+  subject_filter_ui <- create_subject_level_ui(ns("global_filter"))
 
-  dataset_filters_ui <- get_dataset_filters_ui(
+  dataset_filters_ui <- create_dataset_filters_ui(
     get_dataset_filters_info(data, filter_data),
     ns
   )

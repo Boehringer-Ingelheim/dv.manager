@@ -14,7 +14,7 @@ get_dataset_filters_info <- function(data, filter_data) {
   return(res)
 }
 
-get_dataset_filters_ui <- function(dataset_filters_info, ns) {
+create_dataset_filters_ui <- function(dataset_filters_info, ns) {
   if (!isTRUE(getOption("new_filter_switch"))) {
     res <- vector(mode = "list", length = length(dataset_filters_info))
     for (idx in seq_along(dataset_filters_info)) {
@@ -33,17 +33,17 @@ get_dataset_filters_ui <- function(dataset_filters_info, ns) {
   return(res)
 }
 
-get_subject_level_ui <- function(id) {
+create_subject_level_ui <- function(id) {
   dv.filter::data_filter_ui(id)
 }
 
-get_subject_level_server <- function(
+create_subject_level_server <- function(
     id,
     data) {
   if (!isTRUE(getOption("new_filter_switch"))) dv.filter::data_filter_server(id, data)
 }
 
-get_dataset_filters_server <- function(datasets_filters_info, data_list) {
+create_dataset_filters_server <- function(datasets_filters_info, data_list) {
   if (!isTRUE(getOption("new_filter_switch"))) {
     res <- local({
       l <- vector(mode = "list", length = length(datasets_filters_info))

@@ -126,12 +126,12 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  global_filtered_values <- get_subject_level_server(
+  global_filtered_values <- create_subject_level_server(
     "global_filter",
     shiny::reactive(unfiltered_dataset()[[filter_data]])
   )
 
-  dataset_filters <- get_dataset_filters_server(datasets_filters_info, unfiltered_dataset)
+  dataset_filters <- create_dataset_filters_server(datasets_filters_info, unfiltered_dataset)
 
   filtered_dataset <- shinymeta::metaReactive({
     # dv.filter returns a logical vector. This contemplates the case of empty lists
