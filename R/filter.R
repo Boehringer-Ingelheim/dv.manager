@@ -171,14 +171,21 @@ mock_new_filter <- function() {
 
 
 apply_filter <- function(data, filter_parameters) {
-    
+  if (length(filter_parameters) == 0) {
+    return(rep_len(TRUE, nrow(data)))
+  }
+
+  checkmate::assert_subset(c("type"), names(filter_parameters))
   type <- filter_parameters[["type"]]
 
   if (type %in% c("integer", "double", "date")) {
+    checkmate::assert_subset(names(filter_parameters), c("type", "column", "value", "NAs"))
 
-    column <- filter_parameters[["column"]]    
+    column <- filter_parameters[["column"]]
     value <- filter_parameters[["value"]]
     NAs <- filter_parameters[["NAs"]]
+
+    checkmate::assert_set_equal(names(value), c("min", "max"))
 
     min_v <- if (!is.na(value[["min"]])) value[["min"]] else -Inf
     max_v <- if (!is.na(value[["max"]])) value[["max"]] else Inf
@@ -188,31 +195,37 @@ apply_filter <- function(data, filter_parameters) {
       mask <- mask | is.na(data[[column]])
     } else {
       mask <- mask & !is.na(data[[column]])
-    }    
+    }
   } else if (type == "category") {
+    checkmate::assert_set_equal(names(filter_parameters), c("type", "column", "value", "NAs"))
 
     column <- filter_parameters[["column"]]
     value <- as.character(filter_parameters[["value"]]) # Force as.character in case JSON conversion fails
     NAs <- filter_parameters[["NAs"]]
-    
+
     mask <- data[[column]] %in% c(value)
     if (NAs) {
       mask <- mask | is.na(data[[column]])
     } else {
       mask <- mask & !is.na(data[[column]])
-    }      
+    }
   } else if (type == "and") {
+    checkmate::assert_set_equal(names(filter_parameters), c("type", "filter_list"))
     filter_list <- filter_parameters[["filter_list"]]
     mask <- TRUE # Neutral element for &
     for (this_filter_parameters in filter_list) {
       mask <- mask & apply_filter(data, this_filter_parameters)
     }
   } else if (type == "or") {
+    checkmate::assert_set_equal(names(filter_parameters), c("type", "filter_list"))
     filter_list <- filter_parameters[["filter_list"]]
     mask <- FALSE # Neutral element for |
     for (this_filter_parameters in filter_list) {
       mask <- mask | apply_filter(data, this_filter_parameters)
     }
+  } else if (type == "not") {
+    checkmate::assert_set_equal(names(filter_parameters), c("type", "filter"))
+    mask <- !apply_filter(data, filter_parameters[["filter"]])        
   } else {
     stop("Filter type unknown")
   }

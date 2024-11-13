@@ -430,4 +430,20 @@ local({
 
     expect_identical(apply_filter(data, filter_parameters), c(TRUE, TRUE, TRUE, FALSE))
   })
+
+  test_that("empty filter returns all TRUE", {
+    filter_parameters <- list(
+    )
+
+    expect_identical(apply_filter(data, filter_parameters), c(TRUE, TRUE, TRUE, TRUE))
+  })
+
+  test_that("not type is correctly applied", {
+    filter_parameters <- list(
+      type = "not",
+      filter = list()
+    )
+
+    expect_identical(apply_filter(data, filter_parameters), c(FALSE, FALSE, FALSE, FALSE))
+  })
 })
