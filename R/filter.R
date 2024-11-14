@@ -68,7 +68,6 @@ create_dataset_filters_server <- function(datasets_filters_info, data_list) {
   return(res)
 }
 
-
 # NEW FILTER
 
 get_single_filter_data <- function(data) {
@@ -142,22 +141,155 @@ new_filter_server <- function(id, data) {
   return(res)
 }
 
-mock_new_filter <- function() {
-  data <- list(
-    D1 = list(cars = mtcars, iris = iris)
-  )
+mock_new_filter <- function(data = list(
+    "D1" = list(
+      adsl = get_pharmaverse_data("adsl"),
+      adae = get_pharmaverse_data("adae")
+    ),
+    "D2" = list(
+      adsl = get_pharmaverse_data("adsl"),
+      adae = get_pharmaverse_data("adae")
+    )
+  )) {
+    
 
   ui <- function(request) {
     shiny::fluidPage(
       shiny::bookmarkButton(),
+      shiny::selectizeInput(
+        "json",
+        "Returned Filter JSON",
+        list(
+          "AGE" = r"({
+  "D1": {
+    "dataset": [
+      {
+        "target": "adsl",
+        "filter": {
+          "type": "or",
+          "filter_list": [
+            {
+              "type": "integer",
+              "column": "AGE",
+              "value": {
+                "min": 63,
+                "max": 63
+              },
+              "NAs": false
+            },
+            {
+              "type": "integer",
+              "column": "AGE",
+              "value": {
+                "min": 64,
+                "max": 64
+              },
+              "NAs": false
+            }
+          ]
+        }
+      },
+      {
+        "target": "adae",
+        "filter": {
+          "type": "or",
+          "filter_list": [
+            {
+              "type": "integer",
+              "column": "AGE",
+              "value": {
+                "min": 63,
+                "max": 63
+              },
+              "NAs": false
+            },
+            {
+              "type": "integer",
+              "column": "AGE",
+              "value": {
+                "min": 64,
+                "max": 64
+              },
+              "NAs": false
+            }
+          ]
+        }
+      }
+    ],
+    "subject": {
+      "target": "adsl",
+      "filter": {
+        "type": "or",
+        "filter_list": [
+          {
+            "type": "integer",
+            "column": "AGE",
+            "value": {
+              "min": 63,
+              "max": 63
+            },
+            "NAs": false
+          },
+          {
+            "type": "integer",
+            "column": "AGE",
+            "value": {
+              "min": 64,
+              "max": 64
+            },
+            "NAs": false
+          }
+        ]
+      }
+    }
+  }
+}
+
+
+
+)"
+        )
+      ),
+      shiny::verbatimTextOutput("output_json"),
+      shiny::verbatimTextOutput("output_filtered_sbj"),
+      shiny::verbatimTextOutput("output_filtered_ds"),
       new_filter_ui("filter", data),
-      shiny::verbatimTextOutput("output")
+      shiny::verbatimTextOutput("output_ds")
     )
   }
 
   server <- function(input, output, session) {
     x <- new_filter_server("filter", shiny::reactive(data))
-    output[["output"]] <- shiny::renderPrint({
+    selected_data <- "D1"
+
+    output[["output_json"]] <- shiny::renderPrint({
+      jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)
+    })
+
+    filtered_datasets <- shiny::reactive({
+      filters <- jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)[[selected_data]][["dataset"]]
+      ds <- data[[selected_data]]
+      mask <- create_masks_from_dataset_filters(ds, filters)
+      apply_masks_to_datasets(ds, mask)
+    })
+
+    filtered_subjects <- shiny::reactive({
+      filters <- jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)[[selected_data]][["subject"]]
+      ds <- data[[selected_data]]
+      subjid_set <- as.character(compute_subject_set_from_filter(ds, filters, "USUBJID"))
+      subjid_set
+    })
+
+    output[["output_filtered_ds"]] <- shiny::renderPrint({
+      filtered_datasets()
+    })
+
+    output[["output_filtered_sbj"]] <- shiny::renderPrint({
+      x <- filtered_subjects()
+      x
+    })
+
+    output[["output_ds"]] <- shiny::renderPrint({
       x()
     })
   }
@@ -169,7 +301,6 @@ mock_new_filter <- function() {
   )
 }
 
-
 apply_filter <- function(data, filter_parameters) {
   if (length(filter_parameters) == 0) {
     return(rep_len(TRUE, nrow(data)))
@@ -179,7 +310,7 @@ apply_filter <- function(data, filter_parameters) {
   type <- filter_parameters[["type"]]
 
   if (type %in% c("integer", "double", "date")) {
-    checkmate::assert_subset(names(filter_parameters), c("type", "column", "value", "NAs"))
+    checkmate::assert_set_equal(c("type", "column", "value", "NAs"), names(filter_parameters))
 
     column <- filter_parameters[["column"]]
     value <- filter_parameters[["value"]]
@@ -197,7 +328,7 @@ apply_filter <- function(data, filter_parameters) {
       mask <- mask & !is.na(data[[column]])
     }
   } else if (type == "category") {
-    checkmate::assert_set_equal(names(filter_parameters), c("type", "column", "value", "NAs"))
+    checkmate::assert_set_equal(c("type", "column", "value", "NAs"), names(filter_parameters))
 
     column <- filter_parameters[["column"]]
     value <- as.character(filter_parameters[["value"]]) # Force as.character in case JSON conversion fails
@@ -210,7 +341,7 @@ apply_filter <- function(data, filter_parameters) {
       mask <- mask & !is.na(data[[column]])
     }
   } else if (type == "and") {
-    checkmate::assert_set_equal(names(filter_parameters), c("type", "filter_list"))
+    checkmate::assert_set_equal(c("type", "filter_list"),names(filter_parameters))
     filter_list <- filter_parameters[["filter_list"]]
     mask <- TRUE # Neutral element for &
     for (this_filter_parameters in filter_list) {
@@ -225,10 +356,90 @@ apply_filter <- function(data, filter_parameters) {
     }
   } else if (type == "not") {
     checkmate::assert_set_equal(names(filter_parameters), c("type", "filter"))
-    mask <- !apply_filter(data, filter_parameters[["filter"]])        
+    mask <- !apply_filter(data, filter_parameters[["filter"]])
   } else {
     stop("Filter type unknown")
   }
 
   return(mask)
+}
+
+create_masks_from_dataset_filters <- function(data_list, filter_list) {
+  n_filter <- length(filter_list)
+  res_mask <- vector(mode = "list", length = n_filter)
+  res_names <- character(0)
+  for (idx in seq_len(n_filter)) {
+    nm <- filter_list[[idx]][["target"]]
+    filter <- filter_list[[idx]][["filter"]]
+    d <- data_list[[nm]]
+    res_mask[[idx]] <- apply_filter(d, filter)
+    res_names[[idx]] <- nm
+  }
+  names(res_mask) <- res_names
+  res_mask
+}
+
+apply_masks_to_datasets <- function(data_list, mask_list) {
+  nm_data <- names(data_list)
+  nm_mask <- names(mask_list)
+  n_data <- length(nm_data)
+  res_data <- vector(mode = "list", length = n_data)
+  names(res_data) <- nm_data
+  for (idx in seq_len(n_data)) {
+    nm <- nm_data[[idx]]
+    d <- data_list[[nm]]
+
+    # If no mask is given for a dataset the dataset is considered not filtered and included as is
+    if (!nm %in% nm_mask) {
+      res_data[[nm]] <- d
+    } else {
+      res_data[[nm]] <- d[mask_list[[nm]], , drop = FALSE]
+    }
+  }
+  res_data
+}
+
+compute_subject_set_from_filter <- function(data_list, filter_list, subjid_var) {  
+  if ("target" %in% names(filter_list)) {
+    target <- filter_list[["target"]]
+    filter <- filter_list[["filter"]]
+    d <- data_list[[target]]
+
+    checkmate::test_subset(target, names(data_list))
+    mask <- apply_filter(data_list[[target]], filter)
+    res_subject_set <- d[[subjid_var]][mask]
+  } else if ("type" %in% names(filter_list)) {
+    type <- filter_list[["type"]]
+    filter <- filter_list[["filter"]]
+    if (type == "intersect") {
+      checkmate::assert_list(filter, min.len = 1)
+      for (idx in seq_along(filter)) {
+        if (idx == 1) {
+          res_subject_set <- compute_subject_set_from_filter(data_list, filter[[idx]], subjid_var)
+        } else {
+          res_subject_set <- intersect(res_subject_set, compute_subject_set_from_filter(data_list, filter[[idx]], subjid_var))
+        }
+      }
+    } else if (type == "union") {      
+      checkmate::assert_list(filter, min.len = 1)
+      for (idx in seq_along(filter)) {
+        if (idx == 1) {
+          res_subject_set <- compute_subject_set_from_filter(data_list, filter[[idx]], subjid_var)
+        } else {
+          res_subject_set <- union(res_subject_set, compute_subject_set_from_filter(data_list, filter[[idx]], subjid_var))
+        }
+      }
+    } else if (type == "diff") {
+      checkmate::assert_list(filter_list, len = 2)
+      res_subject_set_1 <- compute_subject_set_from_filter(data_list, filter[[1]], subjid_var)
+      res_subject_set_2 <- compute_subject_set_from_filter(data_list, filter[[2]], subjid_var)
+      res_subject_set <- setdiff(res_subject_set_1, res_subject_set_2)
+    } else {
+      stop("Unknown type")
+    }
+  } else {
+    stop("Unknown element")
+  }
+
+  return(res_subject_set)
 }

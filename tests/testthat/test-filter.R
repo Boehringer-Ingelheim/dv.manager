@@ -432,8 +432,7 @@ local({
   })
 
   test_that("empty filter returns all TRUE", {
-    filter_parameters <- list(
-    )
+    filter_parameters <- list()
 
     expect_identical(apply_filter(data, filter_parameters), c(TRUE, TRUE, TRUE, TRUE))
   })
@@ -446,4 +445,111 @@ local({
 
     expect_identical(apply_filter(data, filter_parameters), c(FALSE, FALSE, FALSE, FALSE))
   })
+})
+
+local({
+  data <- list(
+    d1 = data.frame(
+      sbj = 1L:3L,
+      age = 1:3
+    ),
+    d2 = data.frame(
+      sbj = 1L:3L,
+      age = 1:3
+    )
+  )
+
+  test_that("union is correctly applied", {
+    filter_list <- list(
+      type = "union",
+      filter = list(
+        list(
+          target = "d1",
+          filter = list(
+            column = "age",
+            type = "integer",
+            value = list(min = 1, max = 1),
+            NAs = FALSE
+          )
+        ),
+        list(
+          target = "d1",
+          filter = list(
+            column = "age",
+            type = "integer",
+            value = list(min = 2, max = 2),
+            NAs = FALSE
+          )
+        )
+      )
+    )
+
+    expect_identical(
+      compute_subject_set_from_filter(data, filter_list, "sbj"),
+      c(1L, 2L)
+    )
+  })
+
+  test_that("intersection is correctly applied", {
+    filter_list <- list(
+      type = "intersect",
+      filter = list(
+        list(
+          target = "d1",
+          filter = list(
+            column = "age",
+            type = "integer",
+            value = list(min = 1, max = 2),
+            NAs = FALSE
+          )
+        ),
+        list(
+          target = "d1",
+          filter = list(
+            column = "age",
+            type = "integer",
+            value = list(min = 2, max = 3),
+            NAs = FALSE
+          )
+        )
+      )
+    )
+
+    expect_identical(
+      compute_subject_set_from_filter(data, filter_list, "sbj"),
+      c(2L)
+    )
+  })
+
+  test_that("diff is correctly applied", {
+    filter_list <- list(
+      type = "diff",
+      filter = list(
+        list(
+          target = "d1",
+          filter = list(
+            column = "age",
+            type = "integer",
+            value = list(min = 1, max = 2),
+            NAs = FALSE
+          )
+        ),
+        list(
+          target = "d1",
+          filter = list(
+            column = "age",
+            type = "integer",
+            value = list(min = 2, max = 2),
+            NAs = FALSE
+          )
+        )
+      )
+    )
+
+    expect_identical(
+      compute_subject_set_from_filter(data, filter_list, "sbj"),
+      c(1L)
+    )
+  })
+
 })
