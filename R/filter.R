@@ -75,26 +75,33 @@ get_single_filter_data <- function(data) {
   n_col <- length(nm_col)
   res <- vector(mode = "list", length = n_col)
 
+  # In R all elements are vectors by default this makes complicated to transform into json as c("a") can be enconded
+  # as "a" or ["a"]. To disambiguate this jsonlite offers `unbox`. It is undesired that this specific function is
+  # coupled as it could purely a transformation of data. It is unlikely that any other package could do this
+  # disambiguation automatically but maybe jsonlite is replaced in the future.
+
   for (idx in seq_len(n_col)) {
     name <- nm_col[[idx]]
     col <- data[[name]]
 
-    l <- list(name = name)
+    l <- list(name = jsonlite::unbox(name))
 
     if (is.character(col)) {
-      l[c("value", "type")] <- list(unique(col), "character")
+      l[c("value", "type")] <- list(unique(col), jsonlite::unbox("character"))
     } else if (is.factor(col)) {
-      l[c("value", "type")] <- list(levels(col), "factor")
+      l[c("value", "type")] <- list(unique(as.character(col)), jsonlite::unbox("factor"))
     } else if (is.integer(col)) {
-      l[c("value", "type")] <- list(list(min = min(col), max = max(col)), "integer")
-    } else if (is.double(col)) {
-      l[c("value", "type")] <- list(list(min = min(col), max = max(col)), "integer")
+      l[c("value", "type")] <- list(list(min = jsonlite::unbox(min(Inf, col, na.rm = TRUE)), max = jsonlite::unbox(max(-Inf, col, na.rm = TRUE))), jsonlite::unbox("integer"))
+    } else if (is.numeric(col)) { # It also detects integers, it must go after is.integer
+      l[c("value", "type")] <- list(list(min = jsonlite::unbox(min(Inf, col, na.rm = TRUE)), max = jsonlite::unbox(max(-Inf, col, na.rm = TRUE))), jsonlite::unbox("double"))
     } else if (inherits(col, "POSIXct")) {
       d <- as.Date(col)
-      l[c("value", "type")] <- list(list(min = min(d), max = max(d)), "Date")
-    } else if (inherits(col, "Date")) {
-      l[c("value", "type")] <- list(list(min = min(col), max = max(col)), "Date")
+      l[c("value", "type")] <- list(list(min = jsonlite::unbox(min(Inf, col, na.rm = TRUE)), max = jsonlite::unbox(max(-Inf, col, na.rm = TRUE))), jsonlite::unbox("Date"))
+    } else if (inherits(col, "Date")) { # is.double also detect this one
+      l[c("value", "type")] <- list(list(min = jsonlite::unbox(min(Inf, col, na.rm = TRUE)), max = jsonlite::unbox(max(-Inf, col, na.rm = TRUE))), jsonlite::unbox("Date"))
     }
+    # remove NA
+    l[["value"]] <- l[["value"]][!is.na(l[["value"]])]
     res[[idx]] <- l
   }
   return(res)
@@ -118,187 +125,6 @@ get_filter_data <- function(datasets) {
     res[[idx]] <- dataset_res
   }
   return(res)
-}
-
-new_filter_ui <- function(id, data) {
-  ns <- shiny::NS(id)
-  list(
-    shiny::h1("FILTER"),
-    shiny::div(
-      id = ns("filter_container"),
-      shiny::tags[["script"]](
-        type = "application/json",
-        jsonlite::toJSON(get_filter_data(data))
-      )
-    )
-  )
-}
-
-new_filter_server <- function(id, data) {
-  res <- shiny::reactive({
-    data()
-  })
-  return(res)
-}
-
-mock_new_filter <- function(data = list(
-    "D1" = list(
-      adsl = get_pharmaverse_data("adsl"),
-      adae = get_pharmaverse_data("adae")
-    ),
-    "D2" = list(
-      adsl = get_pharmaverse_data("adsl"),
-      adae = get_pharmaverse_data("adae")
-    )
-  )) {
-    
-
-  ui <- function(request) {
-    shiny::fluidPage(
-      shiny::bookmarkButton(),
-      shiny::selectizeInput(
-        "json",
-        "Returned Filter JSON",
-        list(
-          "AGE" = r"({
-  "D1": {
-    "dataset": [
-      {
-        "target": "adsl",
-        "filter": {
-          "type": "or",
-          "filter_list": [
-            {
-              "type": "integer",
-              "column": "AGE",
-              "value": {
-                "min": 63,
-                "max": 63
-              },
-              "NAs": false
-            },
-            {
-              "type": "integer",
-              "column": "AGE",
-              "value": {
-                "min": 64,
-                "max": 64
-              },
-              "NAs": false
-            }
-          ]
-        }
-      },
-      {
-        "target": "adae",
-        "filter": {
-          "type": "or",
-          "filter_list": [
-            {
-              "type": "integer",
-              "column": "AGE",
-              "value": {
-                "min": 63,
-                "max": 63
-              },
-              "NAs": false
-            },
-            {
-              "type": "integer",
-              "column": "AGE",
-              "value": {
-                "min": 64,
-                "max": 64
-              },
-              "NAs": false
-            }
-          ]
-        }
-      }
-    ],
-    "subject": {
-      "target": "adsl",
-      "filter": {
-        "type": "or",
-        "filter_list": [
-          {
-            "type": "integer",
-            "column": "AGE",
-            "value": {
-              "min": 63,
-              "max": 63
-            },
-            "NAs": false
-          },
-          {
-            "type": "integer",
-            "column": "AGE",
-            "value": {
-              "min": 64,
-              "max": 64
-            },
-            "NAs": false
-          }
-        ]
-      }
-    }
-  }
-}
-
-
-
-)"
-        )
-      ),
-      shiny::verbatimTextOutput("output_json"),
-      shiny::verbatimTextOutput("output_filtered_sbj"),
-      shiny::verbatimTextOutput("output_filtered_ds"),
-      new_filter_ui("filter", data),
-      shiny::verbatimTextOutput("output_ds")
-    )
-  }
-
-  server <- function(input, output, session) {
-    x <- new_filter_server("filter", shiny::reactive(data))
-    selected_data <- "D1"
-
-    output[["output_json"]] <- shiny::renderPrint({
-      jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)
-    })
-
-    filtered_datasets <- shiny::reactive({
-      filters <- jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)[[selected_data]][["dataset"]]
-      ds <- data[[selected_data]]
-      mask <- create_masks_from_dataset_filters(ds, filters)
-      apply_masks_to_datasets(ds, mask)
-    })
-
-    filtered_subjects <- shiny::reactive({
-      filters <- jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)[[selected_data]][["subject"]]
-      ds <- data[[selected_data]]
-      subjid_set <- as.character(compute_subject_set_from_filter(ds, filters, "USUBJID"))
-      subjid_set
-    })
-
-    output[["output_filtered_ds"]] <- shiny::renderPrint({
-      filtered_datasets()
-    })
-
-    output[["output_filtered_sbj"]] <- shiny::renderPrint({
-      x <- filtered_subjects()
-      x
-    })
-
-    output[["output_ds"]] <- shiny::renderPrint({
-      x()
-    })
-  }
-
-  shiny::shinyApp(
-    ui = ui,
-    server = server,
-    enableBookmarking = "url"
-  )
 }
 
 apply_filter <- function(data, filter_parameters) {
@@ -341,7 +167,7 @@ apply_filter <- function(data, filter_parameters) {
       mask <- mask & !is.na(data[[column]])
     }
   } else if (type == "and") {
-    checkmate::assert_set_equal(c("type", "filter_list"),names(filter_parameters))
+    checkmate::assert_set_equal(c("type", "filter_list"), names(filter_parameters))
     filter_list <- filter_parameters[["filter_list"]]
     mask <- TRUE # Neutral element for &
     for (this_filter_parameters in filter_list) {
@@ -399,7 +225,7 @@ apply_masks_to_datasets <- function(data_list, mask_list) {
   res_data
 }
 
-compute_subject_set_from_filter <- function(data_list, filter_list, subjid_var) {  
+compute_subject_set_from_filter <- function(data_list, filter_list, subjid_var) {
   if ("target" %in% names(filter_list)) {
     target <- filter_list[["target"]]
     filter <- filter_list[["filter"]]
@@ -420,7 +246,7 @@ compute_subject_set_from_filter <- function(data_list, filter_list, subjid_var) 
           res_subject_set <- intersect(res_subject_set, compute_subject_set_from_filter(data_list, filter[[idx]], subjid_var))
         }
       }
-    } else if (type == "union") {      
+    } else if (type == "union") {
       checkmate::assert_list(filter, min.len = 1)
       for (idx in seq_along(filter)) {
         if (idx == 1) {
@@ -442,4 +268,221 @@ compute_subject_set_from_filter <- function(data_list, filter_list, subjid_var) 
   }
 
   return(res_subject_set)
+}
+
+add_blockly_dependency <- function() {
+  htmltools::htmlDependency(
+    name = "dv.manager",
+    version = utils::packageVersion("dv.manager"),
+    src = app_sys("filter/"),
+    script = c("blockly/package/blockly_compressed.js", "blockly/package/blocks_compressed.js", "blockly/package/msg/en.js", "filter.js")
+  )
+}
+
+new_filter_ui <- function(id, data) {
+  ns <- shiny::NS(id)
+  shiny::div(
+    add_blockly_dependency(),
+    shiny::h1("FILTER"),
+    shiny::tags[["button"]](id = "gen_code", "Gen Code"),
+    shiny::div(
+      id = ns("filter_container"),
+      style = "height: 480px; width: 100wh;",
+      shiny::tags[["script"]](
+        type = "application/json",
+        jsonlite::toJSON(get_filter_data(data))
+      ),
+      shiny::tags[["script"]](
+        paste0(
+          sprintf("var filter = filterBlockly.init('%s');", ns("filter_container")), "\n",
+          "const send_code = function() {
+          const code = filterBlockly.get_code(filter.workspace, filter.generator);
+          document.getElementById('code').innerText = code;
+          Shiny.setInputValue('", {ns("json")}, "', code, {priority: 'event'});
+};
+
+ document.getElementById('gen_code').addEventListener('click', send_code);
+
+"
+        )
+      )
+    ),
+    shiny::div(
+      id = "code"
+    )
+  )
+}
+
+new_filter_server <- function(id, data) {
+  mod <- function(input, output, session){
+  res <- shiny::reactive({
+    if (checkmate::test_string(input[["json"]], min.chars = 1)) {
+      input[["json"]]
+    } else {
+      NA_character_
+    }
+  })
+  return(res)
+  }
+  shiny::moduleServer(id, mod)
+}
+
+mock_new_filter <- function(data = list(
+                              "D1" = list(
+                                adsl = get_pharmaverse_data("adsl"),
+                                adae = get_pharmaverse_data("adae")
+                              ),
+                              "D2" = list(
+                                adsl = get_pharmaverse_data("adsl"),
+                                adae = get_pharmaverse_data("adae")
+                              )
+                            )) {
+  ui <- function(request) {
+    shiny::fluidPage(
+      #       shiny::bookmarkButton(),
+      #       shiny::selectizeInput(
+      #         "json",
+      #         "Returned Filter JSON",
+      #         list(
+      #           "AGE" = r"({
+      #   "D1": {
+      #     "dataset": [
+      #       {
+      #         "target": "adsl",
+      #         "filter": {
+      #           "type": "or",
+      #           "filter_list": [
+      #             {
+      #               "type": "integer",
+      #               "column": "AGE",
+      #               "value": {
+      #                 "min": 63,
+      #                 "max": 63
+      #               },
+      #               "NAs": false
+      #             },
+      #             {
+      #               "type": "integer",
+      #               "column": "AGE",
+      #               "value": {
+      #                 "min": 64,
+      #                 "max": 64
+      #               },
+      #               "NAs": false
+      #             }
+      #           ]
+      #         }
+      #       },
+      #       {
+      #         "target": "adae",
+      #         "filter": {
+      #           "type": "or",
+      #           "filter_list": [
+      #             {
+      #               "type": "integer",
+      #               "column": "AGE",
+      #               "value": {
+      #                 "min": 63,
+      #                 "max": 63
+      #               },
+      #               "NAs": false
+      #             },
+      #             {
+      #               "type": "integer",
+      #               "column": "AGE",
+      #               "value": {
+      #                 "min": 64,
+      #                 "max": 64
+      #               },
+      #               "NAs": false
+      #             }
+      #           ]
+      #         }
+      #       }
+      #     ],
+      #     "subject": {
+      #       "target": "adsl",
+      #       "filter": {
+      #         "type": "or",
+      #         "filter_list": [
+      #           {
+      #             "type": "integer",
+      #             "column": "AGE",
+      #             "value": {
+      #               "min": 63,
+      #               "max": 63
+      #             },
+      #             "NAs": false
+      #           },
+      #           {
+      #             "type": "integer",
+      #             "column": "AGE",
+      #             "value": {
+      #               "min": 64,
+      #               "max": 64
+      #             },
+      #             "NAs": false
+      #           }
+      #         ]
+      #       }
+      #     }
+      #   }
+      # }
+
+
+
+      # )"
+      #         )
+      #       ),
+      new_filter_ui("filter", data),
+            # shiny::verbatimTextOutput("output_json"),
+            # shiny::verbatimTextOutput("output_filtered_sbj"),
+            shiny::verbatimTextOutput("output_filtered_ds"),
+      # shiny::verbatimTextOutput("output_ds")
+    )
+  }
+
+  server <- function(input, output, session) {
+    x <- new_filter_server("filter", shiny::reactive(data))
+    selected_data <- "D1"
+
+    output[["output_json"]] <- shiny::renderPrint({
+      shiny::req(!is.na(x()))
+      jsonlite::fromJSON(x(), simplifyVector = FALSE)
+    })
+
+    filtered_datasets <- shiny::reactive({
+      shiny::req(!is.na(x()))
+      filters <- jsonlite::fromJSON(x(), simplifyVector = FALSE)[[selected_data]][["dataset"]]
+      ds <- data[[selected_data]]
+      mask <- create_masks_from_dataset_filters(ds, filters)
+      apply_masks_to_datasets(ds, mask)
+    })
+
+    filtered_subjects <- shiny::reactive({
+      shiny::req(!is.na(x()))
+      filters <- jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)[[selected_data]][["subject"]]
+      ds <- data[[selected_data]]
+      subjid_set <- as.character(compute_subject_set_from_filter(ds, filters, "USUBJID"))
+      subjid_set
+    })
+
+    output[["output_filtered_ds"]] <- shiny::renderPrint({
+      filtered_datasets()
+    })
+
+    output[["output_filtered_sbj"]] <- shiny::renderPrint({
+       filtered_subjects()
+    })
+
+    output[["output_ds"]] <- shiny::renderPrint({
+      x()
+    })
+  }
+
+  shiny::shinyApp(
+    ui = ui,
+    server = server,
+    enableBookmarking = "url"
+  )
 }
