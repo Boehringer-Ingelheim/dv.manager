@@ -272,7 +272,7 @@ compute_subject_set_from_filter <- function(data_list, filter_list, subjid_var) 
 
 add_blockly_dependency <- function() {
   htmltools::htmlDependency(
-    name = "dv.manager",
+    name = "filter_blockly",
     version = utils::packageVersion("dv.manager"),
     src = app_sys("filter/"),
     script = c("blockly/package/blockly_compressed.js", "blockly/package/blocks_compressed.js", "blockly/package/msg/en.js", "filter.js")
@@ -302,7 +302,6 @@ new_filter_ui <- function(id, data) {
 };
 
  document.getElementById('gen_code').addEventListener('click', send_code);
-
 "
         )
       )
@@ -485,4 +484,128 @@ mock_new_filter <- function(data = list(
     server = server,
     enableBookmarking = "url"
   )
+}
+
+mock_new_filter_modal <- function(data = list(
+                              "D1" = list(
+                                adsl = get_pharmaverse_data("adsl"),
+                                adae = get_pharmaverse_data("adae")
+                              ),
+                              "D2" = list(
+                                adsl = get_pharmaverse_data("adsl"),
+                                adae = get_pharmaverse_data("adae")
+                              )
+                            )) {
+  ui <- function(request) {
+    shiny::fluidPage(
+      unnamespaced_filter_modal(new_filter_ui("filter", data)),            
+      shiny::verbatimTextOutput("output_filtered_ds")
+    )
+  }
+
+  server <- function(input, output, session) {
+    x <- new_filter_server("filter", shiny::reactive(data))
+    selected_data <- "D1"
+
+    output[["output_json"]] <- shiny::renderPrint({
+      shiny::req(!is.na(x()))
+      jsonlite::fromJSON(x(), simplifyVector = FALSE)
+    })
+
+    filtered_datasets <- shiny::reactive({
+      shiny::req(!is.na(x()))
+      filters <- jsonlite::fromJSON(x(), simplifyVector = FALSE)[[selected_data]][["dataset"]]
+      ds <- data[[selected_data]]
+      mask <- create_masks_from_dataset_filters(ds, filters)
+      apply_masks_to_datasets(ds, mask)
+    })
+
+    filtered_subjects <- shiny::reactive({
+      shiny::req(!is.na(x()))
+      filters <- jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)[[selected_data]][["subject"]]
+      ds <- data[[selected_data]]
+      subjid_set <- as.character(compute_subject_set_from_filter(ds, filters, "USUBJID"))
+      subjid_set
+    })
+
+    output[["output_filtered_ds"]] <- shiny::renderPrint({
+      tryCatch(filtered_datasets(), error = function(e)"A")
+    })
+
+    output[["output_filtered_sbj"]] <- shiny::renderPrint({
+       filtered_subjects()
+    })
+
+    output[["output_ds"]] <- shiny::renderPrint({
+      x()
+    })
+  }
+
+  shiny::shinyApp(
+    ui = ui,
+    server = server,
+    enableBookmarking = "url"
+  )
+}
+
+unnamespaced_filter_modal <- function(filter_ui) {
+  shiny::div(
+        shiny::tags[["label"]]("Show filter", "for" = "filter-checkbox", class = "btn"),
+        shiny::tags[["input"]](type = "checkbox", id = "filter-checkbox", style = "display:none;"),
+        shiny::div(
+          id = "filter_overlay",
+          shiny::tags[["style"]](
+            '
+            /* Overlay style */
+        #filter_overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;            
+        }
+
+        /* Modal content style */
+        #filter_modal {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            height: 100vh;
+            width: 100vw;
+            text-align: center;
+        }
+
+        /* Close button style */
+        #filter_close-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #ccc;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+
+        #filter_close-btn:hover {
+            background-color: #aaa;
+        }
+
+        /* Show the modal when the checkbox is checked */
+        input[type="checkbox"]:checked + #filter_overlay {
+            display: flex;
+        }
+
+            '
+          ),
+          shiny::div(id = "filter_modal",
+          shiny::h4("Filter"),
+          filter_ui,
+          shiny::tags[["label"]]("Close filter", "for" = "filter-checkbox", id = "filter_close-btn")
+          )
+        )        
+      )
 }

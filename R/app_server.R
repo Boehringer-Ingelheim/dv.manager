@@ -131,39 +131,20 @@ app_server_ <- function(input, output, session, opts) {
     shiny::reactive(unfiltered_dataset()[[filter_data]])
   )
 
-  dataset_filters <- create_dataset_filters_server(datasets_filters_info, unfiltered_dataset)
+  dataset_filter <- new_filter_server("filter", unfiltered_dataset)
 
   filtered_dataset <- shinymeta::metaReactive({
     # dv.filter returns a logical vector. This contemplates the case of empty lists
     shiny::req(is.logical(global_filtered_values()))
+    filtered_key_values <- unfiltered_dataset()[[filter_data]][[filter_key]][global_filtered_values()]
 
-    # Depend on all datasets
-    purrr::walk(dataset_filters, ~ .x())
-
-    # We do not react to changed in unfiltered dataset, otherwise when a dataset changes
-    # We filter the previous dataset which in the best case produces and extra reactive beat
-    # and in the worst case produces an error in (mvbc)
-    # We don't want to control the error in (mvbc) because filtered dataset only changes when filter changes
-    ufds <- shiny::isolate(unfiltered_dataset())
-
-    curr_dataset_filters <- dataset_filters[intersect(names(dataset_filters), names(ufds))]
-
-    # Current dataset must be logical with length above 0
-    # Check dataset filters check all datafilters are initialized
-    purrr::walk(curr_dataset_filters, ~ shiny::req(checkmate::test_logical(.x(), min.len = 1)))
-
-    filtered_key_values <- ufds[[filter_data]][[filter_key]][global_filtered_values()]
-
-    fds <- ufds
-
-    # Single dataset filtering
-    fds[names(curr_dataset_filters)] <- purrr::imap(
-      fds[names(curr_dataset_filters)],
-      function(val, nm) {
-        # (mvbc)
-        fds[[nm]][dataset_filters[[nm]](), , drop = FALSE]
-      }
-    )
+    if(!is.na(dataset_filter())) {
+      filters <- jsonlite::fromJSON(dataset_filter(), simplifyVector = FALSE)[[input$selector]][["dataset"]]
+      mask <- create_masks_from_dataset_filters(unfiltered_dataset(), filters)
+      fds <- apply_masks_to_datasets(unfiltered_dataset(), mask)
+    } else {
+      fds <- unfiltered_dataset()
+    }
 
     # Global dataset filtering
     global_filtered <- purrr::map(

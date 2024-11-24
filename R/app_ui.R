@@ -36,7 +36,7 @@ app_ui <- function(request_id) {
     get_dataset_filters_info(data, filter_data),
     ns
   )
-  
+
   collapsable_ui <-
     shiny::div(
       class = "menu-contents",
@@ -69,7 +69,7 @@ app_ui <- function(request_id) {
             shiny::icon("circle-info", title = TT[["DATASET_FILTER"]]),
             class = "text-primary"
           ),
-          dataset_filters_ui
+          unnamespaced_filter_modal(new_filter_ui("filter", data))
         )
       )
     )
