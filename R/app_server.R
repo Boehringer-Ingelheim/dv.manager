@@ -195,6 +195,7 @@ app_server_ <- function(input, output, session, opts) {
   }
 
   module_args <- list(
+    data = data,
     unfiltered_dataset = unfiltered_dataset,
     filtered_dataset = filtered_dataset,
     url_parameters = url_parameters,

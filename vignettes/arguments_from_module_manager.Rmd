@@ -14,15 +14,15 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, include = FALSE}
 library(dv.manager)
 ```
 
-
-
-When developing a module we create a wrapper function that returns a list that is used to instantiate a given module
+When developing a module, we create a wrapper function that returns a list that is used to instantiate a given module
 inside module manager. Within this list the `server` is a function with a single parameter provided by module manager when
-the server function is called. This parameter by convention usually called `afmm`, an acronym of **a**rguments **f**rom **m**odule **manager**. `afmm` is a list with the following entries: 
+the server function is called. This parameter by convention usually called `afmm`, an acronym of **a**rguments **f**rom **m**odule **m**anager. `afmm` is a list with the following entries: 
+
+1. **data**: a list of lists of data frames (or of functions that return data frames). Pass-through of the `run_app` argument by the same name.
 
 1. **unfiltered_dataset**: a metaReactive list containing the tables inside the selected dataset before filtering them.
   
@@ -32,11 +32,9 @@ the server function is called. This parameter by convention usually called `afmm
   
 1. **dataset_name**: a reactive string containing the name of the selected dataset. (Deprecated)
 
-1. **dataset_metadata**: a list with following entries:
-
-  1. **name**: a reactive string with the name of the selected dataset
-
-  1. **date_range**: a reactive character vector with two entries earliest and latest modification date in the dataset.
+1. **dataset_metadata**: a list with the following entries:
+   a. **name**: a reactive string with the name of the selected dataset
+   a. **date_range**: a reactive character vector with two entries earliest and latest modification date in the dataset.
   
 1. **module_output**: a function that when called returns a list of all the values returned by the different modules indexed by the module_id.
 
@@ -93,7 +91,6 @@ mod_table <- function(table_name, mod_id) {
   mod
 }
 
-
 data_list <- list(
   "D1" = list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae),
   "D2" = list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
@@ -113,7 +110,8 @@ run_app(
 ```
 
 When creating the module list we can select which of the tables inside the dataset we will access. Nonetheless, this is
-just a design choice of the module developer. See below another possible example in which we can also select
+just a design choice of the module developer. See below another possible example in which we can select either the 
+filtered or unfiltered dataset input by toggling the logical `filtered` parameter.
 
 ```{r, eval = FALSE}
 mod_table <- function(table_name, filtered = FALSE, mod_id) {
@@ -131,7 +129,6 @@ mod_table <- function(table_name, filtered = FALSE, mod_id) {
   )
   mod
 }
-
 
 data_list <- list("D1" = list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae))
 
