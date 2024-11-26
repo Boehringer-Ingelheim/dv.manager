@@ -1,3 +1,9 @@
+# dv.manager 2.1.4
+
+- Removes leftover title automatic capitalization.
+
+- Extends Arguments From Module Manager to include include a `data` slot that acts as a pass-through of the `run_app` argument by the same name.
+
 # dv.manager 2.1.3
 
 - dv.manager includes the option to filter using several datasets
