@@ -225,7 +225,7 @@ apply_masks_to_datasets <- function(data_list, mask_list) {
   res_data
 }
 
-compute_subject_set_from_filter <- function(data_list, filter_list, subjid_var) {  
+compute_subject_set_from_filter <- function(data_list, filter_list, subjid_var) {
   if ("target" %in% names(filter_list)) {
     target <- filter_list[["target"]]
     filter <- filter_list[["filter"]]
@@ -236,7 +236,7 @@ compute_subject_set_from_filter <- function(data_list, filter_list, subjid_var) 
     res_subject_set <- d[[subjid_var]][mask]
   } else if ("type" %in% names(filter_list)) {
     type <- filter_list[["type"]]
-    filter <- filter_list[["filter"]]
+    filter <- filter_list[["filter_list"]]
     if (type == "intersect") {
       checkmate::assert_list(filter, min.len = 1)
       for (idx in seq_along(filter)) {
@@ -413,11 +413,12 @@ mock_new_filter_modal <- function(data = list(
                               "D1" = list(
                                 adsl = get_pharmaverse_data("adsl"),
                                 adae = get_pharmaverse_data("adae")
-                              ),
-                              "D2" = list(
-                                adsl = get_pharmaverse_data("adsl"),
-                                adae = get_pharmaverse_data("adae")
                               )
+                              # ,
+                              # "D2" = list(
+                              #   adsl = get_pharmaverse_data("adsl"),
+                              #   adae = get_pharmaverse_data("adae")
+                              # )
                             )) {
   ui <- function(request) {
     shiny::fluidPage(

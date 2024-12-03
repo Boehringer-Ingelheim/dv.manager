@@ -14,21 +14,14 @@ const filterBlockly = (() => {
   }
 
   const subject_generator = function (block, generator) {
-    const statements = "[" + generator.statementToCode(block, 'contents') + "]";
+    const statements = generator.statementToCode(block, 'contents');
     const parsed_contents = JSON.parse(statements);
 
     let res = {};
-    let ds_name = parsed_contents[0].dataset_name;
-    let filters = [];
+    let ds_name = "D1"
+    console.warn("HARDCODED DATASET NAME FOR DEMO")
 
-    for (idx in parsed_contents) {
-      if (ds_name !== parsed_contents[idx]["dataset_name"]) {
-        throw new Error("Dataset differ");
-      }
-      if(parsed_contents[idx].filters) {filters.push(...parsed_contents[idx].filters)};
-      if(parsed_contents[idx].filter_list) {filters.push(...parsed_contents[idx].filter_list)};      
-    }
-    res[ds_name] = { subject: filters }
+    res[ds_name] = { subject: parsed_contents }
 
     const code = JSON.stringify(res)
     logger(code);
@@ -52,7 +45,6 @@ const filterBlockly = (() => {
         filters.push(...parsed_contents[idx].filters);
       }
       if(parsed_contents[idx].filter_list) {
-        debugger;
         filters.push(...parsed_contents[idx].filter_list);
       }
     }
@@ -81,18 +73,35 @@ const filterBlockly = (() => {
 
   const set_generator = function (block, generator) {
     const type = block.getFieldValue("operation");
-    const statements = generator.statementToCode(block, 'contents');
-    let code;
+    const statements = "[" + generator.statementToCode(block, 'contents') + "]";
+    let parsed_code;
+    const parsed = JSON.parse(statements);
     if (type === "union" || type === "intersect") {
-      code = `{"type": "${type}", "filter_list":[${statements}]}`
+      let filters = [];
+      for(entry of parsed) {
+        filters.push(...entry.filters)
+      }
+      parsed_code = {
+        type: type,
+        filter_list: filters
+      }
     } else if (type === "diff") {
-      code = `{"type": "${type}", "filter":${statements}}`
+      let filters = [];
+      for(entry of parsed) {
+        filters.push(...entry.filters)
+      }
+      parsed_code = {
+        type: type,
+        filter_list: filters
+      }
     } else {
       throw new Error("Operation unknown");
     }
 
-    logger(code);
-    return (code)
+    const stringified_code = JSON.stringify(parsed_code);
+
+    logger(stringified_code);
+    return (stringified_code)
   }
 
   const filter_generator_numeric = function (block, generator) {
@@ -221,14 +230,15 @@ const filterBlockly = (() => {
       blocks.length = 0;
     }
 
-    const ds_name = Object.keys(allCode[0])[0];
+    const ds_name = "D1";
+    console.warn("HARCODED DATASET TO D1 JUST FOR DEMO")
     let res = {};
     res[ds_name] = {};
 
     for (idx in allCode) {
-      if (ds_name !== Object.keys(allCode[idx])[0]) {
-        throw new Error("Dataset differ");
-      }
+      // if (ds_name !== Object.keys(allCode[idx])[0]) {
+      //   throw new Error("Dataset differ");
+      // }
       Object.assign(res[ds_name], allCode[idx][ds_name]); // Merge the properties
     }
 
@@ -236,7 +246,7 @@ const filterBlockly = (() => {
       state: Blockly.serialization.workspaces.save(ws),
       filters: res
     }
-
+    
     let stringified_res = JSON.stringify(res_state)
 
     return (stringified_res)
