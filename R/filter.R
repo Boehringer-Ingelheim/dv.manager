@@ -225,7 +225,7 @@ apply_masks_to_datasets <- function(data_list, mask_list) {
   res_data
 }
 
-compute_subject_set_from_filter <- function(data_list, filter_list, subjid_var) {
+compute_subject_set_from_filter <- function(data_list, filter_list, subjid_var) {  
   if ("target" %in% names(filter_list)) {
     target <- filter_list[["target"]]
     filter <- filter_list[["filter"]]
@@ -281,6 +281,11 @@ add_blockly_dependency <- function() {
 
 new_filter_ui <- function(id, data) {
   ns <- shiny::NS(id)
+
+  previous_state <- shiny::restoreInput(ns("json"), "null")
+  current_filter_data <- jsonlite::toJSON(get_filter_data(data))
+  payload <- sprintf("{\"state\": %s, \"data\": %s}", previous_state, current_filter_data)
+
   shiny::div(
     add_blockly_dependency(),
     shiny::h1("FILTER"),
@@ -290,7 +295,7 @@ new_filter_ui <- function(id, data) {
       style = "height: 480px; width: 100wh;",
       shiny::tags[["script"]](
         type = "application/json",
-        jsonlite::toJSON(get_filter_data(data))
+        payload        
       ),
       shiny::tags[["script"]](
         paste0(
@@ -313,12 +318,23 @@ new_filter_ui <- function(id, data) {
 }
 
 new_filter_server <- function(id, data) {
-  mod <- function(input, output, session){
+  mod <- function(input, output, session) {
+    
   res <- shiny::reactive({
     if (checkmate::test_string(input[["json"]], min.chars = 1)) {
-      input[["json"]]
+      parsed_json <- jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)
+      list(
+        state = parsed_json[["state"]] %||% NA_character_,
+        filters = parsed_json[["filters"]] %||% NA_character_,        
+        raw = input[["json"]]
+      )
     } else {
-      NA_character_
+      list(
+        state = NA_character_,
+        dataset_filters = NA_character_,
+        subject_filters = NA_character_,
+        raw = NA_character_
+      )
     }
   })
   return(res)
@@ -337,107 +353,12 @@ mock_new_filter <- function(data = list(
                               )
                             )) {
   ui <- function(request) {
-    shiny::fluidPage(
-      #       shiny::bookmarkButton(),
-      #       shiny::selectizeInput(
-      #         "json",
-      #         "Returned Filter JSON",
-      #         list(
-      #           "AGE" = r"({
-      #   "D1": {
-      #     "dataset": [
-      #       {
-      #         "target": "adsl",
-      #         "filter": {
-      #           "type": "or",
-      #           "filter_list": [
-      #             {
-      #               "type": "integer",
-      #               "column": "AGE",
-      #               "value": {
-      #                 "min": 63,
-      #                 "max": 63
-      #               },
-      #               "NAs": false
-      #             },
-      #             {
-      #               "type": "integer",
-      #               "column": "AGE",
-      #               "value": {
-      #                 "min": 64,
-      #                 "max": 64
-      #               },
-      #               "NAs": false
-      #             }
-      #           ]
-      #         }
-      #       },
-      #       {
-      #         "target": "adae",
-      #         "filter": {
-      #           "type": "or",
-      #           "filter_list": [
-      #             {
-      #               "type": "integer",
-      #               "column": "AGE",
-      #               "value": {
-      #                 "min": 63,
-      #                 "max": 63
-      #               },
-      #               "NAs": false
-      #             },
-      #             {
-      #               "type": "integer",
-      #               "column": "AGE",
-      #               "value": {
-      #                 "min": 64,
-      #                 "max": 64
-      #               },
-      #               "NAs": false
-      #             }
-      #           ]
-      #         }
-      #       }
-      #     ],
-      #     "subject": {
-      #       "target": "adsl",
-      #       "filter": {
-      #         "type": "or",
-      #         "filter_list": [
-      #           {
-      #             "type": "integer",
-      #             "column": "AGE",
-      #             "value": {
-      #               "min": 63,
-      #               "max": 63
-      #             },
-      #             "NAs": false
-      #           },
-      #           {
-      #             "type": "integer",
-      #             "column": "AGE",
-      #             "value": {
-      #               "min": 64,
-      #               "max": 64
-      #             },
-      #             "NAs": false
-      #           }
-      #         ]
-      #       }
-      #     }
-      #   }
-      # }
-
-
-
-      # )"
-      #         )
-      #       ),
+    shiny::fluidPage(      
+      shiny::bookmarkButton(),
       new_filter_ui("filter", data),
-            # shiny::verbatimTextOutput("output_json"),
-            # shiny::verbatimTextOutput("output_filtered_sbj"),
+
             shiny::verbatimTextOutput("output_filtered_ds"),
-      # shiny::verbatimTextOutput("output_ds")
+            shiny::verbatimTextOutput("output_filtered_sbj")
     )
   }
 
@@ -451,16 +372,16 @@ mock_new_filter <- function(data = list(
     })
 
     filtered_datasets <- shiny::reactive({
-      shiny::req(!is.na(x()))
-      filters <- jsonlite::fromJSON(x(), simplifyVector = FALSE)[[selected_data]][["dataset"]]
+      shiny::req(!is.null(x()[["filters"]][[selected_data]][["dataset"]]))
+      filters <- x()[["filters"]][[selected_data]][["dataset"]]
       ds <- data[[selected_data]]
       mask <- create_masks_from_dataset_filters(ds, filters)
       apply_masks_to_datasets(ds, mask)
     })
 
     filtered_subjects <- shiny::reactive({
-      shiny::req(!is.na(x()))
-      filters <- jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)[[selected_data]][["subject"]]
+      shiny::req(!is.null(x()[["filters"]][[selected_data]][["subject"]]))
+      filters <- x()[["filters"]][[selected_data]][["subject"]]
       ds <- data[[selected_data]]
       subjid_set <- as.character(compute_subject_set_from_filter(ds, filters, "USUBJID"))
       subjid_set
@@ -478,6 +399,8 @@ mock_new_filter <- function(data = list(
       x()
     })
   }
+
+  message("A")
 
   shiny::shinyApp(
     ui = ui,
@@ -498,7 +421,8 @@ mock_new_filter_modal <- function(data = list(
                             )) {
   ui <- function(request) {
     shiny::fluidPage(
-      unnamespaced_filter_modal(new_filter_ui("filter", data)),            
+      #unnamespaced_filter_modal(new_filter_ui("filter", data)),            
+      new_filter_ui("filter", data),            
       shiny::verbatimTextOutput("output_filtered_ds")
     )
   }

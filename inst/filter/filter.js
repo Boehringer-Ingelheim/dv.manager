@@ -2,13 +2,63 @@ const filterBlockly = (() => {
 
   const logger = console.log;
 
-  // Block definition helpers
+  // Block definition 
 
   const table_generator = function (block, generator) {
     const dataset = block.type.split('_')[1];
     const target = block.type.split('_').slice(2).join('_');
     const statements = generator.statementToCode(block, 'contents');
-    const code = `{"${dataset}": {"dataset":[{"target": "${target}", "filter":${statements}}]}},`
+    const code = `{"dataset_name": "${dataset}", "filters": [{"target": "${target}", "filter":${statements}}]}`
+    logger(code);
+    return (code)
+  }
+
+  const subject_generator = function (block, generator) {
+    const statements = "[" + generator.statementToCode(block, 'contents') + "]";
+    const parsed_contents = JSON.parse(statements);
+
+    let res = {};
+    let ds_name = parsed_contents[0].dataset_name;
+    let filters = [];
+
+    for (idx in parsed_contents) {
+      if (ds_name !== parsed_contents[idx]["dataset_name"]) {
+        throw new Error("Dataset differ");
+      }
+      if(parsed_contents[idx].filters) {filters.push(...parsed_contents[idx].filters)};
+      if(parsed_contents[idx].filter_list) {filters.push(...parsed_contents[idx].filter_list)};      
+    }
+    res[ds_name] = { subject: filters }
+
+    const code = JSON.stringify(res)
+    logger(code);
+    return (code)
+  }
+
+  const dataset_generator = function (block, generator) {
+    const statements = "[" + generator.statementToCode(block, 'contents') + "]";
+    const parsed_contents = JSON.parse(statements);
+
+    let res = {};
+    let ds_name = parsed_contents[0].dataset_name;
+    let filters = [];
+
+    for (idx in parsed_contents) {
+      if (ds_name !== parsed_contents[idx]["dataset_name"]) {
+        throw new Error("Dataset differ");
+      }
+      
+      if(parsed_contents[idx].filters) {
+        filters.push(...parsed_contents[idx].filters);
+      }
+      if(parsed_contents[idx].filter_list) {
+        debugger;
+        filters.push(...parsed_contents[idx].filter_list);
+      }
+    }
+    res[ds_name] = { dataset: filters }
+
+    const code = JSON.stringify(res)
     logger(code);
     return (code)
   }
@@ -17,14 +67,30 @@ const filterBlockly = (() => {
     const type = block.getFieldValue("operation");
     const statements = generator.statementToCode(block, 'contents');
     let code;
-    if(type === "and" || type === "or") {
+    if (type === "and" || type === "or") {
       code = `{"type": "${type}", "filter_list":[${statements}]}`
     } else if (type === "not") {
       code = `{"type": "${type}", "filter":${statements}}`
     } else {
       throw new Error("Operation unknown");
     }
-    
+
+    logger(code);
+    return (code)
+  }
+
+  const set_generator = function (block, generator) {
+    const type = block.getFieldValue("operation");
+    const statements = generator.statementToCode(block, 'contents');
+    let code;
+    if (type === "union" || type === "intersect") {
+      code = `{"type": "${type}", "filter_list":[${statements}]}`
+    } else if (type === "diff") {
+      code = `{"type": "${type}", "filter":${statements}}`
+    } else {
+      throw new Error("Operation unknown");
+    }
+
     logger(code);
     return (code)
   }
@@ -64,6 +130,8 @@ const filterBlockly = (() => {
           name: "contents"
         }
       ],
+      previousStatement: null,
+      nextStatement: null,
       colour: color
     }
     return (def)
@@ -137,21 +205,41 @@ const filterBlockly = (() => {
   }
 
   const get_code = function (ws, gen) {
-    let str_code = "[" + gen.workspaceToCode(ws).slice(0, -1) + "]";
-    let parsed_code = JSON.parse(str_code);
-    const ds_name = Object.keys(parsed_code[0])[0];
-    let res = {};
-    res[ds_name] = {dataset: []};
-    for(idx in parsed_code) {
-      if(ds_name !== Object.keys(parsed_code[idx])[0]){
-        throw new Error("Dataset differ");
-     }
-     res[ds_name].dataset.push(parsed_code[idx][ds_name].dataset[0])
+
+    var json = Blockly.serialization.workspaces.save(ws);
+    var blocks = json['blocks']['blocks'];
+    var topBlocks = blocks.slice();  // Create shallow copy.
+    blocks.length = 0;
+
+    var allCode = [];
+    var headless = new Blockly.Workspace();
+    for (var i = 0; i < topBlocks.length; i++) {
+      var block = topBlocks[i];
+      blocks.push(block);
+      Blockly.serialization.workspaces.load(json, headless);
+      allCode.push(JSON.parse(gen.workspaceToCode(headless)));
+      blocks.length = 0;
     }
 
-    let stringified_res = JSON.stringify(res)
-    
-    return(stringified_res)
+    const ds_name = Object.keys(allCode[0])[0];
+    let res = {};
+    res[ds_name] = {};
+
+    for (idx in allCode) {
+      if (ds_name !== Object.keys(allCode[idx])[0]) {
+        throw new Error("Dataset differ");
+      }
+      Object.assign(res[ds_name], allCode[idx][ds_name]); // Merge the properties
+    }
+
+    const res_state = {
+      state: Blockly.serialization.workspaces.save(ws),
+      filters: res
+    }
+
+    let stringified_res = JSON.stringify(res_state)
+
+    return (stringified_res)
   }
 
   let json_generator = new Blockly.Generator('JSON');
@@ -165,7 +253,10 @@ const filterBlockly = (() => {
     return code;
   };
 
+  json_generator.forBlock['dataset_filters'] = dataset_generator;
+  json_generator.forBlock['subject_filters'] = subject_generator;
   json_generator.forBlock['c_dataset_connector'] = connector_generator;
+  json_generator.forBlock['c_subject_connector'] = set_generator;
 
   const init = function (id) {
     const container_div = document.getElementById(id);
@@ -179,6 +270,9 @@ const filterBlockly = (() => {
     } catch (error) {
       console.error("Error parsing JSON:", error);
     }
+
+    let filter_state = json_data.state;
+    let filter_data = json_data.data;
 
     let block_definition = [
       {
@@ -213,6 +307,65 @@ const filterBlockly = (() => {
         previousStatement: null,
         nextStatement: null,
         "colour": 225
+      },
+      {
+        "type": "c_subject_connector",
+        "tooltip": "",
+        "helpUrl": "",
+        "message0": "%1 %2",
+        "args0": [
+          {
+            "type": "field_dropdown",
+            "name": "operation",
+            "options": [
+              [
+                "union",
+                "union"
+              ],
+              [
+                "intersect",
+                "intersect"
+              ],
+              [
+                "diff",
+                "diff"
+              ]
+            ]
+          },
+          {
+            "type": "input_statement",
+            "name": "contents"
+          }
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        "colour": 225
+      },
+      {
+        "type": "dataset_filters",
+        "tooltip": "",
+        "helpUrl": "",
+        "message0": "Dataset Filters %1",
+        "args0": [
+          {
+            "type": "input_statement",
+            "name": "contents"
+          }
+        ],
+        "colour": 285
+      },
+      {
+        "type": "subject_filters",
+        "tooltip": "",
+        "helpUrl": "",
+        "message0": "Subject Filters %1",
+        "args0": [
+          {
+            "type": "input_statement",
+            "name": "contents"
+          }
+        ],
+        "colour": 285
       }
     ];
     let toolbox = {
@@ -220,18 +373,35 @@ const filterBlockly = (() => {
       contents: [
         {
           kind: "category",
+          name: "tables",
+          contents: [
+            {
+              kind: "block",
+              type: "dataset_filters"
+            },
+            {
+              kind: "block",
+              type: "subject_filters"
+            },      
+          ]
+        },          
+        {
+          kind: "category",
           name: "connectors",
           contents: [
             {
               kind: "block",
               type: "c_dataset_connector"
+            },{
+              kind: "block",
+              type: "c_subject_connector"
             }
           ]
-        }
+        },
       ]
     };
 
-    for (const dataset in json_data) {
+    for (const dataset in filter_data) {
       logger(dataset)
       let color = 0;
       let dataset_category = {
@@ -239,7 +409,7 @@ const filterBlockly = (() => {
         name: dataset,
         contents: []
       };
-      this_dataset = json_data[dataset];
+      this_dataset = filter_data[dataset];
 
       for (const table in this_dataset) {
         const table_name = "t_" + dataset + "_" + table;
@@ -294,6 +464,10 @@ const filterBlockly = (() => {
     options.toolbox = toolbox;
     let ws = Blockly.inject(container_div, options);
 
+    if(filter_state) {
+      Blockly.serialization.workspaces.load(filter_state.state, ws)
+    }
+
     let res = {
       workspace: ws,
       generator: json_generator
@@ -308,4 +482,5 @@ const filterBlockly = (() => {
     init: init,
     get_code: get_code,
   });
+
 })();
