@@ -275,7 +275,7 @@ add_blockly_dependency <- function() {
     name = "filter_blockly",
     version = utils::packageVersion("dv.manager"),
     src = app_sys("filter/"),
-    script = c("blockly/blockly_compressed.js", "blockly/blocks_compressed.js", "blockly/msg/en.js", "filter.js")
+    script = c("blockly/blockly_compressed.js", "blockly/blocks_compressed.js", "filter.js")
   )
 }
 
