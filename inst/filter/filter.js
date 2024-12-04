@@ -18,7 +18,7 @@ const filterBlockly = (() => {
     const parsed_contents = JSON.parse(statements);
 
     let res = {};
-    let ds_name = "D1"
+    let ds_name = "Tables"
     console.warn("HARDCODED DATASET NAME FOR DEMO")
 
     res[ds_name] = { subject: parsed_contents }
@@ -230,8 +230,8 @@ const filterBlockly = (() => {
       blocks.length = 0;
     }
 
-    const ds_name = "D1";
-    console.warn("HARCODED DATASET TO D1 JUST FOR DEMO")
+    const ds_name = "Tables";
+    console.warn("HARCODED DATASET TO Tables JUST FOR DEMO")
     let res = {};
     res[ds_name] = {};
 
@@ -383,7 +383,7 @@ const filterBlockly = (() => {
       contents: [
         {
           kind: "category",
-          name: "tables",
+          name: "Filter Types",
           contents: [
             {
               kind: "block",
@@ -397,7 +397,7 @@ const filterBlockly = (() => {
         },          
         {
           kind: "category",
-          name: "connectors",
+          name: "Operations",
           contents: [
             {
               kind: "block",
