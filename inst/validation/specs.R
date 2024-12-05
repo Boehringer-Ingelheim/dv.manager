@@ -112,7 +112,7 @@ specs <- c(
   fs_spec,
   sds_spec,
   list(tab_group = tab_group),
-  list(filtering = filtering),
+  list(filtering = filtering)
 )
 
 #nolint end
