@@ -85,6 +85,7 @@ app_server_ <- function(input, output, session, opts) {
   )
 
   module_server <- opts[["module_info"]][["server_list"]]
+  module_meta <- opts[["module_info"]][["meta_list"]]
   module_names <- opts[["module_info"]][["module_name_list"]]
   module_hierarchy_list <- opts[["module_info"]][["hierarchy_list"]]
   data <- opts[["data"]]
@@ -257,10 +258,35 @@ app_server_ <- function(input, output, session, opts) {
     )
   )
 
+  used_datasets <- list()
+
   module_output <- list()
-  for (srv in module_server) {
+  for (srv in module_server) {    
     module_output[[srv[["module_id"]]]] <- srv[["server"]](module_args)
+    used_datasets[[srv[["module_id"]]]] <- module_meta[[srv[["module_id"]]]][["meta"]][["dataset_info"]][["all"]]
   }
+
+  shiny::observeEvent(input[["__tabset_0__"]], {
+    message(input[["__tabset_0__"]])
+    selected_module <- input[["__tabset_0__"]]
+    used_ds <- used_datasets[[selected_module]]    
+    all_nm <- names(datasets_filters_info)
+    if (!is.null(used_ds)) {
+      used_nm <- intersect(used_datasets[[selected_module]], names(datasets_filters_info))
+      unused_nm <- setdiff(all_nm, used_nm)
+    } else {
+      used_nm <- all_nm
+      unused_nm <- character(0)
+    }
+
+    for(nm in unused_nm){
+      shinyjs::hide(datasets_filters_info[[nm]][["id_cont"]])
+    }
+
+    for(nm in used_nm){
+      shinyjs::show(datasets_filters_info[[nm]][["id_cont"]])
+    }    
+  })
 
   #### Report modal
 
