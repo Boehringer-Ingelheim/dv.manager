@@ -141,7 +141,7 @@ resolve_plain <- function(x, nm, hierarchy, nested_hierarchy) {
   meta_list[[x[["module_id"]]]] <- list(
     meta = x[["meta"]],
     module_id = x[["module_id"]]
-  )  
+  )
 
   module_id_list <- character(0)
   module_id_list[[nm]] <- x[["module_id"]]
