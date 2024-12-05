@@ -1,3 +1,7 @@
+# dv.manager 2.1.5
+
+- dv.manager filter hide/shows filters depending on the selected module
+
 # dv.manager 2.1.4
 
 - Removes leftover title automatic capitalization.

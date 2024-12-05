@@ -1,7 +1,7 @@
 Package: dv.manager
 Type: Package
 Title: DaVinci Module Manager
-Version: 2.1.4
+Version: 2.1.5
 Authors@R: c(person("Boehringer-Ingelheim Pharma GmbH & Co.KG", role = c("cph", "fnd")),
     person('Sorin', 'Voicu', email = 'sorin.voicu.ext@boehringer-ingelheim.com', role = c('aut')),
              person('Luis', 'Morís Fernández', email = 'luis.moris.fernandez@gmail.com', role = c('cre', 'aut')))
