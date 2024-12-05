@@ -104,10 +104,15 @@ tab_group <- list(
   "allows_switching" = "module can switch to/from other modules"
 )
 
+filtering <- list(
+  "filter_hidding" = "filters should show information only relevant for the current selected module"
+)
+
 specs <- c(
   fs_spec,
   sds_spec,
-  list(tab_group = tab_group)
+  list(tab_group = tab_group),
+  list(filtering = filtering),
 )
 
 #nolint end
