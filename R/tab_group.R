@@ -132,11 +132,16 @@ resolve_plain <- function(x, nm, hierarchy, nested_hierarchy) {
   )
 
   server_list <- list()
-
   server_list[[x[["module_id"]]]] <- list(
     server = x[["server"]],
     module_id = x[["module_id"]]
   )
+
+  meta_list <- list()
+  meta_list[[x[["module_id"]]]] <- list(
+    meta = x[["meta"]],
+    module_id = x[["module_id"]]
+  )  
 
   module_id_list <- character(0)
   module_id_list[[nm]] <- x[["module_id"]]
@@ -155,6 +160,7 @@ resolve_plain <- function(x, nm, hierarchy, nested_hierarchy) {
   r <- list(
     ui_list = ui_list,
     server_list = server_list,
+    meta_list = meta_list,
     module_id_list = module_id_list,
     module_name_list = module_name_list,
     hierarchy_list = hierarchy_list,
@@ -173,6 +179,7 @@ resolve_module_list <- function(
     )) {
   server_list <- list()
   ui_list <- list()
+  meta_list <- list()
   module_id_list <- character(0)
   module_name_list <- character(0)
   tab_group_names <- character(0)
@@ -193,6 +200,7 @@ resolve_module_list <- function(
     ui_list <- c(ui_list, r[["ui_list"]])
     module_id_list <- c(module_id_list, r[["module_id_list"]])
     server_list <- c(server_list, r[["server_list"]])
+    meta_list <- c(meta_list, r[["meta_list"]])
     module_name_list <- c(module_name_list, r[["module_name_list"]])
     hierarchy_list <- c(hierarchy_list, r[["hierarchy_list"]])
     tab_group_names <- c(tab_group_names, r[["tab_group_names"]])
@@ -202,6 +210,7 @@ resolve_module_list <- function(
   res <- list(
     ui_list = ui_list,
     server_list = server_list,
+    meta_list = meta_list,
     module_id_list = module_id_list,
     module_name_list = module_name_list,
     hierarchy_list = hierarchy_list,
