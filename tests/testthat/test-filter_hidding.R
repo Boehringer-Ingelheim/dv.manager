@@ -31,7 +31,7 @@ local({
     )
   })
 
-  root_app <- start_app_driver(app_expr)  
+  root_app <- start_app_driver(app_expr)
   app <- shinytest2::AppDriver$new(root_app$get_url())
 
   d2_filter <- "dataset_filter_a2b14ad9_cont"

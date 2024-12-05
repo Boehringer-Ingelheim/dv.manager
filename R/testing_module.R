@@ -119,7 +119,7 @@ mod_simple <- function(dataset, module_id) {
       simple_server(module_id, mm_resolve_dispatcher(dataset, afmm, flatten = TRUE))
     },
     module_id = module_id,
-    meta 
+    meta
   )
   mod
 }
@@ -984,8 +984,8 @@ simple_server <- function(id, dataset) {
 
 #' A simple module that counts the number of rows
 #'
-#' This simple module is used for demonstration purposes in documentation 
-#' 
+#' This simple module is used for demonstration purposes in documentation
+#'
 #' It is similar to mod_simple but does not use dispatchers
 #'
 #' @param module_id shiny module ID
