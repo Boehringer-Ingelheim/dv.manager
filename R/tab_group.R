@@ -112,6 +112,7 @@ resolve_tab_group <- function(x, nm, hierarchy, tab_group_count, nested_hierarch
     list(
       ui_list = r[["ui_list"]],
       server_list = r[["server_list"]],
+      meta_list = r[["meta_list"]],
       module_id_list = r[["module_id_list"]],
       module_name_list = r[["module_name_list"]],
       tab_label_list = r[["tab_label_list"]],

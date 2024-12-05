@@ -262,17 +262,26 @@ app_server_ <- function(input, output, session, opts) {
 
   module_output <- list()
   for (srv in module_server) {
-    module_output[[srv[["module_id"]]]] <- srv[["server"]](module_args)
-    used_datasets[[srv[["module_id"]]]] <- module_meta[[srv[["module_id"]]]][["meta"]][["dataset_info"]][["all"]]
+    mod_id <- srv[["module_id"]]
+    srv_fun <- srv[["server"]]
+
+    module_output[[mod_id]] <- srv_fun(module_args)
+    used_datasets[[mod_id]] <- module_meta[[mod_id]][["meta"]][["dataset_info"]][["all"]]
   }
 
-  shiny::observeEvent(input[["__tabset_0__"]], {
-    message(input[["__tabset_0__"]])
-    selected_module <- input[["__tabset_0__"]]
-    used_ds <- used_datasets[[selected_module]]
+
+  tab_ids <- c("__tabset_0__", names(opts[["module_info"]][["tab_group_names"]]))
+  shiny::observeEvent({purrr::map(tab_ids, ~input[[.x]])}, {
+    current_tab <- "__tabset_0__"
+    while (!current_tab %in% opts[["module_info"]][["module_id_list"]]) {
+      checkmate::assert_string(current_tab, min.chars = 1)
+      current_tab <- input[[current_tab]]
+    }
+
+    used_ds <- used_datasets[[current_tab]]
     all_nm <- names(datasets_filters_info)
     if (!is.null(used_ds)) {
-      used_nm <- intersect(used_datasets[[selected_module]], names(datasets_filters_info))
+      used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
       unused_nm <- setdiff(all_nm, used_nm)
     } else {
       used_nm <- all_nm
