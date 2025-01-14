@@ -118,8 +118,7 @@ mod_simple <- function(dataset, module_id) {
       # Add dispatcher support
       simple_server(module_id, mm_resolve_dispatcher(dataset, afmm, flatten = TRUE))
     },
-    module_id = module_id,
-    meta
+    module_id = module_id
   )
   mod
 }
