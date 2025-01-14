@@ -277,14 +277,16 @@ app_server_ <- function(input, output, session, opts) {
     },
     {
       current_tab <- "__tabset_0__"
-      while (!current_tab %in% opts[["module_info"]][["module_id_list"]]) {
-        checkmate::assert_string(current_tab, min.chars = 1)
-        current_tab <- input[[current_tab]]
+      zero_tabs <- length(input[["__tabset_0__"]]) == 0
+      if (!zero_tabs) {
+        while (!current_tab %in% opts[["module_info"]][["module_id_list"]]) {
+          current_tab <- input[[current_tab]]
+        }
       }
 
       used_ds <- used_datasets[[current_tab]]
       all_nm <- names(datasets_filters_info)
-      if (!is.null(used_ds)) {
+      if (!zero_tabs && !is.null(used_ds)) {
         used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
         unused_nm <- setdiff(all_nm, used_nm)
       } else {
