@@ -1,4 +1,4 @@
-# dv.manager 2.1.5
+# dv.manager 2.1.4.9000
 
 - dv.manager filter hide/shows filters depending on the selected module
 
