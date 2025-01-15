@@ -47,6 +47,7 @@ run_app <- function(data = NULL,
                     azure_options = NULL,
                     reload_period = NULL,
                     enableBookmarking = "server", # nolint
+                    use_dataset_filter = FALSE,
                     .launch = TRUE) {
   check_deprecated_calls(filter_data)
 
@@ -68,6 +69,7 @@ run_app <- function(data = NULL,
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
+  config[["use_dataset_filter"]] <- use_dataset_filter
 
   check_meta_mtime_attribute(data)
 

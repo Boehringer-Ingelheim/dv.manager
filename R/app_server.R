@@ -51,7 +51,8 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
     "filter_data" = get_config("filter_data"),
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
-    "reload_period" = get_config("reload_period")
+    "reload_period" = get_config("reload_period"),
+    "use_dataset_filter" = get_config("use_dataset_filter")
   )
 
   app_server_(input, output, session, opts)
@@ -93,6 +94,7 @@ app_server_ <- function(input, output, session, opts) {
   filter_key <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
+  use_dataset_filter <- opts[["use_dataset_filter"]]
 
   datasets_filters_info <- get_dataset_filters_info(data, filter_data)
 
@@ -132,7 +134,12 @@ app_server_ <- function(input, output, session, opts) {
     shiny::reactive(unfiltered_dataset()[[filter_data]])
   )
 
-  dataset_filters <- local({
+
+  if(use_dataset_filter) {
+
+    log_inform("Dataset filter server")
+
+    dataset_filters <- local({
     l <- vector(mode = "list", length = length(datasets_filters_info))
     names(l) <- names(datasets_filters_info)
     for (idx in seq_along(datasets_filters_info)) {
@@ -150,7 +157,7 @@ app_server_ <- function(input, output, session, opts) {
     l
   })
 
-  filtered_dataset <- shinymeta::metaReactive({
+    filtered_dataset <- shinymeta::metaReactive({
     # dv.filter returns a logical vector. This contemplates the case of empty lists
     shiny::req(is.logical(global_filtered_values()))
 
@@ -188,6 +195,57 @@ app_server_ <- function(input, output, session, opts) {
       ~ dplyr::filter(.x, .data[[filter_key]] %in% filtered_key_values) # nolint
     )
   })
+
+    tab_ids <- c("__tabset_0__", names(opts[["module_info"]][["tab_group_names"]]))
+  shiny::observeEvent(
+    {
+      purrr::map(tab_ids, ~ input[[.x]])
+    },
+    {
+      current_tab <- "__tabset_0__"
+      zero_tabs <- length(input[["__tabset_0__"]]) == 0
+      if (!zero_tabs) {
+        while (!current_tab %in% opts[["module_info"]][["module_id_list"]]) {
+          current_tab <- input[[current_tab]]
+        }
+      }
+
+      used_ds <- used_datasets[[current_tab]]
+      all_nm <- names(datasets_filters_info)
+      if (!zero_tabs && !is.null(used_ds)) {
+        used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
+        unused_nm <- setdiff(all_nm, used_nm)
+      } else {
+        used_nm <- all_nm
+        unused_nm <- character(0)
+      }
+
+      for (nm in unused_nm) {
+        shinyjs::hide(datasets_filters_info[[nm]][["id_cont"]])
+      }
+
+      for (nm in used_nm) {
+        shinyjs::show(datasets_filters_info[[nm]][["id_cont"]])
+      }
+    }
+  )
+
+  } else {
+
+    log_inform("Single filter server")
+
+      filtered_dataset <- shinymeta::metaReactive({
+    # dv.filter returns a logical vector. This contemplates the case of empty lists
+    shiny::req(is.logical(global_filtered_values()))
+    log_inform("New filter applied")
+    filtered_key_values <- unfiltered_dataset()[[filter_data]][[filter_key]][global_filtered_values()] # nolint
+    purrr::map(
+      unfiltered_dataset(),
+      ~ dplyr::filter(.x, .data[[filter_key]] %in% filtered_key_values) # nolint
+    )
+  })
+
+  }
 
   # Prepare module_output argument
   module_output_env <- rlang::current_env()
@@ -270,39 +328,7 @@ app_server_ <- function(input, output, session, opts) {
   }
 
 
-  tab_ids <- c("__tabset_0__", names(opts[["module_info"]][["tab_group_names"]]))
-  shiny::observeEvent(
-    {
-      purrr::map(tab_ids, ~ input[[.x]])
-    },
-    {
-      current_tab <- "__tabset_0__"
-      zero_tabs <- length(input[["__tabset_0__"]]) == 0
-      if (!zero_tabs) {
-        while (!current_tab %in% opts[["module_info"]][["module_id_list"]]) {
-          current_tab <- input[[current_tab]]
-        }
-      }
 
-      used_ds <- used_datasets[[current_tab]]
-      all_nm <- names(datasets_filters_info)
-      if (!zero_tabs && !is.null(used_ds)) {
-        used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
-        unused_nm <- setdiff(all_nm, used_nm)
-      } else {
-        used_nm <- all_nm
-        unused_nm <- character(0)
-      }
-
-      for (nm in unused_nm) {
-        shinyjs::hide(datasets_filters_info[[nm]][["id_cont"]])
-      }
-
-      for (nm in used_nm) {
-        shinyjs::show(datasets_filters_info[[nm]][["id_cont"]])
-      }
-    }
-  )
 
   #### Report modal
 
