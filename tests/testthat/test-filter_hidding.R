@@ -22,6 +22,10 @@ local({
               module_id = "use_d_3",
               dataset_name = "d3"
             )
+          ),
+          "No meta" = dv.manager:::mod_simple(
+              module_id = "use_d_3_with_no_meta",
+              dataset = mm_dispatch("unfiltered_dataset", "d3")
           )
         )
       ),
@@ -61,6 +65,15 @@ local({
     app$set_inputs("__tabset_2__" = "use_d_3")
     app$wait_for_idle()
     expect_true(is_hidden(d2_filter))
+    expect_false(is_hidden(d3_filter))
+  })
+
+  test_that("tab grouped modules. All filters are visible when no meta is provided" |>
+    vdoc[["add_spec"]](c(specs$filtering$filter_hidding)), {
+    app$set_inputs("__tabset_0__" = "__tabset_1__")
+    app$set_inputs("__tabset_1__" = "use_d_3_with_no_meta")    
+    app$wait_for_idle()
+    expect_false(is_hidden(d2_filter))
     expect_false(is_hidden(d3_filter))
   })
 })
