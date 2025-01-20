@@ -11,6 +11,10 @@ simple_UI(id)
 simple_server(id, dataset)
 
 mod_simple(dataset, module_id)
+
+simple_UI(id)
+
+simple_server(id, dataset)
 }
 \arguments{
 \item{id}{shiny id}
@@ -24,6 +28,10 @@ This simple module is used for demonstration purposes in documentation
 }
 \section{Functions}{
 \itemize{
+\item \code{simple_UI()}: Module UI
+
+\item \code{simple_server()}: Module server
+
 \item \code{simple_UI()}: Module UI
 
 \item \code{simple_server()}: Module server

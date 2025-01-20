@@ -25,7 +25,7 @@ app_ui <- function(request_id) {
   data <- get_config("data")
   module_info <- get_config("module_info")
   filter_data <- get_config("filter_data")
-  use_dataset_filter <- get_config("use_dataset_filter")
+  enable_dataset_filter <- get_config("enable_dataset_filter")
 
   log_inform("Initializing HTML template UI")
   log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
@@ -72,7 +72,7 @@ app_ui <- function(request_id) {
             dv.filter::data_filter_ui(ns("global_filter"))
           )
         ),
-        if (use_dataset_filter) {
+        if (enable_dataset_filter) {
           shiny::div(
           class = "c-well shiny_filter",
           shiny::tags$label(

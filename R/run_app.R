@@ -26,7 +26,7 @@
 #' externally.
 #' @param reload_period Either a lubridate object to specify a duration
 #' or a positive numeric value which is then interpreted as a lubridate duration object in days. By default NULL
-#' @param use_dataset_filter a boolean flag indicating if dataset filters are used
+#' @param enable_dataset_filter a boolean flag indicating if dataset filters are enabled
 #' @param .launch by default it should always be TRUE. It should only be false for debugging and testing.
 #' When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.
 #' @inheritParams shiny::shinyApp
@@ -48,7 +48,7 @@ run_app <- function(data = NULL,
                     azure_options = NULL,
                     reload_period = NULL,
                     enableBookmarking = "server", # nolint
-                    use_dataset_filter = FALSE,
+                    enable_dataset_filter = FALSE,
                     .launch = TRUE) {
   check_deprecated_calls(filter_data)
 
@@ -70,7 +70,7 @@ run_app <- function(data = NULL,
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
-  config[["use_dataset_filter"]] <- use_dataset_filter
+  config[["enable_dataset_filter"]] <- enable_dataset_filter
 
   check_meta_mtime_attribute(data)
 

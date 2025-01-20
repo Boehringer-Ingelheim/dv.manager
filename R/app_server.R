@@ -52,7 +52,7 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
-    "use_dataset_filter" = get_config("use_dataset_filter")
+    "enable_dataset_filter" = get_config("enable_dataset_filter")
   )
 
   app_server_(input, output, session, opts)
@@ -94,7 +94,7 @@ app_server_ <- function(input, output, session, opts) {
   filter_key <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
-  use_dataset_filter <- opts[["use_dataset_filter"]]
+  enable_dataset_filter <- opts[["enable_dataset_filter"]]
 
   datasets_filters_info <- get_dataset_filters_info(data, filter_data)
 
@@ -135,7 +135,7 @@ app_server_ <- function(input, output, session, opts) {
   )
 
 
-  if(use_dataset_filter) {
+  if(enable_dataset_filter) {
 
     log_inform("Dataset filter server")
 

@@ -26,7 +26,7 @@ test_that(
           mod_id = "mod_2"
         )
       )),
-      use_dataset_filter = FALSE
+      enable_dataset_filter = FALSE
     )
 
 
@@ -59,7 +59,7 @@ test_that(
           mod_id = "mod_2"
         )
       )),
-      use_dataset_filter = FALSE
+      enable_dataset_filter = FALSE
     )
 
 
@@ -96,7 +96,7 @@ test_that(
           mod_id = "mod_2"
         )
       )),
-      use_dataset_filter = FALSE
+      enable_dataset_filter = FALSE
     )
 
 

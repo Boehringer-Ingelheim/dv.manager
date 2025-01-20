@@ -1,7 +1,7 @@
 # dv.manager 2.1.4.9000
 
 - dv.manager filter hide/shows filters depending on the selected module
-- dv.manager dataset filters are now deactivated by default and can be activated by setting `use_dataset_filter` parameter in `run_app`.
+- dv.manager dataset filters are now deactivated by default and can be activated by setting `enable_dataset_filter` parameter in `run_app`.
 
 # dv.manager 2.1.4
 
