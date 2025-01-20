@@ -48,7 +48,7 @@ run_app <- function(data = NULL,
                     azure_options = NULL,
                     reload_period = NULL,
                     enableBookmarking = "server", # nolint
-                    use_dataset_filter = TRUE,
+                    use_dataset_filter = FALSE,
                     .launch = TRUE) {
   check_deprecated_calls(filter_data)
 
