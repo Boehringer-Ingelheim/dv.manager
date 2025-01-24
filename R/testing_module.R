@@ -934,53 +934,6 @@ run_mock_app_css <- function() {
   )
 }
 
-########### Simple module
-
-#' @describeIn mod_simple
-#' Module UI
-#'
-#' @param id shiny id
-#'
-#' @export
-simple_UI <- function(id) { # nolint
-  ns <- shiny::NS(id)
-  shiny::tagList(
-    shiny::textOutput(ns("text")),
-    shiny::verbatimTextOutput(ns("code"))
-  )
-}
-
-#' @describeIn mod_simple
-#' Module server
-#'
-#' @param dataset input dataset
-#'
-#' @export
-simple_server <- function(id, dataset) {
-  shiny::moduleServer(
-    id,
-    function(input, output, session) {
-      output$text <- shinymeta::metaRender(
-        shiny::renderText,
-        {
-          log_inform(paste(nrow(dataset())))
-          nrow(shinymeta::..(dataset()))
-        }
-      )
-
-      # nolint start
-      # output$code <- shiny::renderPrint({
-      #   shinymeta::expandChain(output$text())
-      # })
-      # nolint end
-
-      return(structure(list(),
-        code = output$text
-      ))
-    }
-  )
-}
-
 #' A simple module that counts the number of rows
 #'
 #' This simple module is used for demonstration purposes in documentation
@@ -993,7 +946,7 @@ simple_server <- function(id, dataset) {
 mod_simple2 <- function(dataset_name, module_id) {
   mod <- list(
     ui = simple_UI,
-    server = function(afmm) {
+    server = function(afmm) {      
       simple_server(module_id, shiny::reactive(afmm[["filtered_dataset"]]()[[dataset_name]]))
     },
     module_id = module_id,
