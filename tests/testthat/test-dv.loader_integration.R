@@ -39,7 +39,7 @@ test_that(
         )
       ),
       filter_key = "car",
-      enable_dataset_filter = FALSE
+      enable_dataset_filter = TRUE
     )
 
 

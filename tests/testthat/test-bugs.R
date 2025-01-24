@@ -9,7 +9,7 @@ test_that("values are returned when datafilter returns are false", {
     data = datasets,
     filter_data = "a",
     module_list = list(),
-    enable_dataset_filter = FALSE,
+    enable_dataset_filter = TRUE,
     filter_key = "mpg" # This filter key is not really good as it is not unique!
   )
 

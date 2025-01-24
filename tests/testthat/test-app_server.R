@@ -17,7 +17,7 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      enable_dataset_filter = FALSE
+      enable_dataset_filter = TRUE
     )
 
 
@@ -47,7 +47,7 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      enable_dataset_filter = FALSE
+      enable_dataset_filter = TRUE
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -66,7 +66,7 @@ test_that(
     testing_options <- list(
       data = list(),
       module_info = resolve_module_list(list("mod_1" = mod_identity(1, "mod_1"), "mod_2" = mod_identity(2, "mod_2"))),      
-      enable_dataset_filter = FALSE
+      enable_dataset_filter = TRUE
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -88,7 +88,7 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      enable_dataset_filter = FALSE
+      enable_dataset_filter = TRUE
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -109,7 +109,7 @@ test_that(
       filter_data = NULL,
       module_info = resolve_module_list(list("mod_1" = mod_identity(1, mod_id = "mod_1"))),
       filter_key = NULL,
-      enable_dataset_filter = FALSE
+      enable_dataset_filter = TRUE
     )
 
     testServer(app_server_test(testing_options), {
@@ -125,7 +125,7 @@ test_that(
       data = list(),
       module_info = resolve_module_list(list()),
       filter_key = NULL,
-      enable_dataset_filter = FALSE
+      enable_dataset_filter = TRUE
     )
     shiny::testServer(app_server_test(testing_options), {
     }) %>%
@@ -164,7 +164,7 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      enable_dataset_filter = FALSE
+      enable_dataset_filter = TRUE
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -203,7 +203,7 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      enable_dataset_filter = FALSE
+      enable_dataset_filter = TRUE
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -245,7 +245,7 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      enable_dataset_filter = FALSE
+      enable_dataset_filter = TRUE
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -279,7 +279,7 @@ test_that(
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
       reload_period = lubridate::duration(1, "seconds"),
-      enable_dataset_filter = FALSE
+      enable_dataset_filter = TRUE
     )
     withr::with_dir(tempdir(), {
       system2(command = "touch", args = c("restart.txt"), stdout = TRUE)
