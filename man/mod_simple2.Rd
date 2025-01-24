@@ -15,3 +15,4 @@ This simple module is used for demonstration purposes in documentation
 \details{
 It is similar to mod_simple but does not use dispatchers
 }
+\keyword{internal}

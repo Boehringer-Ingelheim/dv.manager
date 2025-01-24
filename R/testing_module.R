@@ -941,6 +941,8 @@ run_mock_app_css <- function() {
 #' It is similar to mod_simple but does not use dispatchers
 #'
 #' @param module_id shiny module ID
+#' 
+#' @keywords internal
 #'
 #' @export
 mod_simple2 <- function(dataset_name, module_id) {
