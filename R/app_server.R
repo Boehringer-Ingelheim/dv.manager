@@ -174,7 +174,7 @@ app_server_ <- function(input, output, session, opts) {
 
     # Current dataset must be logical with length above 0
     # Check dataset filters check all datafilters are initialized
-    purrr::walk(curr_dataset_filters, ~ shiny::req(checkmate::test_logical(.x(), min.len = 1)))
+    purrr::walk(curr_dataset_filters, ~ shiny::req(checkmate::test_logical(.x(), min.len = 0)))
 
     filtered_key_values <- ufds[[filter_data]][[filter_key]][global_filtered_values()]
 
