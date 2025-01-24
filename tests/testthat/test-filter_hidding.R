@@ -31,7 +31,8 @@ local({
       ),
       filter_data = "d1",
       filter_key = "cyl",
-      enableBookmarking = "url"
+      enableBookmarking = "url",
+      enable_dataset_filter = TRUE
     )
   })
 
