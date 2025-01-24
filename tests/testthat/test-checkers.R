@@ -316,10 +316,20 @@ test_that(
   vdoc[["add_spec"]]("check_module should error when the module_id in the list are repeated", c(specs$module_list_check)),
   {
     check_resolved_modules(resolve_module_list(list(
-      a = list(ui = 1, server = function(x) x, module_id = 3),
-      b = list(ui = 1, server = function(x) x, module_id = 3)
+      a = list(ui = 1, server = function(x) x, module_id = "a"),
+      b = list(ui = 1, server = function(x) x, module_id = "a")
     ))) %>%
       expect_error(regexp = "module_list has repeated module_ids") # nolint
+  }
+)
+
+test_that(
+  vdoc[["add_spec"]]("check_module should error when at least one module_id is an empty string", c(specs$module_list_check)),
+  {
+    check_resolved_modules(resolve_module_list(list(
+      a = list(ui = 1, server = function(x) x, module_id = "")
+    ))) %>%
+      expect_error(regexp = "module ids must have at least one character") # nolint
   }
 )
 
