@@ -35,7 +35,8 @@ fs_spec <- specs_list(
   "module_name_access" = "Modules will have access to its name and the name of the other modules",
   "modification_dates_access" = "Modules will have access to the earliest and latest modification dates of all the data tables.",
   "module_tab_switching" = "dv.manager allows programatically switching from one module tab to another",  
-  "SSO_authentication_option" = "Modulemanager provides the option to enable the authentication of App Users with SSO to access the app."
+  "SSO_authentication_option" = "dv.manager provides the option to enable the authentication of App Users with SSO to access the app.",
+  "empty_datasets" = "dv.manager supports datasets with 0 rows"
 )
 
 sds_spec <- specs_list(
