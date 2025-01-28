@@ -5,7 +5,7 @@ check_resolved_modules <- function(resolved_module_list) {
   }
 
   if (!all(is.character(resolved_module_list[["module_id_list"]]))) {
-    msg <- "module_list has at least one module_ids that is not a character"
+    msg <- "module_list has at least one module_id that is not of type character"
     rlang::abort(msg)
   }
 
