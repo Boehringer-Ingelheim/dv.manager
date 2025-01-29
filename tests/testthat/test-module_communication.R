@@ -25,7 +25,8 @@ test_that(
           value = mm_dispatch("module_output", "mod_1"),
           mod_id = "mod_2"
         )
-      ))
+      )),
+      enable_dataset_filter = TRUE
     )
 
 
@@ -57,7 +58,8 @@ test_that(
           value = mm_dispatch("module_output", "mod_1"),
           mod_id = "mod_2"
         )
-      ))
+      )),
+      enable_dataset_filter = TRUE
     )
 
 
@@ -93,7 +95,8 @@ test_that(
           value = mm_dispatch("module_output", c("mod_1", "mod_3")),
           mod_id = "mod_2"
         )
-      ))
+      )),
+      enable_dataset_filter = TRUE
     )
 
 

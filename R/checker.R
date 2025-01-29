@@ -4,8 +4,18 @@ check_resolved_modules <- function(resolved_module_list) {
     log_warn(msg)
   }
 
+  if (!all(is.character(resolved_module_list[["module_id_list"]]))) {
+    msg <- "module_list has at least one module_id that is not of type character"
+    rlang::abort(msg)
+  }
+
   if (any(duplicated(resolved_module_list[["module_id_list"]]))) {
     msg <- "module_list has repeated module_ids"
+    rlang::abort(msg)
+  }
+
+  if (any(nchar(resolved_module_list[["module_id_list"]]) == 0)) {
+    msg <- "module ids must have at least one character"
     rlang::abort(msg)
   }
 

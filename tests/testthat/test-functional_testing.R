@@ -53,7 +53,8 @@ local({
         "id_1"
       )
     )),
-    filter_key = "car"
+    filter_key = "car",
+      enable_dataset_filter = TRUE
   )
 
 
@@ -178,7 +179,8 @@ local({
             "id_1"
           )
         ),
-        filter_key = "car"
+        filter_key = "car",
+      enable_dataset_filter = TRUE
       )
 
 

@@ -39,10 +39,12 @@ The figure below depicts the steps of the filtering process when using the defau
 
 In a first step (1), `filter_data` makes a subselection of all subjects in the study according to the criteria selected by the user (in the case of the figure only female participants above 30 years). In a second step (2), we filter the rest of the datasets in `data` and only those subjects that survived the filtering in step 1 will remain.
 
-# Single filter
+# Dataset filter
 
 **dv.manager** includes a filter for each of the datasets, with the exception of the one used in the population filter, that allows filtering the rows in that specific dataset. As opposed to the population filter
 this filter only affects the dataset itself and not the other datasets in the input data.
+
+This feature is optional and can be activated by setting the `enable_dataset_filter` parameter in `run_app`.
 
 
 

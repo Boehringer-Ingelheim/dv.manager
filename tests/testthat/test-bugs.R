@@ -9,6 +9,7 @@ test_that("values are returned when datafilter returns are false", {
     data = datasets,
     filter_data = "a",
     module_list = list(),
+    enable_dataset_filter = TRUE,
     filter_key = "mpg" # This filter key is not really good as it is not unique!
   )
 
@@ -31,4 +32,24 @@ test_that("values are returned when datafilter returns are false", {
     expect_equal(nrow(filtered_dataset()[["a"]]), 0)
   }) %>%
     expect_warning(regexp = "a has no date.*")
+})
+
+test_that(
+  vdoc[["add_spec"]](
+    "dv.manager support datasets with 0 rows", c(specs$empty_datasets)
+  ), {
+    skip_if_not_running_shiny_tests()
+    skip_if_suspect_check()
+
+    app <- start_app_driver({
+      dv.manager::run_app(
+        data = list(one_dataset = list(a = data.frame(a = 1), empty = tibble::tibble(a = numeric(0)))),
+        module_list = list(module = dv.manager::mod_simple2(dataset_name = "empty", module_id = "module")),
+        filter_data = "a",
+        filter_key = "a",
+        enable_dataset_filter = TRUE
+      )
+    }) |> suppressWarnings()
+
+    expect_identical(app$get_value(output = "module-text"), as.character(0))
 })
