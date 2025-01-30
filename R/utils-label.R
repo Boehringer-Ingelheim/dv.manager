@@ -6,7 +6,7 @@
 #'
 #' @return A named list in which name is the name of the df column and value is the label of the column.
 #' Non-labelled columns will return NULL. In the robust version NULL is replaced by the name of the column.
-#' @keywords misc
+#' @keywords internal
 #' @export
 
 get_lbls <- function(df) {
@@ -29,7 +29,7 @@ get_lbls_robust <- function(df) {
 #'
 #' @return A string with the label name
 #'
-#' @keywords misc
+#' @keywords internal
 #' @export
 get_lbl <- function(df, var) {
   purrr::attr_getter("label")(df[[var]])
@@ -44,7 +44,7 @@ get_lbl <- function(df, var) {
 #'
 #' @return The label attribute or the name of the column if the label attribute is NULL.
 #'
-#' @keywords misc
+#' @keywords internal
 #' @export
 
 get_lbl_robust <- function(df, var) {
@@ -97,7 +97,7 @@ swap_val_names <- function(l) {
 #'
 #' @return the dataframe with the replaced label
 #'
-#' @keywords misc
+#' @keywords internal
 #' @export
 set_lbl <- function(df, var, lbl) {
   attr(df[[var]], "label") <- lbl
@@ -112,7 +112,7 @@ set_lbl <- function(df, var, lbl) {
 #'  label of the given column.
 #'
 #' @return A dataframe with the set labels
-#' @keywords misc
+#' @keywords internal
 #' @export
 
 set_lbls <- function(df, lbls) {
