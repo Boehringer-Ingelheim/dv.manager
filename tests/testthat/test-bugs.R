@@ -37,7 +37,8 @@ test_that("values are returned when datafilter returns are false", {
 test_that(
   vdoc[["add_spec"]](
     "dv.manager support datasets with 0 rows", c(specs$empty_datasets)
-  ), {
+  ),
+  {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
 
@@ -52,4 +53,33 @@ test_that(
     }) |> suppressWarnings()
 
     expect_identical(app$get_value(output = "module-text"), as.character(0))
-})
+  }
+)
+
+test_that(
+  "labels are preserved when the datasets are data.frames",
+  {
+    skip_if_not_running_shiny_tests()
+    skip_if_suspect_check()
+
+    app <- start_app_driver({
+      data <- list(
+        D1 = list(
+          t1 = data.frame(fk = 0, a = 1, b = 2),
+          t2 = data.frame(fk = 0, c = 1, d = 2)
+        )
+      )
+
+      # Leave two with no label to cover the no label case
+      attr(data[["D1"]][["t1"]][["a"]], "label") <- "label a"
+      attr(data[["D1"]][["t2"]][["c"]], "label") <- "label c"
+      dv.manager:::run_mock_app_labels(data = data)
+    }) |> suppressWarnings()
+
+    data <- app$get_value(export = "mod1-data")
+    expect_identical(attr(data[["t1"]][["a"]], "label"), "label a")
+    expect_null(attr(data[["t1"]][["b"]], "label"))
+    expect_identical(attr(data[["t2"]][["c"]], "label"), "label c")
+    expect_null(attr(data[["t2"]][["d"]], "label"))
+  }
+)
