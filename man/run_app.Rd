@@ -18,6 +18,7 @@ run_app(
   azure_options = NULL,
   reload_period = NULL,
   enableBookmarking = "server",
+  enable_dataset_filter = FALSE,
   .launch = TRUE
 )
 }
@@ -55,6 +56,8 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
 \code{"disable"}. The default value, \code{NULL}, will respect the setting from
 any previous calls to  \code{\link[shiny:enableBookmarking]{enableBookmarking()}}. See \code{\link[shiny:enableBookmarking]{enableBookmarking()}}
 for more information on bookmarking your app.}
+
+\item{enable_dataset_filter}{a boolean flag indicating if dataset filters are enabled}
 
 \item{.launch}{by default it should always be TRUE. It should only be false for debugging and testing.
 When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.}

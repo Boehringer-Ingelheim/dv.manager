@@ -104,7 +104,7 @@ local({
     mpg_no_date = mpg_no_date_expr
   )
 
-  args <- list(data = datasets, module_list = module_list, filter_data = "mpg", filter_key = "car", title = "Custom title")
+  args <- list(data = datasets, module_list = module_list, filter_data = "mpg", filter_key = "car", title = "Custom title", enable_dataset_filter = TRUE)
 
   app_expr <- rlang::quo({
     Sys.setenv("LC_TIME" = "en_US.UTF-8")

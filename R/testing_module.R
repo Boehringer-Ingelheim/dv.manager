@@ -933,3 +933,109 @@ run_mock_app_css <- function() {
     filter_key = ""
   )
 }
+
+#' A simple module that counts the number of rows
+#'
+#' This simple module is used for demonstration purposes in documentation
+#'
+#' It is similar to mod_simple but does not use dispatchers
+#'
+#' @param module_id shiny module ID
+#'
+#' @keywords internal
+#'
+#' @export
+mod_simple2 <- function(dataset_name, module_id) {
+  mod <- list(
+    ui = simple_UI,
+    server = function(afmm) {
+      simple_server(module_id, shiny::reactive(afmm[["filtered_dataset"]]()[[dataset_name]]))
+    },
+    module_id = module_id,
+    meta = list(dataset_info = list(all = dataset_name))
+  )
+  mod
+}
+
+
+#' A simple module that lists the column labels of all used datasets
+#'
+#' This simple module is used for demonstration purposes in documentation
+#'
+#' 
+#'
+#' @param module_id shiny module ID
+#'
+#' @keywords internal
+#'
+#' @export
+mod_dataset_labels <- function(dataset_names, module_id) {
+  mod <- list(
+    ui = dataset_labels_UI,
+    server = function(afmm) {
+      dataset_labels_server(module_id, shiny::reactive(afmm[["filtered_dataset"]]()[dataset_names]))
+    },
+    module_id = module_id,
+    meta = list(dataset_info = list(all = dataset_names))
+  )
+  mod
+}
+
+dataset_labels_UI <- function(id) { # nolintr
+  ns <- shiny::NS(id)
+  list(
+    shiny::h1("labels"),
+    shiny::uiOutput(ns("labels"))
+  )
+}
+
+dataset_labels_server <- function(id, data) {
+  mod <- function(input, output, session) {
+    output[["labels"]] <- shiny::renderUI({
+      ds_li <- list()
+      nm_ds <- names(data())
+      for (ds_idx in seq_along(data())) {
+        ds <- data()[[ds_idx]]
+        nm_col <- names(ds)
+        label_li <- list()
+        for (col_idx in seq_along(ds)) {
+          label_li[[col_idx]] <- shiny::tags[["li"]](shiny::p(nm_col[[col_idx]], ": ", attr(ds[[col_idx]], "label")))
+        }
+        ds_li[[(ds_idx * 2) - 1]] <- shiny::tags[["li"]](nm_ds[[ds_idx]])
+        ds_li[[(ds_idx * 2)]] <- do.call(shiny::tags[["ul"]], label_li)
+      }
+      do.call(shiny::tags[["ul"]], ds_li)
+    })
+
+    shiny::exportTestValues(
+      data = data()
+    )
+
+    NULL
+  }
+  shiny::moduleServer(id, mod)
+}
+
+run_mock_app_labels <- function(data) {
+  if (missing(data)) {
+    add_dummy_labels <- function(ds) {
+      nm_cols <- names(ds)
+      for (col_idx in seq_along(ds)) {
+        attr(ds[[col_idx]], "label") <- paste("Label of", nm_cols[[col_idx]])
+      }
+      ds
+    }
+    data <- list("D1" = list(mtcars = add_dummy_labels(mtcars), mtcars2 = add_dummy_labels(mtcars)))
+  }
+
+
+  run_app(
+    data = data,
+    module_list = list(
+      "Labels" = mod_dataset_labels(names(data[[1]]), "mod1")
+    ),
+    filter_data = names(data[[1]])[[1]],
+    filter_key = names(data[[1]][[1]])[[1]],
+    enable_dataset_filter = TRUE
+  )
+}

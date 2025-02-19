@@ -4,13 +4,13 @@
 \alias{tab_group}
 \title{Create a Tabbed Shiny Module Collection}
 \usage{
-tab_group(module_list)
+tab_group(...)
 }
 \arguments{
-\item{module_list}{A list of modules.}
+\item{...}{A set of davinci modules or tab groups}
 }
 \value{
-The module list marked with an attribute.
+The set of of modules wrapped in a list marked with an attribute.
 }
 \description{
 \code{tab_group} is a function that groups dv modules in tabsets (see \link[shiny:tabsetPanel]{shiny::tabsetPanel}).

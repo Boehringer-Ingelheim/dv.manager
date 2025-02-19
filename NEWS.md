@@ -1,3 +1,11 @@
+# dv.manager 2.1.5
+
+- dv.manager dataset filters are now deactivated by default and can be activated by setting `enable_dataset_filter` parameter in `run_app`.
+- dv.manager filter hide/shows filters depending on the selected module.
+- Empty datasets can be included in the application again.
+- Fixed a bug that removed labels from column datasets when data was filtered.
+- Module names can no longer be an empty string `''`.
+
 # dv.manager 2.1.4
 
 - Removes leftover title automatic capitalization.
