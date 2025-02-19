@@ -73,6 +73,15 @@
     <loc>/reference/get_date_range.html</loc>
   </url>
   <url>
+    <loc>/reference/get_lbl.html</loc>
+  </url>
+  <url>
+    <loc>/reference/get_lbl_robust.html</loc>
+  </url>
+  <url>
+    <loc>/reference/get_lbls.html</loc>
+  </url>
+  <url>
     <loc>/reference/has_all_items_named.html</loc>
   </url>
   <url>
@@ -100,10 +109,19 @@
     <loc>/reference/mm_resolve_dispatcher.html</loc>
   </url>
   <url>
+    <loc>/reference/mod_dataset_labels.html</loc>
+  </url>
+  <url>
     <loc>/reference/mod_simple.html</loc>
   </url>
   <url>
+    <loc>/reference/mod_simple2.html</loc>
+  </url>
+  <url>
     <loc>/reference/mod_switch.html</loc>
+  </url>
+  <url>
+    <loc>/reference/name_label_formatter.html</loc>
   </url>
   <url>
     <loc>/reference/ns_css.html</loc>
@@ -115,7 +133,22 @@
     <loc>/reference/pipe.html</loc>
   </url>
   <url>
+    <loc>/reference/possibly_set_lbls.html</loc>
+  </url>
+  <url>
+    <loc>/reference/rpl_nulls_name.html</loc>
+  </url>
+  <url>
     <loc>/reference/run_app.html</loc>
+  </url>
+  <url>
+    <loc>/reference/set_lbl.html</loc>
+  </url>
+  <url>
+    <loc>/reference/set_lbls.html</loc>
+  </url>
+  <url>
+    <loc>/reference/swap_val_names.html</loc>
   </url>
   <url>
     <loc>/reference/tab_group.html</loc>

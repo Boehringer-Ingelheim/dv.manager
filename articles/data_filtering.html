@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,9 +112,10 @@
 <p>In a first step (1), <code>filter_data</code> makes a subselection of all subjects in the study according to the criteria selected by the user (in the case of the figure only female participants above 30 years). In a second step (2), we filter the rest of the datasets in <code>data</code> and only those subjects that survived the filtering in step 1 will remain.</p>
 </div>
 <div class="section level2">
-<h2 id="single-filter">Single filter<a class="anchor" aria-label="anchor" href="#single-filter"></a>
+<h2 id="dataset-filter">Dataset filter<a class="anchor" aria-label="anchor" href="#dataset-filter"></a>
 </h2>
 <p><strong>dv.manager</strong> includes a filter for each of the datasets, with the exception of the one used in the population filter, that allows filtering the rows in that specific dataset. As opposed to the population filter this filter only affects the dataset itself and not the other datasets in the input data.</p>
+<p>This feature is optional and can be activated by setting the <code>enable_dataset_filter</code> parameter in <code>run_app</code>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>
@@ -124,7 +125,7 @@
 
     <footer><div class="pkgdown-footer-left">
   <p></p>
-<p>Developed by Boehringer-Ingelheim Pharma GmbH &amp; Co.KG, Sorin Voicu, Luis Morís Fernández.</p>
+<p>Developed by Boehringer-Ingelheim Pharma GmbH &amp; Co.KG, Luis Morís Fernández, Sorin Voicu.</p>
 </div>
 
 <div class="pkgdown-footer-right">
