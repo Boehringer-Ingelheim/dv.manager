@@ -21,7 +21,7 @@ get_lbls_robust <- function(df) {
 
 #' Get a single label from a dataframe
 #'
-#' It will try to read the label attribute from one columns.
+#' It will try to read the label attribute from one column.
 #'
 #' @param df a dataframe.
 #'
