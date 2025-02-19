@@ -958,7 +958,7 @@ mod_simple2 <- function(dataset_name, module_id) {
 }
 
 
-#' A simple module that counts the number of rows
+#' A simple module that lists the column labels of all used datasets
 #'
 #' This simple module is used for demonstration purposes in documentation
 #'
