@@ -575,6 +575,7 @@ unnamespaced_filter_modal <- function(filter_ui) {
             display: none; /* Hidden by default */
             justify-content: center;
             align-items: center;
+            z-index: 999;
         }
 
         /* Modal content style */
