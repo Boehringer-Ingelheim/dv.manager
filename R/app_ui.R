@@ -22,6 +22,13 @@ app_ui <- function(request_id) {
 
   ns <- shiny::NS(id)
 
+  ## Feature switch for new data filter
+
+  use_new_filter_switch <- isTRUE(getOption("dv.manager.use.blockly.filter"))
+  new_filter_state <- getOption("dv.manager.blockly.predefined.filter")
+
+  ######################################
+
   data <- get_config("data")
   module_info <- get_config("module_info")
   filter_data <- get_config("filter_data")
@@ -31,21 +38,55 @@ app_ui <- function(request_id) {
   log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
   log_inform(glue::glue("Dataset options (N): {length(data)}"))
 
-  dataset_filters_ui <- local({
-    datasets_filters_info <- get_dataset_filters_info(data, filter_data)
-    purrr::map(
-      datasets_filters_info,
-      function(entry) {
+  subject_filter_ui <- create_subject_level_ui(ns("global_filter"))
+
+  dataset_filters_ui <- create_dataset_filters_ui(
+    get_dataset_filters_info(data, filter_data),
+    ns
+  )
+
+  if (use_new_filter_switch) {
+    filter_ui <- shiny::div(
+      class = "c-well shiny_filter",
+      shiny::tags$label(
+        "Filter",
+        shiny::icon("circle-info", title = TT[["SUBJECT_LEVEL_FILTER"]]),
+        class = "text-primary"
+      ),
+      shiny::div(
+        class = "filter-control  filter-filters",
+        unnamespaced_filter_modal(list(
+          new_filter_ui(ns("filter"), data, state = new_filter_state)[["combined_ui"]]
+        )),
+      )
+    )
+  } else {
+    filter_ui <- list(
+      shiny::div(
+        class = "c-well shiny_filter",
+        shiny::tags$label(
+          "Subject Level Filter",
+          shiny::icon("circle-info", title = TT[["SUBJECT_LEVEL_FILTER"]]),
+          class = "text-primary"
+        ),
         shiny::div(
-          id = entry[["id_cont"]],
           class = "filter-control  filter-filters",
-          shiny::tags[["label"]](entry[["name"]]),
-          dv.filter::data_filter_ui(ns(entry[["id"]])),
-          shiny::hr(style = "border-top: 2px solid gray; height: 10px;")
+          subject_filter_ui
+        )
+      ),
+      if (enable_dataset_filter) {
+        shiny::div(
+          class = "c-well shiny_filter",
+          shiny::tags$label(
+            "Dataset Filter(s)",
+            shiny::icon("circle-info", title = TT[["DATASET_FILTER"]]),
+            class = "text-primary"
+          ),
+          unnamespaced_filter_modal(new_filter_ui("filter", data))
         )
       }
     )
-  })
+  }
 
   collapsable_ui <-
     shiny::div(
@@ -60,29 +101,7 @@ app_ui <- function(request_id) {
           ),
           shiny::selectInput(ns("selector"), label = NULL, choices = names(data))
         )),
-        shiny::div(
-          class = "c-well shiny_filter",
-          shiny::tags$label(
-            "Subject Level Filter",
-            shiny::icon("circle-info", title = TT[["SUBJECT_LEVEL_FILTER"]]),
-            class = "text-primary"
-          ),
-          shiny::div(
-            class = "filter-control  filter-filters",
-            dv.filter::data_filter_ui(ns("global_filter"))
-          )
-        ),
-        if (enable_dataset_filter) {
-          shiny::div(
-          class = "c-well shiny_filter",
-          shiny::tags$label(
-            "Dataset Filter(s)",
-            shiny::icon("circle-info", title = TT[["DATASET_FILTER"]]),
-            class = "text-primary"
-          ),
-          dataset_filters_ui
-        )
-        }        
+        filter_ui
       )
     )
 

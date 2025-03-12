@@ -1,0 +1,14 @@
+/**
+ * @license
+ * Copyright 2020 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
+ * @license
+ * Copyright Copyright 2024 Boehringer-Ingelheim Pharma GmbH & Co.KG
+ * SPDX-License-Identifier: Apache-2.0
+ * 
+ * See repository root for full license
+ * 
+ */
