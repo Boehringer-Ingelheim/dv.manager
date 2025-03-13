@@ -150,10 +150,30 @@ app_server_ <- function(input, output, session, opts) {
 
       ds <- unfiltered_dataset()
 
-      ds_mask <- create_datasets_filter_masks(ds, dataset_filter()[["filters"]][["datasets_filter"]])
-      fd <- apply_masks_to_datasets(ds, ds_mask)
 
-      subject_set <- create_subject_set(ds, dataset_filter()[["filters"]][["subject_filter"]], filter_key)
+      fd <- tryCatch({
+        ds_mask <- create_datasets_filter_masks(ds, dataset_filter()[["filters"]][["datasets_filter"]])
+        apply_masks_to_datasets(ds, ds_mask)
+      },
+        error = function(e) {
+          msg <- paste("Filter not applied error found:\n", e[["message"]])
+          warning(msg)
+          shiny::showNotification(msg, type = "error")
+          ds
+        }
+      )      
+
+      subject_set <- tryCatch({
+        create_subject_set(ds, dataset_filter()[["filters"]][["subject_filter"]], filter_key)
+      },
+        error = function(e) {
+          msg <- paste("Filter not applied error found:\n", e[["message"]])
+          warning(msg)
+          shiny::showNotification(msg, type = "error")
+          NA_character_
+      })
+      
+
       if (!identical(subject_set, NA_character_)) {
         fd <- apply_subject_set_to_datasets(fd, subject_set, filter_key)
       }
