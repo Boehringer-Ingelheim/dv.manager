@@ -761,7 +761,6 @@ const filterBlockly = (() => {
             if (b.table_name && b.table_name !== table_name) {
               logger("Incorrect piece in stack");
               current_block.unplug();
-              return;
             }
             stack.push(...b.getChildren());
           }
