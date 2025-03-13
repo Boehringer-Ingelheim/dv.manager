@@ -347,7 +347,7 @@ new_filter_ui <- function(id, data, state = NULL) {
       state <- paste0(readLines(state), collapse = "\n")
     }
   } else {
-    state <- "null" # Acts as a no filter JSON filter
+    state <- "null" # Acts as a no filter JSON
   }
 
   bookmark <- shiny::restoreInput(ns("json"), "null")
