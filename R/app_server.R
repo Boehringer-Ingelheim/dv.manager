@@ -150,6 +150,12 @@ app_server_ <- function(input, output, session, opts) {
 
       ds <- unfiltered_dataset()
 
+      # JS client may not fully control that the selected filter is correct.
+      # (e.g. blocks that must have children, like `and`,  has them).
+      # The server must also control for those (and it actually does it right now). See asserts in the create*_masks functions
+      # This is required as the server must NOT trust the client and always assert that the filter is correct.
+      # Errors must be caught here as downstream modules may crash when an errors happens inside one of the observes
+      # Errors should be controlled inside the observes by modules themselves, unfortunately it is not always the case
 
       fd <- tryCatch({
         ds_mask <- create_datasets_filter_masks(ds, dataset_filter()[["filters"]][["datasets_filter"]])
