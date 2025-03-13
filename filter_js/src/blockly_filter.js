@@ -744,7 +744,7 @@ const filterBlockly = (() => {
 
         // Check the connection is legal
 
-        let root_block = current_block.getParent();
+        let root_block = current_block;
 
         while (root_block.getParent() !== null) {
           root_block = root_block.getParent();
