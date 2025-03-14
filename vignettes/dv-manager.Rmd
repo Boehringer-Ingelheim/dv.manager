@@ -38,7 +38,6 @@ Now, we have to select which modules will be included in our application. As men
 If you already have **dv.listings** installed you can skip this step.
 
 ```{r, eval=FALSE}
-# TODO
 if (!require("remotes")) install.packages("remotes")
 remotes::install_github("Boehringer-Ingelheim/dv.listings")
 ```

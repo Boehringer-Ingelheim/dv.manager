@@ -129,7 +129,7 @@ module_list <- list(
   ),
   "ADAE listing" = dv.listings::mod_listings(
     dataset_names = "adae",
-    module_id = "mod1"
+    module_id = "mod2"
   )
 )
 
@@ -162,7 +162,7 @@ module_list <- list(
   ),
   "ADAE listing" = dv.listings::mod_listings(
     dataset_names = "adae",
-    module_id = "mod1"
+    module_id = "mod2"
   )
 )
 
@@ -221,7 +221,7 @@ module_list <- list(
   ),
   "ADAE listing" = dv.listings::mod_listings(
     dataset_names = "adae",
-    module_id = "mod1"
+    module_id = "mod2"
   )
 )
 
@@ -270,7 +270,7 @@ module_list <- list(
   ),
   "ADAE listing" = dv.listings::mod_listings(
     dataset_names = "adae",
-    module_id = "mod1"
+    module_id = "mod2"
   )
 )
 
