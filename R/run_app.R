@@ -218,3 +218,21 @@ build_secure_arguments <- function(azure_options, app_ui, app_server) {
     options = list(port = port)
   )
 }
+
+run_app_dev_filter <- function(..., state = NULL) {
+  msg <- paste(
+    "##############################################################",
+    "# You are using the application using an experimental filter #",
+    "# If this is not intended, please use the regular `run_app`  #",
+    "#                                                            #",
+    "# This function is NOT SUPPORTED for production              #",
+    "# This function WILL BREAK and WILL DISAPPEAR without notice #",    
+    "##############################################################",
+    sep = "\n"
+  )
+  warning(msg)
+
+  options(dv.manager.use.blockly.filter = TRUE)
+  options(dv.manager.blockly.predefined.filter = state)
+  run_app(...)
+}

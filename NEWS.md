@@ -1,3 +1,7 @@
+# dv.manager 2.1.5-9000
+
+- Includes a new blockly filter in development mode
+
 # dv.manager 2.1.5
 
 - dv.manager dataset filters are now deactivated by default and can be activated by setting `enable_dataset_filter` parameter in `run_app`.

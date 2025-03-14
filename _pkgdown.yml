@@ -45,6 +45,7 @@ articles:
   - passing_data
   - css_namespace  
   - logging
+  - blockly_filter
 
 - title: How does it work
   navbar: How does it work

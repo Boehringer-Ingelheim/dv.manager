@@ -180,3 +180,7 @@ name_label_formatter <- function(l) {
 get_labelled_names <- function(x) {
   unlist(get_lbls_robust(x) |> swap_val_names() |> name_label_formatter())
 }
+
+if_not_null <- function(x, true, false = NULL) {
+  if (!is.null(x)) true else false
+}

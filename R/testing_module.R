@@ -138,7 +138,7 @@ run_mock_app <- function() {
 run_mock_app_two_datasets <- function() {
   run_app(
     data = list(
-      "D1" = list(
+      "D0" = list(
         adsl = get_pharmaverse_data("adsl"),
         adae = get_pharmaverse_data("adae")
       ),
