@@ -82,7 +82,7 @@ app_ui <- function(request_id) {
             shiny::icon("circle-info", title = TT[["DATASET_FILTER"]]),
             class = "text-primary"
           ),
-          unnamespaced_filter_modal(new_filter_ui("filter", data))
+          dataset_filters_ui
         )
       }
     )
