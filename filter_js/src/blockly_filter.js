@@ -8,7 +8,7 @@
  */
 
 
-/* Func specs:
+/* Func specs: 
 
 - When a column in the preset filter is not present in the current dataset
   - Send error message, remove the whole filter
@@ -18,6 +18,8 @@
 - When we switch datasets
   - Remove the filters, apply preset one always
 - Bookmarked only applied once
+- Client should strive to send only applicable filter states. But server must always check that those are correct.
+
 
 */
 
@@ -27,6 +29,12 @@ import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
 import './toolbox-search'
 
+
+/* TODO: Control for incorrect filter definitions that should never be sent to the server. e.g. ands with not children
+
+Several dataset or subjet filters blocks
+
+*/
 
 /* TODO: Define behavior of unplugged blocks */
 
