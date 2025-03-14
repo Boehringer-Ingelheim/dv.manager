@@ -563,70 +563,6 @@ mock_new_filter <- function(data = list(
   )
 }
 
-mock_new_filter_modal <- function(data = list(
-                                    "D1" = list(
-                                      adsl = get_pharmaverse_data("adsl"),
-                                      adae = get_pharmaverse_data("adae")
-                                    )
-                                    # ,
-                                    # "D2" = list(
-                                    #   adsl = get_pharmaverse_data("adsl"),
-                                    #   adae = get_pharmaverse_data("adae")
-                                    # )
-                                  )) {
-  ui <- function(request) {
-    shiny::fluidPage(
-      # unnamespaced_filter_modal(new_filter_ui("filter", data)),
-      new_filter_ui("filter", data)[["combined_ui"]],
-      shiny::verbatimTextOutput("output_filtered_ds")
-    )
-  }
-
-  server <- function(input, output, session) {
-    x <- new_filter_server("filter", shiny::reactive(data))
-    selected_data <- "D1"
-
-    output[["output_json"]] <- shiny::renderPrint({
-      shiny::req(!is.na(x()))
-      jsonlite::fromJSON(x(), simplifyVector = FALSE)
-    })
-
-    filtered_datasets <- shiny::reactive({
-      shiny::req(!is.na(x()))
-      filters <- jsonlite::fromJSON(x(), simplifyVector = FALSE)[[selected_data]][["dataset"]]
-      ds <- data[[selected_data]]
-      mask <- create_masks_from_dataset_filters(ds, filters)
-      apply_masks_to_datasets(ds, mask)
-    })
-
-    filtered_subjects <- shiny::reactive({
-      shiny::req(!is.na(x()))
-      filters <- jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)[[selected_data]][["subject"]]
-      ds <- data[[selected_data]]
-      subjid_set <- as.character(compute_subject_set_from_filter(ds, filters, "USUBJID"))
-      subjid_set
-    })
-
-    output[["output_filtered_ds"]] <- shiny::renderPrint({
-      tryCatch(filtered_datasets(), error = function(e) "A")
-    })
-
-    output[["output_filtered_sbj"]] <- shiny::renderPrint({
-      filtered_subjects()
-    })
-
-    output[["output_ds"]] <- shiny::renderPrint({
-      x()
-    })
-  }
-
-  shiny::shinyApp(
-    ui = ui,
-    server = server,
-    enableBookmarking = "url"
-  )
-}
-
 unnamespaced_filter_modal <- function(filter_ui) {
   # WARNING: This, as it name implies, is not a module and is not namespaced.
   # This should be adressed before releasing
@@ -714,292 +650,292 @@ unnamespaced_filter_modal <- function(filter_ui) {
   )
 }
 
-demo_app_filter <- function(data = list(
-                              "Tables" = list(
-                                adsl = get_pharmaverse_data("adsl"),
-                                adae = get_pharmaverse_data("adae")
-                              )
-                              # ,
-                              # "D2" = list(
-                              #   adsl = get_pharmaverse_data("adsl"),
-                              #   adae = get_pharmaverse_data("adae")
-                              # )
-                            ),
-                            video_link = "https://www.google.es",
-                            email = "PLACEHOLDER@EMAIL.COM") {
-  ui <- function(request) {
-    shiny::fluidPage(
-      shiny::div(
-        shiny::HTML(paste0("
-<style>
-  .collapsible-container {
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    overflow: hidden;
-  }
+# demo_app_filter <- function(data = list(
+#                               "Tables" = list(
+#                                 adsl = get_pharmaverse_data("adsl"),
+#                                 adae = get_pharmaverse_data("adae")
+#                               )
+#                               # ,
+#                               # "D2" = list(
+#                               #   adsl = get_pharmaverse_data("adsl"),
+#                               #   adae = get_pharmaverse_data("adae")
+#                               # )
+#                             ),
+#                             video_link = "https://www.google.es",
+#                             email = "PLACEHOLDER@EMAIL.COM") {
+#   ui <- function(request) {
+#     shiny::fluidPage(
+#       shiny::div(
+#         shiny::HTML(paste0("
+# <style>
+#   .collapsible-container {
+#     margin: 10px 0;
+#     border: 1px solid #ccc;
+#     border-radius: 5px;
+#     overflow: hidden;
+#   }
 
-  .collapsible-title {
-    cursor: pointer;
-    background-color: #f1f1f1;
-    padding: 10px;
-    font-size: 18px;
-    font-weight: bold;
-    border-bottom: 1px solid #ccc;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+#   .collapsible-title {
+#     cursor: pointer;
+#     background-color: #f1f1f1;
+#     padding: 10px;
+#     font-size: 18px;f
+#     font-weight: bold;
+#     border-bottom: 1px solid #ccc;
+#     display: flex;
+#     justify-content: space-between;
+#     align-items: center;
+#   }
 
-  .chevron {
-    transition: transform 0.3s ease;
-  }
+#   .chevron {
+#     transition: transform 0.3s ease;
+#   }
 
-  .chevron.collapsed {
-    transform: rotate(-90deg);
-  }
+#   .chevron.collapsed {
+#     transform: rotate(-90deg);
+#   }
 
-  .collapsible-content {
-    display: block; /* Expanded by default */
-    padding: 10px;
-  }
-</style>
+#   .collapsible-content {
+#     display: block; /* Expanded by default */
+#     padding: 10px;
+#   }
+# </style>
 
-<div class='collapsible-container'>
-  <div class='collapsible-title' onclick='toggleCollapsible()'>
-    Filtering App Information (Click to hide/show)
-    <span class='chevron' id='chevron'>&#9660;</span>
-  </div>
-  <div class='collapsible-content' id='collapsible-content'>
-    <div style='display:flex;gap:20px;'>
-      <!-- Left side content -->
-      <div style='flex:1;'>
-        <h3>About This App</h3>
-        <ul>
-          <li>This is a proof of concept for a new filtering tool within the DaVinCI applications, designed to explore richer options for filtering clinical datasets.</li>
-          <li>As an early-stage prototype, occasional errors or unexpected behavior are expected.</li>
-          <li>Your feedback is crucial in shaping and refining this concept—thank you for your support!</li>
-        </ul>
-        <h3>Features</h3>
-        <ul>
-          <li>Filter individual datasets to focus on specific variables or criteria.</li>
-          <li>Create population filters to analyze subgroups based on custom conditions.</li>
-          <li>Save bookmarks to capture and revisit the current state of the application, ensuring quick access to your workflows.</li>
-        </ul>
-        <h3>Initial Steps</h3>
-        <ul>
-          <li>
-            <strong>Dataset Filters:</strong>
-            <ul>
-              <li>Begin by selecting <strong>Dataset Filters</strong> from the <strong>Filter Types</strong> category.</li>
-              <li>Next, choose a table from the <strong>Tables</strong> menu to start working.</li>
-              <li><em>Note:</em> The <strong>Tables</strong> menu may be a bit confusing at this stage, as it requires you to collapse and expand sections to view the available tables.</li>
-              <li>Once a table is included, you must always add an <strong>Operation</strong> under it.</li>
-              <li>After setting up the table and its operation, you can start building your filter logic.</li>
-              <li>You can add multiple tables at the top level to create complex filters.</li>
-              <li>Finally, click <strong>Apply Filter</strong> to execute your filter and see the results.</li>
-              <li>
-                <strong>Example:</strong>
-                <p>Imagine you want to filter the <strong>adsl</strong> dataset to find female patients between 55 and 60 years old:</p>
-                <ol>
-                  <li>First, drag the <strong>Dataset Filters</strong> piece into the workspace.</li>
-                  <li>From the <strong>Tables</strong> menu, drag the <strong>adsl</strong> table into the workspace.</li>
-                  <li>Next, drag an <strong>AND Operation</strong> into the workspace under the <strong>adsl</strong> table.</li>
-                  <li>Under the AND Operation, drag two pieces: <strong>sex</strong> and <strong>age</strong> from the <strong>adsl</strong> menu under the <strong>Tables</strong> section.</li>
-                  <li>For the <strong>sex</strong> filter, select the value <strong>Female</strong>.</li>
-                  <li>For the <strong>age</strong> filter, set the range to <strong>55 to 60 years</strong>.</li>
-                  <li>Finally, click <strong>Apply Filter</strong> to execute your filter and see the results.</li>
-                </ol>
-                <p>This setup creates a filter that identifies female patients aged between 55 and 60 from the <strong>adsl</strong> dataset.</p>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <strong>Subject Filters:</strong>
-            <ul>
-              <li>Begin by selecting <strong>Subject Filters</strong> from the <strong>Filter Types</strong> category.</li>
-              <li>Next, include a <strong>Union</strong>, <strong>Intersect</strong>, or <strong>Diff Operation</strong> at the top level.</li>
-              <li>Each of these operations must have <strong>Table</strong> pieces immediately below to define the dataset(s) to compare.</li>
-              <li>Under the table, you can add additional filters and operations as needed, similar to <strong>Dataset Filters</strong>.</li>
-              <li><em>Note:</em> The <strong>Tables</strong> menu may be a bit confusing at this stage, as it requires you to collapse and expand sections to view the available tables.</li>
-              <li>After setting up your filters, click <strong>Apply Filter</strong> to execute and see the results.</li>
-            </ul>
-          </li>
-        </ul>
-        <h3>Bookmarks</h3>
-        <ul>
-          <li>You can save the state of the application using the <strong>Bookmark</strong> button.</li>
-          <li>When you create a bookmark, it will generate a unique link. Opening this link will restore the application to the state of the <strong>last applied filter</strong>.</li>
-          <li><strong>Important:</strong> When restoring a bookmark, remember to press <strong>Apply Filter</strong>. Otherwise, the loaded filter will not be applied.</li>
-        </ul>
-      </div>
+# <div class='collapsible-container'>
+#   <div class='collapsible-title' onclick='toggleCollapsible()'>
+#     Filtering App Information (Click to hide/show)
+#     <span class='chevron' id='chevron'>&#9660;</span>
+#   </div>
+#   <div class='collapsible-content' id='collapsible-content'>
+#     <div style='display:flex;gap:20px;'>
+#       <!-- Left side content -->
+#       <div style='flex:1;'>
+#         <h3>About This App</h3>
+#         <ul>
+#           <li>This is a proof of concept for a new filtering tool within the DaVinCI applications, designed to explore richer options for filtering clinical datasets.</li>
+#           <li>As an early-stage prototype, occasional errors or unexpected behavior are expected.</li>
+#           <li>Your feedback is crucial in shaping and refining this concept thank you for your support!</li>
+#         </ul>
+#         <h3>Features</h3>
+#         <ul>
+#           <li>Filter individual datasets to focus on specific variables or criteria.</li>
+#           <li>Create population filters to analyze subgroups based on custom conditions.</li>
+#           <li>Save bookmarks to capture and revisit the current state of the application, ensuring quick access to your workflows.</li>
+#         </ul>
+#         <h3>Initial Steps</h3>
+#         <ul>
+#           <li>
+#             <strong>Dataset Filters:</strong>
+#             <ul>
+#               <li>Begin by selecting <strong>Dataset Filters</strong> from the <strong>Filter Types</strong> category.</li>
+#               <li>Next, choose a table from the <strong>Tables</strong> menu to start working.</li>
+#               <li><em>Note:</em> The <strong>Tables</strong> menu may be a bit confusing at this stage, as it requires you to collapse and expand sections to view the available tables.</li>
+#               <li>Once a table is included, you must always add an <strong>Operation</strong> under it.</li>
+#               <li>After setting up the table and its operation, you can start building your filter logic.</li>
+#               <li>You can add multiple tables at the top level to create complex filters.</li>
+#               <li>Finally, click <strong>Apply Filter</strong> to execute your filter and see the results.</li>
+#               <li>
+#                 <strong>Example:</strong>
+#                 <p>Imagine you want to filter the <strong>adsl</strong> dataset to find female patients between 55 and 60 years old:</p>
+#                 <ol>
+#                   <li>First, drag the <strong>Dataset Filters</strong> piece into the workspace.</li>
+#                   <li>From the <strong>Tables</strong> menu, drag the <strong>adsl</strong> table into the workspace.</li>
+#                   <li>Next, drag an <strong>AND Operation</strong> into the workspace under the <strong>adsl</strong> table.</li>
+#                   <li>Under the AND Operation, drag two pieces: <strong>sex</strong> and <strong>age</strong> from the <strong>adsl</strong> menu under the <strong>Tables</strong> section.</li>
+#                   <li>For the <strong>sex</strong> filter, select the value <strong>Female</strong>.</li>
+#                   <li>For the <strong>age</strong> filter, set the range to <strong>55 to 60 years</strong>.</li>
+#                   <li>Finally, click <strong>Apply Filter</strong> to execute your filter and see the results.</li>
+#                 </ol>
+#                 <p>This setup creates a filter that identifies female patients aged between 55 and 60 from the <strong>adsl</strong> dataset.</p>
+#               </li>
+#             </ul>
+#           </li>
+#           <li>
+#             <strong>Subject Filters:</strong>
+#             <ul>
+#               <li>Begin by selecting <strong>Subject Filters</strong> from the <strong>Filter Types</strong> category.</li>
+#               <li>Next, include a <strong>Union</strong>, <strong>Intersect</strong>, or <strong>Diff Operation</strong> at the top level.</li>
+#               <li>Each of these operations must have <strong>Table</strong> pieces immediately below to define the dataset(s) to compare.</li>
+#               <li>Under the table, you can add additional filters and operations as needed, similar to <strong>Dataset Filters</strong>.</li>
+#               <li><em>Note:</em> The <strong>Tables</strong> menu may be a bit confusing at this stage, as it requires you to collapse and expand sections to view the available tables.</li>
+#               <li>After setting up your filters, click <strong>Apply Filter</strong> to execute and see the results.</li>
+#             </ul>
+#           </li>
+#         </ul>
+#         <h3>Bookmarks</h3>
+#         <ul>
+#           <li>You can save the state of the application using the <strong>Bookmark</strong> button.</li>
+#           <li>When you create a bookmark, it will generate a unique link. Opening this link will restore the application to the state of the <strong>last applied filter</strong>.</li>
+#           <li><strong>Important:</strong> When restoring a bookmark, remember to press <strong>Apply Filter</strong>. Otherwise, the loaded filter will not be applied.</li>
+#         </ul>
+#       </div>
 
-      <!-- Right side content -->
-      <div style='flex:1;border-left:1px solid #ccc;padding-left:20px;'>
-        <h3>Available Datasets and Results</h3>
-        <p>In the current version of the app, two datasets are available for filtering and analysis:</p>
-        <ul>
-          <li><strong>ADSL Dataset:</strong> Typically used for subject-level analysis.</li>
-          <li><strong>ADAE Dataset:</strong> Typically used for event-level analysis.</li>
-        </ul>
-        <p>Below the filtering section, you will find the results of the applied filters:</p>
-        <ul>
-          <li><strong>Dataset Filters Results:</strong> These display the filtered rows of each dataset independently, based on the criteria applied to the specific dataset.</li>
-          <li><strong>Population Filters Results:</strong> These display the selection of a population of patients that meet the criteria of the population filter, which affects both datasets simultaneously.</li>
-        </ul>
-        <p><strong>Important Notes:</strong></p>
-        <ul>
-          <li>The effects of <strong>Dataset Filters</strong> are specific to the dataset they are applied to (e.g., ADSL or ADAE).</li>
-          <li>The effects of <strong>Subject Filters</strong> apply to both datasets and define a population of patients.</li>
-          <li>For demonstration purposes in this app, the results of <strong>Dataset Filters</strong> (row-level filtering) and <strong>Population Filters</strong> (patient population selection) are displayed independently and do not influence one another.</li>
-        </ul>
-        <h3>Known Issues</h3>
-        <p>As this application is a proof of concept, not all functionality is fully implemented. Below are some issues already identified and planned for the roadmap:</p>
-        <ul>
-          <li>Only one <strong>Dataset Filter</strong> and one <strong>Subject Filter</strong> should be allowed at a time.</li>
-          <li>The filter system must prevent incorrect connections, such as:
-            <ul>
-              <li>Using columns from <strong>adae</strong> under <strong>adsl</strong> tables.</li>
-              <li>Adding <strong>Union Operations</strong> in <strong>Dataset Filters</strong>.</li>
-              <li>Other similar incorrect configurations...</li>
-            </ul>
-          </li>
-          <li>Incorrect filter setups currently fail silently. The application must provide meaningful error messages to guide users when filters are configured incorrectly.</li>
-          <li>When restoring a bookmark, the filter is loaded but not automatically applied. Users must press <strong>Apply Filter</strong> to execute the loaded filter.</li>
-        </ul>
-        <h3>What Can You Do For Us?</h3>
-        <p>Your feedback is incredibly valuable and appreciated! The more feedback we receive, the better and more refined the initial version of this filter will be. Help us create a tool that meets your needs and expectations.</p>
-        <p>Write to us at <strong>", email, "</strong> and let us know your thoughts. Here are some examples of how you can contribute:</p>
-        <ul>
-          <li><strong>Suggest a functionality or improvement</strong> to the current setup.</li>
-          <li>
-            <strong>Is there a selection you want to express but can't?</strong>
-            <ul>
-              <li>Try to express it with the available pieces.</li>
-              <li>Take a screenshot of your setup and include a brief description of your desired outcome.</li>
-            </ul>
-          </li>
-          <li>
-            <strong>Does your selection not work as expected?</strong>
-            <ul>
-              <li>Take a screenshot of your selected filter.</li>
-              <li>Include a brief description of the issue and your desired outcome.</li>
-            </ul>
-          </li>
-        </ul>
-        <p>Thank you for helping us make this tool better!</p>
-        <h3>FAQ</h3>
-        <ul>
-          <li>
-            <strong>Q: When I move a piece, all pieces below it are moved too. What can I do?</strong>
-            <br>
-            <strong>A:</strong> Try using <strong>Control + Click</strong> to select only the specific piece you want to move without affecting others.
-          </li>
-          <li>
-            <strong>Q: Can I use keyboard shortcuts like copy and paste?</strong>
-            <br>
-            <strong>A:</strong> Yes, you can use common shortcuts such as <strong>Ctrl + C</strong> to copy and <strong>Ctrl + V</strong> to paste components within the workspace.
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
+#       <!-- Right side content -->
+#       <div style='flex:1;border-left:1px solid #ccc;padding-left:20px;'>
+#         <h3>Available Datasets and Results</h3>
+#         <p>In the current version of the app, two datasets are available for filtering and analysis:</p>
+#         <ul>
+#           <li><strong>ADSL Dataset:</strong> Typically used for subject-level analysis.</li>
+#           <li><strong>ADAE Dataset:</strong> Typically used for event-level analysis.</li>
+#         </ul>
+#         <p>Below the filtering section, you will find the results of the applied filters:</p>
+#         <ul>
+#           <li><strong>Dataset Filters Results:</strong> These display the filtered rows of each dataset independently, based on the criteria applied to the specific dataset.</li>
+#           <li><strong>Population Filters Results:</strong> These display the selection of a population of patients that meet the criteria of the population filter, which affects both datasets simultaneously.</li>
+#         </ul>
+#         <p><strong>Important Notes:</strong></p>
+#         <ul>
+#           <li>The effects of <strong>Dataset Filters</strong> are specific to the dataset they are applied to (e.g., ADSL or ADAE).</li>
+#           <li>The effects of <strong>Subject Filters</strong> apply to both datasets and define a population of patients.</li>
+#           <li>For demonstration purposes in this app, the results of <strong>Dataset Filters</strong> (row-level filtering) and <strong>Population Filters</strong> (patient population selection) are displayed independently and do not influence one another.</li>
+#         </ul>
+#         <h3>Known Issues</h3>
+#         <p>As this application is a proof of concept, not all functionality is fully implemented. Below are some issues already identified and planned for the roadmap:</p>
+#         <ul>
+#           <li>Only one <strong>Dataset Filter</strong> and one <strong>Subject Filter</strong> should be allowed at a time.</li>
+#           <li>The filter system must prevent incorrect connections, such as:
+#             <ul>
+#               <li>Using columns from <strong>adae</strong> under <strong>adsl</strong> tables.</li>
+#               <li>Adding <strong>Union Operations</strong> in <strong>Dataset Filters</strong>.</li>
+#               <li>Other similar incorrect configurations...</li>
+#             </ul>
+#           </li>
+#           <li>Incorrect filter setups currently fail silently. The application must provide meaningful error messages to guide users when filters are configured incorrectly.</li>
+#           <li>When restoring a bookmark, the filter is loaded but not automatically applied. Users must press <strong>Apply Filter</strong> to execute the loaded filter.</li>
+#         </ul>
+#         <h3>What Can You Do For Us?</h3>
+#         <p>Your feedback is incredibly valuable and appreciated! The more feedback we receive, the better and more refined the initial version of this filter will be. Help us create a tool that meets your needs and expectations.</p>
+#         <p>Write to us at <strong>", email, "</strong> and let us know your thoughts. Here are some examples of how you can contribute:</p>
+#         <ul>
+#           <li><strong>Suggest a functionality or improvement</strong> to the current setup.</li>
+#           <li>
+#             <strong>Is there a selection you want to express but can't?</strong>
+#             <ul>
+#               <li>Try to express it with the available pieces.</li>
+#               <li>Take a screenshot of your setup and include a brief description of your desired outcome.</li>
+#             </ul>
+#           </li>
+#           <li>
+#             <strong>Does your selection not work as expected?</strong>
+#             <ul>
+#               <li>Take a screenshot of your selected filter.</li>
+#               <li>Include a brief description of the issue and your desired outcome.</li>
+#             </ul>
+#           </li>
+#         </ul>
+#         <p>Thank you for helping us make this tool better!</p>
+#         <h3>FAQ</h3>
+#         <ul>
+#           <li>
+#             <strong>Q: When I move a piece, all pieces below it are moved too. What can I do?</strong>
+#             <br>
+#             <strong>A:</strong> Try using <strong>Control + Click</strong> to select only the specific piece you want to move without affecting others.
+#           </li>
+#           <li>
+#             <strong>Q: Can I use keyboard shortcuts like copy and paste?</strong>
+#             <br>
+#             <strong>A:</strong> Yes, you can use common shortcuts such as <strong>Ctrl + C</strong> to copy and <strong>Ctrl + V</strong> to paste components within the workspace.
+#           </li>
+#         </ul>
+#       </div>
+#     </div>
+#   </div>
+# </div>
 
-<script>
-  function toggleCollapsible() {
-    const content = document.getElementById('collapsible-content');
-    const chevron = document.getElementById('chevron');
-    const isCollapsed = content.style.display === 'none';
+# <script>
+#   function toggleCollapsible() {
+#     const content = document.getElementById('collapsible-content');
+#     const chevron = document.getElementById('chevron');
+#     const isCollapsed = content.style.display === 'none';
 
-    content.style.display = isCollapsed ? 'block' : 'none';
-    chevron.classList.toggle('collapsed', !isCollapsed);
-  }
-</script>
-
-
-"))
-      ),
-      shiny::a("Open example video", href = video_link, target = "_blank", rel = "noopener", class = "btn btn-primary btn-lg"),
-      shiny::br(),
-      shiny::br(),
-      shiny::bookmarkButton(),
-      new_filter_ui("filter", data)[["combined_ui"]],
-      shiny::h3("Results of applying data filters"),
-      shiny::h4("adsl"),
-      shiny::dataTableOutput("output_filtered_ds_adsl"),
-      shiny::h4("adae"),
-      shiny::dataTableOutput("output_filtered_ds_adae"),
-      shiny::h3("Results of applying subject filters"),
-      shiny::h4("Selected population"),
-      shiny::verbatimTextOutput("selected_subjects"),
-      shiny::h4("adsl"),
-      shiny::dataTableOutput("output_filtered_sbj_adsl"),
-      shiny::h4("adae"),
-      shiny::dataTableOutput("output_filtered_sbj_adae"),
-    )
-  }
-
-  server <- function(input, output, session) {
-    x <- new_filter_server("filter", shiny::reactive(data))
-    selected_data <- "Tables"
-
-    output[["output_json"]] <- shiny::renderPrint({
-      shiny::req(!is.na(x()))
-      jsonlite::fromJSON(x(), simplifyVector = FALSE)
-    })
-
-    filtered_datasets <- shiny::reactive({
-      shiny::validate(
-        shiny::need(
-          !is.null(x()[["filters"]][[selected_data]][["dataset"]]),
-          "Have you applied the filter? Otherwise, Dataset Filter is empty or there was an error when processing it"
-        )
-      )
-      filters <- x()[["filters"]][[selected_data]][["dataset"]]
-      ds <- data[[selected_data]]
-      mask <- create_masks_from_dataset_filters(ds, filters)
-      apply_masks_to_datasets(ds, mask)
-    })
-
-    filtered_subjects <- shiny::reactive({
-      shiny::validate(
-        shiny::need(
-          !is.null(x()[["filters"]][[selected_data]][["subject"]]),
-          "Have you applied the filter? Otherwise, Subject Filter is empty or there was an error when processing it"
-        )
-      )
-      filters <- x()[["filters"]][[selected_data]][["subject"]]
-      ds <- data[[selected_data]]
-      subjid_set <- as.character(compute_subject_set_from_filter(ds, filters, "USUBJID"))
-      subjid_set
-    })
-
-    output[["output_filtered_ds_adsl"]] <- shiny::renderDataTable({
-      filtered_datasets()[["adsl"]]
-    })
-
-    output[["output_filtered_ds_adae"]] <- shiny::renderDataTable({
-      filtered_datasets()[["adae"]]
-    })
-
-    output[["selected_subjects"]] <- shiny::renderPrint({
-      filtered_subjects()
-    })
+#     content.style.display = isCollapsed ? 'block' : 'none';
+#     chevron.classList.toggle('collapsed', !isCollapsed);
+#   }
+# </script>
 
 
-    output[["output_filtered_sbj_adsl"]] <- shiny::renderDataTable({
-      dplyr::filter(data[[selected_data]][["adsl"]], .data[["USUBJID"]] %in% filtered_subjects())
-    })
+# "))
+#       ),
+#       shiny::a("Open example video", href = video_link, target = "_blank", rel = "noopener", class = "btn btn-primary btn-lg"),
+#       shiny::br(),
+#       shiny::br(),
+#       shiny::bookmarkButton(),
+#       new_filter_ui("filter", data)[["combined_ui"]],
+#       shiny::h3("Results of applying data filters"),
+#       shiny::h4("adsl"),
+#       shiny::dataTableOutput("output_filtered_ds_adsl"),
+#       shiny::h4("adae"),
+#       shiny::dataTableOutput("output_filtered_ds_adae"),
+#       shiny::h3("Results of applying subject filters"),
+#       shiny::h4("Selected population"),
+#       shiny::verbatimTextOutput("selected_subjects"),
+#       shiny::h4("adsl"),
+#       shiny::dataTableOutput("output_filtered_sbj_adsl"),
+#       shiny::h4("adae"),
+#       shiny::dataTableOutput("output_filtered_sbj_adae"),
+#     )
+#   }
 
-    output[["output_filtered_sbj_adae"]] <- shiny::renderDataTable({
-      dplyr::filter(data[[selected_data]][["adae"]], .data[["USUBJID"]] %in% filtered_subjects())
-    })
-  }
+#   server <- function(input, output, session) {
+#     x <- new_filter_server("filter", shiny::reactive(data))
+#     selected_data <- "Tables"
 
-  shiny::shinyApp(
-    ui = ui,
-    server = server,
-    enableBookmarking = "server"
-  )
-}
+#     output[["output_json"]] <- shiny::renderPrint({
+#       shiny::req(!is.na(x()))
+#       jsonlite::fromJSON(x(), simplifyVector = FALSE)
+#     })
+
+#     filtered_datasets <- shiny::reactive({
+#       shiny::validate(
+#         shiny::need(
+#           !is.null(x()[["filters"]][[selected_data]][["dataset"]]),
+#           "Have you applied the filter? Otherwise, Dataset Filter is empty or there was an error when processing it"
+#         )
+#       )
+#       filters <- x()[["filters"]][[selected_data]][["dataset"]]
+#       ds <- data[[selected_data]]
+#       mask <- create_masks_from_dataset_filters(ds, filters)
+#       apply_masks_to_datasets(ds, mask)
+#     })
+
+#     filtered_subjects <- shiny::reactive({
+#       shiny::validate(
+#         shiny::need(
+#           !is.null(x()[["filters"]][[selected_data]][["subject"]]),
+#           "Have you applied the filter? Otherwise, Subject Filter is empty or there was an error when processing it"
+#         )
+#       )
+#       filters <- x()[["filters"]][[selected_data]][["subject"]]
+#       ds <- data[[selected_data]]
+#       subjid_set <- as.character(compute_subject_set_from_filter(ds, filters, "USUBJID"))
+#       subjid_set
+#     })
+
+#     output[["output_filtered_ds_adsl"]] <- shiny::renderDataTable({
+#       filtered_datasets()[["adsl"]]
+#     })
+
+#     output[["output_filtered_ds_adae"]] <- shiny::renderDataTable({
+#       filtered_datasets()[["adae"]]
+#     })
+
+#     output[["selected_subjects"]] <- shiny::renderPrint({
+#       filtered_subjects()
+#     })
+
+
+#     output[["output_filtered_sbj_adsl"]] <- shiny::renderDataTable({
+#       dplyr::filter(data[[selected_data]][["adsl"]], .data[["USUBJID"]] %in% filtered_subjects())
+#     })
+
+#     output[["output_filtered_sbj_adae"]] <- shiny::renderDataTable({
+#       dplyr::filter(data[[selected_data]][["adae"]], .data[["USUBJID"]] %in% filtered_subjects())
+#     })
+#   }
+
+#   shiny::shinyApp(
+#     ui = ui,
+#     server = server,
+#     enableBookmarking = "server"
+#   )
+# }
