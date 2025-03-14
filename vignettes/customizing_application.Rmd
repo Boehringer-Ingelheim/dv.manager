@@ -30,8 +30,8 @@ data <- list(
 )
 
 module_list <- list(
-  "My First Data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+  "My First listing" = dv.listings::mod_listings(
+    dataset_names = "adsl",
     module_id = "mod1"
   )
 )
@@ -58,12 +58,12 @@ data <- list(
 )
 
 module_list <- list(
-  "My First Data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+  "My First listing" = dv.listings::mod_listings(
+    dataset_names = "adsl",
     module_id = "mod1"
   ),
-  "My Second Data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+  "My Second listing" = dv.listings::mod_listings(
+    dataset_names = "adsl",
     module_id = "mod2"
   )
 )
@@ -83,48 +83,22 @@ Notice how we modified the `module_id` to `"mod2"` and also the name of the entr
 
 Both must be **unique** across modules!
 
-```{r, eval=FALSE}
-### Repeated module_id
-module_list <- list(
-  "My First Data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
-    module_id = "mod1"
-  ),
-  "My Second Data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
-    module_id = "mod1"
-  )
-)
-
-### Repeated module name
-module_list <- list(
-  "My First Data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
-    module_id = "mod1"
-  ),
-  "My First Data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
-    module_id = "mod2"
-  )
-)
-```
-
 # Renaming a module
 
 If we want to change the display of a module we just have to modify the name of the appropriate entry.
 
-If we want to change the module named "My Second Data table" to "Cool-named module", we just have to change the name of the entry in the module_list.
+If we want to change the module named "My Second listing" to "Cool-named module", we just have to change the name of the entry in the module_list.
 
 ```{r, eval=FALSE}
 data <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 
 module_list <- list(
-  "My First Data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+  "My First listing" = dv.listings::mod_listings(
+    dataset_names = "adsl",
     module_id = "mod1"
   ),
-  "Cool-named module" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+  "Cool-named module" = dv.listings::mod_listings(
+    dataset_names = "adsl",
     module_id = "mod2"
   )
 )
@@ -140,7 +114,7 @@ dv.manager::run_app(
 
 # Changing the data source
 
-To modify a module so it has a different data source, we just have to modify the `dataset` parameter.
+To modify a module so it has a different data source, we just have to modify the `dataset_names` parameter.
 
 ```{r, eval=FALSE}
 data <- list(
@@ -149,13 +123,13 @@ data <- list(
 )
 
 module_list <- list(
-  "ADSL data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+  "ADSL listing" = dv.listings::mod_listings(
+    dataset_names = "adsl",
     module_id = "mod1"
   ),
-  "ADAE data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adae"),
-    module_id = "mod2"
+  "ADAE listing" = dv.listings::mod_listings(
+    dataset_names = "adae",
+    module_id = "mod1"
   )
 )
 
@@ -166,7 +140,7 @@ dv.manager::run_app(
 )
 ```
 
-Notice how both data tables are affected by the filter located in the sidebar.
+Notice how both listings are affected by the filter located in the sidebar.
 
 This example contains modules that only need a single dataset. More complex modules may need more datasets, please refer to the documentation of each particular module.
 
@@ -182,13 +156,13 @@ data1 <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 data2 <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 
 module_list <- list(
-  "ADSL data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+  "ADSL listing" = dv.listings::mod_listings(
+    dataset_names = "adsl",
     module_id = "mod1"
   ),
-  "ADAE data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adae"),
-    module_id = "mod2"
+  "ADAE listing" = dv.listings::mod_listings(
+    dataset_names = "adae",
+    module_id = "mod1"
   )
 )
 
@@ -241,13 +215,13 @@ attr(data[["adsl_filter"]][["AGE"]], "label") <- "Age (Years)"
 
 
 module_list <- list(
-  "ADSL data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+  "ADSL listing" = dv.listings::mod_listings(
+    dataset_names = "adsl",
     module_id = "mod1"
   ),
-  "ADAE data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adae"),
-    module_id = "mod2"
+  "ADAE listing" = dv.listings::mod_listings(
+    dataset_names = "adae",
+    module_id = "mod1"
   )
 )
 
@@ -262,7 +236,7 @@ Notice how the filter only shows the selected data, and how the filtering differ
 
 The same approach can be used to, for example:
 
-1.  reduce the number of variable presented in the data table
+1.  reduce the number of variable presented in the listing
 
 2.  recalculate a new variable age in months.
 
@@ -290,13 +264,13 @@ attr(data[["adsl_mod"]][["AGE_M"]], "label") <- "Age (Months)"
 
 
 module_list <- list(
-  "ADSL data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+  "ADSL listing" = dv.listings::mod_listings(
+    dataset_names = "adsl",
     module_id = "mod1"
   ),
-  "ADSL_mod data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl_mod"),
-    module_id = "mod2"
+  "ADAE listing" = dv.listings::mod_listings(
+    dataset_names = "adae",
+    module_id = "mod1"
   )
 )
 
