@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 
   1. Act as a front end container for **dv.filter** and the modules included in the app
   1. Dispatch data from the loaded datasets to each of the modules (either filtered or unfiltered)
-  1. Manage communication between modules (**Not available yet**)
+  1. Manage communication between modules
 
 # Anatomy of DaVinci Modules
 
@@ -29,8 +29,8 @@ Opposed to pure Shiny modules, DaVinci modules are defined in a single call such
 data <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 
 module_list <- list(
-  "My First Data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+  "My First listing" = dv.listings::mod_listings(
+    dataset_names = "adsl",
     module_id = "mod1"
   )
 )
