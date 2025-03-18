@@ -59,7 +59,7 @@ mod_com_test <- function(choices, message, value, mod_id) {
   mod
 }
 
-run_app(
+dv.manager::run_app(
   data = list(),
   module_list = list(
     "Send and Receive 1" = mod_com_test(
@@ -74,7 +74,7 @@ run_app(
       value = "mod_1",
       mod_id = "mod_2"
     ),
-    "Simple" = mod_simple("adsl", "modSimp")
+    "Simple" = dv.manager::mod_simple("adsl", "modSimp")
   ),
   filter_data = "adsl",
   filter_key = "USUBJID"

@@ -2,6 +2,8 @@
 
 - Includes a new blockly filter in development mode
 - Updates old documentation
+- De-exports several util functions
+
 
 # dv.manager 2.1.5
 

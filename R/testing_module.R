@@ -967,8 +967,6 @@ mod_simple2 <- function(dataset_name, module_id) {
 #' @param module_id shiny module ID
 #'
 #' @keywords internal
-#'
-#' @export
 mod_dataset_labels <- function(dataset_names, module_id) {
   mod <- list(
     ui = dataset_labels_UI,
