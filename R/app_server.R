@@ -99,7 +99,7 @@ app_server_ <- function(input, output, session, opts) {
 
   ## Feature switch for new data filter
 
-  use_new_filter_switch <- isTRUE(getOption("dv.manager.use.blockly.filter"))
+  use_new_filter_switch <- isTRUE(get_config("dv.manager.use.blockly.filter"))
 
   ######################################
 

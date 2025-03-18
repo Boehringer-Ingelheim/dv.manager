@@ -24,8 +24,8 @@ app_ui <- function(request_id) {
 
   ## Feature switch for new data filter
 
-  use_new_filter_switch <- isTRUE(getOption("dv.manager.use.blockly.filter"))
-  new_filter_state <- getOption("dv.manager.blockly.predefined.filter")
+  use_new_filter_switch <- get_config("dv.manager.use.blockly.filter")
+  new_filter_state <- get_config("dv.manager.blockly.predefined.filter")
 
   ######################################
 
