@@ -61,20 +61,6 @@ get_data_tables_names <- function(data) {
   return(nm)
 }
 
-get_dataset_filters_info <- function(data, filter_data) {
-  dataset_filter_names <- setdiff(get_data_tables_names(data), filter_data)
-  purrr::map(
-    dataset_filter_names,
-    function(nm) {
-      name <- nm
-      hash <- digest::digest(nm, "murmur32")
-      id <- sprintf("dataset_filter_%s", hash)
-      cont_id <- paste0(id, "_cont")
-      list(name = nm, id = id, hash = hash, id_cont = cont_id)
-    }
-  ) |> purrr::set_names(dataset_filter_names)
-}
-
 `%||%` <- function(x, y) {
   if (!is.null(x)) x else y
 }

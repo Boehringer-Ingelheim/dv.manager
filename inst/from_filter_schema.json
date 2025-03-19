@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "dataset_name": {
+          "description": "Dataset over which the filters are calculated",
+          "type": "string"
+        },
+    "filters": {
+      "type": "object",
+      "properties": {        
+        "subject_filter": {
+          "description": "Filters applied to each of the datasets and when combined will provide a list of subjects",
+          "type": "object",
+          "properties": {
+            "children": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  { "$ref": "#/definitions/filter_operation" },
+                  { "$ref": "#/definitions/filter" }
+                ]
+              },
+              "maxItems": 1
+            }
+          },
+          "required": ["children"]
+        },
+        "datasets_filter": {
+          "description": "Filters applied to each of the datasets separately",
+          "type": "object",
+          "properties": {
+            "children": {
+              "type": "array",
+              "items": {
+                "oneOf": [{ "$ref": "#/definitions/dataset" }]
+              }
+            }
+          },
+          "required": ["children"]
+        }
+      }
+    }
+  },
+  "definitions": {    
+    "dataset": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type" : "string",
+          "enum": ["dataset"]
+        },        
+        "name": { "type": "string" },
+        "children": {
+          "type": "array",
+          "description": "Must contain filter operations or filters",
+          "items": {
+            "oneOf": [
+              { "$ref": "#/definitions/filter_operation" },
+              { "$ref": "#/definitions/filter" }
+            ]
+          },
+          "maxItems": 1
+        }
+      },
+      "required": ["name", "children"]
+    },
+    "filter_operation": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["filter_operation"] }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "operation": { "type": "string", "enum": ["and", "or"] },
+            "children": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  { "$ref": "#/definitions/filter_operation" },
+                  { "$ref": "#/definitions/filter" }
+                ]
+              },
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "properties": {
+            "operation": { "type": "string", "enum": ["not"] },
+            "children": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  { "$ref": "#/definitions/filter_operation" },
+                  { "$ref": "#/definitions/filter" }
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 1
+            }
+          }
+        }
+      ],
+      "required": ["kind", "operation", "children"]
+    },
+    "filter": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["filter"] },
+        "dataset": { "type": "string" },
+        "field": { "type": "string" },
+        "include_NA": { "type": "boolean" }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "operation": { "type": "string", "enum": ["select_subset"] },
+            "values": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "required": ["kind", "values", "include_NA", "field", "dataset"]
+        },
+        {
+          "properties": {
+            "operation": { "type": "string", "enum": ["select_range"] },
+            "min": {
+              "oneOf": [
+                { "type": "number" },
+                { "type": "string", "enum": ["Inf", "-Inf", "NA", "NaN"] }
+              ]
+            },
+            "max": {
+              "oneOf": [
+                { "type": "number" },
+                { "type": "string", "enum": ["Inf", "-Inf", "NA", "NaN"] }
+              ]
+            }
+          },
+          "required": ["kind", "min", "max", "include_NA", "field", "dataset"]
+        },
+        {
+          "properties": {
+            "operation": { "type": "string", "enum": ["select_date"] },
+            "min": {
+              "oneOf": [
+                { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                { "type": "string", "enum": ["Inf", "-Inf", "NA"] }
+              ]
+            },
+            "max": {
+              "oneOf": [
+                { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                { "type": "string", "enum": ["Inf", "-Inf", "NA"] }
+              ]
+            }
+          },
+          "required": ["kind", "min", "max", "include_NA", "field", "dataset"]
+        }
+      ]
+    }
+  }
+}

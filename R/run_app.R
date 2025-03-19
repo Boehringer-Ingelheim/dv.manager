@@ -71,6 +71,11 @@ run_app <- function(data = NULL,
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
   config[["enable_dataset_filter"]] <- enable_dataset_filter
+  
+  # NEW DATAFILTER OPTIONS
+  config[["dv.manager.use.blockly.filter"]] <- isTRUE(getOption("dv.manager.use.blockly.filter"))
+  config[["dv.manager.blockly.predefined.filter"]] <- getOption("dv.manager.blockly.predefined.filter")
+  # NEW DATAFILTER OPTIONS (F)
 
   check_meta_mtime_attribute(data)
 
@@ -217,4 +222,29 @@ build_secure_arguments <- function(azure_options, app_ui, app_server) {
     srv_func = sec_server,
     options = list(port = port)
   )
+}
+
+run_app_dev_filter <- function(..., state = NULL) {
+  msg <- paste(
+    "##############################################################",
+    "# You are using the application using an experimental filter #",
+    "# If this is not intended, please use the regular `run_app`  #",
+    "#                                                            #",
+    "# This function is NOT SUPPORTED for production              #",
+    "# This function WILL BREAK and WILL DISAPPEAR without notice #",    
+    "##############################################################",
+    sep = "\n"
+  )
+  warning(msg)
+
+  old_use <- getOption("dv.manager.use.blockly.filter")
+  old_state <- getOption("dv.manager.blockly.predefined.filter")
+  on.exit({
+    message(paste("Reset to", old_use))
+    options(dv.manager.use.blockly.filter = old_use)
+  }, add = TRUE)
+  on.exit(options(dv.manager.blockly.predefined.filter = old_state), add = TRUE)
+  options(dv.manager.use.blockly.filter = TRUE)
+  options(dv.manager.blockly.predefined.filter = state)
+  run_app(...)
 }
