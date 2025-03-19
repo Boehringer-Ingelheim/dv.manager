@@ -103,14 +103,15 @@ get_single_filter_data <- function(data) {
       l[["NA_count"]] <- jsonlite::unbox(sum(is.na(col)))
       na_clean_col <- col[!is.na(col)]
 
-      values <- unique(na_clean_col)
+      count <- table(na_clean_col)
+      values <- names(count)
+      count <- unname(count)
       l[["values_count"]] <- vector(mode = "list", length = length(l[["values"]]))
       for (v_idx in seq_along(values)) {
-        current_value <- values[[v_idx]]
         l[["values_count"]][[v_idx]] <- list(
-          value = jsonlite::unbox(current_value),
-          count = jsonlite::unbox(sum(values == current_value))
-        )
+          value = jsonlite::unbox(values[[v_idx]]),
+          count = jsonlite::unbox(count[[v_idx]])
+        )        
       }
     } else if (is.numeric(col)) {
       l[["kind"]] <- jsonlite::unbox("numerical")
