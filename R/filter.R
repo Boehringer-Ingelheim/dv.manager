@@ -217,7 +217,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
       max <- element[["max"]]
       min <- element[["min"]]
       ; assert(is.numeric(min) && is.numeric(max), "Max and min must be numerical")
-      mask <- field_values <= max & field_values >= min | (is.na(field_values) & include_NA)
+      ; assert(min <= max, "min <= max")
     } else if (operation == "select_date") {
       if (inherits(field_values, "POSIXct")) {
         max <- as.POSIXct(element[["max"]], "%Y-%m-%d")
@@ -228,7 +228,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
       } else {
         stop("Incorrect column type")
       }
-      mask <- field_values <= max & field_values >= min | (is.na(field_values) & include_NA)
+      ; assert(min <= max, "min <= max")
     } else {
       stop(paste0("Operation unknown: `", operation, "`"))
     }
