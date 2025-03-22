@@ -204,6 +204,7 @@ process_dataset_filter_element <- function(data_list, element, dataset = NULL) {
     include_NA <- element[["include_NA"]]
     filter_dataset <- element[["dataset"]]
     if (!is.null(dataset)) assert(dataset == filter_dataset, "Filtering on the wrong dataset")
+    ; assert(field %in% names(data_list[[filter_dataset]]), sprintf("data[[%s]] does not contain col `%s`", filter_dataset, field))
 
     field_values <- data_list[[filter_dataset]][[field]]
 
