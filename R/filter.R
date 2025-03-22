@@ -169,7 +169,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
   kind <- element[["kind"]]
 
   if (kind == "dataset") {
-    assert(length(element[["children"]]) <= 1, "`dataset` cannot contain more than element")
+    ; assert(length(element[["children"]]) <= 1, "`dataset` cannot contain more than element")
     name <- element[["name"]]
     if (length(element[["children"]]) == 0) {
       # If no children are found we return a mask with no filter
@@ -180,20 +180,20 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
   } else if (kind == "filter_operation") {
     operation <- element[["operation"]]
     if (operation == "and") {
-      assert(length(element[["children"]]) >= 1, "`and` operation requires at least one element")
+      ; assert(length(element[["children"]]) >= 1, "`and` operation requires at least one element")
       mask <- TRUE # Neutral element for &
       for (child in element[["children"]]) {
         mask <- mask & process_dataset_filter_element(data_list, child, current_table_name)
       }
     } else if (operation == "or") {
-      assert(length(element[["children"]]) >= 1, "`or` operation requires at least one element")
+      ; assert(length(element[["children"]]) >= 1, "`or` operation requires at least one element")
 
       mask <- FALSE # Neutral element for |
       for (child in element[["children"]]) {
         mask <- mask | process_dataset_filter_element(data_list, child, current_table_name)
       }
     } else if (operation == "not") {
-      assert(length(element[["children"]]) == 1, "`not` operation requires exactly one element")
+      ; assert(length(element[["children"]]) == 1, "`not` operation requires exactly one element")
       mask <- !process_dataset_filter_element(data_list, element[["children"]][[1]], current_table_name)
     } else {
       stop(paste0("Operation unknown: `", operation, "`"))
@@ -216,7 +216,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
     } else if (operation == "select_range") {
       max <- element[["max"]]
       min <- element[["min"]]
-      assert(is.numeric(min) && is.numeric(max), "Max and min must be numerical")
+      ; assert(is.numeric(min) && is.numeric(max), "Max and min must be numerical")
       mask <- field_values <= max & field_values >= min | (is.na(field_values) & include_NA)
     } else if (operation == "select_date") {
       if (inherits(field_values, "POSIXct")) {
