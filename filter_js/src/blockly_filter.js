@@ -30,6 +30,9 @@ import { multiPickerField } from './multi_picker.js';
 import './toolbox-search'
 
 
+/* TODO: Filter data structure generation is slow, it is generated everytime the UI starts, it could be moved to a 
+step previous to the UI, to avoid running it everytime we start the application. Memoize the operation?
+
 /* TODO: Control for incorrect filter definitions that should never be sent to the server. e.g. ands with not children
 
 Several dataset or subjet filters blocks

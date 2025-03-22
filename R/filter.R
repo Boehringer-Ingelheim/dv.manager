@@ -79,7 +79,7 @@ get_single_filter_data <- function(data) {
   # as "a" or ["a"]. To disambiguate this jsonlite offers `unbox`.
 
   # Why are we inserting NA values in some of the fields?
-  # `jsonlite` transforms `NA` `null` by default, seems reasonabel as JSON as has no support for NA values
+  # `jsonlite` transforms `NA` `null` by default, seems reasonable as JSON as has no support for NA values
   # Therefore, we remove all NA values from the fields before making our calculations making all `null`
   # values in the JSON intentional.
   # Why not using NULL? NULL is interpreted as an empty object `{}` by default by `jsonlite::toJSON`. We can modify the
@@ -168,7 +168,7 @@ get_filter_data <- function(datasets) {
 process_dataset_filter_element <- function(data_list, element, current_table_name = NULL) { # TODO: replace dataset for dataset_name
   kind <- element[["kind"]]
 
-  if (kind == "dataset") {
+  if (kind == "dataset") { #TODO: Move this to the top function. Datasets are not allowed as children of other datasets
     ; assert(length(element[["children"]]) <= 1, "`dataset` cannot contain more than element")
     name <- element[["name"]]
     if (length(element[["children"]]) == 0) {
@@ -202,7 +202,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
     field <- element[["field"]]
     operation <- element[["operation"]]
     include_NA <- element[["include_NA"]]
-    filter_dataset <- element[["dataset"]]
+    filter_dataset <- element[["dataset"]] # TODO: Change for name table
     ; assert(is.null(current_table_name) || current_table_name == filter_dataset, "Filtering on the wrong dataset")
     ; assert(field %in% names(data_list[[filter_dataset]]), sprintf("data[[%s]] does not contain col `%s`", filter_dataset, field))
 
@@ -245,7 +245,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
 
 create_datasets_filter_masks <- function(data_list, datasets_filter) {
   children <- datasets_filter[["children"]]
-  if (length(children) == 0) mask <- list()
+  if (length(children) == 0) mask <- list() # TO BE DELETED
   dataset_masks <- list()
 
   for (child in datasets_filter[["children"]]) {
@@ -278,7 +278,6 @@ apply_subject_set_to_datasets <- function(data_list, subject_set, subj_var) {
 }
 
 create_subject_set <- function(data_list, subject_filter, sbj_var) {
-  # Cojunto completo de participantes
   complete_sbj_list <- character(0)
   for (current_data in data_list) {
     complete_subject_list <- union(complete_sbj_list, as.character(unique(current_data[[sbj_var]])))
@@ -308,7 +307,7 @@ process_subject_filter_element <- function(data_list, element, sbj_var, complete
       }
     } else if (operation == "and") {
       children <- element[["children"]]
-      subjects <- NA_character_
+      subjects <- NA_character_ # TODO: replace complete_subject_list
       assert(length(children) > 0, "`and` requires at least one child")
       for (child in children) {
         current_subjects <- process_subject_filter_element(data_list, child, sbj_var, complete_subject_list)
@@ -334,7 +333,7 @@ process_subject_filter_element <- function(data_list, element, sbj_var, complete
   } else if (kind == "filter") {
     # redirect but do not process
     mask <- process_dataset_filter_element(data_list, element)
-    dataset <- element[["dataset"]]
+    dataset <- element[["dataset"]] # TODO: Replace by table
     subjects <- as.character(data_list[[dataset]][[sbj_var]][mask])
   } else {
     stop(paste("Unknown kind: ", kind))
