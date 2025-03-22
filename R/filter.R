@@ -165,7 +165,7 @@ get_filter_data <- function(datasets) {
 }
 
 # nolint start cyclocomp_linter
-process_dataset_filter_element <- function(data_list, element, dataset = NULL) {
+process_dataset_filter_element <- function(data_list, element, current_table_name = NULL) { # TODO: replace dataset for dataset_name
   kind <- element[["kind"]]
 
   if (kind == "dataset") {
@@ -173,9 +173,9 @@ process_dataset_filter_element <- function(data_list, element, dataset = NULL) {
     name <- element[["name"]]
     if (length(element[["children"]]) == 0) {
       # If no children are found we return a mask with no filter
-      mask <- rep_len(TRUE, nrow(data_list[[dataset]]))
+      mask <- rep_len(TRUE, nrow(data_list[[current_table_name]]))
     } else {
-      mask <- process_dataset_filter_element(data_list, element[["children"]][[1]], dataset)
+      mask <- process_dataset_filter_element(data_list, element[["children"]][[1]], current_table_name)
     }
   } else if (kind == "filter_operation") {
     operation <- element[["operation"]]
@@ -183,18 +183,18 @@ process_dataset_filter_element <- function(data_list, element, dataset = NULL) {
       assert(length(element[["children"]]) >= 1, "`and` operation requires at least one element")
       mask <- TRUE # Neutral element for &
       for (child in element[["children"]]) {
-        mask <- mask & process_dataset_filter_element(data_list, child, dataset)
+        mask <- mask & process_dataset_filter_element(data_list, child, current_table_name)
       }
     } else if (operation == "or") {
       assert(length(element[["children"]]) >= 1, "`or` operation requires at least one element")
 
       mask <- FALSE # Neutral element for |
       for (child in element[["children"]]) {
-        mask <- mask | process_dataset_filter_element(data_list, child, dataset)
+        mask <- mask | process_dataset_filter_element(data_list, child, current_table_name)
       }
     } else if (operation == "not") {
       assert(length(element[["children"]]) == 1, "`not` operation requires exactly one element")
-      mask <- !process_dataset_filter_element(data_list, element[["children"]][[1]], dataset)
+      mask <- !process_dataset_filter_element(data_list, element[["children"]][[1]], current_table_name)
     } else {
       stop(paste0("Operation unknown: `", operation, "`"))
     }
@@ -203,7 +203,7 @@ process_dataset_filter_element <- function(data_list, element, dataset = NULL) {
     operation <- element[["operation"]]
     include_NA <- element[["include_NA"]]
     filter_dataset <- element[["dataset"]]
-    if (!is.null(dataset)) assert(dataset == filter_dataset, "Filtering on the wrong dataset")
+    ; assert(is.null(current_table_name) || current_table_name == filter_dataset, "Filtering on the wrong dataset")
     ; assert(field %in% names(data_list[[filter_dataset]]), sprintf("data[[%s]] does not contain col `%s`", filter_dataset, field))
 
     field_values <- data_list[[filter_dataset]][[field]]
