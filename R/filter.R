@@ -299,7 +299,7 @@ process_subject_filter_element <- function(data_list, element, sbj_var, complete
     if (operation == "or") {
       children <- element[["children"]]
       subjects <- character(0)
-      assert(length(children) > 0, "`union` requires at least one child")
+      assert(length(children) > 0, "`or` requires at least one child")
       for (child in children) {
         current_subjects <- process_subject_filter_element(data_list, child, sbj_var, complete_subject_list)
         subjects <- union(subjects, current_subjects)
@@ -307,7 +307,7 @@ process_subject_filter_element <- function(data_list, element, sbj_var, complete
     } else if (operation == "and") {
       children <- element[["children"]]
       subjects <- NA_character_
-      assert(length(children) > 0, "`intersection` requires at least one child")
+      assert(length(children) > 0, "`and` requires at least one child")
       for (child in children) {
         current_subjects <- process_subject_filter_element(data_list, child, sbj_var, complete_subject_list)
         if (!identical(subjects, NA_character_)) {
@@ -318,7 +318,7 @@ process_subject_filter_element <- function(data_list, element, sbj_var, complete
       }
     } else if (operation == "not") {
       children <- element[["children"]]
-      assert(length(children) == 1, "`complement` requires exactly one child")
+      assert(length(children) == 1, "`not` requires exactly one child")
       subjects <- setdiff(
         complete_subject_list,
         process_subject_filter_element(
