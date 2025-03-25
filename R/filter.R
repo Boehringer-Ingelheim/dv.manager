@@ -244,20 +244,19 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
 
   return(mask)
 }
-
 # nolint end cyclocomp_linter
 
 create_datasets_filter_masks <- function(data_list, datasets_filter) {
   datasets_filter <- as_safe_list(datasets_filter)
+
   children <- datasets_filter[["children"]]
-  if (length(children) == 0) mask <- list() # TO BE DELETED
   dataset_masks <- list()
 
   for (child in datasets_filter[["children"]]) {
     kind <- child[["kind"]]
     name <- child[["name"]]
-    assert(!(name %in% names(dataset_masks)), "a dataset can only appear once inside dataset_filters")
-    assert(kind == "dataset", "dataset_filters children can only be of kind `dataset`")
+    ; assert(!(name %in% names(dataset_masks)), "a dataset can only appear once inside dataset_filters")
+    ; assert(kind == "dataset", "dataset_filters children can only be of kind `dataset`")
     dataset_masks[[name]] <- process_dataset_filter_element(data_list, child, name)
   }
 
@@ -359,6 +358,7 @@ to_filter_validate <- function(x) {
     verbose = TRUE
     )
 }
+
 from_filter_validate <- function(x) {
   jsonvalidate::json_validate(
     x,
