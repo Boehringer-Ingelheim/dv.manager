@@ -14,7 +14,7 @@ local({
 
   # Column filters
 
-  test_that("select_range filter returns mask excluding NAs (dataset filter)", {
+  test_that("process_dataset_filter_element - select_range filter returns mask excluding NAs", {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -28,7 +28,7 @@ local({
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
-  test_that("select_range filter returns mask including NAs (dataset filter)", {
+  test_that("process_dataset_filter_element - select_range filter returns mask including NAs", {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -42,7 +42,7 @@ local({
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
-  test_that("select_subset filter returns mask excluding NAs (dataset filter)", {
+  test_that("process_dataset_filter_element - select_subset filter returns mask excluding NAs", {
     e <- list(
       kind = "filter",
       operation = "select_subset",
@@ -55,7 +55,7 @@ local({
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
-  test_that("select_subset filter returns mask including NAs (dataset filter)", {
+  test_that("process_dataset_filter_element - select_subset filter returns mask including NAs", {
     e <- list(
       kind = "filter",
       operation = "select_subset",
@@ -68,7 +68,7 @@ local({
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
-  test_that("select_date filter returns mask excluding NAs for Date type (dataset filter)", {
+  test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for Date type", {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -82,7 +82,7 @@ local({
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
-  test_that("select_date filter returns mask including NAs for Date type (dataset filter)", {
+  test_that("process_dataset_filter_element - select_date filter returns mask including NAs for Date type", {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -96,7 +96,7 @@ local({
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
-  test_that("select_date filter returns mask excluding NAs for POSIX type (dataset filter)", {
+  test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for POSIX type", {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -110,7 +110,7 @@ local({
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
-  test_that("select_date filter returns mask including NAs for POSIX type (dataset filter)", {
+  test_that("process_dataset_filter_element - select_date filter returns mask including NAs for POSIX type", {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -124,7 +124,7 @@ local({
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
-  test_that("table filters fail when the current_table_is not the same as the table in the filter (dataset filter)", {
+  test_that("process_dataset_filter_element - dataset filters fail when the current_table_is not the same as the table in the filter", {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -142,7 +142,7 @@ local({
     )
   })
 
-  test_that("table filters fail when the table does not contain the filtered field (dataset filter)", {
+  test_that("process_dataset_filter_element - dataset filters fail when the table does not contain the filtered field", {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -160,7 +160,7 @@ local({
     )
   })
 
-  test_that("select_range filter fail when the field is not numeric (dataset filter)", {
+  test_that("process_dataset_filter_element - select_range filter fail when the field is not numeric", {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -178,7 +178,7 @@ local({
     )
   })
 
-  test_that("select_date filter fail when the field is not numeric (dataset filter)", {
+  test_that("process_dataset_filter_element - select_date filter fail when the field is not numeric", {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -194,9 +194,9 @@ local({
       regexp = "Field values must be POSIX.ct or Date",
       fixed = TRUE
     )
-  })
+    })
 
-  test_that("select_range min must be lower or equal than max (dataset filter)", {
+  test_that("process_dataset_filter_element - select_range min must be lower or equal than max", {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -214,7 +214,7 @@ local({
     )
   })
 
-  test_that("select_date min must be lower or equal than max (dataset filter)", {
+  test_that("process_dataset_filter_element - select_date min must be lower or equal than max", {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -232,7 +232,7 @@ local({
     )
   })
 
-  test_that("fails for unknown operations", {
+  test_that("process_dataset_filter_element - fails for unknown operations", {
     e <- list(
       kind = "filter",
       operation = "UNKNOWN OPERATION",
@@ -250,7 +250,7 @@ local({
     )
   })
 
-  test_that("and filter operation returns mask for 1 element (dataset filter)", {
+  test_that("process_dataset_filter_element - and filter operation returns mask for 1 element", {
     e <- list(
       kind = "filter_operation",
       operation = "and",
@@ -271,7 +271,7 @@ local({
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
-  test_that("and filter operation returns mask for n elements (dataset filter)", {
+  test_that("process_dataset_filter_element - and filter operation returns mask for n elements", {
     e <- list(
       kind = "filter_operation",
       operation = "and",
@@ -300,7 +300,7 @@ local({
     expect_identical(mask, c(FALSE, TRUE, TRUE, FALSE, FALSE, FALSE))
   })
 
-  test_that("and filter operation fails when it does not have at least 1 children (dataset filter)", {
+  test_that("process_dataset_filter_element - and filter operation fails when it does not have at least 1 children", {
     e <- list(
       kind = "filter_operation",
       operation = "and",
@@ -313,7 +313,7 @@ local({
     )
   })
 
-  test_that("or filter operation returns mask for 1 element (dataset filter)", {
+  test_that("process_dataset_filter_element - or filter operation returns mask for 1 element", {
     e <- list(
       kind = "filter_operation",
       operation = "or",
@@ -334,7 +334,7 @@ local({
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
-  test_that("or filter operation returns mask for n elements (dataset filter)", {
+  test_that("process_dataset_filter_element - or filter operation returns mask for n elements", {
     e <- list(
       kind = "filter_operation",
       operation = "or",
@@ -363,7 +363,7 @@ local({
     expect_identical(mask, c(TRUE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
-  test_that("or filter operation fails when it does not have at least 1 children (dataset filter)", {
+  test_that("process_dataset_filter_element - or filter operation fails when it does not have at least 1 children", {
     e <- list(
       kind = "filter_operation",
       operation = "or",
@@ -376,7 +376,7 @@ local({
     )
   })
 
-  test_that("not filter operation returns mask (dataset filter)", {
+  test_that("process_dataset_filter_element - not filter operation returns mask", {
     e <- list(
       kind = "filter_operation",
       operation = "not",
@@ -397,7 +397,7 @@ local({
     expect_identical(mask, !c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
-  test_that("not filter operation fails when it does not have exactly 1 children (dataset filter)", {
+  test_that("process_dataset_filter_element - not filter operation fails when it does not have exactly 1 children", {
     e <- list(
       kind = "filter_operation",
       operation = "not",
@@ -554,7 +554,7 @@ local({
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
-  test_that("and filter operation returns subject set for 1 element (subject_filter)", {
+  test_that("process_subject_filter_element - and filter operation returns subject set for 1 element", {
     e <- list(
       kind = "filter_operation",
       operation = "and",
@@ -575,7 +575,7 @@ local({
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
-  test_that("and filter operation returns subject set for n elements (subject_filter)", {
+  test_that("process_subject_filter_element - and filter operation returns subject set for n elements", {
     e <- list(
       kind = "filter_operation",
       operation = "and",
@@ -604,7 +604,7 @@ local({
     expect_identical(subject_set, c("SBJ-2", "SBJ-3"))
   })
 
-  test_that("and filter operation fails when it does not have at least 1 children (subject filter)", {
+  test_that("process_subject_filter_element - and filter operation fails when it does not have at least 1 children (subject filter)", {
     e <- list(
       kind = "filter_operation",
       operation = "and",
@@ -617,7 +617,7 @@ local({
     )
   })
 
-  test_that("or filter operation returns subject set for 1 element (subject_filter)", {
+  test_that("process_subject_filter_element - or filter operation returns subject set for 1 element", {
     e <- list(
       kind = "filter_operation",
       operation = "or",
@@ -638,7 +638,7 @@ local({
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
-  test_that("or filter operation returns subject set for n elements (subject_filter)", {
+  test_that("process_subject_filter_element - or filter operation returns subject set for n elements", {
     e <- list(
       kind = "filter_operation",
       operation = "or",
@@ -667,7 +667,7 @@ local({
     expect_identical(sort(subject_set), c("SBJ-1", "SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
-  test_that("or filter operation fails when it does not have at least 1 children (subject filter)", {
+  test_that("process_subject_filter_element - or filter operation fails when it does not have at least 1 children (subject filter)", {
     e <- list(
       kind = "filter_operation",
       operation = "or",
@@ -680,7 +680,7 @@ local({
     )
   })
 
-  test_that("not filter operation returns subject set (subject_filter)", {
+  test_that("process_subject_filter_element - not filter operation returns subject set", {
     e <- list(
       kind = "filter_operation",
       operation = "not",
@@ -701,7 +701,7 @@ local({
     expect_identical(subject_set, c("SBJ-1", "SBJ-5", "SBJ-6"))
   })
 
-  test_that("not filter operation fails when it does not have exactly 1 children (subject filter)", {
+  test_that("process_subject_filter_element - not filter operation fails when it does not have exactly 1 children (subject filter)", {
     e <- list(
       kind = "filter_operation",
       operation = "not",
@@ -743,8 +743,8 @@ local({
       fixed = TRUE
     )
   })
-  
-  test_that("table filter and subject filter fails when a field of element is not present", {
+
+  test_that("dataset filter and subject filter fails when a field of element is not present", {
     e <- list()
     expect_error(process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"))
     expect_error(process_subject_filter_element(data_list = data_list, element = e, sbj_var = "sbj_col", complete_subject_list = data_list[["d"]][["sbj_col"]]))
