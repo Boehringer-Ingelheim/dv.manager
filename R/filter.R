@@ -166,6 +166,9 @@ get_filter_data <- function(datasets) {
 
 # nolint start cyclocomp_linter
 process_dataset_filter_element <- function(data_list, element, current_table_name = NULL) { # TODO: replace dataset for dataset_name
+    
+  element <- as_safe_list(element)
+
   kind <- element[["kind"]]
 
   if (kind == "dataset") { #TODO: Move this to the top function. Datasets are not allowed as children of other datasets
@@ -204,7 +207,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
     include_NA <- element[["include_NA"]]
     filter_dataset <- element[["dataset"]] # TODO: Change for name table
     ; assert(is.null(current_table_name) || current_table_name == filter_dataset, "Filtering on the wrong dataset")
-    ; assert(field %in% names(data_list[[filter_dataset]]), sprintf("data[[%s]] does not contain col `%s`", filter_dataset, field))
+    ; assert(field %in% names(data_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, field))
 
     field_values <- data_list[[filter_dataset]][[field]]
 
@@ -216,6 +219,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
     } else if (operation == "select_range") {
       max <- element[["max"]]
       min <- element[["min"]]
+      ; assert(is.numeric(field_values), "Field values must be numerical")
       ; assert(is.numeric(min) && is.numeric(max), "Max and min must be numerical")
       ; assert(min <= max, "min <= max")
       mask <- field_values <= max & field_values >= min & !is.na(field_values) | (is.na(field_values) & include_NA)
@@ -227,7 +231,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
         max <- as.Date(element[["max"]], "%Y-%m-%d")
         min <- as.Date(element[["min"]], "%Y-%m-%d")
       } else {
-        stop("Incorrect column type")
+        stop("Field values must be POSIX.ct or Date")
       }
       ; assert(min <= max, "min <= max")
       mask <- field_values <= max & field_values >= min & !is.na(field_values) | (is.na(field_values) & include_NA)
@@ -293,6 +297,9 @@ create_subject_set <- function(data_list, subject_filter, sbj_var) {
 }
 
 process_subject_filter_element <- function(data_list, element, sbj_var, complete_subject_list) {
+
+  element <- as_safe_list(element)
+
   kind <- element[["kind"]]
 
   if (kind == "filter_operation") {
