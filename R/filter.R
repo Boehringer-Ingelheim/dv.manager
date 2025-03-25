@@ -248,6 +248,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
 # nolint end cyclocomp_linter
 
 create_datasets_filter_masks <- function(data_list, datasets_filter) {
+  datasets_filter <- as_safe_list(datasets_filter)
   children <- datasets_filter[["children"]]
   if (length(children) == 0) mask <- list() # TO BE DELETED
   dataset_masks <- list()
@@ -282,6 +283,7 @@ apply_subject_set_to_datasets <- function(data_list, subject_set, subj_var) {
 }
 
 create_subject_set <- function(data_list, subject_filter, sbj_var) {
+  subject_filter <- as_safe_list(subject_filter)
   complete_sbj_list <- character(0)
   for (current_data in data_list) {
     complete_subject_list <- union(complete_sbj_list, as.character(unique(current_data[[sbj_var]])))
