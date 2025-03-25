@@ -375,7 +375,8 @@ add_blockly_dependency <- function() {
   )
 }
 
-new_filter_ui <- function(id, data, state = NULL) {
+
+new_filter_ui <- function(id, dataset_lists, state = NULL) {
   ns <- shiny::NS(id)
 
   if (!is.null(state)) {
@@ -387,7 +388,7 @@ new_filter_ui <- function(id, data, state = NULL) {
   }
 
   bookmark <- shiny::restoreInput(ns("json"), "null")
-  current_filter_data <- jsonlite::toJSON(get_filter_data(data))
+  current_filter_data <- jsonlite::toJSON(get_filter_data(dataset_lists))
   assert(to_filter_validate(current_filter_data), "failed to validate message to filter")
   payload <- sprintf("{\"state\": %s, \"data\": %s, \"bookmark\": %s}", state, current_filter_data, bookmark)
 
@@ -450,18 +451,18 @@ new_filter_ui <- function(id, data, state = NULL) {
   )
 }
 
-new_filter_server <- function(id, selected_dataset, strict = FALSE) {
+new_filter_server <- function(id, selected_dataset_name, strict = FALSE) {
   mod <- function(input, output, session) {
     ns <- session[["ns"]]
 
     message(paste("Listening to:", ns("json")))
 
-    shiny::observeEvent(selected_dataset(), {
+    shiny::observeEvent(selected_dataset_name(), {
       session[["sendCustomMessage"]](
         "init_blockly_filter",
         list(
           container_id = ns("filter_container"),
-          dataset = selected_dataset(),
+          dataset = selected_dataset_name(),
           gen_code_button_id = ns("gen_code"),
           json_input_id = ns("json"),
           log_input_id = ns("log")
