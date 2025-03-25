@@ -194,7 +194,7 @@ local({
       regexp = "Field values must be POSIX.ct or Date",
       fixed = TRUE
     )
-    })
+  })
 
   test_that("process_dataset_filter_element - select_range min must be lower or equal than max", {
     e <- list(
@@ -441,7 +441,6 @@ local({
   })
 
   local({
-
     data_list <- list(
       d1 = data.frame(var1 = c("a", "NOT IN SUBSET")),
       d2 = data.frame(var2 = "b"),
@@ -499,8 +498,7 @@ local({
     e <- list(
       kind = "datasets",
       children = list(
-        list(          
-        ),
+        list(),
         list(
           kind = "dataset",
           name = "d1",
@@ -509,7 +507,7 @@ local({
       )
     )
 
-    expect_error (
+    expect_error(
       create_datasets_filter_masks(data_list, e),
       regexp = "a dataset can only appear once inside dataset_filters",
       fixed = TRUE
@@ -524,7 +522,7 @@ local({
 
     e <- list(
       kind = "datasets",
-      children = list(      
+      children = list(
         list(
           kind = "NOT DATASET",
           name = "d1",
@@ -533,7 +531,7 @@ local({
       )
     )
 
-    expect_error (
+    expect_error(
       create_datasets_filter_masks(data_list, e),
       regexp = "dataset_filters children can only be of kind `dataset`",
       fixed = TRUE
@@ -782,13 +780,11 @@ local({
     )
 
     e <- list(
-      children = list(        
-      )
+      children = list()
     )
 
     expect_true(is.na(create_subject_set(data_list = data_list, e, "sbj")))
   })
-
 })
 
 local({
@@ -918,7 +914,6 @@ local({
   })
 
   test_that("get_filter_data returns one entry per dataset_list and dataset", {
-
     dataset_lists <- list(
       dl1 = list(
         ds1 = data.frame(var1 = "a"),
@@ -939,5 +934,4 @@ local({
     expect_identical(r[["datasets"]][[1]][["tables"]][[1]][["name"]], jsonlite::unbox("ds1"))
     expect_identical(r[["datasets"]][[1]][["tables"]][[1]][["fields"]][[1]][["name"]], jsonlite::unbox("var1"))
   })
-
 })
