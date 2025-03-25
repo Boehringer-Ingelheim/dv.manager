@@ -314,16 +314,12 @@ process_subject_filter_element <- function(data_list, element, sbj_var, complete
         subjects <- union(subjects, current_subjects)
       }
     } else if (operation == "and") {
-      children <- element[["children"]]
-      subjects <- NA_character_ # TODO: replace complete_subject_list
+      children <- element[["children"]]      
       assert(length(children) > 0, "`and` operation requires at least one child")
       for (child in children) {
+        subjects <- complete_subject_list
         current_subjects <- process_subject_filter_element(data_list, child, sbj_var, complete_subject_list)
-        if (!identical(subjects, NA_character_)) {
-          subjects <- intersect(subjects, current_subjects)
-        } else {
-          subjects <- current_subjects
-        }
+        subjects <- intersect(subjects, current_subjects)        
       }
     } else if (operation == "not") {
       children <- element[["children"]]
