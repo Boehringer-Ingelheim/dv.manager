@@ -538,6 +538,54 @@ local({
     )
   })
 
+  test_that("create_datasets_filter_masks fails when it has more than one children", {
+    data_list <- list(
+      d1 = data.frame(var1 = "a"),
+      d2 = data.frame(var2 = "b")
+    )
+
+    e <- list(
+      children = list(
+        list(
+          kind = "dataset",
+          name = "d1",
+          children = list(
+            list(),
+            list()
+          )
+        )        
+      )
+    )
+
+    expect_error(
+      create_datasets_filter_masks(data_list, e),
+      regexp = "`datasets_filter` cannot contain more than children",
+      fixed = TRUE
+    )
+  })
+
+  test_that("create_datasets_filter_masks returns an all TRUE mask when no dataset has no child filters", {
+    data_list <- list(
+      d1 = data.frame(var1 = c("a", "b")),
+      d2 = data.frame(var2 = "b")
+    )
+
+    e <- list(
+      children = list(
+        list(
+          kind = "dataset",
+          name = "d1",
+          children = list()
+        )        
+      )
+    )
+
+    expect_identical(
+      create_datasets_filter_masks(data_list, e),
+      list(d1 = c(TRUE, TRUE))
+    )
+  })
+
   test_that("process_subject_filter_element returns subjects set", {
     e <- list(
       kind = "filter",

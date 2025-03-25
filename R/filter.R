@@ -173,16 +173,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
 
   kind <- element[["kind"]]
 
-  if (kind == "dataset") { # TODO: Move this to the top function. Datasets are not allowed as children of other datasets
-    assert(length(element[["children"]]) <= 1, "`dataset` cannot contain more than element")
-    name <- element[["name"]]
-    if (length(element[["children"]]) == 0) {
-      # If no children are found we return a mask with no filter
-      mask <- rep_len(TRUE, nrow(data_list[[current_table_name]]))
-    } else {
-      mask <- process_dataset_filter_element(data_list, element[["children"]][[1]], current_table_name)
-    }
-  } else if (kind == "filter_operation") {
+  if (kind == "filter_operation") {
     operation <- element[["operation"]]
     if (operation == "and") {
       assert(length(element[["children"]]) >= 1, "`and` operation requires at least one child")
@@ -257,9 +248,15 @@ create_datasets_filter_masks <- function(data_list, datasets_filter) {
   for (child in datasets_filter[["children"]]) {
     kind <- child[["kind"]]
     name <- child[["name"]]
-    assert(!(name %in% names(dataset_masks)), "a dataset can only appear once inside dataset_filters")
-    assert(kind == "dataset", "dataset_filters children can only be of kind `dataset`")
-    dataset_masks[[name]] <- process_dataset_filter_element(data_list, child, name)
+    ; assert(!(name %in% names(dataset_masks)), "a dataset can only appear once inside dataset_filters")
+    ; assert(kind == "dataset", "dataset_filters children can only be of kind `dataset`")    
+    if (length(child[["children"]]) == 1) {
+      dataset_masks[[name]] <- process_dataset_filter_element(data_list, child[["children"]][[1]], name)
+    } else if (length(child[["children"]]) == 0) {
+      dataset_masks[[name]] <- rep_len(TRUE, nrow(data_list[[name]]))
+    } else {
+      ; assert(FALSE, "`datasets_filter` cannot contain more than children")
+    }
   }
 
   return(dataset_masks)
