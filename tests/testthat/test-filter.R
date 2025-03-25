@@ -440,6 +440,106 @@ local({
     )
   })
 
+  local({
+
+    data_list <- list(
+      d1 = data.frame(var1 = c("a", "NOT IN SUBSET")),
+      d2 = data.frame(var2 = "b"),
+      d3 = data.frame(var3 = "c"),
+      d4 = data.frame(var4 = "d")
+    )
+
+    e <- list(
+      kind = "datasets",
+      children = list(
+        list(
+          kind = "dataset",
+          name = "d1",
+          children = list(
+            list(
+              kind = "filter",
+              operation = "select_subset",
+              values = c("a"),
+              include_NA = FALSE,
+              field = "var1",
+              dataset = "d1"
+            )
+          )
+        ),
+        list(
+          kind = "dataset",
+          name = "d2",
+          children = list()
+        )
+      )
+    )
+
+    r <- create_datasets_filter_masks(data_list, e)
+
+    test_that("create_dataset_filter_masks creates a mask per dataset in the filter and none for those not in the filter", {
+      expect_identical(names(r), c("d1", "d2"))
+      expect_length(r, 2)
+    })
+
+    test_that("create_dataset_filter_masks creates a mask for dataset filters with children", {
+      expect_identical(r[["d1"]], c(TRUE, FALSE))
+    })
+
+    test_that("create_dataset_filter_masks creates a TRUE mask for dataset filters with no children", {
+      expect_true(r[["d2"]])
+    })
+  })
+
+  test_that("create_datasets_filter_masks fails when a dataset appears more than once in the dataset filters", {
+    data_list <- list(
+      d1 = data.frame(var1 = "a"),
+      d2 = data.frame(var2 = "b")
+    )
+
+    e <- list(
+      kind = "datasets",
+      children = list(
+        list(          
+        ),
+        list(
+          kind = "dataset",
+          name = "d1",
+          children = list()
+        )
+      )
+    )
+
+    expect_error (
+      create_datasets_filter_masks(data_list, e),
+      regexp = "a dataset can only appear once inside dataset_filters",
+      fixed = TRUE
+    )
+  })
+
+  test_that("create_datasets_filter_masks fails when a children is not of kind dataset", {
+    data_list <- list(
+      d1 = data.frame(var1 = "a"),
+      d2 = data.frame(var2 = "b")
+    )
+
+    e <- list(
+      kind = "datasets",
+      children = list(      
+        list(
+          kind = "NOT DATASET",
+          name = "d1",
+          children = list()
+        )
+      )
+    )
+
+    expect_error (
+      create_datasets_filter_masks(data_list, e),
+      regexp = "dataset_filters children can only be of kind `dataset`",
+      fixed = TRUE
+    )
+  })
+
   test_that("process_subject_filter_element returns subjects set", {
     e <- list(
       kind = "filter",
@@ -649,5 +749,195 @@ local({
     expect_error(process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"))
     expect_error(process_subject_filter_element(data_list = data_list, element = e, sbj_var = "sbj_col", complete_subject_list = data_list[["d"]][["sbj_col"]]))
   })
-  
+
+  test_that("create_subject_set returns a subject set", {
+    data_list <- list(
+      d1 = data.frame(var1 = c("a", "b"), sbj = c("SBJ1", "SBJ2")),
+      d2 = data.frame(var1 = "a", sbj = "SBJ3")
+    )
+
+    e <- list(
+      children = list(
+        list(
+          kind = "filter",
+          operation = "select_subset",
+          values = c("a"),
+          include_NA = FALSE,
+          field = "var1",
+          dataset = "d1"
+        )
+      )
+    )
+
+    expect_identical(
+      create_subject_set(data_list = data_list, e, "sbj"),
+      "SBJ1"
+    )
+  })
+
+  test_that("create_subject_set returns NA for an empty filter", {
+    data_list <- list(
+      d1 = data.frame(var1 = c("a", "b"), sbj = c("SBJ1", "SBJ2")),
+      d2 = data.frame(var1 = "a", sbj = "SBJ3")
+    )
+
+    e <- list(
+      children = list(        
+      )
+    )
+
+    expect_true(is.na(create_subject_set(data_list = data_list, e, "sbj")))
+  })
+
+})
+
+local({
+  test_that("get_single_filter_data show correct counts and entries for character columns", {
+    d <- data.frame(
+      var = c("A", "A", "B", NA_character_)
+    )
+    attr(d[["var"]], "label") <- "var_label"
+    r <- get_single_filter_data(d)
+    expect_length(r, 1)
+    expect_identical(
+      r[[1]],
+      list(
+        name = jsonlite::unbox("var"),
+        label = jsonlite::unbox("var_label"),
+        kind = jsonlite::unbox("categorical"),
+        NA_count = jsonlite::unbox(1L),
+        values_count = list(
+          list(value = jsonlite::unbox("A"), count = jsonlite::unbox(2L)),
+          list(value = jsonlite::unbox("B"), count = jsonlite::unbox(1L))
+        )
+      )
+    )
+  })
+
+  test_that("get_single_filter_data show correct counts and entries for factor columns", {
+    d <- data.frame(
+      var = factor(c("A", "A", "B", NA_character_))
+    )
+    attr(d[["var"]], "label") <- "var_label"
+    r <- get_single_filter_data(d)
+    expect_length(r, 1)
+    expect_identical(
+      r[[1]],
+      list(
+        name = jsonlite::unbox("var"),
+        label = jsonlite::unbox("var_label"),
+        kind = jsonlite::unbox("categorical"),
+        NA_count = jsonlite::unbox(1L),
+        values_count = list(
+          list(value = jsonlite::unbox("A"), count = jsonlite::unbox(2L)),
+          list(value = jsonlite::unbox("B"), count = jsonlite::unbox(1L))
+        )
+      )
+    )
+  })
+
+  test_that("get_single_filter_data show correct max and min for numeric columns", {
+    d <- data.frame(
+      var = c(1, 1, 2, NA_real_)
+    )
+    attr(d[["var"]], "label") <- "var_label"
+    r <- get_single_filter_data(d)
+    expect_length(r, 1)
+    expect_identical(
+      r[[1]],
+      list(
+        name = jsonlite::unbox("var"),
+        label = jsonlite::unbox("var_label"),
+        kind = jsonlite::unbox("numerical"),
+        NA_count = jsonlite::unbox(1L),
+        min = jsonlite::unbox(1),
+        max = jsonlite::unbox(2)
+      )
+    )
+  })
+
+  test_that("get_single_filter_data show correct max and min for Date columns", {
+    d <- data.frame(
+      var = as.Date(c("2024-01-01", "2024-01-02", NA))
+    )
+    attr(d[["var"]], "label") <- "var_label"
+    r <- get_single_filter_data(d)
+    expect_length(r, 1)
+    expect_identical(
+      r[[1]],
+      list(
+        name = jsonlite::unbox("var"),
+        label = jsonlite::unbox("var_label"),
+        kind = jsonlite::unbox("date"),
+        NA_count = jsonlite::unbox(1L),
+        min = jsonlite::unbox(as.Date(c("2024-01-01"))),
+        max = jsonlite::unbox(as.Date(c("2024-01-02")))
+      )
+    )
+  })
+
+  test_that("get_single_filter_data show correct max and min for POSIXct columns", {
+    d <- data.frame(
+      var = as.POSIXct(as.Date(c("2024-01-01", "2024-01-02", NA)))
+    )
+    attr(d[["var"]], "label") <- "var_label"
+    r <- get_single_filter_data(d)
+    expect_length(r, 1)
+    expect_identical(
+      r[[1]],
+      list(
+        name = jsonlite::unbox("var"),
+        label = jsonlite::unbox("var_label"),
+        kind = jsonlite::unbox("date"),
+        NA_count = jsonlite::unbox(1L),
+        min = jsonlite::unbox(as.Date(c("2024-01-01"))),
+        max = jsonlite::unbox(as.Date(c("2024-01-02")))
+      )
+    )
+  })
+
+  test_that("get_single_filter_data fails for unsupported types", {
+    d <- data.frame(
+      var = TRUE
+    )
+    attr(d[["var"]], "label") <- "var_label"
+    expect_error(
+      get_single_filter_data(d),
+      regexp = "column type unsupported: logical",
+      fixed = TRUE
+    )
+  })
+
+  test_that("get_single_filter_data returns one entry per column", {
+    d <- data.frame(
+      var1 = "a",
+      var2 = "a"
+    )
+    r <- get_single_filter_data(d)
+    expect_length(r, 2)
+  })
+
+  test_that("get_filter_data returns one entry per dataset_list and dataset", {
+
+    dataset_lists <- list(
+      dl1 = list(
+        ds1 = data.frame(var1 = "a"),
+        ds2 = data.frame(var2 = "a")
+      ),
+      dl2 = list(
+        ds1 = data.frame(var3 = "a"),
+        ds2 = data.frame(var4 = "a")
+      )
+    )
+
+    r <- get_filter_data(dataset_lists)
+
+    expect_length(r[["datasets"]], 2)
+    expect_length(r[["datasets"]][[1]][["tables"]], 2)
+
+    expect_identical(r[["datasets"]][[1]][["name"]], jsonlite::unbox("dl1"))
+    expect_identical(r[["datasets"]][[1]][["tables"]][[1]][["name"]], jsonlite::unbox("ds1"))
+    expect_identical(r[["datasets"]][[1]][["tables"]][[1]][["fields"]][[1]][["name"]], jsonlite::unbox("var1"))
+  })
+
 })
