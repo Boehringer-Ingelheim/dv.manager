@@ -142,10 +142,14 @@ app_server_ <- function(input, output, session, opts) {
 
     filtered_dataset <- shinymeta::metaReactive({
 
+      ufd <- shiny::isolate(unfiltered_dataset())
+
+      shiny::req(!is.na(dataset_filter()))
+
       safe_dsf <- as_safe_list(dataset_filter())      
 
       if (isTRUE(is.na(safe_dsf[["parsed"]]))) {
-        return(unfiltered_dataset())
+        return(ufd)
       }
 
       safe_filters <- as_safe_list(safe_dsf[["parsed"]][["filters"]])
@@ -154,7 +158,7 @@ app_server_ <- function(input, output, session, opts) {
       current_client_dataset_name <- safe_dsf[["parsed"]][["dataset_list_name"]]
       shiny::req(current_server_dataset_name == current_client_dataset_name)
 
-      ds <- unfiltered_dataset()
+      ds <- ufd
 
       # JS client may not fully control that the selected filter is correct.
       # (e.g. blocks that must have children, like `and`,  has them).
