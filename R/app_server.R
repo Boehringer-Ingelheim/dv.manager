@@ -142,12 +142,16 @@ app_server_ <- function(input, output, session, opts) {
 
     filtered_dataset <- shinymeta::metaReactive({
 
-      if (isTRUE(is.na(dataset_filter()[["filters"]]))) {
+      safe_dsf <- as_safe_list(dataset_filter())      
+
+      if (isTRUE(is.na(safe_dsf[["parsed"]]))) {
         return(unfiltered_dataset())
       }
 
+      safe_filters <- as_safe_list(safe_dsf[["parsed"]][["filters"]])
+
       current_server_dataset_name <- shiny::isolate(input$selector)
-      current_client_dataset_name <- dataset_filter()[["filters"]][["dataset_name"]]
+      current_client_dataset_name <- safe_dsf[["parsed"]][["dataset_list_name"]]
       shiny::req(current_server_dataset_name == current_client_dataset_name)
 
       ds <- unfiltered_dataset()
@@ -160,8 +164,8 @@ app_server_ <- function(input, output, session, opts) {
       # Errors should be controlled inside the observes by modules themselves, unfortunately it is not always the case
 
       fd <- tryCatch({
-        ds_mask <- create_datasets_filter_masks(ds, dataset_filter()[["filters"]][["datasets_filter"]])
-        apply_masks_to_datasets(ds, ds_mask)
+        ds_mask <- create_dataset_filter_masks(ds, safe_filters[["datasets_filter"]])
+        apply_dataset_filter_masks(ds, ds_mask)
       },
         error = function(e) {
           msg <- paste("Filter not applied. Error found:\n", e[["message"]])
@@ -174,7 +178,7 @@ app_server_ <- function(input, output, session, opts) {
 
       # Check NA optimization in the future
       subject_set <- tryCatch({
-        create_subject_set(ds, dataset_filter()[["filters"]][["subject_filter"]], filter_key)
+        create_subject_set(ds, safe_filters[["subject_filter"]], filter_key)
       },
         error = function(e) {
           msg <- paste("Filter not applied. Error found:\n", e[["message"]])
@@ -184,7 +188,7 @@ app_server_ <- function(input, output, session, opts) {
       })      
 
       if (!identical(subject_set, NA_character_)) {
-        fd <- apply_subject_set_to_datasets(fd, subject_set, filter_key)
+        fd <- apply_subject_set(fd, subject_set, filter_key)
       }
 
       fd

@@ -1,15 +1,15 @@
 local({
-  date_col <- as.Date("2024-01-01") + c(0L:4L, NA)
+  date_var <- as.Date("2024-01-01") + c(0L:4L, NA)
 
-  data_list <- list(
+  dataset_list <- list(
     d = data.frame(
       row.names = 1:6,
-      range_col = c(1.0:5.0, NA),
-      date_col = date_col,
-      posix_col = as.POSIXct(date_col),
-      subset_col = factor(c(letters[1:5], NA)),
-      logical_col = c(TRUE, TRUE, TRUE, FALSE, FALSE, NA),
-      sbj_col = paste0("SBJ-", 1:6)
+      range_var = c(1.0:5.0, NA),
+      date_var = date_var,
+      posix_var = as.POSIXct(date_var),
+      subset_var = factor(c(letters[1:5], NA)),
+      logical_var = c(TRUE, TRUE, TRUE, FALSE, FALSE, NA),
+      sbj_var = paste0("SBJ-", 1:6)
     )
   )
 
@@ -22,10 +22,10 @@ local({
       max = 4,
       min = 2,
       include_NA = FALSE,
-      field = "range_col",
+      variable = "range_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -36,10 +36,10 @@ local({
       max = 4,
       min = 2,
       include_NA = TRUE,
-      field = "range_col",
+      variable = "range_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
@@ -49,10 +49,10 @@ local({
       operation = "select_subset",
       values = c("b", "c", "d"),
       include_NA = FALSE,
-      field = "subset_col",
+      variable = "subset_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -62,10 +62,10 @@ local({
       operation = "select_subset",
       values = c("b", "c", "d"),
       include_NA = TRUE,
-      field = "subset_col",
+      variable = "subset_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
@@ -75,10 +75,10 @@ local({
       operation = "select_subset",
       values = c("TRUE"),
       include_NA = FALSE,
-      field = "logical_col",
+      variable = "logical_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(TRUE, TRUE, TRUE, FALSE, FALSE, FALSE))
   })
 
@@ -88,10 +88,10 @@ local({
       operation = "select_subset",
       values = c("TRUE"),
       include_NA = TRUE,
-      field = "logical_col",
+      variable = "logical_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(TRUE, TRUE, TRUE, FALSE, FALSE, TRUE))
   })
 
@@ -102,10 +102,10 @@ local({
       min = "2024-01-02",
       max = "2024-01-04",
       include_NA = FALSE,
-      field = "date_col",
+      variable = "date_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -116,10 +116,10 @@ local({
       min = "2024-01-02",
       max = "2024-01-04",
       include_NA = TRUE,
-      field = "date_col",
+      variable = "date_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
@@ -130,10 +130,10 @@ local({
       min = "2024-01-02",
       max = "2024-01-04",
       include_NA = FALSE,
-      field = "posix_col",
+      variable = "posix_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -144,10 +144,10 @@ local({
       min = "2024-01-02",
       max = "2024-01-04",
       include_NA = TRUE,
-      field = "posix_col",
+      variable = "posix_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
@@ -158,12 +158,12 @@ local({
       max = 4,
       min = 2,
       include_NA = FALSE,
-      field = "range_col",
+      variable = "range_var",
       dataset = "d"
     )
 
     expect_error(
-      process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "INCORRECT_D"),
+      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "INCORRECT_D"),
       regexp = "Filtering on the wrong dataset",
       fixed = TRUE
     )
@@ -176,12 +176,12 @@ local({
       max = 4,
       min = 2,
       include_NA = FALSE,
-      field = "NON_EXISTING_FIELD",
+      variable = "NON_EXISTING_FIELD",
       dataset = "d"
     )
 
     expect_error(
-      process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"),
+      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "data[['d']] does not contain col `NON_EXISTING_FIELD`",
       fixed = TRUE
     )
@@ -194,12 +194,12 @@ local({
       max = 4,
       min = 2,
       include_NA = FALSE,
-      field = "subset_col",
+      variable = "subset_var",
       dataset = "d"
     )
 
     expect_error(
-      process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"),
+      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "Field values must be numerical",
       fixed = TRUE
     )
@@ -212,12 +212,12 @@ local({
       max = 4,
       min = 2,
       include_NA = FALSE,
-      field = "subset_col",
+      variable = "subset_var",
       dataset = "d"
     )
 
     expect_error(
-      process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"),
+      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "Field values must be POSIX.ct or Date",
       fixed = TRUE
     )
@@ -230,12 +230,12 @@ local({
       max = 2,
       min = 4,
       include_NA = FALSE,
-      field = "range_col",
+      variable = "range_var",
       dataset = "d"
     )
 
     expect_error(
-      process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"),
+      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "min <= max",
       fixed = TRUE
     )
@@ -248,12 +248,12 @@ local({
       min = "2024-01-04",
       max = "2024-01-02",
       include_NA = TRUE,
-      field = "posix_col",
+      variable = "posix_var",
       dataset = "d"
     )
 
     expect_error(
-      process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"),
+      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "min <= max",
       fixed = TRUE
     )
@@ -266,12 +266,12 @@ local({
       min = "2024-01-04",
       max = "2024-01-02",
       include_NA = TRUE,
-      field = "posix_col",
+      variable = "posix_var",
       dataset = "d"
     )
 
     expect_error(
-      process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"),
+      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "Operation unknown: `UNKNOWN OPERATION`",
       fixed = TRUE
     )
@@ -288,13 +288,13 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
 
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -309,7 +309,7 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         ),
         list(
@@ -318,12 +318,12 @@ local({
           max = 3,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, FALSE, FALSE, FALSE))
   })
 
@@ -334,7 +334,7 @@ local({
       children = list()
     )
     expect_error(
-      process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"),
+      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "`and` operation requires at least one child",
       fixed = TRUE
     )
@@ -351,13 +351,13 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
 
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -372,7 +372,7 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         ),
         list(
@@ -381,12 +381,12 @@ local({
           max = 3,
           min = 1,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(TRUE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -397,7 +397,7 @@ local({
       children = list()
     )
     expect_error(
-      process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"),
+      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "`or` operation requires at least one child",
       fixed = TRUE
     )
@@ -414,13 +414,13 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
 
-    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, !c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -431,7 +431,7 @@ local({
       children = list()
     )
     expect_error(
-      process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"),
+      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "`not` operation requires exactly one child",
       fixed = TRUE
     )
@@ -446,7 +446,7 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         ),
         list(
@@ -455,20 +455,20 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
     expect_error(
-      process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"),
+      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "`not` operation requires exactly one child",
       fixed = TRUE
     )
   })
 
   local({
-    data_list <- list(
+    dataset_list <- list(
       d1 = data.frame(var1 = c("a", "NOT IN SUBSET")),
       d2 = data.frame(var2 = "b"),
       d3 = data.frame(var3 = "c"),
@@ -476,7 +476,6 @@ local({
     )
 
     e <- list(
-      kind = "datasets",
       children = list(
         list(
           kind = "dataset",
@@ -487,7 +486,7 @@ local({
               operation = "select_subset",
               values = c("a"),
               include_NA = FALSE,
-              field = "var1",
+              variable = "var1",
               dataset = "d1"
             )
           )
@@ -500,7 +499,7 @@ local({
       )
     )
 
-    r <- create_datasets_filter_masks(data_list, e)
+    r <- create_dataset_filter_masks(dataset_list, e)
 
     test_that("create_dataset_filter_masks creates a mask per dataset in the filter and none for those not in the filter", {
       expect_identical(names(r), c("d1", "d2"))
@@ -517,7 +516,7 @@ local({
   })
 
   test_that("create_datasets_filter_masks fails when a dataset appears more than once in the dataset filters", {
-    data_list <- list(
+    dataset_list <- list(
       d1 = data.frame(var1 = "a"),
       d2 = data.frame(var2 = "b")
     )
@@ -535,14 +534,14 @@ local({
     )
 
     expect_error(
-      create_datasets_filter_masks(data_list, e),
+      create_dataset_filter_masks(dataset_list, e),
       regexp = "a dataset can only appear once inside dataset_filters",
       fixed = TRUE
     )
   })
 
   test_that("create_datasets_filter_masks fails when a children is not of kind dataset", {
-    data_list <- list(
+    dataset_list <- list(
       d1 = data.frame(var1 = "a"),
       d2 = data.frame(var2 = "b")
     )
@@ -559,14 +558,14 @@ local({
     )
 
     expect_error(
-      create_datasets_filter_masks(data_list, e),
+      create_dataset_filter_masks(dataset_list, e),
       regexp = "dataset_filters children can only be of kind `dataset`",
       fixed = TRUE
     )
   })
 
   test_that("create_datasets_filter_masks fails when it has more than one children", {
-    data_list <- list(
+    dataset_list <- list(
       d1 = data.frame(var1 = "a"),
       d2 = data.frame(var2 = "b")
     )
@@ -585,14 +584,14 @@ local({
     )
 
     expect_error(
-      create_datasets_filter_masks(data_list, e),
+      create_dataset_filter_masks(data_list, e),
       regexp = "`datasets_filter` cannot contain more than children",
       fixed = TRUE
     )
   })
 
   test_that("create_datasets_filter_masks returns an all TRUE mask when no dataset has no child filters", {
-    data_list <- list(
+    dataset_list <- list(
       d1 = data.frame(var1 = c("a", "b")),
       d2 = data.frame(var2 = "b")
     )
@@ -608,7 +607,7 @@ local({
     )
 
     expect_identical(
-      create_datasets_filter_masks(data_list, e),
+      create_dataset_filter_masks(dataset_list, e),
       list(d1 = c(TRUE, TRUE))
     )
   })
@@ -620,10 +619,10 @@ local({
       max = 4,
       min = 2,
       include_NA = FALSE,
-      field = "range_col",
+      variable = "range_var",
       dataset = "d"
     )
-    subject_set <- process_subject_filter_element(data_list = data_list, element = e, sbj_var = "sbj_col", complete_subject_list = data_list[["d"]][["sbj_col"]])
+    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
@@ -638,13 +637,13 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
 
-    subject_set <- process_subject_filter_element(data_list = data_list, element = e, sbj_var = "sbj_col", complete_subject_list = data_list[["d"]][["sbj_col"]])
+    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
@@ -659,7 +658,7 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         ),
         list(
@@ -668,12 +667,12 @@ local({
           max = 3,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
-    subject_set <- process_subject_filter_element(data_list = data_list, element = e, sbj_var = "sbj_col", complete_subject_list = data_list[["d"]][["sbj_col"]])
+    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(subject_set, c("SBJ-2", "SBJ-3"))
   })
 
@@ -684,7 +683,7 @@ local({
       children = list()
     )
     expect_error(
-      process_subject_filter_element(data_list = data_list, element = e),
+      process_subject_filter_element(dataset_list =dataset_list, filter_element = e),
       regexp = "`and` operation requires at least one child",
       fixed = TRUE
     )
@@ -701,13 +700,13 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
 
-    subject_set <- process_subject_filter_element(data_list = data_list, element = e, sbj_var = "sbj_col", complete_subject_list = data_list[["d"]][["sbj_col"]])
+    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
@@ -722,7 +721,7 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         ),
         list(
@@ -731,12 +730,12 @@ local({
           max = 3,
           min = 1,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
-    subject_set <- process_subject_filter_element(data_list = data_list, element = e, sbj_var = "sbj_col", complete_subject_list = data_list[["d"]][["sbj_col"]])
+    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(sort(subject_set), c("SBJ-1", "SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
@@ -747,7 +746,7 @@ local({
       children = list()
     )
     expect_error(
-      process_subject_filter_element(data_list = data_list, element = e),
+      process_subject_filter_element(dataset_list =dataset_list, filter_element = e),
       regexp = "`or` operation requires at least one child",
       fixed = TRUE
     )
@@ -764,13 +763,13 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
 
-    subject_set <- process_subject_filter_element(data_list = data_list, element = e, sbj_var = "sbj_col", complete_subject_list = data_list[["d"]][["sbj_col"]])
+    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(subject_set, c("SBJ-1", "SBJ-5", "SBJ-6"))
   })
 
@@ -781,7 +780,7 @@ local({
       children = list()
     )
     expect_error(
-      process_subject_filter_element(data_list = data_list, element = e),
+      process_subject_filter_element(dataset_list = dataset_list, filter_element = e),
       regexp = "`not` operation requires exactly one child",
       fixed = TRUE
     )
@@ -796,7 +795,7 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         ),
         list(
@@ -805,13 +804,13 @@ local({
           max = 4,
           min = 2,
           include_NA = FALSE,
-          field = "range_col",
+          variable = "range_var",
           dataset = "d"
         )
       )
     )
     expect_error(
-      process_subject_filter_element(data_list = data_list, element = e),
+      process_subject_filter_element(dataset_list =dataset_list, filter_element = e),
       regexp = "`not` operation requires exactly one child",
       fixed = TRUE
     )
@@ -819,12 +818,12 @@ local({
 
   test_that("dataset filter and subject filter fails when a field of element is not present", {
     e <- list()
-    expect_error(process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d"))
-    expect_error(process_subject_filter_element(data_list = data_list, element = e, sbj_var = "sbj_col", complete_subject_list = data_list[["d"]][["sbj_col"]]))
+    expect_error(process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"))
+    expect_error(process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]]))
   })
 
   test_that("create_subject_set returns a subject set", {
-    data_list <- list(
+    dataset_list <- list(
       d1 = data.frame(var1 = c("a", "b"), sbj = c("SBJ1", "SBJ2")),
       d2 = data.frame(var1 = "a", sbj = "SBJ3")
     )
@@ -836,20 +835,20 @@ local({
           operation = "select_subset",
           values = c("a"),
           include_NA = FALSE,
-          field = "var1",
+          variable = "var1",
           dataset = "d1"
         )
       )
     )
 
     expect_identical(
-      create_subject_set(data_list = data_list, e, "sbj"),
+      create_subject_set(dataset_list = dataset_list, e, "sbj"),
       "SBJ1"
     )
   })
 
   test_that("create_subject_set returns NA for an empty filter", {
-    data_list <- list(
+    dataset_list <- list(
       d1 = data.frame(var1 = c("a", "b"), sbj = c("SBJ1", "SBJ2")),
       d2 = data.frame(var1 = "a", sbj = "SBJ3")
     )
@@ -858,7 +857,7 @@ local({
       children = list()
     )
 
-    expect_true(is.na(create_subject_set(data_list = data_list, e, "sbj")))
+    expect_true(is.na(create_subject_set(dataset_list = dataset_list, e, "sbj")))
   })
 })
 
@@ -974,7 +973,7 @@ local({
     attr(d[["var"]], "label") <- "var_label"
     expect_error(
       get_single_filter_data(d),
-      regexp = "column type unsupported: complex",
+      regexp = "variable type unsupported: complex",
       fixed = TRUE
     )
   })
@@ -1002,11 +1001,11 @@ local({
 
     r <- get_filter_data(dataset_lists)
 
-    expect_length(r[["datasets"]], 2)
-    expect_length(r[["datasets"]][[1]][["tables"]], 2)
+    expect_length(r[["dataset_lists"]], 2)
+    expect_length(r[["dataset_lists"]][[1]][["dataset_list"]], 2)
 
-    expect_identical(r[["datasets"]][[1]][["name"]], jsonlite::unbox("dl1"))
-    expect_identical(r[["datasets"]][[1]][["tables"]][[1]][["name"]], jsonlite::unbox("ds1"))
-    expect_identical(r[["datasets"]][[1]][["tables"]][[1]][["fields"]][[1]][["name"]], jsonlite::unbox("var1"))
+    expect_identical(r[["dataset_lists"]][[1]][["name"]], jsonlite::unbox("dl1"))
+    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["name"]], jsonlite::unbox("ds1"))
+    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["variables"]][[1]][["name"]], jsonlite::unbox("var1"))
   })
 })
