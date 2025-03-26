@@ -371,32 +371,37 @@ const filterBlockly = (() => {
 
     const start = new Date();
 
-    let blockly_state = Blockly.serialization.workspaces.save(workspace);
-    let blocks = blockly_state["blocks"]["blocks"];
-    let topBlocks = blocks.slice(); // shallow copy
-    blockly_state["blocks"]["blocks"].length = 0;
-
-    let hl = new Blockly.Workspace();
-
     let filters = {
       datasets_filter: { children: [] },
       subject_filter: { children: [] }
     };
 
-    for (let i = 0; i < topBlocks.length; i++) {
-      let current_block = topBlocks[i];
-      blockly_state["blocks"]["blocks"].push(current_block);
-      Blockly.serialization.workspaces.load(blockly_state, hl);
-      const current_filter = JSON.parse(generator.workspaceToCode(hl));
-      if (current_filter.kind === "dataset") {
-        filters.datasets_filter.children.push(current_filter);
-      } else {
-        filters.subject_filter = (current_filter.subject_filter);
-      }
-      blockly_state["blocks"]["blocks"].length = 0;
-    }
+    let blockly_state = Blockly.serialization.workspaces.save(workspace);
 
-    blockly_state["blocks"]["blocks"] = topBlocks; // Restore blocks for saving
+    if(blockly_state["blocks"] !== undefined){
+      
+      let blocks = blockly_state["blocks"]["blocks"];
+      let topBlocks = blocks.slice(); // shallow copy
+      blockly_state["blocks"]["blocks"].length = 0;
+  
+      let hl = new Blockly.Workspace();
+  
+      for (let i = 0; i < topBlocks.length; i++) {
+        let current_block = topBlocks[i];
+        blockly_state["blocks"]["blocks"].push(current_block);
+        Blockly.serialization.workspaces.load(blockly_state, hl);
+        const current_filter = JSON.parse(generator.workspaceToCode(hl));
+        if (current_filter.kind === "dataset") {
+          filters.datasets_filter.children.push(current_filter);
+        } else {
+          filters.subject_filter = (current_filter.subject_filter);
+        }
+        blockly_state["blocks"]["blocks"].length = 0;
+      }
+  
+      blockly_state["blocks"]["blocks"] = topBlocks; // Restore blocks for saving
+
+    }
 
     const res_state = {
       filters: filters,
@@ -838,7 +843,7 @@ const filterBlockly = (() => {
     get_code: get_code,
     chaff: Blockly.hideChaff
   });
-
+ 
 })();
 
 const init = filterBlockly.init;
