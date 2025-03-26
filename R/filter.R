@@ -209,10 +209,9 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
     field_values <- data_list[[filter_dataset]][[field]]
 
     if (operation == "select_subset") {
-
       # Logical are treated as factors
       if (is.logical(field_values)) field_values <- factor(field_values)
-      
+
       field <- element[["field"]]
       include_NA <- element[["include_NA"]]
       values <- element[["values"]]
@@ -322,12 +321,12 @@ process_subject_filter_element <- function(data_list, element, sbj_var, complete
         subjects <- union(subjects, current_subjects)
       }
     } else if (operation == "and") {
-      children <- element[["children"]]      
+      children <- element[["children"]]
       assert(length(children) > 0, "`and` operation requires at least one child")
       for (child in children) {
         subjects <- complete_subject_list
         current_subjects <- process_subject_filter_element(data_list, child, sbj_var, complete_subject_list)
-        subjects <- intersect(subjects, current_subjects)        
+        subjects <- intersect(subjects, current_subjects)
       }
     } else if (operation == "not") {
       children <- element[["children"]]
@@ -382,7 +381,6 @@ add_blockly_dependency <- function() {
     style = c("blockly_filter.css"),
   )
 }
-
 
 new_filter_ui <- function(id, dataset_lists, state = NULL) {
   ns <- shiny::NS(id)
