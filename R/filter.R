@@ -1,3 +1,5 @@
+# TODO: review naming
+
 get_dataset_filters_info <- function(data, filter_data) {
   dataset_filter_names <- setdiff(get_data_tables_names(data), filter_data)
   res <- vector(mode = "list", length = length(dataset_filter_names))
@@ -222,7 +224,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
       assert(is.numeric(field_values), "Field values must be numerical")
       assert(is.numeric(min) && is.numeric(max), "Max and min must be numerical")
       assert(min <= max, "min <= max")
-      mask <- field_values <= max & field_values >= min & !is.na(field_values) | (is.na(field_values) & include_NA)
+      mask <- (((field_values <= max) & (field_values >= min)) & !is.na(field_values)) | (is.na(field_values) & include_NA)
     } else if (operation == "select_date") {
       if (inherits(field_values, "POSIXct")) {
         max <- as.POSIXct(element[["max"]], "%Y-%m-%d")
@@ -234,7 +236,7 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
         stop("Field values must be POSIX.ct or Date")
       }
       assert(min <= max, "min <= max")
-      mask <- field_values <= max & field_values >= min & !is.na(field_values) | (is.na(field_values) & include_NA)
+      mask <- (((field_values <= max) & (field_values >= min)) & !is.na(field_values)) | (is.na(field_values) & include_NA)
     } else {
       stop(paste0("Operation unknown: `", operation, "`"))
     }

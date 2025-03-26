@@ -178,7 +178,7 @@ local({
     )
   })
 
-  test_that("process_dataset_filter_element - select_date filter fail when the field is not numeric", {
+  test_that("process_dataset_filter_element - select_date filter fail when the field is not date or posix", {
     e <- list(
       kind = "filter",
       operation = "select_date",
