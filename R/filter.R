@@ -485,15 +485,17 @@ new_filter_server <- function(id, selected_dataset_name, strict = TRUE) {
       }
     })
 
+    
     res <- shiny::reactive({
-      message(input[["json"]])      
-      if (checkmate::test_string(input[["json"]], min.chars = 1)) {
-        val_res <- from_filter_validate(input[["json"]])
+      json_r <- input[["json"]]
+
+      if (checkmate::test_string(json_r, min.chars = 1)) {
+        val_res <- from_filter_validate(json_r)
         if (strict) assert(val_res, "failed to validate message from filter")
-        parsed_json <- jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)
+        parsed_json <- jsonlite::fromJSON(json_r, simplifyVector = FALSE)
         list(
           parsed = parsed_json %||% NA_character_,
-          raw = input[["json"]]
+          raw = json_r
         )
       } else {
         list(
