@@ -847,7 +847,7 @@ local({
     )
   })
 
-  test_that("create_subject_set returns NA for an empty filter", {
+  test_that("create_subject_set returns full subject list, across datasets, for an empty filter", {
     dataset_list <- list(
       d1 = data.frame(var1 = c("a", "b"), sbj = c("SBJ1", "SBJ2")),
       d2 = data.frame(var1 = "a", sbj = "SBJ3")
@@ -857,7 +857,7 @@ local({
       children = list()
     )
 
-    expect_true(is.na(create_subject_set(dataset_list = dataset_list, e, "sbj")))
+    expect_identical(create_subject_set(dataset_list = dataset_list, e, "sbj"), c("SBJ1", "SBJ2", "SBJ3"))
   })
 })
 

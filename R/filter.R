@@ -291,17 +291,17 @@ apply_subject_set <- function(dataset_list, subject_set, subj_var) {
 
 create_subject_set <- function(dataset_list, subject_filter, sbj_var) {
   subject_filter <- as_safe_list(subject_filter)
-  complete_sbj_list <- character(0)
+  complete_subject_list <- character(0)
   for (current_data in dataset_list) {
-    complete_subject_list <- union(complete_sbj_list, as.character(unique(current_data[[sbj_var]])))
+    complete_subject_list <- union(complete_subject_list, as.character(unique(current_data[[sbj_var]])))
   }
   children <- subject_filter[["children"]]
   assert(length(children) < 2, "subject filter must have 0 or 1 child")
-  if (length(children) == 0) subjects <- return(NA_character_)
+  if (length(children) == 0) subjects <- return(complete_subject_list)
   if (length(children) == 1) {
     subjects <- process_subject_filter_element(
       dataset_list, children[[1]],
-      sbj_var, complete_sbj_list
+      sbj_var, complete_subject_list
     )
   }
   return(subjects)
