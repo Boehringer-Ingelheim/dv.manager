@@ -43,14 +43,6 @@ Several dataset or subjet filters blocks
 
 /* TODO: Should a warning appear when a preset filters uses an out of range value. They are corrected by blockly but there is no warning*/
 
-/*
-TODO: Selection is not applied to the block value for subset selector unless the menu is closed.
-  This can be confusing because:
-  - The other selectors are applied immediately
-  - The user can hit the apply button while the menu is open
-  - The solution should be for the filter to apply the selection to the block element immediately as it changes
-*/
-
 /* TODO: name consitency */
 
 /* TODO: Clean, clean, clean!!!!

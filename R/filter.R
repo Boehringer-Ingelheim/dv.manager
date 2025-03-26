@@ -677,14 +677,16 @@ unnamespaced_filter_modal <- function(filter_ui) {
         shiny::tags[["label"]]("Close filter", "for" = "filter-checkbox", id = "filter_close-btn")
       ),
       shiny::tags[["script"]]("
-    $(document).ready(function () {
-    document.getElementById('filter_modal').addEventListener('click', function(event) {
-            event.stopPropagation(); // Prevent the click event from reaching the overlay
-        });
+    $(document).ready(function () {    
     const overlay = document.getElementById('filter_overlay');
-            overlay.addEventListener('click', function(){
-            document.getElementById('filter-checkbox').checked = false;
+            overlay.addEventListener('click', function(event){
+            let $target = $(event.target);
+                    if(!$target.closest('#filter_modal').length) {
+                      console.log('Inner Hit')
+                      document.getElementById('filter-checkbox').checked = false;
             $('#filter-checkbox').trigger('change');
+                      
+                    }
         });
     $('#filter-checkbox').change(function () {
       window.dispatchEvent(new Event('resize'));
