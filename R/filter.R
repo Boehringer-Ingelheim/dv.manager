@@ -100,6 +100,10 @@ get_single_filter_data <- function(data) {
       name = jsonlite::unbox(name),
       label = jsonlite::unbox(attr(col, "label"))
     )
+
+    # Logical is treated as a factor in the client
+    if (is.logical(col)) col <- factor(col)
+
     if (is.character(col) || is.factor(col)) {
       l[["kind"]] <- jsonlite::unbox("categorical")
       l[["NA_count"]] <- jsonlite::unbox(sum(is.na(col)))
@@ -205,6 +209,10 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
     field_values <- data_list[[filter_dataset]][[field]]
 
     if (operation == "select_subset") {
+
+      # Logical are treated as factors
+      if (is.logical(field_values)) field_values <- factor(field_values)
+      
       field <- element[["field"]]
       include_NA <- element[["include_NA"]]
       values <- element[["values"]]

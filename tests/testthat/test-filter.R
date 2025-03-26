@@ -8,6 +8,7 @@ local({
       date_col = date_col,
       posix_col = as.POSIXct(date_col),
       subset_col = factor(c(letters[1:5], NA)),
+      logical_col = c(TRUE, TRUE, TRUE, FALSE, FALSE, NA),
       sbj_col = paste0("SBJ-", 1:6)
     )
   )
@@ -66,6 +67,32 @@ local({
     )
     mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
+  })
+
+    test_that("process_dataset_filter_element - select_subset filter returns mask for logical excluding NAs", {
+    e <- list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("TRUE"),
+      include_NA = FALSE,
+      field = "logical_col",
+      dataset = "d"
+    )
+    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    expect_identical(mask, c(TRUE, TRUE, TRUE, FALSE, FALSE, FALSE))
+  })
+
+  test_that("process_dataset_filter_element - select_subset filter returns mask for logical including NAs", {
+    e <- list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("TRUE"),
+      include_NA = TRUE,
+      field = "logical_col",
+      dataset = "d"
+    )
+    mask <- process_dataset_filter_element(data_list = data_list, element = e, current_table_name = "d")
+    expect_identical(mask, c(TRUE, TRUE, TRUE, FALSE, FALSE, TRUE))
   })
 
   test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for Date type", {
@@ -940,14 +967,14 @@ local({
     )
   })
 
-  test_that("get_single_filter_data fails for unsupported types", {
+  test_that("get_single_filter_data fails for unsupported types", {    
     d <- data.frame(
-      var = TRUE
+      var = 1+2i
     )
     attr(d[["var"]], "label") <- "var_label"
     expect_error(
       get_single_filter_data(d),
-      regexp = "column type unsupported: logical",
+      regexp = "column type unsupported: complex",
       fixed = TRUE
     )
   })
