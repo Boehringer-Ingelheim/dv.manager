@@ -66,5 +66,5 @@ get_data_tables_names <- function(data) {
 }
 
 assert <- function(expr, msg) {
-  if (!isTRUE(expr)) stop(msg)
+  if (!isTRUE(expr)) stop(msg, call. = FALSE)
 }
