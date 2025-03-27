@@ -39,7 +39,7 @@ local({
       variable = "range_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
@@ -52,7 +52,7 @@ local({
       variable = "subset_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -65,11 +65,11 @@ local({
       variable = "subset_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
-    test_that("process_dataset_filter_element - select_subset filter returns mask for logical excluding NAs", {
+  test_that("process_dataset_filter_element - select_subset filter returns mask for logical excluding NAs", {
     e <- list(
       kind = "filter",
       operation = "select_subset",
@@ -78,7 +78,7 @@ local({
       variable = "logical_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(TRUE, TRUE, TRUE, FALSE, FALSE, FALSE))
   })
 
@@ -91,7 +91,7 @@ local({
       variable = "logical_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(TRUE, TRUE, TRUE, FALSE, FALSE, TRUE))
   })
 
@@ -105,7 +105,7 @@ local({
       variable = "date_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -119,7 +119,7 @@ local({
       variable = "date_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
@@ -133,7 +133,7 @@ local({
       variable = "posix_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -147,7 +147,7 @@ local({
       variable = "posix_var",
       dataset = "d"
     )
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE))
   })
 
@@ -163,7 +163,7 @@ local({
     )
 
     expect_error(
-      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "INCORRECT_D"),
+      process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "INCORRECT_D"),
       regexp = "Filtering on the wrong dataset",
       fixed = TRUE
     )
@@ -181,7 +181,7 @@ local({
     )
 
     expect_error(
-      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
+      process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "data[['d']] does not contain col `NON_EXISTING_FIELD`",
       fixed = TRUE
     )
@@ -199,7 +199,7 @@ local({
     )
 
     expect_error(
-      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
+      process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "Field values must be numerical",
       fixed = TRUE
     )
@@ -217,7 +217,7 @@ local({
     )
 
     expect_error(
-      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
+      process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "Field values must be POSIX.ct or Date",
       fixed = TRUE
     )
@@ -235,7 +235,7 @@ local({
     )
 
     expect_error(
-      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
+      process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "min <= max",
       fixed = TRUE
     )
@@ -253,7 +253,7 @@ local({
     )
 
     expect_error(
-      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
+      process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "min <= max",
       fixed = TRUE
     )
@@ -271,7 +271,7 @@ local({
     )
 
     expect_error(
-      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
+      process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "Operation unknown: `UNKNOWN OPERATION`",
       fixed = TRUE
     )
@@ -294,7 +294,7 @@ local({
       )
     )
 
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -323,7 +323,7 @@ local({
         )
       )
     )
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, FALSE, FALSE, FALSE))
   })
 
@@ -334,7 +334,7 @@ local({
       children = list()
     )
     expect_error(
-      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
+      process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "`and` operation requires at least one child",
       fixed = TRUE
     )
@@ -357,7 +357,7 @@ local({
       )
     )
 
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -386,7 +386,7 @@ local({
         )
       )
     )
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, c(TRUE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -397,7 +397,7 @@ local({
       children = list()
     )
     expect_error(
-      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
+      process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "`or` operation requires at least one child",
       fixed = TRUE
     )
@@ -420,7 +420,7 @@ local({
       )
     )
 
-    mask <- process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d")
+    mask <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d")
     expect_identical(mask, !c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE))
   })
 
@@ -431,7 +431,7 @@ local({
       children = list()
     )
     expect_error(
-      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
+      process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "`not` operation requires exactly one child",
       fixed = TRUE
     )
@@ -461,7 +461,7 @@ local({
       )
     )
     expect_error(
-      process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"),
+      process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d"),
       regexp = "`not` operation requires exactly one child",
       fixed = TRUE
     )
@@ -579,7 +579,7 @@ local({
             list(),
             list()
           )
-        )        
+        )
       )
     )
 
@@ -602,7 +602,7 @@ local({
           kind = "dataset",
           name = "d1",
           children = list()
-        )        
+        )
       )
     )
 
@@ -622,7 +622,7 @@ local({
       variable = "range_var",
       dataset = "d"
     )
-    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
@@ -643,7 +643,7 @@ local({
       )
     )
 
-    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
@@ -672,7 +672,7 @@ local({
         )
       )
     )
-    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(subject_set, c("SBJ-2", "SBJ-3"))
   })
 
@@ -683,7 +683,7 @@ local({
       children = list()
     )
     expect_error(
-      process_subject_filter_element(dataset_list =dataset_list, filter_element = e),
+      process_subject_filter_element(dataset_list = dataset_list, filter_element = e),
       regexp = "`and` operation requires at least one child",
       fixed = TRUE
     )
@@ -706,7 +706,7 @@ local({
       )
     )
 
-    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
@@ -735,7 +735,7 @@ local({
         )
       )
     )
-    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(sort(subject_set), c("SBJ-1", "SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
@@ -746,7 +746,7 @@ local({
       children = list()
     )
     expect_error(
-      process_subject_filter_element(dataset_list =dataset_list, filter_element = e),
+      process_subject_filter_element(dataset_list = dataset_list, filter_element = e),
       regexp = "`or` operation requires at least one child",
       fixed = TRUE
     )
@@ -769,7 +769,7 @@ local({
       )
     )
 
-    subject_set <- process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(subject_set, c("SBJ-1", "SBJ-5", "SBJ-6"))
   })
 
@@ -810,7 +810,7 @@ local({
       )
     )
     expect_error(
-      process_subject_filter_element(dataset_list =dataset_list, filter_element = e),
+      process_subject_filter_element(dataset_list = dataset_list, filter_element = e),
       regexp = "`not` operation requires exactly one child",
       fixed = TRUE
     )
@@ -818,8 +818,8 @@ local({
 
   test_that("dataset filter and subject filter fails when a field of element is not present", {
     e <- list()
-    expect_error(process_dataset_filter_element(dataset_list =dataset_list, filter_element = e, current_dataset_name = "d"))
-    expect_error(process_subject_filter_element(dataset_list =dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]]))
+    expect_error(process_dataset_filter_element(dataset_list = dataset_list, filter_element = e, current_dataset_name = "d"))
+    expect_error(process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]]))
   })
 
   test_that("create_subject_set returns a subject set", {
@@ -1268,32 +1268,6 @@ local({
   })
 
   local({
-  root_app <- start_app_driver(rlang::quo({
-    dv.manager:::run_app_dev_filter(
-      data = dataset_lists,
-      module_list = list(
-        Simple3 = dv.manager:::mod_simple(
-          dataset = "ds1",
-          module_id = "mod"
-        )
-      ),
-      filter_data = "ds1",
-      filter_key = "sbj_var",
-      enableBookmarking = "url",
-      state = !!absolute_state_file
-    )
-  }))
-
-  url <- "?_inputs_&filter-IGNORE_INPUT=null&__tabset_0__=%22mod%22&open_options_modal=0&selector=%22dl1%22&click=true&filter-checkbox=false&filter-log=null&filter-json=%22%7B%5C%22filters%5C%22%3A%7B%5C%22datasets_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%5D%7D%2C%5C%22subject_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%7B%5C%22kind%5C%22%3A%5C%22filter%5C%22%2C%5C%22dataset%5C%22%3A%5C%22ds1%5C%22%2C%5C%22operation%5C%22%3A%5C%22select_subset%5C%22%2C%5C%22variable%5C%22%3A%5C%22sbj_var%5C%22%2C%5C%22values%5C%22%3A%5B%5C%22SBJ-1%5C%22%5D%2C%5C%22include_NA%5C%22%3Afalse%7D%5D%7D%7D%2C%5C%22dataset_list_name%5C%22%3A%5C%22dl1%5C%22%7D%22"
-
-
-  test_that("Bookmark can be restored | Bookmark overrides state", {
-    full_url <- paste0(root_app$get_url(), url)
-    app <- shinytest2::AppDriver$new(full_url)
-    expect_identical(app$get_value(output = "mod-text"), "1")
-  })
-
-  test_that("Bookmark can be restored with no state", {
     root_app <- start_app_driver(rlang::quo({
       dv.manager:::run_app_dev_filter(
         data = dataset_lists,
@@ -1305,17 +1279,42 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        enableBookmarking = "url"
+        enableBookmarking = "url",
+        state = !!absolute_state_file
       )
     }))
 
-    full_url <- paste0(root_app$get_url(), url)
-    app <- shinytest2::AppDriver$new(full_url)
+    url <- "?_inputs_&filter-IGNORE_INPUT=null&__tabset_0__=%22mod%22&open_options_modal=0&selector=%22dl1%22&click=true&filter-checkbox=false&filter-log=null&filter-json=%22%7B%5C%22filters%5C%22%3A%7B%5C%22datasets_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%5D%7D%2C%5C%22subject_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%7B%5C%22kind%5C%22%3A%5C%22filter%5C%22%2C%5C%22dataset%5C%22%3A%5C%22ds1%5C%22%2C%5C%22operation%5C%22%3A%5C%22select_subset%5C%22%2C%5C%22variable%5C%22%3A%5C%22sbj_var%5C%22%2C%5C%22values%5C%22%3A%5B%5C%22SBJ-1%5C%22%5D%2C%5C%22include_NA%5C%22%3Afalse%7D%5D%7D%7D%2C%5C%22dataset_list_name%5C%22%3A%5C%22dl1%5C%22%7D%22"
 
-    expect_identical(app$get_value(output = "mod-text"), "1")
+
+    test_that("Bookmark can be restored | Bookmark overrides state", {
+      full_url <- paste0(root_app$get_url(), url)
+      app <- shinytest2::AppDriver$new(full_url)
+      expect_identical(app$get_value(output = "mod-text"), "1")
+    })
+
+    test_that("Bookmark can be restored with no state", {
+      root_app <- start_app_driver(rlang::quo({
+        dv.manager:::run_app_dev_filter(
+          data = dataset_lists,
+          module_list = list(
+            Simple3 = dv.manager:::mod_simple(
+              dataset = "ds1",
+              module_id = "mod"
+            )
+          ),
+          filter_data = "ds1",
+          filter_key = "sbj_var",
+          enableBookmarking = "url"
+        )
+      }))
+
+      full_url <- paste0(root_app$get_url(), url)
+      app <- shinytest2::AppDriver$new(full_url)
+
+      expect_identical(app$get_value(output = "mod-text"), "1")
+    })
   })
-})
-
 })
 
 # Only returns once, serves as test for the bookmark of the modules
