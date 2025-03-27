@@ -966,9 +966,9 @@ local({
     )
   })
 
-  test_that("get_single_filter_data fails for unsupported types", {    
+  test_that("get_single_filter_data fails for unsupported types", {
     d <- data.frame(
-      var = 1+2i
+      var = 1 + 2i
     )
     attr(d[["var"]], "label") <- "var_label"
     expect_error(
