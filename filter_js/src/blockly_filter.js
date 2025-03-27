@@ -814,7 +814,7 @@ const filterBlockly = (() => {
     let state_for_restore;
 
     if(script_tag.hasAttribute("bookmark")) {
-      state_for_restore = json_data.bookmark.filters;
+      state_for_restore = json_data.bookmark;
       script_tag.toggleAttribute("bookmark");
     } else {
       state_for_restore = json_data.state;
