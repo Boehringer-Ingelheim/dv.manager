@@ -1009,3 +1009,315 @@ local({
     expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["variables"]][[1]][["name"]], jsonlite::unbox("var1"))
   })
 })
+
+
+# E2E testing
+
+local({
+  skip_if_not_running_shiny_tests()
+  skip_if_suspect_check()
+
+  date_var <- as.Date("2024-01-01") + c(0L:4L, NA)
+
+
+  dataset_lists <- list(
+    dl1 = list(
+      ds1 = data.frame(
+        row.names = 1:6,
+        range_var = c(1.0:5.0, NA),
+        date_var = date_var,
+        posix_var = as.POSIXct(date_var),
+        subset_var = factor(c(letters[1:5], NA)),
+        logical_var = c(TRUE, TRUE, TRUE, FALSE, FALSE, NA),
+        sbj_var = paste0("SBJ-", 1:6)
+      ),
+      ds2 = data.frame(
+        row.names = 1:6,
+        range_var = c(1.0:5.0, NA),
+        date_var = date_var,
+        posix_var = as.POSIXct(date_var),
+        subset_var = factor(c(letters[1:5], NA)),
+        logical_var = c(TRUE, TRUE, TRUE, FALSE, FALSE, NA),
+        sbj_var = paste0("SBJ-", 1:6)
+      )
+    ),
+    dl2 = list(
+      ds1 = data.frame(
+        row.names = 1:6,
+        range_var = c(1.0:5.0, NA),
+        date_var = date_var,
+        posix_var = as.POSIXct(date_var),
+        subset_var = factor(c(letters[1:5], NA)),
+        logical_var = c(TRUE, TRUE, TRUE, FALSE, FALSE, NA),
+        sbj_var = paste0("SBJ-", 1:6)
+      ),
+      ds2 = data.frame(
+        row.names = 1:6,
+        range_var = c(1.0:5.0, NA),
+        date_var = date_var,
+        posix_var = as.POSIXct(date_var),
+        subset_var = factor(c(letters[1:5], NA)),
+        logical_var = c(TRUE, TRUE, TRUE, FALSE, FALSE, NA),
+        sbj_var = paste0("SBJ-", 1:6)
+      )
+    )
+  )
+
+  absolute_state_file <- file.path(getwd(), "./test_data/filter_state.txt")
+
+  test_that("A file state can be loaded in the app|all block types can be included in the application", {
+    # The filter includes all possible blocks which effectively test that all can be included
+    # Because we are reading back the processed filter we also ensure that all blocks are processed properly
+
+    app <- start_app_driver(rlang::quo({
+      message(getwd())
+      dv.manager:::run_app_dev_filter(
+        data = !!dataset_lists,
+        module_list = list(
+          Simple3 = dv.listings::mod_listings(
+            "mod13",
+            dataset_names = "ds1"
+          )
+        ),
+        filter_data = "ds1",
+        filter_key = "sbj_var",
+        state = !!absolute_state_file
+      )
+    }))
+
+    state_from_app <- jsonlite::prettify(app$get_value(input = "filter-json"))
+    state_from_file <- jsonlite::prettify(paste0(readLines(absolute_state_file), collapse = "\n"))
+
+    expect_identical(state_from_app, state_from_file)
+  })
+
+  test_that("A string state can be loaded in the app", {
+    string_state <- paste(readLines(absolute_state_file), collapse = "\n")
+
+    app <- start_app_driver(rlang::quo({
+      dv.manager:::run_app_dev_filter(
+        data = !!dataset_lists,
+        module_list = list(
+          Simple3 = dv.listings::mod_listings(
+            "mod13",
+            dataset_names = "ds1"
+          )
+        ),
+        filter_data = "ds1",
+        filter_key = "sbj_var",
+        state = !!string_state
+      )
+    }))
+
+    state_from_app <- jsonlite::prettify(app$get_value(input = "filter-json"))
+    state_from_file <- jsonlite::prettify(string_state)
+
+    expect_identical(state_from_app, state_from_file)
+  })
+
+  test_that("An app with no state has an empty filter", {
+    app <- start_app_driver(rlang::quo({
+      dv.manager:::run_app_dev_filter(
+        data = !!dataset_lists,
+        module_list = list(
+          Simple3 = dv.listings::mod_listings(
+            "mod13",
+            dataset_names = "ds1"
+          )
+        ),
+        filter_data = "ds1",
+        filter_key = "sbj_var"
+      )
+    }))
+
+    app_state <- app$get_value(input = "filter-json")
+    expect_identical(app_state, '{"filters":{"datasets_filter":{"children":[]},"subject_filter":{"children":[]}},"dataset_list_name":"dl1"}')
+  })
+
+  test_that("Filter can be exported", {
+    app <- start_app_driver(rlang::quo({
+      dv.manager:::run_app_dev_filter(
+        data = !!dataset_lists,
+        module_list = list(
+          Simple3 = dv.listings::mod_listings(
+            "mod13",
+            dataset_names = "ds1"
+          )
+        ),
+        filter_data = "ds1",
+        filter_key = "sbj_var",
+        state = !!absolute_state_file
+      )
+    }))
+
+    tmp_file <- tempfile()
+    app$get_download("filter-export_code", tmp_file)
+    expect_equal(readLines(tmp_file), readLines(absolute_state_file))
+  })
+
+  test_that("Filter can be exported", {
+    app <- start_app_driver(rlang::quo({
+      dv.manager:::run_app_dev_filter(
+        data = !!dataset_lists,
+        module_list = list(
+          Simple3 = dv.listings::mod_listings(
+            "mod13",
+            dataset_names = "ds1"
+          )
+        ),
+        filter_data = "ds1",
+        filter_key = "sbj_var",
+        state = !!absolute_state_file
+      )
+    }))
+
+    tmp_file <- tempfile()
+    app$get_download("filter-export_code", tmp_file)
+    expect_equal(readLines(tmp_file), readLines(absolute_state_file))
+  })
+
+
+
+  test_that("dataset filters are applied", {
+    app <- start_app_driver(rlang::quo({
+      dv.manager:::run_app_dev_filter(
+        data = dataset_lists,
+        module_list = list(
+          Simple3 = dv.manager:::mod_simple(
+            dataset = "ds1",
+            module_id = "mod"
+          )
+        ),
+        filter_data = "ds1",
+        filter_key = "sbj_var",
+        state = '  {
+    "filters": {
+        "datasets_filter": {
+            "children": [
+                {
+                    "name": "ds1",
+                    "kind": "dataset",
+                    "children": [
+                        {
+                            "kind": "filter",
+                            "dataset": "ds1",
+                            "operation": "select_subset",
+                            "variable": "sbj_var",
+                            "values" : ["SBJ-1"],
+                            "include_NA": false
+                        }
+                    ]
+                }
+            ]
+        },
+        "subject_filter": {
+            "children": []
+        }
+    },
+    "dataset_list_name": "dl1"
+}'
+      )
+    }))
+
+    expect_identical(app$get_value(output = "mod-text"), "1")
+  })
+
+
+
+
+
+
+  test_that("dataset filters are applied", {
+    # Filter on ds2 see the effect on ds1
+
+    app <- start_app_driver(rlang::quo({
+      dv.manager:::run_app_dev_filter(
+        data = dataset_lists,
+        module_list = list(
+          Simple3 = dv.manager:::mod_simple(
+            dataset = "ds1",
+            module_id = "mod"
+          )
+        ),
+        filter_data = "ds1",
+        filter_key = "sbj_var",
+        state = '  {
+    "filters": {
+        "subject_filter": {
+            "children": [
+                   {
+                            "kind": "filter",
+                            "dataset": "ds2",
+                            "operation": "select_subset",
+                            "variable": "sbj_var",
+                            "values" : ["SBJ-1"],
+                            "include_NA": false
+                        }
+            ]
+        },
+        "dataset_filter": {
+            "children": []
+        }
+    },
+    "dataset_list_name": "dl1"
+}'
+      )
+    }))
+
+    expect_identical(app$get_value(output = "mod-text"), "1")
+  })
+
+  local({
+  root_app <- start_app_driver(rlang::quo({
+    dv.manager:::run_app_dev_filter(
+      data = dataset_lists,
+      module_list = list(
+        Simple3 = dv.manager:::mod_simple(
+          dataset = "ds1",
+          module_id = "mod"
+        )
+      ),
+      filter_data = "ds1",
+      filter_key = "sbj_var",
+      enableBookmarking = "url",
+      state = !!absolute_state_file
+    )
+  }))
+
+  url <- "?_inputs_&filter-IGNORE_INPUT=null&__tabset_0__=%22mod%22&open_options_modal=0&selector=%22dl1%22&click=true&filter-checkbox=false&filter-log=null&filter-json=%22%7B%5C%22filters%5C%22%3A%7B%5C%22datasets_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%5D%7D%2C%5C%22subject_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%7B%5C%22kind%5C%22%3A%5C%22filter%5C%22%2C%5C%22dataset%5C%22%3A%5C%22ds1%5C%22%2C%5C%22operation%5C%22%3A%5C%22select_subset%5C%22%2C%5C%22variable%5C%22%3A%5C%22sbj_var%5C%22%2C%5C%22values%5C%22%3A%5B%5C%22SBJ-1%5C%22%5D%2C%5C%22include_NA%5C%22%3Afalse%7D%5D%7D%7D%2C%5C%22dataset_list_name%5C%22%3A%5C%22dl1%5C%22%7D%22"
+
+
+  test_that("Bookmark can be restored | Bookmark overrides state", {
+    full_url <- paste0(root_app$get_url(), url)
+    app <- shinytest2::AppDriver$new(full_url)
+    expect_identical(app$get_value(output = "mod-text"), "1")
+  })
+
+  test_that("Bookmark can be restored with no state", {
+    root_app <- start_app_driver(rlang::quo({
+      dv.manager:::run_app_dev_filter(
+        data = dataset_lists,
+        module_list = list(
+          Simple3 = dv.manager:::mod_simple(
+            dataset = "ds1",
+            module_id = "mod"
+          )
+        ),
+        filter_data = "ds1",
+        filter_key = "sbj_var",
+        enableBookmarking = "url"
+      )
+    }))
+
+    full_url <- paste0(root_app$get_url(), url)
+    app <- shinytest2::AppDriver$new(full_url)
+
+    expect_identical(app$get_value(output = "mod-text"), "1")
+  })
+})
+
+})
+
+# Only returns once, serves as test for the bookmark of the modules
+
+# Create a module with a menu that depends on the data, copy something from dv.explorer.parameter
