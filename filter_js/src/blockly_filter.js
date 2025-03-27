@@ -103,7 +103,12 @@ const filterBlockly = (() => {
     return ("contents_" + Blockly.utils.idGenerator.genUid());
   }
 
-  const filter_to_state = function (filter, dataset_list) {
+  const filter_to_state = function (previous_filter, dataset_list) {
+
+    let filter = undefined;
+    if (previous_filter) {
+      filter = previous_filter.filters
+    }
     
     let state = {
       blocks: {

@@ -240,10 +240,21 @@ run_app_dev_filter <- function(..., state = NULL) {
   old_use <- getOption("dv.manager.use.blockly.filter")
   old_state <- getOption("dv.manager.blockly.predefined.filter")
   on.exit({
-    message(paste("Reset to", old_use))
     options(dv.manager.use.blockly.filter = old_use)
   }, add = TRUE)
   on.exit(options(dv.manager.blockly.predefined.filter = old_state), add = TRUE)
+
+  if (!is.null(state)) {
+    if (file.exists(state)) {
+      state <- paste0(readLines(state), collapse = "\n")    
+    }
+    x <- try(jsonlite::parse_json(state), silent = TRUE)
+    if (inherits(x, "try-error")) {
+      message(state)
+      stop("`state` string file cannot be parsed JSON")
+    }
+  } 
+
   options(dv.manager.use.blockly.filter = TRUE)
   options(dv.manager.blockly.predefined.filter = state)
   run_app(...)
