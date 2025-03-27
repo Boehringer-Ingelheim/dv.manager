@@ -837,11 +837,17 @@ const filterBlockly = (() => {
     return (res)
   }
 
+  let chaff = function(){
+    if(Blockly.getMainWorkspace() !== undefined){
+      Blockly.hideChaff; 
+    }    
+  }
+
   // Return public API
   return ({
     init: init,
     get_code: get_code,
-    chaff: Blockly.hideChaff
+    chaff: chaff
   });
  
 })();
