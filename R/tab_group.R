@@ -255,7 +255,10 @@ compose_ui <- function(nh, ui_fn_list, ns) {
     res <- shiny::tabPanel(
       title = ui_fn_list[[nh]][["module_label"]],
       value = ui_fn_list[[nh]][["module_id"]],
-      ns_css(ui_fn_list[[nh]][["ui"]](ns(ui_fn_list[[nh]][["module_id"]])))
+      shiny::div(
+        class = "min-height-50-vh", # Force so tippy top menus fit into the screen
+        ns_css(ui_fn_list[[nh]][["ui"]](ns(ui_fn_list[[nh]][["module_id"]])))
+      )
     )
   } else {
     stop("Unknown Case")
