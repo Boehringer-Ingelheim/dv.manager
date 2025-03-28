@@ -1317,6 +1317,19 @@ local({
   })
 })
 
-# Only returns once, serves as test for the bookmark of the modules
+test_that("filter only sends one value when it is updated", {
 
-# Create a module with a menu that depends on the data, copy something from dv.explorer.parameter
+  # Related to every time we change the filter, including first beat
+
+  skip("skipped until we can set a state programatically")
+})
+
+test_that("modules bookmark state works with filter", {
+  # Related to the first beat of the app
+  # Mainly related to the above, the main requisite is that when starting the app on a bookmarked state
+  # a single filtered dataset_list is sent to the modules, otherwise bookmark state is spent on the first filtered
+  # dataset_list and in the next one they go to empty/default
+
+  skip("skipped until we can set a state programatically")
+  
+})
