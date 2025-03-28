@@ -316,7 +316,7 @@ local({
           kind = "filter",
           operation = "select_range",
           max = 3,
-          min = 2,
+          min = 1,
           include_NA = FALSE,
           variable = "range_var",
           dataset = "d"
@@ -665,7 +665,7 @@ local({
           kind = "filter",
           operation = "select_range",
           max = 3,
-          min = 2,
+          min = 1,
           include_NA = FALSE,
           variable = "range_var",
           dataset = "d"
