@@ -66,6 +66,7 @@ run_app <- function(data = NULL,
 
   config <- list()
   config[["module_info"]] <- check_resolved_modules(process_module_list(module_list))
+  # The automatic mapping will influence reporting when it is implemented in the future
   config[["data"]] <- char_vars_to_factor_vars_dataset_lists(check_data(dataset_lists))
   config[["filter_data"]] <- check_filter_data(filter_data, dataset_lists)
   config[["filter_key"]] <- check_filter_key(filter_key, dataset_lists)
