@@ -116,7 +116,6 @@ mod_simple <- function(dataset, module_id) {
     ui = simple_UI,
     server = function(afmm) {
       if (is.character(dataset)) {
-        shiny::reactive(afmm[["filtered_dataset"]]()[[bm_dataset_name]])
         simple_server(module_id, shiny::reactive(afmm[["filtered_dataset"]]()[[dataset]]))
       } else {
         simple_server(module_id, mm_resolve_dispatcher(dataset, afmm, flatten = TRUE))
