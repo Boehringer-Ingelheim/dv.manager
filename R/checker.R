@@ -78,7 +78,12 @@ check_filter_data <- function(filter_data, datasets) {
   filter_data_check <- purrr::map(
     datasets,
     function(.x) {
-      filter_data %in% names(.x)
+      if (is.function(.x)) {
+        dataset_list <- .x()
+      } else {
+        dataset_list <- .x
+      }
+      filter_data %in% names(dataset_list)
     }
   ) %>% purrr::keep(~ !.x)
 
