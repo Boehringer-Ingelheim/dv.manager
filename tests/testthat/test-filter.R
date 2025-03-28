@@ -683,7 +683,7 @@ local({
       children = list()
     )
     expect_error(
-      process_subject_filter_element(dataset_list = dataset_list, filter_element = e),
+      process_subject_filter_element(dataset_list = dataset_list, filter_element = e, complete_subject_list = dataset_list[["d"]][["sbj_var"]]),
       regexp = "`and` operation requires at least one child",
       fixed = TRUE
     )
