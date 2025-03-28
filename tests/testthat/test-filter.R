@@ -1155,28 +1155,6 @@ local({
     expect_equal(readLines(tmp_file), readLines(absolute_state_file))
   })
 
-  test_that("Filter can be exported", {
-    app <- start_app_driver(rlang::quo({
-      dv.manager:::run_app_dev_filter(
-        data = !!dataset_lists,
-        module_list = list(
-          Simple3 = dv.listings::mod_listings(
-            "mod13",
-            dataset_names = "ds1"
-          )
-        ),
-        filter_data = "ds1",
-        filter_key = "sbj_var",
-        state = !!absolute_state_file
-      )
-    }))
-
-    tmp_file <- tempfile()
-    app$get_download("filter-export_code", tmp_file)
-    expect_equal(readLines(tmp_file), readLines(absolute_state_file))
-  })
-
-
 
   test_that("dataset filters are applied", {
     app <- start_app_driver(rlang::quo({
