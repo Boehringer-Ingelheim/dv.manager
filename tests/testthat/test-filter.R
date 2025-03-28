@@ -1205,7 +1205,7 @@ local({
 
 
 
-  test_that("dataset filters are applied", {
+  test_that("subject filters are applied", {
     # Filter on ds2 see the effect on ds1
 
     app <- start_app_driver(rlang::quo({
