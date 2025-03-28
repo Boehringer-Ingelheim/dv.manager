@@ -52,6 +52,8 @@ run_app <- function(data = NULL,
                     .launch = TRUE) {
   check_deprecated_calls(filter_data)
 
+  dataset_lists <- data
+
   if (is.null(azure_options)) {
     app_args <- list(
       ui_func = app_ui,
@@ -64,9 +66,9 @@ run_app <- function(data = NULL,
 
   config <- list()
   config[["module_info"]] <- check_resolved_modules(process_module_list(module_list))
-  config[["data"]] <- check_data(data)
-  config[["filter_data"]] <- check_filter_data(filter_data, data)
-  config[["filter_key"]] <- check_filter_key(filter_key, data)
+  config[["data"]] <- check_data(dataset_lists)
+  config[["filter_data"]] <- check_filter_data(filter_data, dataset_lists)
+  config[["filter_key"]] <- check_filter_key(filter_key, dataset_lists)
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
@@ -77,7 +79,7 @@ run_app <- function(data = NULL,
   config[["dv.manager.blockly.predefined.filter"]] <- getOption("dv.manager.blockly.predefined.filter")
   # NEW DATAFILTER OPTIONS (F)
 
-  check_meta_mtime_attribute(data)
+  check_meta_mtime_attribute(dataset_lists)
 
   # Add logging
   call_args <- list(
