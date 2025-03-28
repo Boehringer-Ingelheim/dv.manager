@@ -324,9 +324,9 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
       }
     } else if (operation == "and") {
       children <- filter_element[["children"]]
+      subjects <- complete_subject_list
       assert(length(children) > 0, "`and` operation requires at least one child")
       for (child in children) {
-        subjects <- complete_subject_list
         current_subjects <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
         subjects <- intersect(subjects, current_subjects)
       }
