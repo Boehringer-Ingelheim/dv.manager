@@ -2,61 +2,60 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "datasets_schema.json",
   "title": "datasets",
-  "description": "A collection of datasets, each containing multiple tables with fields",
   "type": "object",
   "properties": {
-    "datasets": {
-      "description": "An array of datasets",
+    "dataset_lists": {
+      "description": "A list of lists of datasets (dataset_lists)",
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
           "name": {
-            "description": "The name of the dataset",
+            "description": "The name of the dataset_list",
             "type": "string"
           },
-          "tables": {
-            "description": "An array of tables within the dataset",
+          "dataset_list": {
+            "description": "An array of datasets (dataset_list)",
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
                 "name": {
-                  "description": "The name of the table",
+                  "description": "The name of the dataset",
                   "type": "string"
                 },
-                "fields": {
-                  "description": "An array of fields in the table",
+                "variables": {
+                  "description": "An array of variables in the dataset",
                   "type": "array",
                   "items": {
                     "oneOf": [
-                      { "$ref": "#/definitions/categorical_field" },
-                      { "$ref": "#/definitions/continuous_field" },
-                      { "$ref": "#/definitions/date_field" }
+                      { "$ref": "#/definitions/categorical_variable" },
+                      { "$ref": "#/definitions/continuous_variable" },
+                      { "$ref": "#/definitions/date_variable" }
                     ]
                   }
                 }
               },
-              "required": ["name", "fields"]
+              "required": ["name", "variables"]
             }
           }
         },
-        "required": ["name", "tables"]
+        "required": ["name", "dataset_list"]
       }
     }
   },
-  "required": ["datasets"],
+  "required": ["dataset_lists"],
   "definitions": {
-    "categorical_field": {
+    "categorical_variable": {
       "type": "object",
-      "description": "A categorical field",
+      "description": "A categorical variable",
       "properties": {
         "kind": {
           "enum": ["categorical"]
         },
         "values_count": {
           "type": "array",
-          "description": "Array of unique values in the table field and its count",
+          "description": "Array of unique values in the table variable and its count",
           "items": {
             "type": "object",
             "properties": {
@@ -65,7 +64,7 @@
                 "type": "string"
               },
               "count": {
-                "description": "Number of times the value appears in the field",
+                "description": "Number of times the value appears in the variable",
                 "type": "integer"
               }
             },
@@ -74,28 +73,28 @@
           "minItems": 0
         },
         "NA_count": {
-          "description": "Number of NA values in the field",
+          "description": "Number of NA values in the variable",
           "type": "integer"
         }
       },
       "required": ["kind", "values_count", "NA_count"]
     },
-    "continuous_field": {
+    "continuous_variable": {
       "type": "object",
-      "description": "A numerical continuous field",
+      "description": "A numerical continuous variable",
       "properties": {
         "kind": {
           "enum": ["numerical"]
         },
         "min": {
-          "description": "The minimum value in the field, or 'Inf', '-Inf', 'NA' or 'NaN'",
+          "description": "The minimum value in the variable, or 'Inf', '-Inf', 'NA' or 'NaN'",
           "oneOf": [
             { "type": "number" },
             { "type": "string", "enum": ["Inf", "-Inf", "NA", "NaN"] }
           ]
         },
         "max": {
-          "description": "The maximum value in the field, or 'Inf', '-Inf', 'NA' or 'NaN'",
+          "description": "The maximum value in the variable, or 'Inf', '-Inf', 'NA' or 'NaN'",
           "oneOf": [
             { "type": "number" },
             { "type": "string", "enum": ["Inf", "-Inf", "NA", "NaN"] }
@@ -126,15 +125,15 @@
           "type": "number"
         },
         "NA_count": {
-          "description": "Number of NA values in the field",
+          "description": "Number of NA values in the variable",
           "type": "integer"
         }
       },
       "required": ["kind", "min", "max", "NA_count"]
     },
-    "date_field": {
+    "date_variable": {
       "type": "object",
-      "description": "A date field",
+      "description": "A date variable",
       "properties": {
         "kind": {
           "enum": ["date"]
@@ -177,7 +176,7 @@
           "type": "number"
         },
         "NA_count": {
-          "description": "Number of NA values in the field",
+          "description": "Number of NA values in the variable",
           "type": "integer"
         }
       },

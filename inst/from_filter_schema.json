@@ -2,23 +2,26 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
-    "dataset_name": {
-          "description": "Dataset over which the filters are calculated",
+    "dataset_list_name": {
+          "description": "dataset_list over which the filters are calculated",
           "type": "string"
         },
     "filters": {
       "type": "object",
       "properties": {        
         "subject_filter": {
-          "description": "Filters applied to each of the datasets and when combined will provide a list of subjects",
+          "description": "Filters applied to each of the datasets in the dataset_list and when combined will provide a list of subjects",
           "type": "object",
           "properties": {
             "children": {
               "type": "array",
               "items": {
                 "oneOf": [
-                  { "$ref": "#/definitions/filter_operation" },
-                  { "$ref": "#/definitions/filter" }
+                  { "$ref": "#/definitions/filter_operation_and_or" },
+                  { "$ref": "#/definitions/filter_operation_not" },
+                  { "$ref": "#/definitions/filter_date" },
+                  { "$ref": "#/definitions/filter_subset" },
+                  { "$ref": "#/definitions/filter_range" }
                 ]
               },
               "maxItems": 1
@@ -42,6 +45,8 @@
       }
     }
   },
+  "required": ["filters", "dataset_list_name"],
+  "additionalProperties": false,
   "definitions": {    
     "dataset": {
       "type": "object",
@@ -55,9 +60,12 @@
           "type": "array",
           "description": "Must contain filter operations or filters",
           "items": {
-            "oneOf": [
-              { "$ref": "#/definitions/filter_operation" },
-              { "$ref": "#/definitions/filter" }
+            "oneOf": [              
+              { "$ref": "#/definitions/filter_operation_and_or" },
+              { "$ref": "#/definitions/filter_operation_not" },
+              { "$ref": "#/definitions/filter_date" },
+              { "$ref": "#/definitions/filter_subset" },
+              { "$ref": "#/definitions/filter_range" }
             ]
           },
           "maxItems": 1
@@ -65,102 +73,110 @@
       },
       "required": ["name", "children"]
     },
-    "filter_operation": {
+    "filter_operation_and_or": {
       "type": "object",
       "properties": {
-        "kind": { "type": "string", "enum": ["filter_operation"] }
-      },
-      "oneOf": [
-        {
-          "properties": {
-            "operation": { "type": "string", "enum": ["and", "or"] },
+        "kind": { "type": "string", "enum": ["filter_operation"] },
+        "operation": { "type": "string", "enum": ["and", "or"] },
             "children": {
               "type": "array",
               "items": {
                 "oneOf": [
-                  { "$ref": "#/definitions/filter_operation" },
-                  { "$ref": "#/definitions/filter" }
+                  { "$ref": "#/definitions/filter_operation_and_or" },
+                  { "$ref": "#/definitions/filter_operation_not" },
+                  { "$ref": "#/definitions/filter_date" },
+                  { "$ref": "#/definitions/filter_subset" },
+                  { "$ref": "#/definitions/filter_range" }
                 ]
               },
               "minItems": 1
             }
-          }
-        },
-        {
-          "properties": {
-            "operation": { "type": "string", "enum": ["not"] },
+      },
+      "required": ["kind", "operation", "children"]
+    },
+    "filter_operation_not": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["filter_operation"] },
+        "operation": { "type": "string", "enum": ["not"] },
             "children": {
               "type": "array",
               "items": {
                 "oneOf": [
-                  { "$ref": "#/definitions/filter_operation" },
-                  { "$ref": "#/definitions/filter" }
+                  { "$ref": "#/definitions/filter_operation_and_or" },
+                  { "$ref": "#/definitions/filter_operation_not" },
+                  { "$ref": "#/definitions/filter_date" },
+                  { "$ref": "#/definitions/filter_subset" },
+                  { "$ref": "#/definitions/filter_range" }
                 ]
               },
               "minItems": 1,
               "maxItems": 1
             }
-          }
-        }
-      ],
+      },
       "required": ["kind", "operation", "children"]
     },
-    "filter": {
+    "filter_subset": {
       "type": "object",
       "properties": {
         "kind": { "type": "string", "enum": ["filter"] },
         "dataset": { "type": "string" },
-        "field": { "type": "string" },
-        "include_NA": { "type": "boolean" }
-      },
-      "oneOf": [
-        {
-          "properties": {
-            "operation": { "type": "string", "enum": ["select_subset"] },
+        "variable": { "type": "string" },
+        "include_NA": { "type": "boolean" },
+        "operation": { "type": "string", "enum": ["select_subset"] },
             "values": {
               "type": "array",
               "items": { "type": "string" }
             }
-          },
-          "required": ["kind", "values", "include_NA", "field", "dataset"]
-        },
-        {
-          "properties": {
-            "operation": { "type": "string", "enum": ["select_range"] },
-            "min": {
-              "oneOf": [
-                { "type": "number" },
-                { "type": "string", "enum": ["Inf", "-Inf", "NA", "NaN"] }
-              ]
-            },
+      },
+      "required": ["kind", "values", "include_NA", "variable", "dataset"]
+    },
+    "filter_range": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["filter"] },
+        "dataset": { "type": "string" },
+        "variable": { "type": "string" },
+        "include_NA": { "type": "boolean" },
+        "operation": { "type": "string", "enum": ["select_range"] },            
             "max": {
               "oneOf": [
                 { "type": "number" },
                 { "type": "string", "enum": ["Inf", "-Inf", "NA", "NaN"] }
               ]
-            }
-          },
-          "required": ["kind", "min", "max", "include_NA", "field", "dataset"]
-        },
-        {
-          "properties": {
-            "operation": { "type": "string", "enum": ["select_date"] },
+            },
             "min": {
               "oneOf": [
-                { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-                { "type": "string", "enum": ["Inf", "-Inf", "NA"] }
-              ]
-            },
-            "max": {
-              "oneOf": [
-                { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-                { "type": "string", "enum": ["Inf", "-Inf", "NA"] }
+                { "type": "number" },
+                { "type": "string", "enum": ["Inf", "-Inf", "NA", "NaN"] }
               ]
             }
-          },
-          "required": ["kind", "min", "max", "include_NA", "field", "dataset"]
+      },
+      "required": ["kind", "min", "max", "include_NA", "variable", "dataset"]
+    },
+    "filter_date": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["filter"] },
+        "dataset": { "type": "string" },
+        "variable": { "type": "string" },
+        "include_NA": { "type": "boolean" },
+        "operation": { "type": "string", "enum": ["select_date"] },
+        "max": {
+          "oneOf": [
+                { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                { "type": "string", "enum": ["Inf", "-Inf", "NA"] }
+              ]
+        },
+        "min": {
+          "oneOf": [
+                { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                { "type": "string", "enum": ["Inf", "-Inf", "NA"] }
+              ]
         }
-      ]
+      },
+      "required": ["kind", "min", "max", "include_NA", "variable", "dataset"]
     }
   }
 }
+

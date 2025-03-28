@@ -72,10 +72,10 @@ create_dataset_filters_server <- function(datasets_filters_info, data_list) {
 
 # NEW FILTER ----
 
-get_single_filter_data <- function(data) {
-  nm_col <- names(data)
-  n_col <- length(nm_col)
-  res <- vector(mode = "list", length = n_col)
+get_single_filter_data <- function(dataset) {
+  nm_var <- names(dataset)
+  n_var <- length(nm_var)
+  res <- vector(mode = "list", length = n_var)
 
   # In R all elements are vectors by default this makes complicated to transform into json as c("a") can be enconded
   # as "a" or ["a"]. To disambiguate this jsonlite offers `unbox`.
@@ -92,20 +92,24 @@ get_single_filter_data <- function(data) {
   # we must do instead `x <- list(); x["a"] <- list(NULL)`
   # Therefore it seems more reasonable to work with NAs in this case.
 
-  for (idx in seq_len(n_col)) {
-    name <- nm_col[[idx]]
-    col <- data[[name]]
+  for (idx in seq_len(n_var)) {
+    name <- nm_var[[idx]]
+    var <- dataset[[name]]
 
     l <- list(
       name = jsonlite::unbox(name),
-      label = jsonlite::unbox(attr(col, "label"))
+      label = jsonlite::unbox(attr(var, "label"))
     )
-    if (is.character(col) || is.factor(col)) {
-      l[["kind"]] <- jsonlite::unbox("categorical")
-      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(col)))
-      na_clean_col <- col[!is.na(col)]
 
-      count <- table(na_clean_col)
+    # Logical is treated as a factor in the client
+    if (is.logical(var)) var <- factor(var)
+
+    if (is.character(var) || is.factor(var)) {
+      l[["kind"]] <- jsonlite::unbox("categorical")
+      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(var)))
+      na_clean_var <- var[!is.na(var)]
+
+      count <- table(na_clean_var)
       values <- names(count)
       count <- unname(count)
       l[["values_count"]] <- vector(mode = "list", length = length(l[["values"]]))
@@ -115,25 +119,25 @@ get_single_filter_data <- function(data) {
           count = jsonlite::unbox(count[[v_idx]])
         )
       }
-    } else if (is.numeric(col)) {
+    } else if (is.numeric(var)) {
       l[["kind"]] <- jsonlite::unbox("numerical")
-      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(col)))
-      na_clean_col <- col[!is.na(col)]
+      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(var)))
+      na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- jsonlite::unbox(min(Inf, na_clean_col, na.rm = TRUE))
-      l[["max"]] <- jsonlite::unbox(max(-Inf, na_clean_col, na.rm = TRUE))
-    } else if (inherits(col, "POSIXct") || inherits(col, "Date")) {
-      if (inherits(col, "POSIXct")) {
-        col <- as.Date(col)
+      l[["min"]] <- jsonlite::unbox(min(Inf, na_clean_var, na.rm = TRUE))
+      l[["max"]] <- jsonlite::unbox(max(-Inf, na_clean_var, na.rm = TRUE))
+    } else if (inherits(var, "POSIXct") || inherits(var, "Date")) {
+      if (inherits(var, "POSIXct")) {
+        var <- as.Date(var)
       }
       l[["kind"]] <- jsonlite::unbox("date")
-      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(col)))
-      na_clean_col <- col[!is.na(col)]
+      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(var)))
+      na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- jsonlite::unbox(min(as.Date(Inf), na_clean_col, na.rm = TRUE))
-      l[["max"]] <- jsonlite::unbox(max(as.Date(-Inf), na_clean_col, na.rm = TRUE))
+      l[["min"]] <- jsonlite::unbox(min(as.Date(Inf), na_clean_var, na.rm = TRUE))
+      l[["max"]] <- jsonlite::unbox(max(as.Date(-Inf), na_clean_var, na.rm = TRUE))
     } else {
-      stop(paste("column type unsupported:", typeof(col)))
+      stop(paste("variable type unsupported:", typeof(var)))
     }
 
     res[[idx]] <- l
@@ -141,102 +145,98 @@ get_single_filter_data <- function(data) {
   return(res)
 }
 
-get_filter_data <- function(datasets) {
-  nm_dataset <- names(datasets)
-  n_dataset <- length(nm_dataset)
-  res <- vector(mode = "list", length = n_dataset)
-  for (idx in seq_len(n_dataset)) {
-    current_dataset <- datasets[[idx]]
-    nm_tables <- names(current_dataset)
-    n_tables <- length(nm_tables)
-    current_dataset_res <- vector(mode = "list", length = n_tables)
-    for (jdx in seq_len(n_tables)) {
-      current_table <- current_dataset[[jdx]]
+get_filter_data <- function(dataset_lists) {
+  nm_dataset_list <- names(dataset_lists)
+  n_dataset_list <- length(nm_dataset_list)
+  res <- vector(mode = "list", length = n_dataset_list)
+  for (idx in seq_len(n_dataset_list)) {
+    current_dataset_list <- dataset_lists[[idx]]
+    current_dataset_list_name <- nm_dataset_list[[idx]]
+    nm_datasets <- names(current_dataset_list)
+    n_datasets <- length(nm_datasets)
+    current_dataset_res <- vector(mode = "list", length = n_datasets)
+    for (jdx in seq_len(n_datasets)) {
+      current_dataset <- current_dataset_list[[jdx]]
+      current_dataset_name <- nm_datasets[[jdx]]
       current_dataset_res[[jdx]] <- list(
-        name = jsonlite::unbox(nm_tables[[jdx]]),
-        fields = get_single_filter_data(current_table)
+        name = jsonlite::unbox(current_dataset_name),
+        variables = get_single_filter_data(current_dataset)
       )
     }
     res[[idx]] <- list(
-      name = jsonlite::unbox(nm_dataset[[idx]]),
-      tables = current_dataset_res
+      name = jsonlite::unbox(current_dataset_list_name),
+      dataset_list = current_dataset_res
     )
   }
-  res <- list(datasets = res)
+  res <- list(dataset_lists = res)
   return(res)
 }
 
 # nolint start cyclocomp_linter
-process_dataset_filter_element <- function(data_list, element, current_table_name = NULL) { # TODO: replace dataset for dataset_name
+process_dataset_filter_element <- function(dataset_list, filter_element, current_dataset_name = NULL) { # TODO: replace dataset for dataset_name
 
-  element <- as_safe_list(element)
+  filter_element <- as_safe_list(filter_element)
 
-  kind <- element[["kind"]]
+  kind <- filter_element[["kind"]]
 
-  if (kind == "dataset") { # TODO: Move this to the top function. Datasets are not allowed as children of other datasets
-    assert(length(element[["children"]]) <= 1, "`dataset` cannot contain more than element")
-    name <- element[["name"]]
-    if (length(element[["children"]]) == 0) {
-      # If no children are found we return a mask with no filter
-      mask <- rep_len(TRUE, nrow(data_list[[current_table_name]]))
-    } else {
-      mask <- process_dataset_filter_element(data_list, element[["children"]][[1]], current_table_name)
-    }
-  } else if (kind == "filter_operation") {
-    operation <- element[["operation"]]
+  if (kind == "filter_operation") {
+    operation <- filter_element[["operation"]]
     if (operation == "and") {
-      assert(length(element[["children"]]) >= 1, "`and` operation requires at least one child")
+      assert(length(filter_element[["children"]]) >= 1, "`and` operation requires at least one child")
       mask <- TRUE # Neutral element for &
-      for (child in element[["children"]]) {
-        mask <- mask & process_dataset_filter_element(data_list, child, current_table_name)
+      for (child in filter_element[["children"]]) {
+        mask <- mask & process_dataset_filter_element(dataset_list, child, current_dataset_name)
       }
     } else if (operation == "or") {
-      assert(length(element[["children"]]) >= 1, "`or` operation requires at least one child")
+      assert(length(filter_element[["children"]]) >= 1, "`or` operation requires at least one child")
 
       mask <- FALSE # Neutral element for |
-      for (child in element[["children"]]) {
-        mask <- mask | process_dataset_filter_element(data_list, child, current_table_name)
+      for (child in filter_element[["children"]]) {
+        mask <- mask | process_dataset_filter_element(dataset_list, child, current_dataset_name)
       }
     } else if (operation == "not") {
-      assert(length(element[["children"]]) == 1, "`not` operation requires exactly one child")
-      mask <- !process_dataset_filter_element(data_list, element[["children"]][[1]], current_table_name)
+      assert(length(filter_element[["children"]]) == 1, "`not` operation requires exactly one child")
+      mask <- !process_dataset_filter_element(dataset_list, filter_element[["children"]][[1]], current_dataset_name)
     } else {
       stop(paste0("Operation unknown: `", operation, "`"))
     }
   } else if (kind == "filter") {
-    field <- element[["field"]]
-    operation <- element[["operation"]]
-    include_NA <- element[["include_NA"]]
-    filter_dataset <- element[["dataset"]] # TODO: Change for name table
-    assert(is.null(current_table_name) || current_table_name == filter_dataset, "Filtering on the wrong dataset")
-    assert(field %in% names(data_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, field))
+    variable <- filter_element[["variable"]]
+    operation <- filter_element[["operation"]]
+    include_NA <- filter_element[["include_NA"]]
+    filter_dataset <- filter_element[["dataset"]] # TODO: Change for name table
+    assert(is.null(current_dataset_name) || current_dataset_name == filter_dataset, "Filtering on the wrong dataset")
+    assert(variable %in% names(dataset_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, variable))
 
-    field_values <- data_list[[filter_dataset]][[field]]
+    variable_values <- dataset_list[[filter_dataset]][[variable]]
 
     if (operation == "select_subset") {
-      field <- element[["field"]]
-      include_NA <- element[["include_NA"]]
-      values <- element[["values"]]
-      mask <- (field_values %in% values) | (is.na(field_values) & include_NA)
+      # Logical are treated as factors
+      if (is.logical(variable_values)) variable_values <- factor(variable_values)
+
+      variable <- filter_element[["variable"]]
+      include_NA <- filter_element[["include_NA"]]
+      values <- filter_element[["values"]]
+      mask <- (variable_values %in% values) | (is.na(variable_values) & include_NA)
     } else if (operation == "select_range") {
-      max <- element[["max"]]
-      min <- element[["min"]]
-      assert(is.numeric(field_values), "Field values must be numerical")
+      max <- filter_element[["max"]]
+      min <- filter_element[["min"]]
+      assert(is.numeric(variable_values), "Field values must be numerical")
       assert(is.numeric(min) && is.numeric(max), "Max and min must be numerical")
       assert(min <= max, "min <= max")
-      mask <- (((field_values <= max) & (field_values >= min)) & !is.na(field_values)) | (is.na(field_values) & include_NA)
+      mask <- (((variable_values <= max) & (variable_values >= min)) & !is.na(variable_values)) | (is.na(variable_values) & include_NA)
     } else if (operation == "select_date") {
-      if (inherits(field_values, "POSIXct")) {
-        max <- as.POSIXct(element[["max"]], "%Y-%m-%d")
-        min <- as.POSIXct(element[["min"]], "%Y-%m-%d")
-      } else if (inherits(field_values, "Date")) {
-        max <- as.Date(element[["max"]], "%Y-%m-%d")
-        min <- as.Date(element[["min"]], "%Y-%m-%d")
+      if (inherits(variable_values, "POSIXct")) {
+        max <- as.POSIXct(filter_element[["max"]], "%Y-%m-%d")
+        min <- as.POSIXct(filter_element[["min"]], "%Y-%m-%d")
+      } else if (inherits(variable_values, "Date")) {
+        max <- as.Date(filter_element[["max"]], "%Y-%m-%d")
+        min <- as.Date(filter_element[["min"]], "%Y-%m-%d")
       } else {
         stop("Field values must be POSIX.ct or Date")
       }
       assert(min <= max, "min <= max")
-      mask <- (((field_values <= max) & (field_values >= min)) & !is.na(field_values)) | (is.na(field_values) & include_NA)
+      mask <- (((variable_values <= max) & (variable_values >= min)) & !is.na(variable_values)) | (is.na(variable_values) & include_NA)
     } else {
       stop(paste0("Operation unknown: `", operation, "`"))
     }
@@ -248,8 +248,8 @@ process_dataset_filter_element <- function(data_list, element, current_table_nam
 }
 # nolint end cyclocomp_linter
 
-create_datasets_filter_masks <- function(data_list, datasets_filter) {
-  datasets_filter <- as_safe_list(datasets_filter)
+create_dataset_filter_masks <- function(dataset_list, filter_state) {
+  datasets_filter <- as_safe_list(filter_state)
 
   children <- datasets_filter[["children"]]
   dataset_masks <- list()
@@ -257,16 +257,22 @@ create_datasets_filter_masks <- function(data_list, datasets_filter) {
   for (child in datasets_filter[["children"]]) {
     kind <- child[["kind"]]
     name <- child[["name"]]
-    assert(!(name %in% names(dataset_masks)), "a dataset can only appear once inside dataset_filters")
-    assert(kind == "dataset", "dataset_filters children can only be of kind `dataset`")
-    dataset_masks[[name]] <- process_dataset_filter_element(data_list, child, name)
+    ; assert(!(name %in% names(dataset_masks)), "a dataset can only appear once inside dataset_filters")
+    ; assert(kind == "dataset", "dataset_filters children can only be of kind `dataset`")    
+    if (length(child[["children"]]) == 1) {
+      dataset_masks[[name]] <- process_dataset_filter_element(dataset_list, child[["children"]][[1]], name)
+    } else if (length(child[["children"]]) == 0) {
+      dataset_masks[[name]] <- rep_len(TRUE, nrow(dataset_list[[name]]))
+    } else {
+      ; assert(FALSE, "`datasets_filter` cannot contain more than children")
+    }
   }
 
   return(dataset_masks)
 }
 
-apply_masks_to_datasets <- function(data_list, mask_list) {
-  filtered_data_list <- data_list
+apply_dataset_filter_masks <- function(dataset_list, mask_list) {
+  filtered_data_list <- dataset_list
   for (current_mask_name in names(mask_list)) {
     current_mask <- mask_list[[current_mask_name]]
     filtered_data_list[[current_mask_name]] <- filtered_data_list[[current_mask_name]][current_mask, , drop = FALSE]
@@ -274,67 +280,63 @@ apply_masks_to_datasets <- function(data_list, mask_list) {
   return(filtered_data_list)
 }
 
-apply_subject_set_to_datasets <- function(data_list, subject_set, subj_var) {
-  filtered_data_list <- data_list
-  for (current_ds_name in names(data_list)) {
-    current_mask <- data_list[[current_ds_name]][[subj_var]] %in% subject_set
+apply_subject_set <- function(dataset_list, subject_set, subj_var) {
+  filtered_data_list <- dataset_list
+  for (current_ds_name in names(dataset_list)) {
+    current_mask <- dataset_list[[current_ds_name]][[subj_var]] %in% subject_set
     filtered_data_list[[current_ds_name]] <- filtered_data_list[[current_ds_name]][current_mask, , drop = FALSE]
   }
   return(filtered_data_list)
 }
 
-create_subject_set <- function(data_list, subject_filter, sbj_var) {
+create_subject_set <- function(dataset_list, subject_filter, sbj_var) {
   subject_filter <- as_safe_list(subject_filter)
-  complete_sbj_list <- character(0)
-  for (current_data in data_list) {
-    complete_subject_list <- union(complete_sbj_list, as.character(unique(current_data[[sbj_var]])))
+  complete_subject_list <- character(0)
+  for (current_data in dataset_list) {
+    complete_subject_list <- union(complete_subject_list, as.character(unique(current_data[[sbj_var]])))
   }
   children <- subject_filter[["children"]]
   assert(length(children) < 2, "subject filter must have 0 or 1 child")
-  if (length(children) == 0) subjects <- return(NA_character_)
+  if (length(children) == 0) subjects <- return(complete_subject_list)
   if (length(children) == 1) {
     subjects <- process_subject_filter_element(
-      data_list, children[[1]],
-      sbj_var, complete_sbj_list
+      dataset_list, children[[1]],
+      sbj_var, complete_subject_list
     )
   }
   return(subjects)
 }
 
-process_subject_filter_element <- function(data_list, element, sbj_var, complete_subject_list) {
-  element <- as_safe_list(element)
+process_subject_filter_element <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+  filter_element <- as_safe_list(filter_element)
 
-  kind <- element[["kind"]]
+  kind <- filter_element[["kind"]]
 
   if (kind == "filter_operation") {
-    operation <- element[["operation"]]
+    operation <- filter_element[["operation"]]
     if (operation == "or") {
-      children <- element[["children"]]
+      children <- filter_element[["children"]]
       subjects <- character(0)
       assert(length(children) > 0, "`or` operation requires at least one child")
       for (child in children) {
-        current_subjects <- process_subject_filter_element(data_list, child, sbj_var, complete_subject_list)
+        current_subjects <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
         subjects <- union(subjects, current_subjects)
       }
     } else if (operation == "and") {
-      children <- element[["children"]]
-      subjects <- NA_character_ # TODO: replace complete_subject_list
+      children <- filter_element[["children"]]
+      subjects <- complete_subject_list
       assert(length(children) > 0, "`and` operation requires at least one child")
       for (child in children) {
-        current_subjects <- process_subject_filter_element(data_list, child, sbj_var, complete_subject_list)
-        if (!identical(subjects, NA_character_)) {
-          subjects <- intersect(subjects, current_subjects)
-        } else {
-          subjects <- current_subjects
-        }
+        current_subjects <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
+        subjects <- intersect(subjects, current_subjects)
       }
     } else if (operation == "not") {
-      children <- element[["children"]]
+      children <- filter_element[["children"]]
       assert(length(children) == 1, "`not` operation requires exactly one child")
       subjects <- setdiff(
         complete_subject_list,
         process_subject_filter_element(
-          data_list, children[[1]],
+          dataset_list, children[[1]],
           sbj_var, complete_subject_list
         )
       )
@@ -343,9 +345,9 @@ process_subject_filter_element <- function(data_list, element, sbj_var, complete
     }
   } else if (kind == "filter") {
     # redirect but do not process
-    mask <- process_dataset_filter_element(data_list, element)
-    dataset <- element[["dataset"]] # TODO: Replace by table
-    subjects <- as.character(data_list[[dataset]][[sbj_var]][mask])
+    mask <- process_dataset_filter_element(dataset_list, filter_element)
+    dataset <- filter_element[["dataset"]] # TODO: Replace by table
+    subjects <- as.character(dataset_list[[dataset]][[sbj_var]][mask])
   } else {
     stop(paste("Unknown kind: ", kind))
   }
@@ -353,13 +355,14 @@ process_subject_filter_element <- function(data_list, element, sbj_var, complete
 }
 
 to_filter_validate <- function(x) {
-  jsonvalidate::json_validate(
+  res <- jsonvalidate::json_validate(
     x,
     system.file("to_filter_schema.json", package = "dv.manager", mustWork = TRUE),
     engine = "ajv",
-    strict = FALSE,
+    strict = TRUE,
     verbose = TRUE
   )
+  res
 }
 
 from_filter_validate <- function(x) {
@@ -367,7 +370,7 @@ from_filter_validate <- function(x) {
     x,
     system.file("from_filter_schema.json", package = "dv.manager", mustWork = TRUE),
     engine = "ajv",
-    strict = FALSE,
+    strict = TRUE,
     verbose = TRUE
   )
 }
@@ -382,7 +385,7 @@ add_blockly_dependency <- function() {
   )
 }
 
-new_filter_ui <- function(id, data, state = NULL) {
+new_filter_ui <- function(id, dataset_lists, state = NULL) {
   ns <- shiny::NS(id)
 
   if (!is.null(state)) {
@@ -394,7 +397,7 @@ new_filter_ui <- function(id, data, state = NULL) {
   }
 
   bookmark <- shiny::restoreInput(ns("json"), "null")
-  current_filter_data <- jsonlite::toJSON(get_filter_data(data))
+  current_filter_data <- jsonlite::toJSON(get_filter_data(dataset_lists))
   assert(to_filter_validate(current_filter_data), "failed to validate message to filter")
   payload <- sprintf("{\"state\": %s, \"data\": %s, \"bookmark\": %s}", state, current_filter_data, bookmark)
 
@@ -457,18 +460,18 @@ new_filter_ui <- function(id, data, state = NULL) {
   )
 }
 
-new_filter_server <- function(id, selected_dataset, strict = FALSE) {
+new_filter_server <- function(id, selected_dataset_name, strict = TRUE) {
   mod <- function(input, output, session) {
     ns <- session[["ns"]]
 
     message(paste("Listening to:", ns("json")))
 
-    shiny::observeEvent(selected_dataset(), {
+    shiny::observeEvent(selected_dataset_name(), {
       session[["sendCustomMessage"]](
         "init_blockly_filter",
         list(
           container_id = ns("filter_container"),
-          dataset = selected_dataset(),
+          dataset = selected_dataset_name(),
           gen_code_button_id = ns("gen_code"),
           json_input_id = ns("json"),
           log_input_id = ns("log")
@@ -482,18 +485,21 @@ new_filter_server <- function(id, selected_dataset, strict = FALSE) {
       }
     })
 
+    
     res <- shiny::reactive({
-      message(input[["json"]])
-      if (checkmate::test_string(input[["json"]], min.chars = 1)) {
-        if (strict) assert(from_filter_validate(input[["json"]]), "failed to validate message from filter")
-        parsed_json <- jsonlite::fromJSON(input[["json"]], simplifyVector = FALSE)
+      json_r <- input[["json"]]
+
+      if (checkmate::test_string(json_r, min.chars = 1)) {
+        val_res <- from_filter_validate(json_r)
+        if (strict) assert(val_res, "failed to validate message from filter")
+        parsed_json <- jsonlite::fromJSON(json_r, simplifyVector = FALSE)
         list(
-          filters = parsed_json %||% NA_character_,
-          raw = input[["json"]]
+          parsed = parsed_json %||% NA_character_,
+          raw = json_r
         )
       } else {
         list(
-          filters = NA_character_,
+          parsed = NA_character_,
           raw = NA_character_
         )
       }
@@ -574,8 +580,8 @@ mock_new_filter <- function(data = list(
     filtered_datasets <- shiny::reactive({
       shiny::req(!is.na(x()))
       ds <- data[[selected_data]]
-      mask <- create_datasets_filter_masks(ds, x()[["filters"]][["datasets_filter"]])
-      apply_masks_to_datasets(ds, mask)
+      mask <- create_dataset_filter_masks(ds, x()[["filters"]][["datasets_filter"]])
+      apply_dataset_filter_masks(ds, mask)
     })
 
     filtered_subjects <- shiny::reactive({
@@ -585,7 +591,7 @@ mock_new_filter <- function(data = list(
       if (identical(subject_set, NA_character_)) {
         ds
       } else {
-        apply_subject_set_to_datasets(ds, subject_set, "USUBJID")
+        apply_subject_set(ds, subject_set, "USUBJID")
       }
     })
 
@@ -677,14 +683,16 @@ unnamespaced_filter_modal <- function(filter_ui) {
         shiny::tags[["label"]]("Close filter", "for" = "filter-checkbox", id = "filter_close-btn")
       ),
       shiny::tags[["script"]]("
-    $(document).ready(function () {
-    document.getElementById('filter_modal').addEventListener('click', function(event) {
-            event.stopPropagation(); // Prevent the click event from reaching the overlay
-        });
+    $(document).ready(function () {    
     const overlay = document.getElementById('filter_overlay');
-            overlay.addEventListener('click', function(){
-            document.getElementById('filter-checkbox').checked = false;
+            overlay.addEventListener('click', function(event){
+            let $target = $(event.target);
+                    if(!$target.closest('#filter_modal').length) {
+                      console.log('Inner Hit')
+                      document.getElementById('filter-checkbox').checked = false;
             $('#filter-checkbox').trigger('change');
+                      
+                    }
         });
     $('#filter-checkbox').change(function () {
       window.dispatchEvent(new Event('resize'));

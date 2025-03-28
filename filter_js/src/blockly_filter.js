@@ -43,14 +43,6 @@ Several dataset or subjet filters blocks
 
 /* TODO: Should a warning appear when a preset filters uses an out of range value. They are corrected by blockly but there is no warning*/
 
-/*
-TODO: Selection is not applied to the block value for subset selector unless the menu is closed.
-  This can be confusing because:
-  - The other selectors are applied immediately
-  - The user can hit the apply button while the menu is open
-  - The solution should be for the filter to apply the selection to the block element immediately as it changes
-*/
-
 /* TODO: name consitency */
 
 /* TODO: Clean, clean, clean!!!!
@@ -99,19 +91,24 @@ const filterBlockly = (() => {
     }
   }
 
-  const get_block_filter_type = function (table, field) {
-    return ("t_" + table + "_f_" + field);
+  const get_block_filter_type = function (dataset_name, variable_name) {
+    return ("d_" + dataset_name + "_v_" + variable_name);
   }
 
-  const get_block_table_type = function (table, field) {
-    return ("t_" + table);
+  const get_block_dataset_type = function (dataset_name, variable_name) {
+    return ("d_" + dataset_name);
   }
 
   const get_random_input_id = function () {
     return ("contents_" + Blockly.utils.idGenerator.genUid());
   }
 
-  const filter_to_state = function (filter, data) {
+  const filter_to_state = function (previous_filter, dataset_list) {
+
+    let filter = undefined;
+    if (previous_filter) {
+      filter = previous_filter.filters
+    }
     
     let state = {
       blocks: {
@@ -140,19 +137,19 @@ const filterBlockly = (() => {
         logger(current_filter);
 
         if (current_filter.kind === "filter") {
-          current_block.type = get_block_filter_type(current_filter.dataset, current_filter.field);
+          current_block.type = get_block_filter_type(current_filter.dataset, current_filter.variable);
           current_block.id = Blockly.utils.idGenerator.genUid();
 
-
           /* Check if filter is applicable
-            Checks only if columns and tables are available in a given dataset
+            Checks only if variables and datasets are available in a given dataset_list
           */
+
           let applicable = true;
-          let table_names = data.map((x)=>x.name);
-          if(table_names.includes(current_filter.dataset)) {
-            let table_idx = data.map((x)=>x.name).indexOf(current_filter.dataset);
-            let field_names = data[table_idx].fields.map((x)=>x.name);            
-            if(!field_names.includes(current_filter.field)) {
+          let dataset_names = dataset_list.map((x)=>x.name);
+          if(dataset_names.includes(current_filter.dataset)) {
+            let dataset_idx = dataset_list.map((x)=>x.name).indexOf(current_filter.dataset);
+            let variable_names = dataset_list[dataset_idx].variables.map((x)=>x.name);            
+            if(!variable_names.includes(current_filter.variable)) {
               applicable = false
             }
           } else {
@@ -168,15 +165,15 @@ const filterBlockly = (() => {
           if (current_filter.operation === "select_subset") {
             logger("as subset");
             logger(current_filter);
-            let table_idx = data.map((x)=>x.name).indexOf(current_filter.dataset);
-            let field_names = data[table_idx].fields.map((x)=>x.name);
-            let field_idx = field_names.indexOf(current_filter.field);
-            let field_values = data[table_idx].fields[field_idx].values_count.map((x) => x.value);
-            let found = current_filter.values.filter((x) => field_values.includes(x));
-            let removed = current_filter.values.filter((x) => !field_values.includes(x));
+            let dataset_idx = dataset_list.map((x)=>x.name).indexOf(current_filter.dataset);
+            let variable_names = dataset_list[dataset_idx].variables.map((x)=>x.name);
+            let variable_idx = variable_names.indexOf(current_filter.variable);
+            let variable_values = dataset_list[dataset_idx].variables[variable_idx].values_count.map((x) => x.value);
+            let found = current_filter.values.filter((x) => variable_values.includes(x));
+            let removed = current_filter.values.filter((x) => !variable_values.includes(x));
 
             if (removed.length>0) {
-              log.push("Removed values: " + removed.join() + " from " + current_filter.dataset + " - " + current_filter.field)              
+              log.push("Removed values: " + removed.join() + " from " + current_filter.dataset + " - " + current_filter.variable)              
             }
             current_block.fields = {
               value: JSON.stringify(found),
@@ -259,7 +256,7 @@ const filterBlockly = (() => {
         let processed_filter = process_filter(curr_dataset_filter.children[0]);
         if (processed_filter !== null) {
           let dataset_filter = {
-            type: get_block_table_type(curr_dataset_filter.name),
+            type: get_block_dataset_type(curr_dataset_filter.name),
             id: Blockly.utils.idGenerator.genUid(),
             x: 0,
             y: 0,
@@ -279,7 +276,7 @@ const filterBlockly = (() => {
   */
   const dataset_filter_generator = function (block, generator) {
     const children_code = generator.valueToCode(block, "children", 0);
-    const code = '{"name" : "' + block.table_name + '", "kind": "dataset", "children": [' + children_code + ']}';
+    const code = '{"name" : "' + block.dataset_name + '", "kind": "dataset", "children": [' + children_code + ']}';
     return (code);
   }
 
@@ -312,8 +309,8 @@ const filterBlockly = (() => {
   }
 
   const filter_generator_range = function (block, generator) {
-    const dataset = block.table_name;
-    const field = block.field_name;
+    const dataset_name = block.dataset_name;
+    const variable = block.variable_name;
     const kind = 'filter';
     const operation = 'select_range';
     const min = block.getFieldValue('min');
@@ -322,9 +319,9 @@ const filterBlockly = (() => {
 
     const code = '{' +
       '"kind": "' + kind + '"' +
-      ', "dataset": "' + dataset + '"' +
+      ', "dataset": "' + dataset_name + '"' +
       ', "operation": "' + operation + '"' +
-      ', "field": "' + field + '"' +
+      ', "variable": "' + variable + '"' +
       ', "min": ' + min +
       ', "max": ' + max +
       ', "include_NA": ' + include_NA +
@@ -334,8 +331,8 @@ const filterBlockly = (() => {
   }
 
   const filter_generator_date_range = function (block, generator) {
-    const dataset = block.table_name;
-    const field = block.field_name;
+    const dataset_name = block.dataset_name;
+    const variable = block.variable_name;
     const kind = 'filter';
     const operation = 'select_date';
     const min = block.getFieldValue('min');
@@ -344,9 +341,9 @@ const filterBlockly = (() => {
 
     const code = '{' +
       '"kind": "' + kind + '"' +
-      ', "dataset": "' + dataset + '"' +
+      ', "dataset": "' + dataset_name + '"' +
       ', "operation": "' + operation + '"' +
-      ', "field": "' + field + '"' +
+      ', "variable": "' + variable + '"' +
       ', "min": "' + min + '"' +
       ', "max": "' + max + '"' +
       ', "include_NA": ' + include_NA +
@@ -356,8 +353,8 @@ const filterBlockly = (() => {
   }
 
   const filter_generator_subset = function (block, generator) {
-    const dataset = block.table_name;
-    const field = block.field_name;
+    const dataset_name = block.dataset_name;
+    const variable = block.variable_name;
     const kind = 'filter';
     const operation = 'select_subset';
     const values = block.getFieldValue('value');
@@ -365,9 +362,9 @@ const filterBlockly = (() => {
 
     const code = '{' +
       '"kind": "' + kind + '"' +
-      ', "dataset": "' + dataset + '"' +
+      ', "dataset": "' + dataset_name + '"' +
       ', "operation": "' + operation + '"' +
-      ', "field": "' + field + '"' +
+      ', "variable": "' + variable + '"' +
       ', "values":' + values +
       ', "include_NA": ' + include_NA +
       '}';
@@ -379,35 +376,42 @@ const filterBlockly = (() => {
 
     const start = new Date();
 
-    let blockly_state = Blockly.serialization.workspaces.save(workspace);
-    let blocks = blockly_state["blocks"]["blocks"];
-    let topBlocks = blocks.slice(); // shallow copy
-    blockly_state["blocks"]["blocks"].length = 0;
-
-    let hl = new Blockly.Workspace();
-
     let filters = {
       datasets_filter: { children: [] },
-      subject_filter: { children: [] },
-      dataset_name: dataset_name
+      subject_filter: { children: [] }
     };
 
-    for (let i = 0; i < topBlocks.length; i++) {
-      let current_block = topBlocks[i];
-      blockly_state["blocks"]["blocks"].push(current_block);
-      Blockly.serialization.workspaces.load(blockly_state, hl);
-      const current_filter = JSON.parse(generator.workspaceToCode(hl));
-      if (current_filter.kind === "dataset") {
-        filters.datasets_filter.children.push(current_filter);
-      } else {
-        filters.subject_filter = (current_filter.subject_filter);
-      }
+    let blockly_state = Blockly.serialization.workspaces.save(workspace);
+
+    if(blockly_state["blocks"] !== undefined){
+      
+      let blocks = blockly_state["blocks"]["blocks"];
+      let topBlocks = blocks.slice(); // shallow copy
       blockly_state["blocks"]["blocks"].length = 0;
+  
+      let hl = new Blockly.Workspace();
+  
+      for (let i = 0; i < topBlocks.length; i++) {
+        let current_block = topBlocks[i];
+        blockly_state["blocks"]["blocks"].push(current_block);
+        Blockly.serialization.workspaces.load(blockly_state, hl);
+        const current_filter = JSON.parse(generator.workspaceToCode(hl));
+        if (current_filter.kind === "dataset") {
+          filters.datasets_filter.children.push(current_filter);
+        } else {
+          filters.subject_filter = (current_filter.subject_filter);
+        }
+        blockly_state["blocks"]["blocks"].length = 0;
+      }
+  
+      blockly_state["blocks"]["blocks"] = topBlocks; // Restore blocks for saving
+
     }
 
-    blockly_state["blocks"]["blocks"] = topBlocks; // Restore blocks for saving
-
-    const res_state = filters;
+    const res_state = {
+      filters: filters,
+      dataset_list_name: dataset_name
+    };
 
     let stringified_res = JSON.stringify(res_state)
 
@@ -514,17 +518,17 @@ const filterBlockly = (() => {
 
     let selected_dataset_name = dataset_name;
 
-    let selected_tables;
+    let selected_datasets;
 
-    for (let dataset of filter_data["datasets"]) {
+    for (let dataset of filter_data["dataset_lists"]) {
       let name = dataset["name"];
       if (name === selected_dataset_name) {
-        selected_tables = dataset["tables"];
+        selected_datasets = dataset["dataset_list"];
         break;
       }
     }
 
-    if (selected_tables === null) {
+    if (selected_datasets === null) {
       throw new Error('Selected dataset not found');
     }
 
@@ -608,50 +612,50 @@ const filterBlockly = (() => {
 
     let current_color = 0;
 
-    for (let table of selected_tables) {
+    for (let dataset of selected_datasets) {
       current_color = current_color + 30;
-      const table_color = current_color;
-      const table_name = table["name"];
-      const table_type = get_block_table_type(table_name);
-      const table_category = {
+      const dataset_color = current_color;
+      const dataset_name = dataset["name"];
+      const dataset_type = get_block_dataset_type(dataset_name);
+      const dataset_category = {
         kind: 'category',
-        name: table_name,
+        name: dataset_name,
         contents: [],
       };
 
-      Blockly.Blocks[table_type] = {
+      Blockly.Blocks[dataset_type] = {
         init: function () {
           this.appendDummyInput()
             .appendField("Dataset Filter: ")
-            .appendField(table_name, "table_name");
+            .appendField(dataset_name, "dataset_name");
           this.appendValueInput("children");
-          this.setColour(table_color);
-          this.table_name = table_name;
-          this.is_top_table = true;
+          this.setColour(dataset_color);
+          this.dataset_name = dataset_name;
+          this.is_top_dataset = true;
         }
       };
 
       toolbox.contents[1].contents.push(
         {
           kind: 'block',
-          type: table_type
+          type: dataset_type
         }
       );
 
-      json_generator.forBlock[table_type] = dataset_filter_generator;
+      json_generator.forBlock[dataset_type] = dataset_filter_generator;
 
       logger(toolbox);
 
-      for (let field of table["fields"]) {
-        const field_name = field["name"];
-        const field_type = get_block_filter_type(table_name, field_name);
-        const field_label = typeof (field["label"]) === "string" ? field["label"] : "";
-        const kind = field["kind"];
-        const block_color = table_color; // Otherwise it takes the value of table_color from the outer closure
-        const field_na_label = "NA(" + field["NA_count"] + "):"
+      for (let variable of dataset["variables"]) {
+        const variable_name = variable["name"];
+        const variable_type = get_block_filter_type(dataset_name, variable_name);
+        const variable_label = typeof (variable["label"]) === "string" ? variable["label"] : "";
+        const kind = variable["kind"];
+        const block_color = dataset_color; // Otherwise it takes the value of dataset_color from the outer closure
+        const variable_na_label = "NA(" + variable["NA_count"] + "):"
 
         if (kind === "categorical") {
-          const values = field["values_count"];
+          const values = variable["values_count"];
           let dd_options = [];
           for (let v of values) {
             dd_options.push([v.value, v.value])
@@ -659,81 +663,81 @@ const filterBlockly = (() => {
 
           if (dd_options.length == 0) dd_options = [['_EMPTY_VEC_', '_EMPTY_VEC_']]
 
-          Blockly.Blocks[field_type] = {
+          Blockly.Blocks[variable_type] = {
             init: function () {
               this.appendEndRowInput()
-                .appendField(`[(${table_name}) - ${field_name}]`)
-                .appendField(new Blockly.FieldLabel(field_label, "blockly_filter_bold"))
+                .appendField(`[(${dataset_name}) - ${variable_name}]`)
+                .appendField(new Blockly.FieldLabel(variable_label, "blockly_filter_bold"))
                 .appendField(new multiPickerField(dd_options), "value")
-                .appendField(field_na_label)
+                .appendField(variable_na_label)
                 .appendField(new Blockly.FieldCheckbox(false), 'include_NA');
               this.setOutput(true);
               this.setColour(block_color);
-              this.field_name = field_name;
-              this.table_name = table_name;
+              this.variable_name = variable_name;
+              this.dataset_name = dataset_name;
             }
           }
 
-          json_generator.forBlock[field_type] = filter_generator_subset;
+          json_generator.forBlock[variable_type] = filter_generator_subset;
 
         } else if (kind === "numerical") {
-          const min = field["min"];
-          const max = field["max"];
+          const min = variable["min"];
+          const max = variable["max"];
 
-          Blockly.Blocks[field_type] = {
+          Blockly.Blocks[variable_type] = {
             init: function () {
               this.appendDummyInput()
-                .appendField(`[(${table_name}) - ${field_name}]`)
-                .appendField(new Blockly.FieldLabel(field_label, "blockly_filter_bold"))
+                .appendField(`[(${dataset_name}) - ${variable_name}]`)
+                .appendField(new Blockly.FieldLabel(variable_label, "blockly_filter_bold"))
                 .appendField("Min:")
                 .appendField(new rangeSliderField(min, min, max), "min")
                 .appendField("Max:")
                 .appendField(new rangeSliderField(max, min, max), "max")
-                .appendField(new Blockly.FieldLabel(field_na_label, "na_label"))
+                .appendField(new Blockly.FieldLabel(variable_na_label, "na_label"))
                 .appendField(new Blockly.FieldCheckbox(false), 'include_NA');
 
               this.setOutput(true);
               this.setColour(block_color);
-              this.field_name = field_name;
-              this.table_name = table_name;
+              this.variable_name = variable_name;
+              this.dataset_name = dataset_name;
             }
           }
-          json_generator.forBlock[field_type] = filter_generator_range;
+          json_generator.forBlock[variable_type] = filter_generator_range;
         } else if (kind === "date") {
-          const min = field["min"];
-          const max = field["max"];
+          const min = variable["min"];
+          const max = variable["max"];
 
-          Blockly.Blocks[field_type] = {
+          Blockly.Blocks[variable_type] = {
             init: function () {
               this.appendEndRowInput()
-                .appendField(`[(${table_name}) - ${field_name}]`)
-                .appendField(new Blockly.FieldLabel(field_label, "blockly_filter_bold"))
+                .appendField(`[(${dataset_name}) - ${variable_name}]`)
+                .appendField(new Blockly.FieldLabel(variable_label, "blockly_filter_bold"))
                 .appendField("From:")
                 .appendField(new datePickerField(min, min, max), "min")
                 .appendField("to:")
                 .appendField(new datePickerField(max, min, max), "max")
-                .appendField(field_na_label)
+                .appendField(variable_na_label)
                 .appendField(new Blockly.FieldCheckbox(false), 'include_NA');
               this.setOutput(true);
               this.setColour(block_color);
-              this.field_name = field_name;
-              this.table_name = table_name;
+              this.variable_name = variable_name;
+              this.dataset_name = dataset_name;
             }
           }
-          json_generator.forBlock[field_type] = filter_generator_date_range;
+          json_generator.forBlock[variable_type] = filter_generator_date_range;
         } else {
-          console.error("Unknown field kind: " + kind)
+          console.error("Unknown variable kind: " + kind)
           continue;
           // throw new Error("Unknown field kind: " + kind);
         }
 
-        let field_block = {
+        let variable_block = {
           kind: 'block',
-          type: field_type
+          type: variable_type
         };
-        table_category.contents.push(field_block);
+        dataset_category.contents.push(variable_block);
       }
-      toolbox.contents.push(table_category);
+      toolbox.contents.push(dataset_category);
     }
 
     function onChange(event) {
@@ -761,15 +765,15 @@ const filterBlockly = (() => {
           root_block = root_block.getParent();
         }
 
-        // Only check if the top parent is a table
+        // Only check if the top parent is a dataset
 
-        if (root_block.is_top_table) {
-          const table_name = root_block.table_name;
+        if (root_block.is_top_dataset) {
+          const dataset_name = root_block.dataset_name;
           let stack = [];
           stack.push(root_block);
           while (stack.length) {
             let b = stack.pop();
-            if (b.table_name && b.table_name !== table_name) {
+            if (b.dataset_name && b.dataset_name !== dataset_name) {
               logger("Incorrect piece in stack");
               current_block.unplug();
             }
@@ -817,7 +821,7 @@ const filterBlockly = (() => {
     }
 
     let filter_state, filter_state_log;
-    [filter_state, filter_state_log] = filter_to_state(state_for_restore, selected_tables);
+    [filter_state, filter_state_log] = filter_to_state(state_for_restore, selected_datasets);
 
     if (filter_state) {      
       try {        
@@ -838,13 +842,19 @@ const filterBlockly = (() => {
     return (res)
   }
 
+  let chaff = function(){
+    if(Blockly.getMainWorkspace() !== undefined){
+      Blockly.hideChaff; 
+    }    
+  }
+
   // Return public API
   return ({
     init: init,
     get_code: get_code,
-    chaff: Blockly.hideChaff
+    chaff: chaff
   });
-
+ 
 })();
 
 const init = filterBlockly.init;
@@ -855,7 +865,7 @@ let send_code = null;
 
 let init_blockly_handler = function (msg) {
 
-  // let logger = console.log;
+  // // let logger = console.log;
   let logger = function(x){}
 
   const container_id = msg[["container_id"]];
@@ -896,7 +906,7 @@ let init_blockly_handler = function (msg) {
   };
 
   send_log();
-  // send_code(); // Send code on init in case there is a preloaded state
+  send_code(); // Send code on init in case there is a preloaded state
   document.getElementById(button_id).addEventListener('click', send_code);
 }
 

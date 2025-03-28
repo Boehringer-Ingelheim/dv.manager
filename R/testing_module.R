@@ -115,8 +115,11 @@ mod_simple <- function(dataset, module_id) {
   mod <- list(
     ui = simple_UI,
     server = function(afmm) {
-      # Add dispatcher support
-      simple_server(module_id, mm_resolve_dispatcher(dataset, afmm, flatten = TRUE))
+      if (is.character(dataset)) {
+        simple_server(module_id, shiny::reactive(afmm[["filtered_dataset"]]()[[dataset]]))
+      } else {
+        simple_server(module_id, mm_resolve_dispatcher(dataset, afmm, flatten = TRUE))
+      }
     },
     module_id = module_id
   )
