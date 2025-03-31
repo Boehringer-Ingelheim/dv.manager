@@ -43,12 +43,14 @@ local({
     dl2 = function() edl
   )
 
-  test_that("char_vars_to_factor_vars_dataset transform character variable into factors variables", {
+  test_that("char_vars_to_factor_vars_dataset transform character variable into factors variables" |>
+    vdoc[["add_spec"]](c(specs$preprocessing$char_to_factor_mapping)), {
     r <- char_vars_to_factor_vars_dataset(d1)
     expect_identical(r, e1)
   })
 
-  test_that("char_vars_to_factor_vars respect lables", {    
+  test_that("char_vars_to_factor_vars respect lables" |>
+    vdoc[["add_spec"]](c(specs$preprocessing$char_to_factor_mapping)), {    
     r <- char_vars_to_factor_vars_dataset(dl)    
     expect_identical(attr(e1[["char_var1"]], "label"), "char_var1_label")
   })
@@ -60,7 +62,8 @@ local({
     expect_identical(dec_f(), e)
   })
 
-  test_that("char_vars_to_factor_vars_dataset_lists applies decorators and transformations to dataset_lists", {
+  test_that("char_vars_to_factor_vars_dataset_lists applies decorators and transformations to dataset_lists" |>
+    vdoc[["add_spec"]](c(specs$preprocessing$char_to_factor_mapping)), {
     r <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
     expect_identical(r[["dl1"]][["ds1"]], expected_dataset_lists[["dl1"]][["ds1"]])
     expect_identical(r[["dl1"]][["ds2"]], expected_dataset_lists[["dl1"]][["ds2"]])
@@ -68,7 +71,8 @@ local({
     expect_identical(r[["dl2"]]()[["ds2"]], expected_dataset_lists[["dl2"]]()[["ds2"]])   
   })
 
-  test_that("character variables are transformed into factors during run_app calls", {
+  test_that("character variables are transformed into factors during run_app calls" |>
+    vdoc[["add_spec"]](c(specs$preprocessing$char_to_factor_mapping)), {
     r <- suppressMessages(
       suppressWarnings(
         run_app(dataset_lists, module_list = list(), filter_data = "ds1", filter_key = "char_var1", .launch = FALSE)
