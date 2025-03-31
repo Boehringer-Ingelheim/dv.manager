@@ -10,6 +10,8 @@
 #'     contains a domain, a structure similar to that returned in a `dv.loader::load_data` call.
 #'
 #'    - a named list of functions in which each of the functions will return a list of data.frames.
+#' 
+#'    All `character` variables will be automatically mapped into `factors`.
 #'
 #' @param module_list a list of the modules to be included in the Shiny application
 #' @param title title to be displayed in the browser tab
