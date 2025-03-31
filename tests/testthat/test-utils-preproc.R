@@ -53,7 +53,7 @@ local({
     expect_identical(attr(e1[["char_var1"]], "label"), "char_var1_label")
   })
 
-  test_that("decorate_char_vars_to_factor_vars_dataset_list decorates a functions that returns a list of data.frames and transforms character variables into factor variables", {
+  test_that("decorate_char_vars_to_factor_vars_dataset_list decorates a functions that returns a list of data.frames and transforms character variables into factor variables", { # nolintr
     f <- function() dl
     dec_f <- decorate_char_vars_to_factor_vars_dataset_list(f)
     e <- edl
@@ -69,7 +69,11 @@ local({
   })
 
   test_that("character variables are transformed into factors during run_app calls", {
-    r <- suppressMessages(suppressWarnings(run_app(dataset_lists, module_list = list(), filter_data = "ds1", filter_key = "char_var1", .launch = FALSE)))
+    r <- suppressMessages(
+      suppressWarnings(
+        run_app(dataset_lists, module_list = list(), filter_data = "ds1", filter_key = "char_var1", .launch = FALSE)
+      )
+    )
 
     expect_identical(r[["config"]][["data"]][["dl1"]][["ds1"]], expected_dataset_lists[["dl1"]][["ds1"]])
     expect_identical(r[["config"]][["data"]][["dl1"]][["ds2"]], expected_dataset_lists[["dl1"]][["ds2"]])
