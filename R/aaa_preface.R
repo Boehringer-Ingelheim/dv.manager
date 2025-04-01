@@ -117,12 +117,12 @@ safe_list_ns <- local({
   )
 })
 
-safe_list <- safe_list_ns[["individual_list"]][["safe_list"]]
-`$.safe_list` <- safe_list_ns[["individual_list"]][["$.safe_list"]]
-`[[.safe_list` <- safe_list_ns[["individual_list"]][["[[.safe_list"]]
-`[.safe_list` <- safe_list_ns[["individual_list"]][["[.safe_list"]]
-as_safe_list <- safe_list_ns[["individual_list"]][["as_safe_list"]]
-is_safe_list <- safe_list_ns[["individual_list"]][["is_safe_list"]]
+safe_list <- safe_list_ns[["safe_list"]]
+`$.safe_list` <- safe_list_ns[["$.safe_list"]]
+`[[.safe_list` <- safe_list_ns[["[[.safe_list"]]
+`[.safe_list` <- safe_list_ns[["[.safe_list"]]
+as_safe_list <- safe_list_ns[["as_safe_list"]]
+is_safe_list <- safe_list_ns[["is_safe_list"]]
 
 #' Build a collection of named constants
 #'
