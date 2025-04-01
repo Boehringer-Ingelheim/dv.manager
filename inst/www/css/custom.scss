@@ -107,6 +107,10 @@ body > .container-fluid > .tabbable {
   overflow: hidden;
 }
 
+.min-height-50-vh {
+  min-height: 50vh;
+}
+
 .sidebar {
   width: $sidebar-width-open;
   height: 100vh;

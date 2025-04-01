@@ -10,6 +10,8 @@
 #'     contains a domain, a structure similar to that returned in a `dv.loader::load_data` call.
 #'
 #'    - a named list of functions in which each of the functions will return a list of data.frames.
+#' 
+#'    All `character` variables will be automatically mapped into `factors`.
 #'
 #' @param module_list a list of the modules to be included in the Shiny application
 #' @param title title to be displayed in the browser tab
@@ -52,6 +54,8 @@ run_app <- function(data = NULL,
                     .launch = TRUE) {
   check_deprecated_calls(filter_data)
 
+  dataset_lists <- data
+
   if (is.null(azure_options)) {
     app_args <- list(
       ui_func = app_ui,
@@ -64,9 +68,10 @@ run_app <- function(data = NULL,
 
   config <- list()
   config[["module_info"]] <- check_resolved_modules(process_module_list(module_list))
-  config[["data"]] <- check_data(data)
-  config[["filter_data"]] <- check_filter_data(filter_data, data)
-  config[["filter_key"]] <- check_filter_key(filter_key, data)
+  # The automatic mapping will influence reporting when it is implemented in the future
+  config[["data"]] <- char_vars_to_factor_vars_dataset_lists(check_data(dataset_lists))
+  config[["filter_data"]] <- check_filter_data(filter_data, dataset_lists)
+  config[["filter_key"]] <- check_filter_key(filter_key, dataset_lists)
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
@@ -77,7 +82,7 @@ run_app <- function(data = NULL,
   config[["dv.manager.blockly.predefined.filter"]] <- getOption("dv.manager.blockly.predefined.filter")
   # NEW DATAFILTER OPTIONS (F)
 
-  check_meta_mtime_attribute(data)
+  check_meta_mtime_attribute(dataset_lists)
 
   # Add logging
   call_args <- list(
