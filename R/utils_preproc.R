@@ -25,7 +25,7 @@ char_vars_to_factor_vars_dataset_list <- function(dataset_list) { # nolintr
 }
 
 decorate_char_vars_to_factor_vars_dataset_list <- function(f) { # nolintr
-  function(...) {
+  function() {
     char_vars_to_factor_vars_dataset_list(f())
   }  
 }
