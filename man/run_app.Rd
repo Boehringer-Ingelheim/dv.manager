@@ -28,7 +28,9 @@ run_app(
 \item a named list of lists in which each of the lists will be a list of data.frames. Each of the lists of data.frames
 contains a domain, a structure similar to that returned in a \code{dv.loader::load_data} call.
 \item a named list of functions in which each of the functions will return a list of data.frames.
-}}
+}
+
+All \code{character} variables will be automatically mapped into \code{factors}.}
 
 \item{module_list}{a list of the modules to be included in the Shiny application}
 

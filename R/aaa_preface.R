@@ -21,12 +21,14 @@ safe_list_ns <- local({
   # It exports elements individually and includes a `define_safe_list` that exports all individual elements
   # with the correct names for the operators to work
 
+  #' @keywords internal
   safe_list <- function(...) {
     result <- list(...)
     class(result) <- c("safe_list", class(result))
     return(result)
   }
 
+  #' @keywords internal
   `[[.safe_list` <- function(x, name) {
     if (is.character(name) && !name %in% names(x)) {
       stop(sprintf("Element '%s' not found in safe_list.", name), call. = FALSE)
@@ -34,8 +36,10 @@ safe_list_ns <- local({
     NextMethod("[[")
   }
 
+  #' @keywords internal
   `$.safe_list` <- `[[.safe_list`
 
+  #' @keywords internal
   `[.safe_list` <- function(x, i) {
     if (is.character(i) && length(setdiff(i, names(x))) > 0) {
       stop(sprintf("Elements '%s' not found in safe_list", paste(missing_elements, collapse = ", ")), call. = FALSE)
@@ -113,7 +117,12 @@ safe_list_ns <- local({
   )
 })
 
-safe_list_ns[["define_safe_list"]]()
+safe_list <- safe_list_ns[["individual_list"]][["safe_list"]]
+`$.safe_list` <- safe_list_ns[["individual_list"]][["$.safe_list"]]
+`[[.safe_list` <- safe_list_ns[["individual_list"]][["[[.safe_list"]]
+`[.safe_list` <- safe_list_ns[["individual_list"]][["[.safe_list"]]
+as_safe_list <- safe_list_ns[["individual_list"]][["as_safe_list"]]
+is_safe_list <- safe_list_ns[["individual_list"]][["is_safe_list"]]
 
 #' Build a collection of named constants
 #'
