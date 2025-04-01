@@ -1070,13 +1070,12 @@ local({
     # Because we are reading back the processed filter we also ensure that all blocks are processed properly
 
     app <- start_app_driver(rlang::quo({
-      message(getwd())
       dv.manager:::run_app_dev_filter(
         data = !!dataset_lists,
         module_list = list(
-          Simple3 = dv.listings::mod_listings(
+          Simple3 = dv.manager:::mod_simple(
             "mod13",
-            dataset_names = "ds1"
+            dataset = "ds1"
           )
         ),
         filter_data = "ds1",
@@ -1098,9 +1097,9 @@ local({
       dv.manager:::run_app_dev_filter(
         data = !!dataset_lists,
         module_list = list(
-          Simple3 = dv.listings::mod_listings(
+          Simple3 = dv.manager:::mod_simple(
             "mod13",
-            dataset_names = "ds1"
+            dataset = "ds1"
           )
         ),
         filter_data = "ds1",
@@ -1120,9 +1119,9 @@ local({
       dv.manager:::run_app_dev_filter(
         data = !!dataset_lists,
         module_list = list(
-          Simple3 = dv.listings::mod_listings(
+          Simple3 = dv.manager:::mod_simple(
             "mod13",
-            dataset_names = "ds1"
+            dataset = "ds1"
           )
         ),
         filter_data = "ds1",
@@ -1139,9 +1138,9 @@ local({
       dv.manager:::run_app_dev_filter(
         data = !!dataset_lists,
         module_list = list(
-          Simple3 = dv.listings::mod_listings(
+          Simple3 = dv.manager:::mod_simple(
             "mod13",
-            dataset_names = "ds1"
+            dataset = "ds1"
           )
         ),
         filter_data = "ds1",
