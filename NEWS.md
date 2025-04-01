@@ -1,8 +1,9 @@
-# dv.manager 2.1.7-9000
+# dv.manager 2.1.8-9000
 
 - Includes a new blockly filter in development mode
 - Updates old documentation
 - De-exports several util functions
+- `dv.manager` automatically maps `character` variables into `factors`
 - Fixes tab group menu rendering
 
 

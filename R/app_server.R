@@ -398,6 +398,8 @@ app_server_ <- function(input, output, session, opts) {
 
   # REPORT IS DEACTIVATED
 
+  # Whenever report is reprioritized map from char to factor should be taken into account
+
   # nolint start
 
   # shiny::observeEvent(input$open_report_modal, {
