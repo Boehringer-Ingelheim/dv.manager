@@ -33,7 +33,7 @@ safe_list_ns <- local({
     }
     NextMethod("[[")
   }
-  
+
   `$.safe_list` <- `[[.safe_list`
 
   `[.safe_list` <- function(x, i) {

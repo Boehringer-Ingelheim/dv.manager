@@ -251,20 +251,19 @@ process_dataset_filter_element <- function(dataset_list, filter_element, current
 create_dataset_filter_masks <- function(dataset_list, filter_state) {
   datasets_filter <- as_safe_list(filter_state)
 
-  children <- datasets_filter[["children"]]
   dataset_masks <- list()
 
   for (child in datasets_filter[["children"]]) {
     kind <- child[["kind"]]
     name <- child[["name"]]
-    ; assert(!(name %in% names(dataset_masks)), "a dataset can only appear once inside dataset_filters")
-    ; assert(kind == "dataset", "dataset_filters children can only be of kind `dataset`")    
+    assert(!(name %in% names(dataset_masks)), "a dataset can only appear once inside dataset_filters")
+    assert(kind == "dataset", "dataset_filters children can only be of kind `dataset`")
     if (length(child[["children"]]) == 1) {
       dataset_masks[[name]] <- process_dataset_filter_element(dataset_list, child[["children"]][[1]], name)
     } else if (length(child[["children"]]) == 0) {
       dataset_masks[[name]] <- rep_len(TRUE, nrow(dataset_list[[name]]))
     } else {
-      ; assert(FALSE, "`datasets_filter` cannot contain more than children")
+      assert(FALSE, "`datasets_filter` cannot contain more than children")
     }
   }
 
@@ -485,7 +484,7 @@ new_filter_server <- function(id, selected_dataset_name, strict = TRUE) {
       }
     })
 
-    
+
     res <- shiny::reactive({
       json_r <- input[["json"]]
 
@@ -683,7 +682,7 @@ unnamespaced_filter_modal <- function(filter_ui) {
         shiny::tags[["label"]]("Close filter", "for" = "filter-checkbox", id = "filter_close-btn")
       ),
       shiny::tags[["script"]]("
-    $(document).ready(function () {    
+    $(document).ready(function () {
     const overlay = document.getElementById('filter_overlay');
             overlay.addEventListener('click', function(event){
             let $target = $(event.target);
@@ -691,7 +690,7 @@ unnamespaced_filter_modal <- function(filter_ui) {
                       console.log('Inner Hit')
                       document.getElementById('filter-checkbox').checked = false;
             $('#filter-checkbox').trigger('change');
-                      
+
                     }
         });
     $('#filter-checkbox').change(function () {

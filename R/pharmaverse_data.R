@@ -5,7 +5,6 @@ get_pharmaverse_data <- function(dataset) {
   if (is.null(res)) stop("Unknown dataset")
 
   for (col in names(res)) {
-
     if (endsWith(col, "DTC")) {
       label <- attr(res[[col]], "label")
       res[[col]] <- as.Date(res[[col]])
@@ -15,7 +14,6 @@ get_pharmaverse_data <- function(dataset) {
       res[[col]] <- factor(res[[col]])
       attr(res[[col]], "label") <- label
     }
-    
   }
 
   return(res)

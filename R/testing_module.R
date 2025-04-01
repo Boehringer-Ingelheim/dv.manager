@@ -965,7 +965,7 @@ mod_simple2 <- function(dataset_name, module_id) {
 #'
 #' This simple module is used for demonstration purposes in documentation
 #'
-#' 
+#'
 #'
 #' @param module_id shiny module ID
 #'

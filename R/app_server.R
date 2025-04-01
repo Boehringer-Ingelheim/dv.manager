@@ -138,15 +138,16 @@ app_server_ <- function(input, output, session, opts) {
 
 
   if (use_new_filter_switch) {
-    dataset_filter <- new_filter_server("filter", shiny::reactive({input$selector}))
+    dataset_filter <- new_filter_server("filter", shiny::reactive({
+      input$selector
+    }))
 
     filtered_dataset <- shinymeta::metaReactive({
-
       ufd <- shiny::isolate(unfiltered_dataset())
 
       shiny::req(!is.na(dataset_filter()))
 
-      safe_dsf <- as_safe_list(dataset_filter())      
+      safe_dsf <- as_safe_list(dataset_filter())
 
       if (isTRUE(is.na(safe_dsf[["parsed"]]))) {
         return(ufd)
@@ -167,29 +168,32 @@ app_server_ <- function(input, output, session, opts) {
       # Errors must be caught here as downstream modules may crash when an errors happens inside one of the observes
       # Errors should be controlled inside the observes by modules themselves, unfortunately it is not always the case
 
-      fd <- tryCatch({
-        ds_mask <- create_dataset_filter_masks(ds, safe_filters[["datasets_filter"]])
-        apply_dataset_filter_masks(ds, ds_mask)
-      },
+      fd <- tryCatch(
+        {
+          ds_mask <- create_dataset_filter_masks(ds, safe_filters[["datasets_filter"]])
+          apply_dataset_filter_masks(ds, ds_mask)
+        },
         error = function(e) {
           msg <- paste("Filter not applied. Error found:\n", e[["message"]])
           warning(msg)
           shiny::showNotification(msg, type = "error")
           ds
         }
-      )      
+      )
 
 
       # Check NA optimization in the future
-      subject_set <- tryCatch({
-        create_subject_set(ds, safe_filters[["subject_filter"]], filter_key)
-      },
+      subject_set <- tryCatch(
+        {
+          create_subject_set(ds, safe_filters[["subject_filter"]], filter_key)
+        },
         error = function(e) {
           msg <- paste("Filter not applied. Error found:\n", e[["message"]])
           warning(msg)
           shiny::showNotification(msg, type = "error")
           NA_character_
-      })      
+        }
+      )
 
       if (!identical(subject_set, NA_character_)) {
         fd <- apply_subject_set(fd, subject_set, filter_key)

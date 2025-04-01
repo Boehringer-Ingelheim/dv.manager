@@ -59,28 +59,26 @@ we have created a filter for the "adae" table, where only "Erythemas" or "Advers
 
 
 ``` {r, eval=FALSE}
-
 # Notice the usage of ::: as several of the functions are not exported yet
 # until a final version of the filter is provided
 
-  dv.manager:::run_app_dev_filter(
-    data = list(
-      "D0" = list(
-        adsl = dv.manager:::get_pharmaverse_data("adsl"),
-        adae = dv.manager:::get_pharmaverse_data("adae")
-      ),
-      "D2" = list(
-        adsl = dv.manager:::get_pharmaverse_data("adsl"),
-        adae = dv.manager:::get_pharmaverse_data("adae")
-      )
+dv.manager:::run_app_dev_filter(
+  data = list(
+    "D0" = list(
+      adsl = dv.manager:::get_pharmaverse_data("adsl"),
+      adae = dv.manager:::get_pharmaverse_data("adae")
     ),
-    module_list = list(
-      "Listing" = dv.listings::mod_listings("mod_listing", c("adsl", "adae"))
-    ),
-    filter_data = "adsl",
-    filter_key = "USUBJID"
-  )
-
+    "D2" = list(
+      adsl = dv.manager:::get_pharmaverse_data("adsl"),
+      adae = dv.manager:::get_pharmaverse_data("adae")
+    )
+  ),
+  module_list = list(
+    "Listing" = dv.listings::mod_listings("mod_listing", c("adsl", "adae"))
+  ),
+  filter_data = "adsl",
+  filter_key = "USUBJID"
+)
 ```
 
   - Open the "Filter" modal.
@@ -112,14 +110,13 @@ Now you can export a filter to a file using the "Export Filter" button. This fil
 as a preset filter.
 
 ``` {r, eval = FALSE}
-
 # Notice the usage of ::: as several of the functions are not exported yet
 # until a final version of the filter is provided
 
-  dv.manager:::run_app_dev_filter(
-   ...,
-   state = "path/to/filter/file.json"
-  )
+dv.manager:::run_app_dev_filter(
+  ...,
+  state = "path/to/filter/file.json"
+)
 ```
 
 

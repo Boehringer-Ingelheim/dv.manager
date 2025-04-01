@@ -1296,7 +1296,6 @@ local({
 })
 
 test_that("filter only sends one value when it is updated", {
-
   # Related to every time we change the filter, including first beat
 
   skip("skipped until we can set a state programatically")
@@ -1309,5 +1308,4 @@ test_that("modules bookmark state works with filter", {
   # dataset_list and in the next one they go to empty/default
 
   skip("skipped until we can set a state programatically")
-  
 })
