@@ -10,7 +10,7 @@
 #'     contains a domain, a structure similar to that returned in a `dv.loader::load_data` call.
 #'
 #'    - a named list of functions in which each of the functions will return a list of data.frames.
-#' 
+#'
 #'    All `character` variables will be automatically mapped into `factors`.
 #'
 #' @param module_list a list of the modules to be included in the Shiny application
@@ -76,7 +76,7 @@ run_app <- function(data = NULL,
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
   config[["enable_dataset_filter"]] <- enable_dataset_filter
-  
+
   # NEW DATAFILTER OPTIONS
   config[["dv.manager.use.blockly.filter"]] <- isTRUE(getOption("dv.manager.use.blockly.filter"))
   config[["dv.manager.blockly.predefined.filter"]] <- getOption("dv.manager.blockly.predefined.filter")
@@ -236,7 +236,7 @@ run_app_dev_filter <- function(..., state = NULL) {
     "# If this is not intended, please use the regular `run_app`  #",
     "#                                                            #",
     "# This function is NOT SUPPORTED for production              #",
-    "# This function WILL BREAK and WILL DISAPPEAR without notice #",    
+    "# This function WILL BREAK and WILL DISAPPEAR without notice #",
     "##############################################################",
     sep = "\n"
   )
@@ -244,11 +244,25 @@ run_app_dev_filter <- function(..., state = NULL) {
 
   old_use <- getOption("dv.manager.use.blockly.filter")
   old_state <- getOption("dv.manager.blockly.predefined.filter")
-  on.exit({
-    message(paste("Reset to", old_use))
-    options(dv.manager.use.blockly.filter = old_use)
-  }, add = TRUE)
+  on.exit(
+    {
+      options(dv.manager.use.blockly.filter = old_use)
+    },
+    add = TRUE
+  )
   on.exit(options(dv.manager.blockly.predefined.filter = old_state), add = TRUE)
+
+  if (!is.null(state)) {
+    if (file.exists(state)) {
+      state <- paste0(readLines(state), collapse = "\n")
+    }
+    x <- try(jsonlite::parse_json(state), silent = TRUE)
+    if (inherits(x, "try-error")) {
+      message(state)
+      stop("`state` string file cannot be parsed JSON")
+    }
+  }
+
   options(dv.manager.use.blockly.filter = TRUE)
   options(dv.manager.blockly.predefined.filter = state)
   run_app(...)

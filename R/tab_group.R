@@ -1,49 +1,48 @@
 run_mock_app_tab_group <- function() {
-  module_list <-
-    run_app(
-      data = list(
-        "D1" = list(
-          adsl = get_pharmaverse_data("adsl"),
-          adae = get_pharmaverse_data("adae")
-        ),
-        "D2" = list(
-          adsl = get_pharmaverse_data("adsl"),
-          adae = get_pharmaverse_data("adae"),
-          adlb = get_pharmaverse_data("adlb")
-        )
+  run_app(
+    data = list(
+      "D1" = list(
+        adsl = get_pharmaverse_data("adsl"),
+        adae = get_pharmaverse_data("adae")
       ),
-      module_list = list(
-        "Separate tab" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod1"),
-        "Switch to nest" = mod_switch(
-          "Mod 5",
-          selected = c("mod5"),
-          mm_dispatch("utils", "switch2mod"),
-          "mod_switch1"
+      "D2" = list(
+        adsl = get_pharmaverse_data("adsl"),
+        adae = get_pharmaverse_data("adae"),
+        adlb = get_pharmaverse_data("adlb")
+      )
+    ),
+    module_list = list(
+      "Separate tab" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod1"),
+      "Switch to nest" = mod_switch(
+        "Mod 5",
+        selected = c("mod5"),
+        mm_dispatch("utils", "switch2mod"),
+        "mod_switch1"
+      ),
+      "Module Tab" = tab_group(
+        "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
+        "Simple3" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod3"),
+        "Send and Receive 2" = mod_com_test(
+          choices = c("a", "b", "c"),
+          message = "The other module has selected",
+          value = mm_dispatch("module_output", "mod_rec_1"),
+          mod_id = "mod_rec_2"
         ),
-        "Module Tab" = tab_group(
-          "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
-          "Simple3" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod3"),
-          "Send and Receive 2" = mod_com_test(
-            choices = c("a", "b", "c"),
+        "Nested modules" = tab_group(
+          "Simple4" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod4"),
+          "Simple5" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod5"),
+          "Send and Receive 1" = mod_com_test(
+            choices = 1:3,
             message = "The other module has selected",
-            value = mm_dispatch("module_output", "mod_rec_1"),
-            mod_id = "mod_rec_2"
-          ),
-          "Nested modules" = tab_group(
-            "Simple4" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod4"),
-            "Simple5" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod5"),
-            "Send and Receive 1" = mod_com_test(
-              choices = 1:3,
-              message = "The other module has selected",
-              value = mm_dispatch("module_output", "mod_rec_2"),
-              mod_id = "mod_rec_1"
-            )
+            value = mm_dispatch("module_output", "mod_rec_2"),
+            mod_id = "mod_rec_1"
           )
         )
-      ),
-      filter_data = "adsl",
-      filter_key = "USUBJID"
-    )
+      )
+    ),
+    filter_data = "adsl",
+    filter_key = "USUBJID"
+  )
 }
 
 LAYOUT <- poc( # nolint
@@ -167,6 +166,7 @@ resolve_plain <- function(x, nm, hierarchy, nested_hierarchy) {
     hierarchy_list = hierarchy_list,
     nested_hierarchy = nested_hierarchy
   )
+  r
 }
 
 resolve_module_list <- function(

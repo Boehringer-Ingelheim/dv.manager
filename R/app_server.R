@@ -138,19 +138,28 @@ app_server_ <- function(input, output, session, opts) {
 
 
   if (use_new_filter_switch) {
-    dataset_filter <- new_filter_server("filter", shiny::reactive({input$selector}))
+    dataset_filter <- new_filter_server("filter", shiny::reactive({
+      input$selector
+    }))
 
     filtered_dataset <- shinymeta::metaReactive({
+      ufd <- shiny::isolate(unfiltered_dataset())
 
-      if (isTRUE(is.na(dataset_filter()[["filters"]]))) {
-        return(unfiltered_dataset())
+      shiny::req(!is.na(dataset_filter()))
+
+      safe_dsf <- as_safe_list(dataset_filter())
+
+      if (isTRUE(is.na(safe_dsf[["parsed"]]))) {
+        return(ufd)
       }
 
+      safe_filters <- as_safe_list(safe_dsf[["parsed"]][["filters"]])
+
       current_server_dataset_name <- shiny::isolate(input$selector)
-      current_client_dataset_name <- dataset_filter()[["filters"]][["dataset_name"]]
+      current_client_dataset_name <- safe_dsf[["parsed"]][["dataset_list_name"]]
       shiny::req(current_server_dataset_name == current_client_dataset_name)
 
-      ds <- unfiltered_dataset()
+      ds <- ufd
 
       # JS client may not fully control that the selected filter is correct.
       # (e.g. blocks that must have children, like `and`,  has them).
@@ -159,32 +168,35 @@ app_server_ <- function(input, output, session, opts) {
       # Errors must be caught here as downstream modules may crash when an errors happens inside one of the observes
       # Errors should be controlled inside the observes by modules themselves, unfortunately it is not always the case
 
-      fd <- tryCatch({
-        ds_mask <- create_datasets_filter_masks(ds, dataset_filter()[["filters"]][["datasets_filter"]])
-        apply_masks_to_datasets(ds, ds_mask)
-      },
+      fd <- tryCatch(
+        {
+          ds_mask <- create_dataset_filter_masks(ds, safe_filters[["datasets_filter"]])
+          apply_dataset_filter_masks(ds, ds_mask)
+        },
         error = function(e) {
           msg <- paste("Filter not applied. Error found:\n", e[["message"]])
           warning(msg)
           shiny::showNotification(msg, type = "error")
           ds
         }
-      )      
+      )
 
 
       # Check NA optimization in the future
-      subject_set <- tryCatch({
-        create_subject_set(ds, dataset_filter()[["filters"]][["subject_filter"]], filter_key)
-      },
+      subject_set <- tryCatch(
+        {
+          create_subject_set(ds, safe_filters[["subject_filter"]], filter_key)
+        },
         error = function(e) {
           msg <- paste("Filter not applied. Error found:\n", e[["message"]])
           warning(msg)
           shiny::showNotification(msg, type = "error")
           NA_character_
-      })      
+        }
+      )
 
       if (!identical(subject_set, NA_character_)) {
-        fd <- apply_subject_set_to_datasets(fd, subject_set, filter_key)
+        fd <- apply_subject_set(fd, subject_set, filter_key)
       }
 
       fd
