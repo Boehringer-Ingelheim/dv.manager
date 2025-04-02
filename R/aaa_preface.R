@@ -117,11 +117,17 @@ safe_list_ns <- local({
   )
 })
 
+#' @keywords internal
 safe_list <- safe_list_ns[["safe_list"]]
+#' @keywords internal
 `$.safe_list` <- safe_list_ns[["$.safe_list"]]
+#' @keywords internal
 `[[.safe_list` <- safe_list_ns[["[[.safe_list"]]
+#' @keywords internal
 `[.safe_list` <- safe_list_ns[["[.safe_list"]]
+#' @keywords internal
 as_safe_list <- safe_list_ns[["as_safe_list"]]
+#' @keywords internal
 is_safe_list <- safe_list_ns[["is_safe_list"]]
 
 #' Build a collection of named constants
