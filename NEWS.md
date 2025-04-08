@@ -1,4 +1,4 @@
-# dv.manager 2.1.9-9000
+# dv.manager 2.1.10
 
 - Includes a new blockly filter in development mode
 - Updates old documentation
