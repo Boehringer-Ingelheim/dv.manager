@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "datasets_schema.json",
+  "title": "datasets",
+  "type": "object",
+  "properties": {
+    "dataset_lists": {
+      "description": "A list of lists of datasets (dataset_lists)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the dataset_list",
+            "type": "string"
+          },
+          "dataset_list": {
+            "description": "An array of datasets (dataset_list)",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "description": "The name of the dataset",
+                  "type": "string"
+                },
+                "variables": {
+                  "description": "An array of variables in the dataset",
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      { "$ref": "#/definitions/categorical_variable" },
+                      { "$ref": "#/definitions/continuous_variable" },
+                      { "$ref": "#/definitions/date_variable" }
+                    ]
+                  }
+                }
+              },
+              "required": ["name", "variables"]
+            }
+          }
+        },
+        "required": ["name", "dataset_list"]
+      }
+    }
+  },
+  "required": ["dataset_lists"],
+  "definitions": {
+    "categorical_variable": {
+      "type": "object",
+      "description": "A categorical variable",
+      "properties": {
+        "kind": {
+          "enum": ["categorical"]
+        },
+        "values_count": {
+          "type": "array",
+          "description": "Array of unique values in the table variable and its count",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "description": "Unique value",
+                "type": "string"
+              },
+              "count": {
+                "description": "Number of times the value appears in the variable",
+                "type": "integer"
+              }
+            },
+            "required": ["value", "count"]
+          },        
+          "minItems": 0
+        },
+        "NA_count": {
+          "description": "Number of NA values in the variable",
+          "type": "integer"
+        }
+      },
+      "required": ["kind", "values_count", "NA_count"]
+    },
+    "continuous_variable": {
+      "type": "object",
+      "description": "A numerical continuous variable",
+      "properties": {
+        "kind": {
+          "enum": ["numerical"]
+        },
+        "min": {
+          "description": "The minimum value in the variable, or 'Inf', '-Inf', 'NA' or 'NaN'",
+          "oneOf": [
+            { "type": "number" },
+            { "type": "string", "enum": ["Inf", "-Inf", "NA", "NaN"] }
+          ]
+        },
+        "max": {
+          "description": "The maximum value in the variable, or 'Inf', '-Inf', 'NA' or 'NaN'",
+          "oneOf": [
+            { "type": "number" },
+            { "type": "string", "enum": ["Inf", "-Inf", "NA", "NaN"] }
+          ]
+        },
+        "distribution": {
+          "type": "array",
+          "description": "Array of values used to represent an histogram of the continuous variable",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "description": "Center of the bin",
+                "type": "number"
+              },
+              "count": {
+                "description": "Elements in bin",
+                "type": "integer"
+              }
+            },
+            "required": ["value", "count"]
+          },
+          "uniqueItems": true,
+          "minItems": 0
+        },
+        "step": {
+          "description": "If a slider or similar selector is used which step size should be used",
+          "type": "number"
+        },
+        "NA_count": {
+          "description": "Number of NA values in the variable",
+          "type": "integer"
+        }
+      },
+      "required": ["kind", "min", "max", "NA_count"]
+    },
+    "date_variable": {
+      "type": "object",
+      "description": "A date variable",
+      "properties": {
+        "kind": {
+          "enum": ["date"]
+        },
+        "min": {
+          "description": "The minimum date in format YYYY-MM-DD, or 'Inf', '-Inf' or 'NA'",
+          "oneOf": [
+            { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+            { "type": "string", "enum": ["Inf", "-Inf", "NA"] }
+          ]
+        },
+        "max": {
+          "description": "The maximum date in format YYYY-MM-DD, or 'Inf', '-Inf' or 'NA'",
+          "oneOf": [
+            { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+            { "type": "string", "enum": ["Inf", "-Inf", "NA"] }
+          ]
+        },
+        "distribution": {
+          "type": "array",
+          "description": "Array of values used to represent an histogram of the continuous variable",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "description": "Center of the bin",
+                "type": "string"
+              },
+              "count": {
+                "description": "Elements in bin",
+                "type": "integer"
+              }
+            },
+            "required": ["value", "count"]
+          },
+          "uniqueItems": true
+        },
+        "step": {
+          "description": "If a slider or similar selector is used which step size should be used",
+          "type": "number"
+        },
+        "NA_count": {
+          "description": "Number of NA values in the variable",
+          "type": "integer"
+        }
+      },
+      "required": ["kind", "min", "max", "NA_count"]
+    }
+  }
+}

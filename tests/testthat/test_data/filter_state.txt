@@ -1,0 +1,129 @@
+{
+    "filters": {
+        "datasets_filter": {
+            "children": [
+                {
+                    "name": "ds1",
+                    "kind": "dataset",
+                    "children": [
+                        {
+                            "kind": "filter",
+                            "dataset": "ds1",
+                            "operation": "select_range",
+                            "variable": "range_var",
+                            "min": 1,
+                            "max": 5,
+                            "include_NA": false
+                        }
+                    ]
+                },
+                {
+                    "name": "ds2",
+                    "kind": "dataset",
+                    "children": [
+                        {
+                            "kind": "filter",
+                            "dataset": "ds2",
+                            "operation": "select_range",
+                            "variable": "range_var",
+                            "min": 1,
+                            "max": 5,
+                            "include_NA": false
+                        }
+                    ]
+                }
+            ]
+        },
+        "subject_filter": {
+            "children": [
+                {
+                    "kind": "filter_operation",
+                    "operation": "and",
+                    "children": [
+                        {
+                            "kind": "filter_operation",
+                            "operation": "or",
+                            "children": [
+                                {
+                                    "kind": "filter_operation",
+                                    "operation": "not",
+                                    "children": [
+                                        {
+                                            "kind": "filter",
+                                            "dataset": "ds1",
+                                            "operation": "select_range",
+                                            "variable": "range_var",
+                                            "min": 1,
+                                            "max": 5,
+                                            "include_NA": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "kind": "filter",
+                                    "dataset": "ds1",
+                                    "operation": "select_date",
+                                    "variable": "date_var",
+                                    "min": "2024-01-01",
+                                    "max": "2024-01-05",
+                                    "include_NA": false
+                                },
+                                {
+                                    "kind": "filter",
+                                    "dataset": "ds1",
+                                    "operation": "select_date",
+                                    "variable": "posix_var",
+                                    "min": "2024-01-01",
+                                    "max": "2024-01-05",
+                                    "include_NA": false
+                                },
+                                {
+                                    "kind": "filter",
+                                    "dataset": "ds1",
+                                    "operation": "select_subset",
+                                    "variable": "subset_var",
+                                    "values": [
+                                        "a",
+                                        "b",
+                                        "c",
+                                        "d",
+                                        "e"
+                                    ],
+                                    "include_NA": false
+                                },
+                                {
+                                    "kind": "filter",
+                                    "dataset": "ds1",
+                                    "operation": "select_subset",
+                                    "variable": "logical_var",
+                                    "values": [
+                                        "FALSE",
+                                        "TRUE"
+                                    ],
+                                    "include_NA": false
+                                },
+                                {
+                                    "kind": "filter",
+                                    "dataset": "ds1",
+                                    "operation": "select_subset",
+                                    "variable": "sbj_var",
+                                    "values": [
+                                        "SBJ-1",
+                                        "SBJ-2",
+                                        "SBJ-3",
+                                        "SBJ-4",
+                                        "SBJ-5",
+                                        "SBJ-6"
+                                    ],
+                                    "include_NA": false
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "dataset_list_name": "dl1"
+}
+

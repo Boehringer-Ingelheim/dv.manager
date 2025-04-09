@@ -11,6 +11,8 @@
 #'
 #'    - a named list of functions in which each of the functions will return a list of data.frames.
 #'
+#'    All `character` variables will be automatically mapped into `factors`.
+#'
 #' @param module_list a list of the modules to be included in the Shiny application
 #' @param title title to be displayed in the browser tab
 #' @param filter_data a string indicating which of the loaded datasets is used for filtering.
@@ -52,6 +54,8 @@ run_app <- function(data = NULL,
                     .launch = TRUE) {
   check_deprecated_calls(filter_data)
 
+  dataset_lists <- data
+
   if (is.null(azure_options)) {
     app_args <- list(
       ui_func = app_ui,
@@ -64,15 +68,21 @@ run_app <- function(data = NULL,
 
   config <- list()
   config[["module_info"]] <- check_resolved_modules(process_module_list(module_list))
-  config[["data"]] <- check_data(data)
-  config[["filter_data"]] <- check_filter_data(filter_data, data)
-  config[["filter_key"]] <- check_filter_key(filter_key, data)
+  # The automatic mapping will influence reporting when it is implemented in the future
+  config[["data"]] <- char_vars_to_factor_vars_dataset_lists(check_data(dataset_lists))
+  config[["filter_data"]] <- check_filter_data(filter_data, dataset_lists)
+  config[["filter_key"]] <- check_filter_key(filter_key, dataset_lists)
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
   config[["enable_dataset_filter"]] <- enable_dataset_filter
 
-  check_meta_mtime_attribute(data)
+  # NEW DATAFILTER OPTIONS
+  config[["dv.manager.use.blockly.filter"]] <- isTRUE(getOption("dv.manager.use.blockly.filter"))
+  config[["dv.manager.blockly.predefined.filter"]] <- getOption("dv.manager.blockly.predefined.filter")
+  # NEW DATAFILTER OPTIONS (F)
+
+  check_meta_mtime_attribute(dataset_lists)
 
   # Add logging
   call_args <- list(
@@ -217,4 +227,43 @@ build_secure_arguments <- function(azure_options, app_ui, app_server) {
     srv_func = sec_server,
     options = list(port = port)
   )
+}
+
+run_app_dev_filter <- function(..., state = NULL) {
+  msg <- paste(
+    "##############################################################",
+    "# You are using the application using an experimental filter #",
+    "# If this is not intended, please use the regular `run_app`  #",
+    "#                                                            #",
+    "# This function is NOT SUPPORTED for production              #",
+    "# This function WILL BREAK and WILL DISAPPEAR without notice #",
+    "##############################################################",
+    sep = "\n"
+  )
+  warning(msg)
+
+  old_use <- getOption("dv.manager.use.blockly.filter")
+  old_state <- getOption("dv.manager.blockly.predefined.filter")
+  on.exit(
+    {
+      options(dv.manager.use.blockly.filter = old_use)
+    },
+    add = TRUE
+  )
+  on.exit(options(dv.manager.blockly.predefined.filter = old_state), add = TRUE)
+
+  if (!is.null(state)) {
+    if (file.exists(state)) {
+      state <- paste0(readLines(state), collapse = "\n")
+    }
+    x <- try(jsonlite::parse_json(state), silent = TRUE)
+    if (inherits(x, "try-error")) {
+      message(state)
+      stop("`state` string file cannot be parsed JSON")
+    }
+  }
+
+  options(dv.manager.use.blockly.filter = TRUE)
+  options(dv.manager.blockly.predefined.filter = state)
+  run_app(...)
 }

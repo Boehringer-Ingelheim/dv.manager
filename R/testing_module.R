@@ -115,8 +115,11 @@ mod_simple <- function(dataset, module_id) {
   mod <- list(
     ui = simple_UI,
     server = function(afmm) {
-      # Add dispatcher support
-      simple_server(module_id, mm_resolve_dispatcher(dataset, afmm, flatten = TRUE))
+      if (is.character(dataset)) {
+        simple_server(module_id, shiny::reactive(afmm[["filtered_dataset"]]()[[dataset]]))
+      } else {
+        simple_server(module_id, mm_resolve_dispatcher(dataset, afmm, flatten = TRUE))
+      }
     },
     module_id = module_id
   )
@@ -138,7 +141,7 @@ run_mock_app <- function() {
 run_mock_app_two_datasets <- function() {
   run_app(
     data = list(
-      "D1" = list(
+      "D0" = list(
         adsl = get_pharmaverse_data("adsl"),
         adae = get_pharmaverse_data("adae")
       ),
@@ -962,13 +965,11 @@ mod_simple2 <- function(dataset_name, module_id) {
 #'
 #' This simple module is used for demonstration purposes in documentation
 #'
-#' 
+#'
 #'
 #' @param module_id shiny module ID
 #'
 #' @keywords internal
-#'
-#' @export
 mod_dataset_labels <- function(dataset_names, module_id) {
   mod <- list(
     ui = dataset_labels_UI,

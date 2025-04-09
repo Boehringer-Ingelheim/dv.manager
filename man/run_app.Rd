@@ -28,7 +28,9 @@ run_app(
 \item a named list of lists in which each of the lists will be a list of data.frames. Each of the lists of data.frames
 contains a domain, a structure similar to that returned in a \code{dv.loader::load_data} call.
 \item a named list of functions in which each of the functions will return a list of data.frames.
-}}
+}
+
+All \code{character} variables will be automatically mapped into \code{factors}.}
 
 \item{module_list}{a list of the modules to be included in the Shiny application}
 
@@ -57,7 +59,7 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
 any previous calls to  \code{\link[shiny:enableBookmarking]{enableBookmarking()}}. See \code{\link[shiny:enableBookmarking]{enableBookmarking()}}
 for more information on bookmarking your app.}
 
-\item{enable_dataset_filter}{a boolean flag indicating if dataset filters are enabled}
+\item{enable_dataset_filter}{A boolean flag indicating if dataset filters are enabled. The default value is FALSE.}
 
 \item{.launch}{by default it should always be TRUE. It should only be false for debugging and testing.
 When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.}

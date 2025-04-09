@@ -96,6 +96,13 @@ app_server_ <- function(input, output, session, opts) {
   reload_period <- opts[["reload_period"]]
   enable_dataset_filter <- opts[["enable_dataset_filter"]]
 
+
+  ## Feature switch for new data filter
+
+  use_new_filter_switch <- isTRUE(get_config("dv.manager.use.blockly.filter"))
+
+  ######################################
+
   datasets_filters_info <- get_dataset_filters_info(data, filter_data)
 
   # Check if dataset must be reloaded in the next session
@@ -129,124 +136,191 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  global_filtered_values <- dv.filter::data_filter_server(
-    "global_filter",
-    shiny::reactive(unfiltered_dataset()[[filter_data]])
-  )
 
-
-  if (enable_dataset_filter) {
-    log_inform("Dataset filter server")
-
-    dataset_filters <- local({
-      l <- vector(mode = "list", length = length(datasets_filters_info))
-      names(l) <- names(datasets_filters_info)
-      for (idx in seq_along(datasets_filters_info)) {
-        l[[idx]] <- local({
-          curr_dataset_filter_info <- datasets_filters_info[[idx]]
-          dv.filter::data_filter_server(
-            curr_dataset_filter_info[["id"]],
-            shiny::reactive({
-              unfiltered_dataset()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()
-            })
-          )
-        })
-      }
-
-      l
-    })
+  if (use_new_filter_switch) {
+    dataset_filter <- new_filter_server("filter", shiny::reactive({
+      input$selector
+    }))
 
     filtered_dataset <- shinymeta::metaReactive({
-      # dv.filter returns a logical vector. This contemplates the case of empty lists
-      shiny::req(is.logical(global_filtered_values()))
+      ufd <- shiny::isolate(unfiltered_dataset())
 
-      # Depend on all datasets
-      purrr::walk(dataset_filters, ~ .x())
+      shiny::req(!is.na(dataset_filter()))
 
-      # We do not react to changed in unfiltered dataset, otherwise when a dataset changes
-      # We filter the previous dataset which in the best case produces and extra reactive beat
-      # and in the worst case produces an error in (mvbc)
-      # We don't want to control the error in (mvbc) because filtered dataset only changes when filter changes
-      ufds <- shiny::isolate(unfiltered_dataset())
+      safe_dsf <- as_safe_list(dataset_filter())
 
-      curr_dataset_filters <- dataset_filters[intersect(names(dataset_filters), names(ufds))]
+      if (isTRUE(is.na(safe_dsf[["parsed"]]))) {
+        return(ufd)
+      }
 
-      # Current dataset must be logical with length above 0
-      # Check dataset filters check all datafilters are initialized
-      purrr::walk(curr_dataset_filters, ~ shiny::req(checkmate::test_logical(.x(), min.len = 0)))
+      safe_filters <- as_safe_list(safe_dsf[["parsed"]][["filters"]])
 
-      filtered_key_values <- ufds[[filter_data]][[filter_key]][global_filtered_values()]
+      current_server_dataset_name <- shiny::isolate(input$selector)
+      current_client_dataset_name <- safe_dsf[["parsed"]][["dataset_list_name"]]
+      shiny::req(current_server_dataset_name == current_client_dataset_name)
 
-      fds <- ufds
+      ds <- ufd
 
-      # Single dataset filtering
-      fds[names(curr_dataset_filters)] <- purrr::imap(
-        fds[names(curr_dataset_filters)],
-        function(val, nm) {
-          # (mvbc)
-          labels <- get_lbls(fds[[nm]])
-          current_fds <- fds[[nm]][dataset_filters[[nm]](), , drop = FALSE]
-          set_lbls(current_fds, labels)
+      # JS client may not fully control that the selected filter is correct.
+      # (e.g. blocks that must have children, like `and`,  has them).
+      # The server must also control for those (and it actually does it right now). See asserts in the create*_masks functions
+      # This is required as the server must NOT trust the client and always assert that the filter is correct.
+      # Errors must be caught here as downstream modules may crash when an errors happens inside one of the observes
+      # Errors should be controlled inside the observes by modules themselves, unfortunately it is not always the case
+
+      fd <- tryCatch(
+        {
+          ds_mask <- create_dataset_filter_masks(ds, safe_filters[["datasets_filter"]])
+          apply_dataset_filter_masks(ds, ds_mask)
+        },
+        error = function(e) {
+          msg <- paste("Filter not applied. Error found:\n", e[["message"]])
+          warning(msg)
+          shiny::showNotification(msg, type = "error")
+          ds
         }
       )
 
-      # Global dataset filtering
-      global_filtered <- purrr::map(
-        fds, function(current_ds) {
-          mask <- current_ds[[filter_key]] %in% filtered_key_values
-          labels <- get_lbls(current_ds)
-          current_ds <- current_ds[mask, , drop = FALSE]
-          set_lbls(current_ds, labels)
+
+      # Check NA optimization in the future
+      subject_set <- tryCatch(
+        {
+          create_subject_set(ds, safe_filters[["subject_filter"]], filter_key)
+        },
+        error = function(e) {
+          msg <- paste("Filter not applied. Error found:\n", e[["message"]])
+          warning(msg)
+          shiny::showNotification(msg, type = "error")
+          NA_character_
         }
       )
+
+      if (!identical(subject_set, NA_character_)) {
+        fd <- apply_subject_set(fd, subject_set, filter_key)
+      }
+
+      fd
     })
+  } else {
+    global_filtered_values <- dv.filter::data_filter_server(
+      "global_filter",
+      shiny::reactive(unfiltered_dataset()[[filter_data]])
+    )
 
-    tab_ids <- c("__tabset_0__", names(opts[["module_info"]][["tab_group_names"]]))
-    shiny::observeEvent(
-      {
-        purrr::map(tab_ids, ~ input[[.x]])
-      },
-      {
-        current_tab <- "__tabset_0__"
-        zero_tabs <- length(input[["__tabset_0__"]]) == 0
-        if (!zero_tabs) {
-          while (!current_tab %in% opts[["module_info"]][["module_id_list"]]) {
-            current_tab <- input[[current_tab]]
+
+    if (enable_dataset_filter) {
+      log_inform("Dataset filter server")
+
+      dataset_filters <- local({
+        l <- vector(mode = "list", length = length(datasets_filters_info))
+        names(l) <- names(datasets_filters_info)
+        for (idx in seq_along(datasets_filters_info)) {
+          l[[idx]] <- local({
+            curr_dataset_filter_info <- datasets_filters_info[[idx]]
+            dv.filter::data_filter_server(
+              curr_dataset_filter_info[["id"]],
+              shiny::reactive({
+                unfiltered_dataset()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()
+              })
+            )
+          })
+        }
+
+        l
+      })
+
+      filtered_dataset <- shinymeta::metaReactive({
+        # dv.filter returns a logical vector. This contemplates the case of empty lists
+        shiny::req(is.logical(global_filtered_values()))
+
+        # Depend on all datasets
+        purrr::walk(dataset_filters, ~ .x())
+
+        # We do not react to changed in unfiltered dataset, otherwise when a dataset changes
+        # We filter the previous dataset which in the best case produces and extra reactive beat
+        # and in the worst case produces an error in (mvbc)
+        # We don't want to control the error in (mvbc) because filtered dataset only changes when filter changes
+        ufds <- shiny::isolate(unfiltered_dataset())
+
+        curr_dataset_filters <- dataset_filters[intersect(names(dataset_filters), names(ufds))]
+
+        # Current dataset must be logical with length above 0
+        # Check dataset filters check all datafilters are initialized
+        purrr::walk(curr_dataset_filters, ~ shiny::req(checkmate::test_logical(.x(), min.len = 0)))
+
+        filtered_key_values <- ufds[[filter_data]][[filter_key]][global_filtered_values()]
+
+        fds <- ufds
+
+        # Single dataset filtering
+        fds[names(curr_dataset_filters)] <- purrr::imap(
+          fds[names(curr_dataset_filters)],
+          function(val, nm) {
+            # (mvbc)
+            labels <- get_lbls(fds[[nm]])
+            current_fds <- fds[[nm]][dataset_filters[[nm]](), , drop = FALSE]
+            set_lbls(current_fds, labels)
+          }
+        )
+
+        # Global dataset filtering
+        global_filtered <- purrr::map(
+          fds, function(current_ds) {
+            mask <- current_ds[[filter_key]] %in% filtered_key_values
+            labels <- get_lbls(current_ds)
+            current_ds <- current_ds[mask, , drop = FALSE]
+            set_lbls(current_ds, labels)
+          }
+        )
+      })
+
+      tab_ids <- c("__tabset_0__", names(opts[["module_info"]][["tab_group_names"]]))
+      shiny::observeEvent(
+        {
+          purrr::map(tab_ids, ~ input[[.x]])
+        },
+        {
+          current_tab <- "__tabset_0__"
+          zero_tabs <- length(input[["__tabset_0__"]]) == 0
+          if (!zero_tabs) {
+            while (!current_tab %in% opts[["module_info"]][["module_id_list"]]) {
+              current_tab <- input[[current_tab]]
+            }
+          }
+
+          used_ds <- used_datasets[[current_tab]]
+          all_nm <- names(datasets_filters_info)
+          if (!zero_tabs && !is.null(used_ds)) {
+            used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
+            unused_nm <- setdiff(all_nm, used_nm)
+          } else {
+            used_nm <- all_nm
+            unused_nm <- character(0)
+          }
+
+          for (nm in unused_nm) {
+            shinyjs::hide(datasets_filters_info[[nm]][["id_cont"]])
+          }
+
+          for (nm in used_nm) {
+            shinyjs::show(datasets_filters_info[[nm]][["id_cont"]])
           }
         }
-
-        used_ds <- used_datasets[[current_tab]]
-        all_nm <- names(datasets_filters_info)
-        if (!zero_tabs && !is.null(used_ds)) {
-          used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
-          unused_nm <- setdiff(all_nm, used_nm)
-        } else {
-          used_nm <- all_nm
-          unused_nm <- character(0)
-        }
-
-        for (nm in unused_nm) {
-          shinyjs::hide(datasets_filters_info[[nm]][["id_cont"]])
-        }
-
-        for (nm in used_nm) {
-          shinyjs::show(datasets_filters_info[[nm]][["id_cont"]])
-        }
-      }
-    )
-  } else {
-    log_inform("Single filter server")
-
-    filtered_dataset <- shinymeta::metaReactive({
-      # dv.filter returns a logical vector. This contemplates the case of empty lists
-      shiny::req(is.logical(global_filtered_values()))
-      log_inform("New filter applied")
-      filtered_key_values <- unfiltered_dataset()[[filter_data]][[filter_key]][global_filtered_values()] # nolint
-      purrr::map(
-        unfiltered_dataset(),
-        ~ dplyr::filter(.x, .data[[filter_key]] %in% filtered_key_values) # nolint
       )
-    })
+    } else {
+      log_inform("Single filter server")
+
+      filtered_dataset <- shinymeta::metaReactive({
+        # dv.filter returns a logical vector. This contemplates the case of empty lists
+        shiny::req(is.logical(global_filtered_values()))
+        log_inform("New filter applied")
+        filtered_key_values <- unfiltered_dataset()[[filter_data]][[filter_key]][global_filtered_values()] # nolint
+        purrr::map(
+          unfiltered_dataset(),
+          ~ dplyr::filter(.x, .data[[filter_key]] %in% filtered_key_values) # nolint
+        )
+      })
+    }
   }
 
   # Prepare module_output argument
@@ -335,6 +409,8 @@ app_server_ <- function(input, output, session, opts) {
   #### Report modal
 
   # REPORT IS DEACTIVATED
+
+  # Whenever report is reprioritized map from char to factor should be taken into account
 
   # nolint start
 

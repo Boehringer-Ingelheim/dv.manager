@@ -65,7 +65,7 @@ test_that(
   {
     testing_options <- list(
       data = list(),
-      module_info = resolve_module_list(list("mod_1" = mod_identity(1, "mod_1"), "mod_2" = mod_identity(2, "mod_2"))),      
+      module_info = resolve_module_list(list("mod_1" = mod_identity(1, "mod_1"), "mod_2" = mod_identity(2, "mod_2"))),
       enable_dataset_filter = TRUE
     )
 

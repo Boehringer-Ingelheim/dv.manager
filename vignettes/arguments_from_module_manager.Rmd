@@ -42,8 +42,7 @@ the server function is called. This parameter by convention usually called `afmm
   
 1. **utils**: a list of convenience functions:
   
-    a. **switch2mod**: a function that allows switching between tabs programatically.
-    a. **switch2**: **DEPRECATED** a function that allows switching between tabs programatically.
+    a. **switch2mod**: a function that allows switching between tabs programatically.    
     
 Lets see some example recipes to use all these fields.
 
@@ -275,7 +274,7 @@ The `utils` field contains a list of utility functions for actions that need mod
 
 ### switch2mod
 
-`switch2` allows switching from tab to another in a programmatic manner.
+`switch2mod` allows switching from tab to another in a programmatic manner.
 
 ```{r, eval = FALSE}
 ########### Switch module
@@ -320,68 +319,6 @@ run_app(
   ),
   filter_data = "",
   filter_key = "USUBJID"
-)
-```
-
-Notice that as opposed to its predecessor `switch2`, `switch2mod` uses the module_id and not the name of the module tabs.
-
-# Dispatchers
-
-Module manager include a couple of convenience functions that deal with all the nuances described providing a uniform of accessing all fields above.
-
-Lets see it with our first example.
-
-```{r, eval = FALSE}
-mod_table <- function(dataset, mod_id) {
-  mod <- list(
-    ui = table_ui,
-    server = function(afmm) {
-      table_server(id = mod_id, dataset = mm_resolve_dispatcher(dataset, afmm))
-    },
-    module_id = mod_id
-  )
-  mod
-}
-
-data_list <- list(
-  "D1" = list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae),
-  "D2" = list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
-)
-
-module_list <- list(
-  "Table adsl" = mod_table(mod_id = "mod_1", mm_dispatch("filtered_dataset", "adsl")),
-  "Table adae" = mod_table(mod_id = "mod_2", mm_dispatch("filtered_dataset", "adsl"))
-)
-
-run_app(
-  data = data_list,
-  module_list = module_list,
-  filter_data = "adsl",
-  filter_key = "USUBJID"
-)
-```
-
-In this case we let `mm_resolve_dispatcher` take care of all the nuances, including reactive or metareactive nature of the inputs, for us.
-
-This also allows to quickly change the source without modifying the wrapper function.
-
-```{r, eval=FALSE}
-module_list <- list(
-  "Table adsl" = mod_table(mod_id = "mod_1", mm_dispatch("unfiltered_dataset", "adsl")),
-  "Table adae" = mod_table(mod_id = "mod_2", mm_dispatch("module_output", "mod_return_table")),
-  "Return table" = mod_return_table(..., mod_id = "mod_return_table"),
-  "Table independent data" = mod_table(mod_id = "mod_indp", mtcars),
-)
-```
-
-In the above example we can quickly change the source just by changing the first parameter of the dispatcher. Or even pass an argument non related to `afmm` as `mm_resolve_dispatcher` will ignore objects that do not come from an `mm_dispatch` function.
-
-This dispatcher also works for `utils` given the proper adjustments in the wrapper:
-
-```{r, eval=FALSE}
-module_list <- list(
-  "Mod 1" = mod_switch("Mod 1", "Mod 2", mm_dispatch("utils", "switch2"), "mod1"),
-  "Mod 2" = mod_switch("Mod 2", "Mod 1", mm_dispatch("utils", "switch2"), "mod2")
 )
 ```
 

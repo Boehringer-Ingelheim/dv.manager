@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-Here, we will follow some simple steps to create an application using **dv.manager**. Note that that **dv.manager** does not include any module it just serves as a container therefore along these steps we will install the *app* package from the DaVinci project that contains several exploratory modules.
+Here, we will follow some simple steps to create an application using **dv.manager**. Note that that **dv.manager** does not include any module it just serves as a container therefore along these steps we will install some packages from the DaVinci project.
 
 ## Data loading
 
@@ -38,19 +38,18 @@ Now, we have to select which modules will be included in our application. As men
 If you already have **dv.listings** installed you can skip this step.
 
 ```{r, eval=FALSE}
-# TODO
 if (!require("remotes")) install.packages("remotes")
 remotes::install_github("Boehringer-Ingelheim/dv.listings")
 ```
 
 We can now include in our application or the modules included in the **dv.listings** package.
 
-For example, we can use the *data table* from the **dv.listings** package.
+For example, we can use the *listings* module from the **dv.listings** package.
 
 ```{r, eval=FALSE}
 module_list <- list(
-  "My First Data table" = dv.listings::mod_data_table(
-    dataset = dv.manager::mm_dispatch("filtered_dataset", "adsl"),
+  "My First listing" = dv.listings::mod_listings(
+    dataset_names = "adsl",
     module_id = "mod1"
   )
 )

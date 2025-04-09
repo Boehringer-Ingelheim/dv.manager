@@ -1,6 +1,135 @@
 # THIS FILE IS NAMED aaa_preface.R SO IT IS LOADED BEFORE ALL OTHER FILES
 # DO NOT CHANGE ITS NAME. IT MUST BE THE FIRST ONE ALPHABETICALLY.
 
+#' @noRd
+#' @keywords internal
+
+safe_list_ns <- local({
+  # Defines a safe-list that:
+  # - Fails when trying to access a non-existant element by name, either by $, [] and [[]]
+  # - Disables partial matching when using $
+  # - Supports numerical indexing as usual
+  #
+  # R does not fail when accesing non-existant elements by name, it returns NULL.
+  # If we want to be defensive and forbiding access to non-existant elements, we should do that on an element by
+  # element basis (!is.null, name %in names(), ...)
+  # With this type we avoid including these checks and also forgetting to add a check when accessing a
+  # new element.
+  #
+  # The intention is to use it in specific scopes where this conditions hold true.
+  #
+  # It exports elements individually and includes a `define_safe_list` that exports all individual elements
+  # with the correct names for the operators to work
+
+  #' @keywords internal
+  safe_list <- function(...) {
+    result <- list(...)
+    class(result) <- c("safe_list", class(result))
+    return(result)
+  }
+
+  #' @keywords internal
+  `[[.safe_list` <- function(x, name) {
+    if (is.character(name) && !name %in% names(x)) {
+      stop(sprintf("Element '%s' not found in safe_list.", name), call. = FALSE)
+    }
+    NextMethod("[[")
+  }
+
+  #' @keywords internal
+  `$.safe_list` <- `[[.safe_list`
+
+  #' @keywords internal
+  `[.safe_list` <- function(x, i) {
+    if (is.character(i) && length(setdiff(i, names(x))) > 0) {
+      stop(sprintf("Elements '%s' not found in safe_list", paste(missing_elements, collapse = ", ")), call. = FALSE)
+    }
+    x <- NextMethod("[")
+    as_safe_list(x)
+  }
+
+  as_safe_list <- function(x) {
+    if (!is.list(x)) stop("x must be a list")
+    class(x) <- c("safe_list", class(x))
+    x
+  }
+
+  is_safe_list <- function(x) isTRUE(is.list(x) && inherits(x, "safe_list"))
+
+  test <- function() {
+    assert <- function(expr, msg) if (!isTRUE(expr)) stop(msg)
+    x <- safe_list(aa = 0, bb = 1)
+
+    assert(is.list(x) && inherits(x, "safe_list"), "Classes are correctly set")
+
+    assert(x[["aa"]] == 0, "Present element 'aa' can be accessed via [[]]")
+    assert(x[["bb"]] == 1, "Present element 'bb' can be accessed via [[]]")
+
+    err <- try(x[["c"]], silent = TRUE)
+    assert(inherits(err, "try-error"), "Not present element 'c' cannot be accessed via [[]]")
+    assert(
+      attr(err, "condition")[["message"]] == "Element 'c' not found in safe_list.",
+      "Not present element 'c' cannot be accessed via [[]] and throws the correct error"
+    )
+
+    assert(x$aa == 0, "Present element 'aa' can be accessed via $")
+    assert(x$bb == 1, "Present element 'bb' can be accessed via $")
+
+    err <- try(x$c, silent = TRUE)
+    assert(inherits(err, "try-error"), "Not present element 'c' cannot be accessed via $")
+    assert(
+      attr(err, "condition")[["message"]] == "Element 'c' not found in safe_list.",
+      "Not present element 'c' cannot be accessed via $ and throws the correct error"
+    )
+
+    err <- try(x$b, silent = TRUE)
+    assert(inherits(err, "try-error"), "Partial matching is not possible via $")
+
+    assert(isTRUE(is_safe_list(x)), "safe_list return TRUE when passed a safe_list")
+    assert(isFALSE(is_safe_list(list())), "safe_list return FALSE when passed a regular list")
+
+    assert(identical(x[c("aa")], safe_list(aa = 0)), "[] returns a subset safe_list")
+
+    assert(x[[1]] == 0, "[[]] allows numerical indexing")
+    assert(identical(x[1], safe_list(aa = 0)), "[] allows numerical indexing")
+
+    assert(is_safe_list(as_safe_list(list(aa = 0))), "as_safe_list returns a safe_list")
+
+    TRUE
+  }
+
+  individual_list <- list(
+    safe_list = safe_list,
+    "$.safe_list" = `$.safe_list`,
+    "[[.safe_list" = `[[.safe_list`,
+    "[.safe_list" = `[.safe_list`,
+    as_safe_list = as_safe_list,
+    is_safe_list = is_safe_list
+  )
+
+  c(
+    individual_list,
+    define_safe_list = function(env = parent.frame()) {
+      list2env(individual_list, env)
+      invisible(NULL)
+    },
+    test = test
+  )
+})
+
+#' @keywords internal
+safe_list <- safe_list_ns[["safe_list"]]
+#' @keywords internal
+`$.safe_list` <- safe_list_ns[["$.safe_list"]]
+#' @keywords internal
+`[[.safe_list` <- safe_list_ns[["[[.safe_list"]]
+#' @keywords internal
+`[.safe_list` <- safe_list_ns[["[.safe_list"]]
+#' @keywords internal
+as_safe_list <- safe_list_ns[["as_safe_list"]]
+#' @keywords internal
+is_safe_list <- safe_list_ns[["is_safe_list"]]
+
 #' Build a collection of named constants
 #'
 #' @param ... Named parameters to be collected as constants
@@ -50,18 +179,14 @@ pack_of_constants <- function(...) {
 #' This function differs from the base list extraction method in that it avoids partial matching of keys and throws
 #' an error if the looked-for constant is not contained within the pack.
 #' @keywords internal
-#' @export
 `$.pack_of_constants` <- function(pack, name) {
   checkmate::assert_true(name %in% names(pack), .var.name = paste0(deparse(substitute(pack)), "$", name))
   NextMethod()
 }
 
-# This exports are recent requirement for devtools check https://github.com/r-lib/roxygen2/issues/1592#issue-2121199122
 #' @keywords internal
-#' @export
 `[[.pack_of_constants` <- `$.pack_of_constants`
 
-#' @export
 #' @keywords internal
 `[.pack_of_constants` <- function(pack, name) {
   stop("Invalid pack_of_constants method")

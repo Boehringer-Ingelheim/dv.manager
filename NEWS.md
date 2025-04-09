@@ -1,3 +1,12 @@
+# dv.manager 2.1.10
+
+- Includes a new blockly filter in development mode
+- Updates old documentation
+- De-exports several util functions
+- `dv.manager` automatically maps `character` variables into `factors`
+- Fixes tab group menu rendering
+
+
 # dv.manager 2.1.5
 
 - dv.manager dataset filters are now deactivated by default and can be activated by setting `enable_dataset_filter` parameter in `run_app`.
