@@ -323,10 +323,11 @@ app_server_ <- function(input, output, session, opts) {
     }
   }
 
-  # Prepare module_output argument
-  module_output_env <- rlang::current_env()
+  # This mimicks a reactive, by delaying the access to module_output
+  # This is required for the modules to be able to read the output of other modules that are not yet declared
+  
   module_output_func <- function() {
-    return(base::get("module_output", envir = module_output_env))
+    as_module_output_safe_list(module_output)
   }
 
   module_args <- list(
