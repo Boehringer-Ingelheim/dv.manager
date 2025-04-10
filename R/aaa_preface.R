@@ -41,7 +41,8 @@ safe_list_ns <- local({
 
   #' @keywords internal
   `[.safe_list` <- function(x, i) {
-    if (is.character(i) && length(setdiff(i, names(x))) > 0) {
+    missing_elements <- setdiff(i, names(x))
+    if (is.character(i) && length(missing_elements) > 0) {      
       stop(sprintf("Elements '%s' not found in safe_list", paste(missing_elements, collapse = ", ")), call. = FALSE)
     }
     x <- NextMethod("[")
@@ -87,6 +88,14 @@ safe_list_ns <- local({
 
     assert(isTRUE(is_safe_list(x)), "safe_list return TRUE when passed a safe_list")
     assert(isFALSE(is_safe_list(list())), "safe_list return FALSE when passed a regular list")
+
+    err <- try(x["c"], silent = TRUE)
+    assert(inherits(err, "try-error"), "Not present element 'c' cannot be accessed via $")
+    assert(
+      attr(err, "condition")[["message"]] == "Elements 'c' not found in safe_list",
+      "Not present element 'c' cannot be accessed via $ and throws the correct error"
+    )
+    
 
     assert(identical(x[c("aa")], safe_list(aa = 0)), "[] returns a subset safe_list")
 
