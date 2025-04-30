@@ -39,14 +39,9 @@ as_module_output_safe_list <- function(x) {
   return(result)
 }
 
-missing_test <- function() {
-  x <- as_module_output_safe_list(list(a=0))
-  x[["b"]]
-  x
-}
-
 #' @keywords internal
-`[[.module_output_safe_list` <- function(x, i) {
+#' @export
+`[[.module_output_safe_list` <- function(x, i) { # Namespace with dv.manager, align on the error message (include GH issue url?)
   if (is.character(i) && !i %in% names(x)) {
     msg <- sprintf("Element '%s' not found as module output", i)
     log_warn(msg)
@@ -56,9 +51,11 @@ missing_test <- function() {
 }
 
 #' @keywords internal
+#' @export
 `$.module_output_safe_list` <- `[[.module_output_safe_list`
 
 #' @keywords internal
+#' @export
 `[.module_output_safe_list` <- function(x, i) {
   missing_elements <- setdiff(i, names(x))
   if (is.character(i) && length(setdiff(i, names(x))) > 0) {
