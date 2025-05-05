@@ -22,14 +22,14 @@
 #
 # Why a class with accessors?
 #
-# The object returned to the modules is the full list inside a function mimicking a reactive, 
+# The object returned to the modules is the full list inside a function mimicking a reactive,
 #
 # Could this complexity be avoided? Yes by:a
 # - Removing this fallback system and trust modules will do their part
 # - Modifying the function returning the module_output_list to take a name/s argument that we can check against
-# the names of the list. That would require modifying the current wrappers from module_output[["mod1"]] to 
+# the names of the list. That would require modifying the current wrappers from module_output[["mod1"]] to
 # module_output("mod1").
-# 
+#
 #
 # Operator are exported therefore this class has effect outside of this package namespace, but it the probability of
 # collision should be minimal.
@@ -46,8 +46,8 @@ as_dv_manager_module_output_safe_list <- function(x) {
   if (is.character(i) && !i %in% names(x)) {
     msg <- sprintf("Element '%s' not found in module output", i)
     log_warn(msg)
-    shiny::validate(shiny::need(FALSE, msg))    
-  }  
+    shiny::validate(shiny::need(FALSE, msg))
+  }
   NextMethod("[[")
 }
 
@@ -63,6 +63,6 @@ as_dv_manager_module_output_safe_list <- function(x) {
     msg <- sprintf("Elements %s not found in module_output", paste0("'", missing_elements, "'", collapse = ", "))
     log_warn(msg)
     shiny::validate(shiny::need(FALSE, msg))
-  }  
+  }
   NextMethod("[")
 }
