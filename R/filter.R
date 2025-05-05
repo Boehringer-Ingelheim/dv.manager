@@ -173,7 +173,7 @@ get_filter_data <- function(dataset_lists) {
 }
 
 # nolint start cyclocomp_linter
-process_dataset_filter_element <- function(dataset_list, filter_element, current_dataset_name = NULL) { # TODO: replace dataset for dataset_name
+process_dataset_filter_element <- function(dataset_list, filter_element) { # TODO: replace dataset for dataset_name
 
   filter_element <- as_safe_list(filter_element)
 
@@ -181,22 +181,38 @@ process_dataset_filter_element <- function(dataset_list, filter_element, current
 
   if (kind == "row_operation") {
     operation <- filter_element[["operation"]]
+    filter_dataset <- NA
     if (operation == "and") {
       assert(length(filter_element[["children"]]) >= 1, "`and` operation requires at least one child")
-      mask <- TRUE # Neutral element for &
+      mask <- TRUE # Neutral element for &      
       for (child in filter_element[["children"]]) {
-        mask <- mask & process_dataset_filter_element(dataset_list, child, current_dataset_name)
+        processed_element <- process_dataset_filter_element(dataset_list, child)
+        mask <- mask & processed_element[["mask"]]
+        if (is.na(filter_dataset)) {
+          filter_dataset <- processed_element[["dataset"]]
+        } else {
+          assert(processed_element[["dataset"]] == filter_dataset, "Filtering on the wrong dataset")
+        }
       }
     } else if (operation == "or") {
       assert(length(filter_element[["children"]]) >= 1, "`or` operation requires at least one child")
 
-      mask <- FALSE # Neutral element for |
+      mask <- FALSE # Neutral element for |      
       for (child in filter_element[["children"]]) {
-        mask <- mask | process_dataset_filter_element(dataset_list, child, current_dataset_name)
+        processed_element <- process_dataset_filter_element(dataset_list, child)
+        mask <- mask | processed_element[["mask"]]
+        if (is.na(filter_dataset)) {
+          filter_dataset <- processed_element[["dataset"]]
+        } else {
+          assert(processed_element[["dataset"]] == filter_dataset, "Filtering on the wrong dataset")
+        }
       }
     } else if (operation == "not") {
       assert(length(filter_element[["children"]]) == 1, "`not` operation requires exactly one child")
-      mask <- !process_dataset_filter_element(dataset_list, filter_element[["children"]][[1]], current_dataset_name)
+      child <- filter_element[["children"]][[1]]
+      processed_element <- process_dataset_filter_element(dataset_list, child)      
+      mask <- !processed_element[["mask"]]
+      filter_dataset <- processed_element[["dataset"]]      
     } else {
       stop(paste0("Operation unknown: `", operation, "`"))
     }
@@ -204,10 +220,8 @@ process_dataset_filter_element <- function(dataset_list, filter_element, current
     variable <- filter_element[["variable"]]
     operation <- filter_element[["operation"]]
     include_NA <- filter_element[["include_NA"]]
-    filter_dataset <- filter_element[["dataset"]] # TODO: Change for name table
-    assert(is.null(current_dataset_name) || current_dataset_name == filter_dataset, "Filtering on the wrong dataset")
+    filter_dataset <- filter_element[["dataset"]] # TODO: Change for name table    
     assert(variable %in% names(dataset_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, variable))
-
     variable_values <- dataset_list[[filter_dataset]][[variable]]
 
     if (operation == "select_subset") {
@@ -244,7 +258,7 @@ process_dataset_filter_element <- function(dataset_list, filter_element, current
     stop(paste("Unknown kind: ", kind))
   }
 
-  return(mask)
+  return(list(mask = mask, dataset = filter_dataset))
 }
 # nolint end cyclocomp_linter
 
@@ -257,9 +271,12 @@ create_dataset_filter_masks <- function(dataset_list, filter_state) {
     kind <- child[["kind"]]
     name <- child[["name"]]
     assert(!(name %in% names(dataset_masks)), "a dataset can only appear once inside dataset_filters")
+    assert(name %in% names(dataset_list), "dataset is not inside dataset_list")
     assert(kind == "dataset", "dataset_filters children can only be of kind `dataset`")
     if (length(child[["children"]]) == 1) {
-      dataset_masks[[name]] <- process_dataset_filter_element(dataset_list, child[["children"]][[1]], name)
+      processed_element <- process_dataset_filter_element(dataset_list, child[["children"]][[1]])
+      assert(processed_element[["dataset"]] == name, "Filter on the wrong dataset")
+      dataset_masks[[name]] <- processed_element[["mask"]]
     } else if (length(child[["children"]]) == 0) {
       dataset_masks[[name]] <- rep_len(TRUE, nrow(dataset_list[[name]]))
     } else {
@@ -344,7 +361,7 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
     }
   } else if (kind == "filter") {
     # redirect but do not process
-    mask <- process_dataset_filter_element(dataset_list, filter_element, current_dataset_name = "FAIL")
+    mask <- process_dataset_filter_element(dataset_list, filter_element)[["mask"]]
     dataset <- filter_element[["dataset"]] # TODO: Replace by table
     subjects <- as.character(dataset_list[[dataset]][[sbj_var]][mask])
   } else {
