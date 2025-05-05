@@ -199,7 +199,7 @@ const filterBlockly = (() => {
             throw new Error("Unkown operation: " + current_filter.operation)
           }
 
-        } else if (current_filter.kind === "filter_operation") {
+        } else if (current_filter.kind === "row_operation") {
 
           if (current_filter.operation === "and" || current_filter.operation === "or") {
             current_block.type = C.TYPE.FILTER_COMB_OPERATION;
@@ -288,7 +288,7 @@ const filterBlockly = (() => {
     return ('{"subject_filter": {"children": [' + code + '] }}');
   }
 
-  const filter_operation_generator = function (block, generator) {
+  const row_operation_generator = function (block, generator) {
     let children_code = "";
     let current_inputs = block.inputList.map(x => x.name);
     for (input of current_inputs) {
@@ -299,7 +299,7 @@ const filterBlockly = (() => {
     }
     children_code = children_code.slice(0, -2);
 
-    const kind = 'filter_operation';
+    const kind = 'row_operation';
     const operation = block.getFieldValue('operation');
     const code = '{' +
       '"kind": "' + kind + '"' +
@@ -501,8 +501,8 @@ const filterBlockly = (() => {
       ]
     };
 
-    json_generator.forBlock[C.TYPE.FILTER_COMB_OPERATION] = filter_operation_generator;
-    json_generator.forBlock[C.TYPE.FILTER_NOT_OPERATION] = filter_operation_generator;
+    json_generator.forBlock[C.TYPE.FILTER_COMB_OPERATION] = row_operation_generator;
+    json_generator.forBlock[C.TYPE.FILTER_NOT_OPERATION] = row_operation_generator;
 
     // Preface End
 
@@ -747,7 +747,7 @@ const filterBlockly = (() => {
       let old_parent_block = current_workspace.getBlockById(event.oldParentId);
       let current_block = current_workspace.getBlockById(event.blockId);
 
-      // Code replacement is broken in set and filter_operations by the code below
+      // Code replacement is broken in set and row_operations by the code below
       // In replacement first the piece is disconnected and then reconnected
       // When disconnected the input in the piece is removed, then an attempt to connect is done
       // But the attempt is not possible because the input is no longer there

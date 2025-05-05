@@ -17,8 +17,10 @@
               "type": "array",
               "items": {
                 "oneOf": [
-                  { "$ref": "#/definitions/filter_operation_and_or" },
-                  { "$ref": "#/definitions/filter_operation_not" },
+                  { "$ref": "#/definitions/set_operation_intersect_union" },
+                  { "$ref": "#/definitions/set_operation_complement" },
+                  { "$ref": "#/definitions/row_operation_and_or" },
+                  { "$ref": "#/definitions/row_operation_not" },
                   { "$ref": "#/definitions/filter_date" },
                   { "$ref": "#/definitions/filter_subset" },
                   { "$ref": "#/definitions/filter_range" }
@@ -47,7 +49,54 @@
   },
   "required": ["filters", "dataset_list_name"],
   "additionalProperties": false,
-  "definitions": {    
+  "definitions": {
+    "set_operation_intersect_union": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["row_operation"] },
+        "operation": { "type": "string", "enum": ["intersect", "union"] },
+            "children": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  { "$ref": "#/definitions/set_operation_intersect_union" },
+                  { "$ref": "#/definitions/set_operation_complement" },
+                  { "$ref": "#/definitions/row_operation_and_or" },
+                  { "$ref": "#/definitions/row_operation_not" },
+                  { "$ref": "#/definitions/filter_date" },
+                  { "$ref": "#/definitions/filter_subset" },
+                  { "$ref": "#/definitions/filter_range" }
+                ]
+              },
+              "minItems": 1
+            }
+      },
+      "required": ["kind", "operation", "children"]
+    },
+    "set_operation_complement": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["row_operation"] },
+        "operation": { "type": "string", "enum": ["complement"] },
+            "children": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  { "$ref": "#/definitions/set_operation_intersect_union" },
+                  { "$ref": "#/definitions/set_operation_complement" },
+                  { "$ref": "#/definitions/row_operation_and_or" },
+                  { "$ref": "#/definitions/row_operation_not" },
+                  { "$ref": "#/definitions/filter_date" },
+                  { "$ref": "#/definitions/filter_subset" },
+                  { "$ref": "#/definitions/filter_range" }
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 1
+            }
+      },
+      "required": ["kind", "operation", "children"]
+    },    
     "dataset": {
       "type": "object",
       "properties": {
@@ -61,8 +110,8 @@
           "description": "Must contain filter operations or filters",
           "items": {
             "oneOf": [              
-              { "$ref": "#/definitions/filter_operation_and_or" },
-              { "$ref": "#/definitions/filter_operation_not" },
+              { "$ref": "#/definitions/row_operation_and_or" },
+              { "$ref": "#/definitions/row_operation_not" },
               { "$ref": "#/definitions/filter_date" },
               { "$ref": "#/definitions/filter_subset" },
               { "$ref": "#/definitions/filter_range" }
@@ -73,17 +122,17 @@
       },
       "required": ["name", "children"]
     },
-    "filter_operation_and_or": {
+    "row_operation_and_or": {
       "type": "object",
       "properties": {
-        "kind": { "type": "string", "enum": ["filter_operation"] },
+        "kind": { "type": "string", "enum": ["row_operation"] },
         "operation": { "type": "string", "enum": ["and", "or"] },
             "children": {
               "type": "array",
               "items": {
                 "oneOf": [
-                  { "$ref": "#/definitions/filter_operation_and_or" },
-                  { "$ref": "#/definitions/filter_operation_not" },
+                  { "$ref": "#/definitions/row_operation_and_or" },
+                  { "$ref": "#/definitions/row_operation_not" },
                   { "$ref": "#/definitions/filter_date" },
                   { "$ref": "#/definitions/filter_subset" },
                   { "$ref": "#/definitions/filter_range" }
@@ -94,17 +143,17 @@
       },
       "required": ["kind", "operation", "children"]
     },
-    "filter_operation_not": {
+    "row_operation_not": {
       "type": "object",
       "properties": {
-        "kind": { "type": "string", "enum": ["filter_operation"] },
+        "kind": { "type": "string", "enum": ["row_operation"] },
         "operation": { "type": "string", "enum": ["not"] },
             "children": {
               "type": "array",
               "items": {
                 "oneOf": [
-                  { "$ref": "#/definitions/filter_operation_and_or" },
-                  { "$ref": "#/definitions/filter_operation_not" },
+                  { "$ref": "#/definitions/row_operation_and_or" },
+                  { "$ref": "#/definitions/row_operation_not" },
                   { "$ref": "#/definitions/filter_date" },
                   { "$ref": "#/definitions/filter_subset" },
                   { "$ref": "#/definitions/filter_range" }

@@ -179,7 +179,7 @@ process_dataset_filter_element <- function(dataset_list, filter_element, current
 
   kind <- filter_element[["kind"]]
 
-  if (kind == "filter_operation") {
+  if (kind == "row_operation") {
     operation <- filter_element[["operation"]]
     if (operation == "and") {
       assert(length(filter_element[["children"]]) >= 1, "`and` operation requires at least one child")
@@ -311,27 +311,27 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
 
   kind <- filter_element[["kind"]]
 
-  if (kind == "filter_operation") {
+  if (kind == "set_operation") {
     operation <- filter_element[["operation"]]
-    if (operation == "or") {
+    if (operation == "union") {
       children <- filter_element[["children"]]
       subjects <- character(0)
-      assert(length(children) > 0, "`or` operation requires at least one child")
+      assert(length(children) > 0, "`union` operation requires at least one child")
       for (child in children) {
         current_subjects <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
         subjects <- union(subjects, current_subjects)
       }
-    } else if (operation == "and") {
+    } else if (operation == "intersect") {
       children <- filter_element[["children"]]
       subjects <- complete_subject_list
-      assert(length(children) > 0, "`and` operation requires at least one child")
+      assert(length(children) > 0, "`intersect` operation requires at least one child")
       for (child in children) {
         current_subjects <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
         subjects <- intersect(subjects, current_subjects)
       }
-    } else if (operation == "not") {
+    } else if (operation == "complement") {
       children <- filter_element[["children"]]
-      assert(length(children) == 1, "`not` operation requires exactly one child")
+      assert(length(children) == 1, "`complement` operation requires exactly one child")
       subjects <- setdiff(
         complete_subject_list,
         process_subject_filter_element(
@@ -344,7 +344,7 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
     }
   } else if (kind == "filter") {
     # redirect but do not process
-    mask <- process_dataset_filter_element(dataset_list, filter_element)
+    mask <- process_dataset_filter_element(dataset_list, filter_element, current_dataset_name = "FAIL")
     dataset <- filter_element[["dataset"]] # TODO: Replace by table
     subjects <- as.character(dataset_list[[dataset]][[sbj_var]][mask])
   } else {
@@ -559,34 +559,34 @@ mock_new_filter <- function(data = list(
     x <- new_filter_server("filter", selected_dataset = shiny::reactive(selected_data), strict = TRUE)
 
     output[["raw_json"]] <- shiny::renderPrint({
-      json <- attr(x, "raw")()
+      json <- x()[["raw"]]
       shiny::req(json)
       jsonlite::prettify(json)
     })
 
     output[["validate_json"]] <- DT::renderDataTable({
-      json <- attr(x, "raw")()
+      json <- x()[["raw"]]
       shiny::req(json)
       e <- attr(from_filter_validate(json), "error") |> tibble::as_tibble()
       e
     })
 
     output[["output_json"]] <- shiny::renderPrint({
-      shiny::req(!is.na(x()))
-      jsonlite::fromJSON(x(), simplifyVector = FALSE)
+      shiny::req(!is.na(x()[["parsed"]]))
+      jsonlite::fromJSON(x()[["parsed"]], simplifyVector = FALSE)
     })
 
     filtered_datasets <- shiny::reactive({
-      shiny::req(!is.na(x()))
+      shiny::req(!is.na(x()[["parsed"]]))
       ds <- data[[selected_data]]
-      mask <- create_dataset_filter_masks(ds, x()[["filters"]][["datasets_filter"]])
+      mask <- create_dataset_filter_masks(ds, x()[["parsed"]][["filters"]][["datasets_filter"]])
       apply_dataset_filter_masks(ds, mask)
     })
 
     filtered_subjects <- shiny::reactive({
-      shiny::req(!is.na(x()))
+      shiny::req(!is.na(x()[["parsed"]]))
       ds <- data[[selected_data]]
-      subject_set <- create_subject_set(ds, x()[["filters"]][["subject_filter"]], "USUBJID")
+      subject_set <- create_subject_set(ds, x()[["parsed"]][["filters"]][["subject_filter"]], "USUBJID")
       if (identical(subject_set, NA_character_)) {
         ds
       } else {

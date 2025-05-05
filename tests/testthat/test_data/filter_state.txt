@@ -37,15 +37,15 @@
         "subject_filter": {
             "children": [
                 {
-                    "kind": "filter_operation",
+                    "kind": "row_operation",
                     "operation": "and",
                     "children": [
                         {
-                            "kind": "filter_operation",
+                            "kind": "row_operation",
                             "operation": "or",
                             "children": [
                                 {
-                                    "kind": "filter_operation",
+                                    "kind": "row_operation",
                                     "operation": "not",
                                     "children": [
                                         {

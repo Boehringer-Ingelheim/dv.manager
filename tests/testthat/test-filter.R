@@ -279,7 +279,7 @@ local({
 
   test_that("process_dataset_filter_element - and filter operation returns mask for 1 element", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "and",
       children = list(
         list(
@@ -300,7 +300,7 @@ local({
 
   test_that("process_dataset_filter_element - and filter operation returns mask for n elements", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "and",
       children = list(
         list(
@@ -329,7 +329,7 @@ local({
 
   test_that("process_dataset_filter_element - and filter operation fails when it does not have at least 1 children", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "and",
       children = list()
     )
@@ -342,7 +342,7 @@ local({
 
   test_that("process_dataset_filter_element - or filter operation returns mask for 1 element", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "or",
       children = list(
         list(
@@ -363,7 +363,7 @@ local({
 
   test_that("process_dataset_filter_element - or filter operation returns mask for n elements", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "or",
       children = list(
         list(
@@ -392,7 +392,7 @@ local({
 
   test_that("process_dataset_filter_element - or filter operation fails when it does not have at least 1 children", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "or",
       children = list()
     )
@@ -405,7 +405,7 @@ local({
 
   test_that("process_dataset_filter_element - not filter operation returns mask", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "not",
       children = list(
         list(
@@ -426,7 +426,7 @@ local({
 
   test_that("process_dataset_filter_element - not filter operation fails when it does not have exactly 1 children", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "not",
       children = list()
     )
@@ -437,7 +437,7 @@ local({
     )
 
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "not",
       children = list(
         list(
@@ -628,7 +628,7 @@ local({
 
   test_that("process_subject_filter_element - and filter operation returns subject set for 1 element", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "and",
       children = list(
         list(
@@ -649,7 +649,7 @@ local({
 
   test_that("process_subject_filter_element - and filter operation returns subject set for n elements", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "and",
       children = list(
         list(
@@ -678,7 +678,7 @@ local({
 
   test_that("process_subject_filter_element - and filter operation fails when it does not have at least 1 children (subject filter)", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "and",
       children = list()
     )
@@ -691,7 +691,7 @@ local({
 
   test_that("process_subject_filter_element - or filter operation returns subject set for 1 element", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "or",
       children = list(
         list(
@@ -712,7 +712,7 @@ local({
 
   test_that("process_subject_filter_element - or filter operation returns subject set for n elements", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "or",
       children = list(
         list(
@@ -741,7 +741,7 @@ local({
 
   test_that("process_subject_filter_element - or filter operation fails when it does not have at least 1 children (subject filter)", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "or",
       children = list()
     )
@@ -754,7 +754,7 @@ local({
 
   test_that("process_subject_filter_element - not filter operation returns subject set", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "not",
       children = list(
         list(
@@ -775,7 +775,7 @@ local({
 
   test_that("process_subject_filter_element - not filter operation fails when it does not have exactly 1 children (subject filter)", {
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "not",
       children = list()
     )
@@ -786,7 +786,7 @@ local({
     )
 
     e <- list(
-      kind = "filter_operation",
+      kind = "row_operation",
       operation = "not",
       children = list(
         list(
