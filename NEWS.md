@@ -1,3 +1,6 @@
+# dv.manager 2.1.10-900
+- Fails when modules try to access a non-existant module output
+
 # dv.manager 2.1.10
 
 - Includes a new blockly filter in development mode
