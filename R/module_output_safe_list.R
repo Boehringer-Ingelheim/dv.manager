@@ -8,7 +8,7 @@
 # Because:
 # 1. We expect that in most cases this module_output_safe_list will be called inside a reactive
 # 2. A shiny req will fail silently in the application and simply the output will not appear
-# 3. An uncontrolled error may make the app crash inside an observe.
+# 3. An uncontrolled regular error may make the app crash inside an observe.
 # 4. Even if called outside of a reactive the shiny validate will act as a regular error
 #
 # Why do we not control which entry is called at the application startup?
@@ -17,7 +17,7 @@
 #
 # Shouldn't module check if the output they want to read is available?
 # Yes, this is a fallback system in case a module does not do that. `afmm` contains a list of the available modules
-# therefore modules can make this check during startup (preferred always) or even during app time (only if dynamic never
+# therefore modules can make this check during startup (preferred always) or even during app time (only if dynamic, never
 # find a case yet) Without this the error is quite obscure and can make the app crash.
 #
 # Why a class with accessors?
@@ -25,25 +25,26 @@
 # The object returned to the modules is the full list inside a function mimicking a reactive, 
 #
 # Could this complexity be avoided? Yes by:a
-# - Removing this fallback system and trus modules will do their part
+# - Removing this fallback system and trust modules will do their part
 # - Modifying the function returning the module_output_list to take a name/s argument that we can check against
 # the names of the list. That would require modifying the current wrappers from module_output[["mod1"]] to 
 # module_output("mod1").
 # 
 #
-# Operator are not exported therefore this class has no effect outside of this package namespace
+# Operator are exported therefore this class has effect outside of this package namespace, but it the probability of
+# collision should be minimal.
 
-as_module_output_safe_list <- function(x) {
+as_dv_manager_module_output_safe_list <- function(x) {
   result <- x
-  class(result) <- c("module_output_safe_list", class(result))
+  class(result) <- c("dv_manager_module_output_safe_list", class(result))
   return(result)
 }
 
 #' @keywords internal
 #' @export
-`[[.module_output_safe_list` <- function(x, i) { # Namespace with dv.manager, align on the error message (include GH issue url?)
+`[[.dv_manager_module_output_safe_list` <- function(x, i) { # align on the error message (include GH issue url?)
   if (is.character(i) && !i %in% names(x)) {
-    msg <- sprintf("Element '%s' not found as module output", i)
+    msg <- sprintf("Element '%s' not found in module output", i)
     log_warn(msg)
     shiny::validate(shiny::need(FALSE, msg))    
   }  
@@ -52,14 +53,14 @@ as_module_output_safe_list <- function(x) {
 
 #' @keywords internal
 #' @export
-`$.module_output_safe_list` <- `[[.module_output_safe_list`
+`$.dv_manager_module_output_safe_list` <- `[[.dv_manager_module_output_safe_list`
 
 #' @keywords internal
 #' @export
-`[.module_output_safe_list` <- function(x, i) {
+`[.dv_manager_module_output_safe_list` <- function(x, i) {
   missing_elements <- setdiff(i, names(x))
   if (is.character(i) && length(setdiff(i, names(x))) > 0) {
-    msg <- sprintf("Elements '%s' not found in module_output", paste(missing_elements, collapse = ", "))
+    msg <- sprintf("Elements %s not found in module_output", paste0("'", missing_elements, "'", collapse = ", "))
     log_warn(msg)
     shiny::validate(shiny::need(FALSE, msg))
   }  
