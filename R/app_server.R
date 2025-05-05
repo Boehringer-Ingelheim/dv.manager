@@ -327,7 +327,7 @@ app_server_ <- function(input, output, session, opts) {
   # This is required for the modules to be able to read the output of other modules that are not yet declared
 
   module_output_func <- function() {
-    as_module_output_safe_list(module_output)
+    as_dv_manager_module_output_safe_list(module_output)
   }
 
   module_args <- list(
