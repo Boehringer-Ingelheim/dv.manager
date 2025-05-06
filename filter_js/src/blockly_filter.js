@@ -84,8 +84,10 @@ const filterBlockly = (() => {
 
   const C = {
     TYPE: {
-      FILTER_COMB_OPERATION: 'c_filter_comb_operation',
-      FILTER_NOT_OPERATION: 'c_filter_not_operation',
+      ROW_COMB_OPERATION: 'c_row_comb_operation',
+      ROW_NOT_OPERATION: 'c_row_not_operation',
+      SET_COMB_OPERATION: 'c_set_comb_operation',
+      SET_COMPLEMENT_OPERATION: 'c_set_complement_operation',
       DATASETS_FILTER: 'datasets_filter',
       SUBJECT_FILTER: 'subject_filter'
     }
@@ -199,10 +201,39 @@ const filterBlockly = (() => {
             throw new Error("Unkown operation: " + current_filter.operation)
           }
 
+        } else if (current_filter.kind === "set_operation") {
+
+          if (current_filter.operation === "intersect" || current_filter.operation === "union") {
+            current_block.type = C.TYPE.SET_COMB_OPERATION;
+            current_block.id = Blockly.utils.idGenerator.genUid();
+            current_block.extraState = {
+              data: []
+            };
+            current_block.fields = { operation: current_filter.operation };
+            current_block.inputs = {};
+            for (let idx = 0; idx < current_filter.children.length; idx++) {
+              let input_id = get_random_input_id();
+              current_block.extraState.data.push(input_id);
+              current_block.inputs[input_id] = { block: {} };
+              stack.push([current_block.inputs[input_id].block, current_filter.children[idx]]);
+            }
+            current_block.extraState.data.push(get_random_input_id()); // One extra because we want a free input
+          } else if (current_filter.operation === "complement") {
+            current_block.type = C.TYPE.SET_COMPLEMENT_OPERATION;
+            current_block.id = Blockly.utils.idGenerator.genUid();
+            current_block.fields = { operation: current_filter.operation };
+            current_block.inputs = {
+              contents_fix: { block: {} }
+            };
+            stack.push([current_block.inputs.contents_fix.block, current_filter.children[0]]);
+          } else {
+            throw new Error("Unkown operation: " + current_filter.operation)
+          }
+
         } else if (current_filter.kind === "row_operation") {
 
           if (current_filter.operation === "and" || current_filter.operation === "or") {
-            current_block.type = C.TYPE.FILTER_COMB_OPERATION;
+            current_block.type = C.TYPE.ROW_COMB_OPERATION;
             current_block.id = Blockly.utils.idGenerator.genUid();
             current_block.extraState = {
               data: []
@@ -217,7 +248,7 @@ const filterBlockly = (() => {
             }
             current_block.extraState.data.push(get_random_input_id()); // One extra because we want a free input
           } else if (current_filter.operation === "not") {
-            current_block.type = C.TYPE.FILTER_NOT_OPERATION;
+            current_block.type = C.TYPE.ROW_NOT_OPERATION;
             current_block.id = Blockly.utils.idGenerator.genUid();
             current_block.fields = { operation: current_filter.operation };
             current_block.inputs = {
@@ -286,6 +317,26 @@ const filterBlockly = (() => {
   const subject_filter_generator = function (block, generator) {
     const code = generator.valueToCode(block, "content", 0);
     return ('{"subject_filter": {"children": [' + code + '] }}');
+  }
+
+  const set_operation_generator = function (block, generator) {
+    let children_code = "";
+    let current_inputs = block.inputList.map(x => x.name);
+    for (input of current_inputs) {
+      const code = generator.valueToCode(block, input, 0);
+      if (code !== '') {
+        children_code = children_code + code + ", ";
+      }
+    }
+    children_code = children_code.slice(0, -2);
+
+    const kind = 'set_operation';
+    const operation = block.getFieldValue('operation');
+    const code = '{' +
+      '"kind": "' + kind + '"' +
+      ', "operation": "' + operation + '"' +
+      ', "children": [' + children_code + ']}';
+    return ([code, null])
   }
 
   const row_operation_generator = function (block, generator) {
@@ -490,19 +541,29 @@ const filterBlockly = (() => {
           contents: [
             {
               kind: 'block',
-              type: C.TYPE.FILTER_COMB_OPERATION
+              type: C.TYPE.ROW_COMB_OPERATION
             },
             {
               kind: 'block',
-              type: C.TYPE.FILTER_NOT_OPERATION
+              type: C.TYPE.ROW_NOT_OPERATION
+            },
+            {
+              kind: 'block',
+              type: C.TYPE.SET_COMB_OPERATION
+            },
+            {
+              kind: 'block',
+              type: C.TYPE.SET_COMPLEMENT_OPERATION
             }
           ]
         },
       ]
     };
 
-    json_generator.forBlock[C.TYPE.FILTER_COMB_OPERATION] = row_operation_generator;
-    json_generator.forBlock[C.TYPE.FILTER_NOT_OPERATION] = row_operation_generator;
+    json_generator.forBlock[C.TYPE.ROW_COMB_OPERATION] = row_operation_generator;
+    json_generator.forBlock[C.TYPE.ROW_NOT_OPERATION] = row_operation_generator;
+    json_generator.forBlock[C.TYPE.SET_COMB_OPERATION] = set_operation_generator;
+    json_generator.forBlock[C.TYPE.SET_COMPLEMENT_OPERATION] = set_operation_generator;
 
     // Preface End
 
@@ -562,8 +623,8 @@ const filterBlockly = (() => {
       remove_value_inputs(block, empty_input_names)
     };
 
-    Blockly.Blocks[C.TYPE.FILTER_COMB_OPERATION] = {
-      init: function () {
+    Blockly.Blocks[C.TYPE.ROW_COMB_OPERATION] = {
+      init: function () {                
         this.appendDummyInput("header")
           .appendField(new Blockly.FieldDropdown(
             [['and', 'and'], ['or', 'or']]
@@ -589,11 +650,50 @@ const filterBlockly = (() => {
       }
     };
 
-    Blockly.Blocks[C.TYPE.FILTER_NOT_OPERATION] = {
-      init: function () {
+    Blockly.Blocks[C.TYPE.ROW_NOT_OPERATION] = {
+      init: function () {        
         this.appendDummyInput("header")
           .appendField(new Blockly.FieldDropdown(
             [['not', 'not']]
+          ), "operation")
+        this.appendValueInput("contents_fix");
+        this.setOutput(true);
+        this.setColour(255);
+      }
+    };
+
+    Blockly.Blocks[C.TYPE.SET_COMB_OPERATION] = {
+      init: function () {        
+        this.appendDummyInput("header")
+          .appendField(new Blockly.FieldDropdown(
+            [['intersect', 'intersect'], ['union', 'union']]
+          ), "operation");
+        this.setOutput(true);
+        this.setColour(255);
+      },// This is called during serialization
+      saveExtraState: function () {
+        let saved_inputs = this.inputList.map(x => x.name).filter(x => x.startsWith("contents_"))
+        logger(saved_inputs);
+        return { data: saved_inputs };
+      },
+
+      loadExtraState: function (state) {
+        if (state && state.data !== undefined && state.data.length > 0) {
+          logger("Loading with state")
+          populate_inputs(this, state.data);
+          logger(this.inputList.map(x => x.name));
+        } else {
+          logger("Loading with no state");
+          append_value_input(this);
+        }
+      }
+    };
+
+    Blockly.Blocks[C.TYPE.SET_COMPLEMENT_OPERATION] = {
+      init: function () {        
+        this.appendDummyInput("header")
+          .appendField(new Blockly.FieldDropdown(
+            [['complement', 'complement']]
           ), "operation")
         this.appendValueInput("contents_fix");
         this.setOutput(true);
@@ -607,6 +707,7 @@ const filterBlockly = (() => {
           .appendField('Subject Filter');
         this.appendValueInput("content");
         this.setColour(160);
+        this.is_top_subject = true;
       }
     };
 
@@ -781,12 +882,12 @@ const filterBlockly = (() => {
           }
         }
 
-        if (new_parent_block && new_parent_block.type === C.TYPE.FILTER_COMB_OPERATION) {
+        if (new_parent_block && (new_parent_block.type === C.TYPE.ROW_COMB_OPERATION || new_parent_block.type === C.TYPE.SET_COMB_OPERATION)) {
           remove_empty_inputs(new_parent_block);
           append_value_input(new_parent_block);
         }
       } else if (event.reason.includes("disconnect")) {
-        if (old_parent_block && old_parent_block.type === C.TYPE.FILTER_COMB_OPERATION) {
+        if (old_parent_block && (old_parent_block.type === C.TYPE.ROW_COMB_OPERATION || old_parent_block.type === C.TYPE.SET_COMB_OPERATION)) {
           // Remove the input that has been disconnected
           const input_for_removal = event.oldInputName;
           remove_value_inputs(old_parent_block, [input_for_removal]);

@@ -359,10 +359,11 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
     } else {
       stop(paste("Unknown operation: ", operation))
     }
-  } else if (kind == "filter") {
+  } else if (kind == "filter" || kind == "row_operation") {
     # redirect but do not process
-    mask <- process_dataset_filter_element(dataset_list, filter_element)[["mask"]]
-    dataset <- filter_element[["dataset"]] # TODO: Replace by table
+    processed_element <- process_dataset_filter_element(dataset_list, filter_element)
+    mask <- processed_element[["mask"]]
+    dataset <- processed_element[["dataset"]]
     subjects <- as.character(dataset_list[[dataset]][[sbj_var]][mask])
   } else {
     stop(paste("Unknown kind: ", kind))
@@ -478,6 +479,7 @@ new_filter_ui <- function(id, dataset_lists, state = NULL) {
 
 new_filter_server <- function(id, selected_dataset_name, strict = TRUE) {
   mod <- function(input, output, session) {
+    shiny::setBookmarkExclude("IGNORE_INPUT")
     ns <- session[["ns"]]
 
     message(paste("Listening to:", ns("json")))
