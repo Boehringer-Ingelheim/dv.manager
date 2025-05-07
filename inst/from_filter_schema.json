@@ -76,7 +76,7 @@
     "set_operation_complement": {
       "type": "object",
       "properties": {
-        "kind": { "type": "string", "enum": ["row_operation"] },
+        "kind": { "type": "string", "enum": ["set_operation"] },
         "operation": { "type": "string", "enum": ["complement"] },
             "children": {
               "type": "array",
