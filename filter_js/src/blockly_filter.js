@@ -601,7 +601,7 @@ const filterBlockly = (() => {
     };
 
     let append_value_input = function (block) {
-      block.appendValueInput(get_random_input_id());
+      block.appendValueInput(get_random_input_id()).setCheck(["filter", "row"]);
     }
 
     let remove_value_inputs = function (block, input_names_for_removal) {
@@ -629,7 +629,7 @@ const filterBlockly = (() => {
           .appendField(new Blockly.FieldDropdown(
             [['and', 'and'], ['or', 'or']]
           ), "operation");
-        this.setOutput(true);
+        this.setOutput(true, "row");
         this.setColour(255);
       },// This is called during serialization
       saveExtraState: function () {
@@ -656,8 +656,9 @@ const filterBlockly = (() => {
           .appendField(new Blockly.FieldDropdown(
             [['not', 'not']]
           ), "operation")
-        this.appendValueInput("contents_fix");
-        this.setOutput(true);
+        this.appendValueInput("contents_fix")
+          .setCheck(["filter", "row"]);
+        this.setOutput(true, "row");
         this.setColour(255);
       }
     };
@@ -668,7 +669,7 @@ const filterBlockly = (() => {
           .appendField(new Blockly.FieldDropdown(
             [['intersect', 'intersect'], ['union', 'union']]
           ), "operation");
-        this.setOutput(true);
+          this.setOutput(true, "set");
         this.setColour(255);
       },// This is called during serialization
       saveExtraState: function () {
@@ -696,7 +697,7 @@ const filterBlockly = (() => {
             [['complement', 'complement']]
           ), "operation")
         this.appendValueInput("contents_fix");
-        this.setOutput(true);
+        this.setOutput(true, "set");
         this.setColour(255);
       }
     };
@@ -729,7 +730,8 @@ const filterBlockly = (() => {
           this.appendDummyInput()
             .appendField("Dataset Filter: ")
             .appendField(dataset_name, "dataset_name");
-          this.appendValueInput("children");
+          this.appendValueInput("children")
+          .setCheck(["filter", "row"]);
           this.setColour(dataset_color);
           this.dataset_name = dataset_name;
           this.is_top_dataset = true;
@@ -772,7 +774,7 @@ const filterBlockly = (() => {
                 .appendField(new multiPickerField(dd_options), "value")
                 .appendField(variable_na_label)
                 .appendField(new Blockly.FieldCheckbox(false), 'include_NA');
-              this.setOutput(true);
+              this.setOutput(true, "filter");
               this.setColour(block_color);
               this.variable_name = variable_name;
               this.dataset_name = dataset_name;
@@ -797,7 +799,7 @@ const filterBlockly = (() => {
                 .appendField(new Blockly.FieldLabel(variable_na_label, "na_label"))
                 .appendField(new Blockly.FieldCheckbox(false), 'include_NA');
 
-              this.setOutput(true);
+              this.setOutput(true, "filter");
               this.setColour(block_color);
               this.variable_name = variable_name;
               this.dataset_name = dataset_name;
@@ -819,7 +821,7 @@ const filterBlockly = (() => {
                 .appendField(new datePickerField(max, min, max), "max")
                 .appendField(variable_na_label)
                 .appendField(new Blockly.FieldCheckbox(false), 'include_NA');
-              this.setOutput(true);
+              this.setOutput(true, "filter");
               this.setColour(block_color);
               this.variable_name = variable_name;
               this.dataset_name = dataset_name;
@@ -862,21 +864,44 @@ const filterBlockly = (() => {
 
         let root_block = current_block;
 
-        while (root_block.getParent() !== null) {
+        // Look for the highest block that is a row operation or a dataset filter
+
+        while (root_block.getParent() !== null &&
+         root_block.getParent().type !== C.TYPE.SET_COMB_OPERATION &&
+         root_block.getParent().type !== C.TYPE.SET_COMPLEMENT_OPERATION &&
+         root_block.getParent().type !== C.TYPE.SUBJECT_FILTER
+        ) {
           root_block = root_block.getParent();
         }
 
         // Only check if the top parent is a dataset
 
-        if (root_block.is_top_dataset) {
-          const dataset_name = root_block.dataset_name;
+        if (
+          root_block.is_top_dataset ||
+          root_block.type === C.TYPE.ROW_COMB_OPERATION ||
+          root_block.type === C.TYPE.ROW_NOT_OPERATION
+        ) {          
+
+          // If a dataset filter is on the top we take set the target dataset as that one
+          // Otherwise we set it inside the loop. It is set to the first block that we find that has
+          // a dataset_name property.
+          // We travel the whole tree this is can be optimized but as trees should not be too deep it is left as is.
+
+          let dataset_name = root_block.is_top_dataset ? root_block.dataset_name : null;
+          logger("Before loop: " + dataset_name)
           let stack = [];
           stack.push(root_block);
           while (stack.length) {
             let b = stack.pop();
+            if(b.dataset_name && dataset_name === null) {
+              dataset_name = b.dataset_name
+              logger("Set in loop: " + dataset_name)
+            }
+            logger("b.dataset_name: " + b.dataset_name)
             if (b.dataset_name && b.dataset_name !== dataset_name) {
               logger("Incorrect piece in stack");
               current_block.unplug();
+              break;
             }
             stack.push(...b.getChildren());
           }
