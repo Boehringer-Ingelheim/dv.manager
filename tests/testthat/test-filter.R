@@ -44,7 +44,7 @@ local({
     expected <- c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE)
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
-    expect_identical(processed_element[["dataset"]], "d")    
+    expect_identical(processed_element[["dataset"]], "d")
   })
 
   test_that("process_dataset_filter_element - select_subset filter returns mask excluding NAs", {
@@ -59,8 +59,7 @@ local({
     expected <- c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE)
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
-    expect_identical(processed_element[["dataset"]], "d") 
-    
+    expect_identical(processed_element[["dataset"]], "d")
   })
 
   test_that("process_dataset_filter_element - select_subset filter returns mask including NAs", {
@@ -75,8 +74,7 @@ local({
     expected <- c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE)
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
-    expect_identical(processed_element[["dataset"]], "d") 
-    
+    expect_identical(processed_element[["dataset"]], "d")
   })
 
   test_that("process_dataset_filter_element - select_subset filter returns mask for logical excluding NAs", {
@@ -92,8 +90,7 @@ local({
     expected <- c(TRUE, TRUE, TRUE, FALSE, FALSE, FALSE)
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
-    expect_identical(processed_element[["dataset"]], "d") 
-    
+    expect_identical(processed_element[["dataset"]], "d")
   })
 
   test_that("process_dataset_filter_element - select_subset filter returns mask for logical including NAs", {
@@ -109,8 +106,7 @@ local({
     expected <- c(TRUE, TRUE, TRUE, FALSE, FALSE, TRUE)
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
-    expect_identical(processed_element[["dataset"]], "d") 
-    
+    expect_identical(processed_element[["dataset"]], "d")
   })
 
   test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for Date type", {
@@ -127,8 +123,7 @@ local({
     expected <- c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE)
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
-    expect_identical(processed_element[["dataset"]], "d") 
-    
+    expect_identical(processed_element[["dataset"]], "d")
   })
 
   test_that("process_dataset_filter_element - select_date filter returns mask including NAs for Date type", {
@@ -145,7 +140,7 @@ local({
     expected <- c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE)
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
-    expect_identical(processed_element[["dataset"]], "d") 
+    expect_identical(processed_element[["dataset"]], "d")
   })
 
   test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for POSIX type", {
@@ -162,7 +157,7 @@ local({
     expected <- c(FALSE, TRUE, TRUE, TRUE, FALSE, FALSE)
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
-    expect_identical(processed_element[["dataset"]], "d") 
+    expect_identical(processed_element[["dataset"]], "d")
   })
 
   test_that("process_dataset_filter_element - select_date filter returns mask including NAs for POSIX type", {
@@ -179,11 +174,10 @@ local({
     expected <- c(FALSE, TRUE, TRUE, TRUE, FALSE, TRUE)
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
-    expect_identical(processed_element[["dataset"]], "d")     
+    expect_identical(processed_element[["dataset"]], "d")
   })
 
   test_that("process_dataset_filter_element - dataset filters fail when the current_table_is not the same as the table in the filter", {
-
     dataset_list[["d2"]] <- dataset_list[["d"]]
     e <- list(
       kind = "row_operation",
@@ -208,7 +202,7 @@ local({
           dataset = "d2"
         )
       )
-    )    
+    )
 
     expect_error(
       process_dataset_filter_element(dataset_list = dataset_list, filter_element = e),
@@ -246,7 +240,6 @@ local({
       regexp = "Filtering on the wrong dataset",
       fixed = TRUE
     )
-
   })
 
   test_that("process_dataset_filter_element - dataset filters fail when the table does not contain the filtered field", {
@@ -378,7 +371,6 @@ local({
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
     expect_identical(processed_element[["dataset"]], "d")
-    
   })
 
   test_that("process_dataset_filter_element - and filter operation returns mask for n elements", {
@@ -411,7 +403,6 @@ local({
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
     expect_identical(processed_element[["dataset"]], "d")
-        
   })
 
   test_that("process_dataset_filter_element - and filter operation fails when it does not have at least 1 children", {
@@ -447,7 +438,6 @@ local({
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
     expect_identical(processed_element[["dataset"]], "d")
-    
   })
 
   test_that("process_dataset_filter_element - or filter operation returns mask for n elements", {
@@ -480,7 +470,6 @@ local({
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
     expect_identical(processed_element[["dataset"]], "d")
-    
   })
 
   test_that("process_dataset_filter_element - or filter operation fails when it does not have at least 1 children", {
@@ -517,8 +506,6 @@ local({
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
     expect_identical(processed_element[["dataset"]], "d")
-
-    
   })
 
   test_that("process_dataset_filter_element - not filter operation fails when it does not have exactly 1 children", {
@@ -625,7 +612,7 @@ local({
           kind = "dataset",
           name = "d1",
           children = list()
-        ),        
+        ),
         list(
           kind = "dataset",
           name = "d1",
@@ -649,7 +636,7 @@ local({
 
     e <- list(
       kind = "datasets",
-      children = list(        
+      children = list(
         list(
           kind = "dataset",
           name = "d3",
@@ -937,6 +924,66 @@ local({
     expect_error(
       process_subject_filter_element(dataset_list = dataset_list, filter_element = e),
       regexp = "`complement` operation requires exactly one child",
+      fixed = TRUE
+    )
+  })
+
+  test_that("set operations cannot be child of a row operation or a dataset filter", {
+    browser()
+
+    e <- list(
+      kind = "row_operation",
+      operation = "not",
+      children = list(
+        list(
+          kind = "set_operation",
+          operation = "complement",
+          children = list(
+            list(
+              kind = "filter",
+              operation = "select_range",
+              max = 4,
+              min = 2,
+              include_NA = FALSE,
+              variable = "range_var",
+              dataset = "d"
+            )
+          )
+        )
+      )
+    )
+
+    expect_error(
+      process_subject_filter_element(dataset_list = dataset_list, filter_element = e),
+      regexp = "Unknown kind:  set_operation",
+      fixed = TRUE
+    )
+
+    e <- list(
+      kind = "row_operation",
+      operation = "and",
+      children = list(
+        list(
+          kind = "set_operation",
+          operation = "complement",
+          children = list(
+            list(
+              kind = "filter",
+              operation = "select_range",
+              max = 4,
+              min = 2,
+              include_NA = FALSE,
+              variable = "range_var",
+              dataset = "d"
+            )
+          )
+        )
+      )
+    )
+
+    expect_error(
+      process_subject_filter_element(dataset_list = dataset_list, filter_element = e),
+      regexp = "Unknown kind:  set_operation",
       fixed = TRUE
     )
   })
@@ -1324,11 +1371,6 @@ local({
 
     expect_identical(app$get_value(output = "mod-text"), "1")
   })
-
-
-
-
-
 
   test_that("subject filters are applied", {
     # Filter on ds2 see the effect on ds1
