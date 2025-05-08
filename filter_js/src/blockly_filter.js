@@ -926,6 +926,10 @@ const filterBlockly = (() => {
 
     let options = {};
 
+    options.maxInstances = {};
+    const idx_singleton_cat = toolbox.contents.findIndex(x=>x.name === "Filter Types");
+    toolbox.contents[idx_singleton_cat].contents.map((x)=>options.maxInstances[x.type] = 1)    
+
     options.toolbox = toolbox;
     let ws = Blockly.inject(container_div, options);
 

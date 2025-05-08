@@ -477,7 +477,7 @@ new_filter_ui <- function(id, dataset_lists, state = NULL) {
   )
 }
 
-new_filter_server <- function(id, selected_dataset_name, strict = TRUE) {
+new_filter_server <- function(id, selected_dataset_name, strict = FALSE) {
   mod <- function(input, output, session) {
     shiny::setBookmarkExclude("IGNORE_INPUT")
     ns <- session[["ns"]]
