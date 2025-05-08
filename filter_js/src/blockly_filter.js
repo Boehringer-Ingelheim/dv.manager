@@ -970,7 +970,7 @@ const filterBlockly = (() => {
 
   let chaff = function(){
     if(Blockly.getMainWorkspace() !== undefined){
-      Blockly.hideChaff; 
+      Blockly.hideChaff(); 
     }    
   }
 
