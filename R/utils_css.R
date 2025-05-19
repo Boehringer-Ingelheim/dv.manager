@@ -92,7 +92,7 @@ get_app_theme <- function(custom = FALSE, version = 3) {
   if (!isTRUE(getOption("dv_manager_ignore_css"))) {
     if (isFALSE(custom)) {
       theme <- bslib::bs_theme(version = version) %>%
-        bslib::bs_add_variables("brand-primary" = "#002f62") %>%
+        bslib::bs_add_variables("brand-primary" = "#08312A") %>%
         bslib::bs_add_rules(sass::sass_file(app_sys("www/css/custom.scss")))
     } else {
       theme <- bslib::bs_theme(version = version) %>%

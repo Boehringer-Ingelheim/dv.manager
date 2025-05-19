@@ -81,7 +81,7 @@ app_server_ <- function(input, output, session, opts) {
         "affm[[\"utils\"]][[\"switch_function\"]]",
         msg = "Switch function has been moved to the list of arguments passed to the module"
       )
-      shiny::updateTabsetPanel(session, "__tabset_0__", selected)
+      session$sendCustomMessage("set_active_tab", list(id = selected))      
     }
   )
 
@@ -95,7 +95,6 @@ app_server_ <- function(input, output, session, opts) {
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
   enable_dataset_filter <- opts[["enable_dataset_filter"]]
-
 
   ## Feature switch for new data filter
 
@@ -347,9 +346,9 @@ app_server_ <- function(input, output, session, opts) {
     module_names = module_names,
     utils = list(
       switch2 = function(selected) {
-        .Deprecated(
+        .Defunct(
           "switch2mod",
-          "switch2 is being deprecated in favor of switch2mod. switch2mod directly works on module ids and supports switching to nested tabs." # nolint
+          "switch2. is no longer available" # nolint
         )
         if (!checkmate::test_string(selected, min.chars = 1)) {
           log_warn("selected must be a non-empty string")
@@ -380,15 +379,7 @@ app_server_ <- function(input, output, session, opts) {
           log_warn("selected must be a module id")
           return(NULL)
         }
-
-        this_hierarchy_value <- module_hierarchy_list[[selected]]
-        this_hierarchy_names <- names(this_hierarchy_value)
-
-        for (idx in seq_along(this_hierarchy_value)) {
-          tab_value <- this_hierarchy_value[[idx]]
-          tabset_id <- this_hierarchy_names[[idx]]
-          shiny::updateTabsetPanel(session, tabset_id, tab_value)
-        }
+        session$sendCustomMessage("set_active_tab", list(tab_id = selected))
       }
     )
   )

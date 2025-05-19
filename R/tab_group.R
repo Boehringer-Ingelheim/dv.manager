@@ -228,40 +228,87 @@ process_module_list <- function(module_list) {
   resolved_module_list <- resolve_module_list(module_list)
   # We need the ns to be able to invoke all ui functions
   # TODO: Consider removing namespacing it would make all these simpler
-  resolved_module_list[["ui"]] <- function(ns) {
-    compose_ui(resolved_module_list[["nested_hierarchy"]], resolved_module_list[["ui_list"]], ns)
+
+  resolved_module_list[["ui"]] <- function(ns, footer) {
+    compose_ui(resolved_module_list[["nested_hierarchy"]], resolved_module_list[["ui_list"]], ns, footer)
   }
 
   return(resolved_module_list)
 }
 
-compose_ui <- function(nh, ui_fn_list, ns) {
-  if (is.list(nh)) {
-    assert(setequal(c("tabset_id", "children", "tabset_name"), names(nh)), "Incorrect tabset structure")
-    is_root <- is.na(nh[["tabset_name"]])
-    children_ui <- lapply(nh[["children"]], \(x) compose_ui(x, ui_fn_list, ns))
-    ui <- do.call(shiny::tabsetPanel, c(list(id = nh[["tabset_id"]]), children_ui, type = "pills"))
+compose_ui <- function(nh, ui_fn_list, ns, footer) {
 
-    if (!is_root) {
-      res <- shiny::tabPanel(
-        title = nh[["tabset_name"]],
-        value = nh[["tabset_id"]],
-        ui
-      )
-    } else {
-      res <- ui
-    }
-  } else if (checkmate::test_string(nh)) {
-    res <- shiny::tabPanel(
-      title = ui_fn_list[[nh]][["module_label"]],
-      value = ui_fn_list[[nh]][["module_id"]],
-      shiny::div(
-        class = "min-height-50-vh", # Force so tippy top menus fit into the screen
-        ns_css(ui_fn_list[[nh]][["ui"]](ns(ui_fn_list[[nh]][["module_id"]])))
-      )
-    )
-  } else {
-    stop("Unknown Case")
+  mod_tabs <- vector(mode = "list", length = length(ui_fn_list))
+  mod_buttons <- vector(mode = "list", length = length(ui_fn_list))
+  mod_nms <- names(ui_fn_list)
+
+  for (idx in seq_along(mod_tabs)) {
+    mod_id <- mod_nms[[idx]]
+    mod_tabs[[idx]] <- shiny::div(value = mod_id, ns_css(ui_fn_list[[mod_id]][["ui"]](ns(ui_fn_list[[mod_id]][["module_id"]]))), class = "dv_tab_content")
+    mod_buttons[[idx]] <- shiny::tags[["button"]]("data-value" = mod_id, mod_id, type = "button", class = "dv_tab_activate_button")
   }
-  return(res)
+
+  buttons_hierarchy <- list()
+
+  stack <- list()
+  push <- function(x) { 
+    stack <<- c(stack, list(x))
+  }
+  pop <- function() {
+    x <- stack[[length(stack)]]
+    stack <<- stack[-length(stack)]
+    x
+  }
+
+  push(nh)
+
+  while (length(stack) > 0) {
+    curr_el <- pop()        
+    curr_level <- list()
+    curr_el_id <- curr_el[["tabset_id"]]
+    is_root <- is.na(curr_el[["tabset_name"]])
+    children <- curr_el[["children"]]
+
+    for (idx in seq_along(children)) {
+      curr_child <- children[[idx]]
+      is_tabset <- "tabset_id" %in% names(curr_child)
+      is_leaf <- checkmate::test_string(curr_child, min.chars = 1)
+
+      if (is_tabset) {
+        curr_child_id <- curr_child[["tabset_id"]]   
+        curr_child_name <- curr_child[["tabset_name"]] 
+        curr_level[[idx]] <- shiny::tags[["button"]]("data-value" = curr_child_id, "data-type" = "hier-button", curr_child_name, type = "button", class = "dv_tab_activate_button btn btn-primary")
+        push(curr_child)        
+      } else if (is_leaf) {
+        curr_level[[idx]] <- shiny::tags[["button"]]("data-value" = ui_fn_list[[curr_child]][["module_id"]], "data-type" = "tab-button", ui_fn_list[[curr_child]][["module_label"]], type = "button", class = "dv_tab_activate_button btn btn-primary")
+      } else {
+        stop("Unknown element")
+      }
+
+      if (idx == 1) {        
+        curr_level[[idx]] <- htmltools::tagAppendAttributes(curr_level[[idx]], class = "clicked")
+      }
+    }
+
+    buttons_hierarchy[[curr_el_id]] <- shiny::div("value" = curr_el_id, curr_level, class = "dv_button_level")
+    if (is_root) {
+      buttons_hierarchy[[curr_el_id]] <- htmltools::tagAppendAttributes(buttons_hierarchy[[curr_el_id]], class = "dv_root_button_level")
+    } else {
+      buttons_hierarchy[[curr_el_id]] <- htmltools::tagAppendAttributes(buttons_hierarchy[[curr_el_id]], class = "dv_child_button_level")
+    }
+
+  }
+
+  tabs <- shiny::div(class = "dv_tab_container", mod_tabs)
+  header <- shiny::div(
+    buttons_hierarchy,
+    class = "dv_button_container",
+    id = ns("__button_container__")
+  )
+  default_tab <- shiny::restoreInput(ns("__button_container__"), NA)
+  if (!is.na(default_tab)) header <- htmltools::tagAppendAttributes(header, "default-tab" = default_tab)
+
+  ui <- shiny::div(header, tabs, footer, class = "dv_main_panel")
+
+  return(ui)
 }

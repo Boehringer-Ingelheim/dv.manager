@@ -673,8 +673,8 @@ run_mock_switch_app <- function() {
   run_app(
     data = list("D1" = list(adsl = get_pharmaverse_data("adsl"))),
     module_list = list(
-      "Mod 1" = mod_switch("Mod 1", "Mod 2", mm_dispatch("utils", "switch2"), "mod1"),
-      "Mod 2" = mod_switch("Mod 2", "Mod 1", mm_dispatch("utils", "switch2"), "mod2")
+      "Mod 1" = mod_switch("Mod 1", "mod2", mm_dispatch("utils", "switch2mod"), "mod1"),
+      "Mod 2" = mod_switch("Mod 2", "mod1", mm_dispatch("utils", "switch2mod"), "mod2")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"

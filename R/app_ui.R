@@ -150,7 +150,6 @@ app_ui <- function(request_id) {
     theme = get_app_theme(),
     class = "display-grid",
     sidebar,
-    module_info[["ui"]](ns),
-    dataset_name
+    module_info[["ui"]](ns, dataset_name),
   )
 }
