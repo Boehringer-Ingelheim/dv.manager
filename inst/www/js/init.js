@@ -5,6 +5,13 @@ const dv_tab = (function () {
   // Lazy implementation once the need of several instances is found
   // Easy implementation just pass the container id across functions
 
+
+  // If it is not notified, because of lazy evaluation, dynamic elements and outputs are not displayed
+  // even when they are visible in the client
+  const notify_shiny_display_change = function($el, visibility) {
+    $el.trigger(visibility);
+  };
+
   const set_tab_by_tab_id = function(tab_id) {
     const container_id = document.querySelector(".dv_button_container").id;
     let target_tab_element = document.querySelector(".dv_button_container .dv_tab_activate_button[data-value='"+tab_id+"']");
@@ -47,7 +54,8 @@ const dv_tab = (function () {
     const tabs_to_deactivate = document.querySelectorAll(".dv_tab_container .dv_tab_content");
     for (let idx = 0; idx < tabs_to_deactivate.length; ++idx) {
       const current_node = tabs_to_deactivate[[idx]];
-      current_node.classList.remove("active");
+      current_node.classList.remove("active");      
+      notify_shiny_display_change($(current_node), "hidden");
     }
   }
 
@@ -71,6 +79,7 @@ const dv_tab = (function () {
 
     const tab_target = curr_el.getAttribute("data-value");    
     document.querySelector(".dv_tab_container .dv_tab_content[value='" + tab_target + "']").classList.add("active");
+    notify_shiny_display_change($(".dv_tab_container .dv_tab_content[value='" + tab_target + "']"), "shown");    
     return(tab_target);
   }
 
