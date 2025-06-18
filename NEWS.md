@@ -1,4 +1,4 @@
-# dv.manager 2.1.10-900
+# dv.manager 2.1.11
 - Fails when modules try to access a non-existant module output
 
 # dv.manager 2.1.10
