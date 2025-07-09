@@ -1,6 +1,9 @@
 # dv.manager 2.1.11-900
-- Fails when modules try to access a non-existant module output
 - Expands operations in blockly filter under development
+
+# dv.manager 2.1.11
+- Fails when modules try to access a non-existent module output
+
 
 # dv.manager 2.1.10
 
