@@ -25,7 +25,7 @@ local({
     )
 
     expect_equal(
-      app$get_value(input = "__button_container__"),
+      app$get_value(input = ID$NAV_HEADER),
       "mod2"
     )
 
@@ -80,7 +80,7 @@ local({
     )
 
     expect_equal(
-      app$get_value(input = "__button_container__"),
+      app$get_value(input = ID$NAV_HEADER),
       "mod4"
     )
 

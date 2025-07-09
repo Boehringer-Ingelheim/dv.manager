@@ -1,6 +1,11 @@
 // handle the dataset info bar
 const dv_tab = (function () {
 
+  // let log = console.log;
+  let log = function() {return;};
+
+  let containers = [];
+
   // This code assumes there will be a single instance of a dv_button_container
   // Lazy implementation once the need of several instances is found
   // Easy implementation just pass the container id across functions
@@ -12,9 +17,8 @@ const dv_tab = (function () {
     $el.trigger(visibility);
   };
 
-  const _set_tab_by_tab_id = function(tab_id) {
-    const container_id = document.querySelector(".dv_button_container").id;
-    let target_tab_element = document.querySelector(".dv_button_container .dv_tab_activate_button[data-value='"+tab_id+"']");
+  const _set_tab_by_tab_id = function(tab_id, root_el) {
+    let target_tab_element = root_el.querySelector(".dv_tab_activate_button[data-value='"+tab_id+"']");
     if(target_tab_element === null) {
       console.error("tab_id:'" + tab_id + "' not found in button set");
       return(false);
@@ -24,7 +28,7 @@ const dv_tab = (function () {
     let clicked;
     
     do {
-      clicked = document.querySelector(".dv_button_container .dv_tab_activate_button[data-value='"+next_element+"']");
+      clicked = root_el.querySelector(".dv_tab_activate_button[data-value='"+next_element+"']");
       const unclicked = clicked.parentElement.querySelector(".dv_tab_activate_button.clicked");
 
       // Apply changes elements
@@ -35,23 +39,19 @@ const dv_tab = (function () {
       next_element = clicked.parentElement.getAttribute("value");            
     } while(!clicked.parentElement.classList.contains("dv_root_button_level"));
 
-    remove_active_all();    
-    const active_tab = set_clicked_active();
-    const res = {
-      active_tab : active_tab,
-      container_id : container_id
-    }
+    remove_active_all(root_el);    
+    const res = set_clicked_active(root_el);
     return(res);    
   }
 
-  const remove_active_all = function () {
-    const button_levels_to_deactivate = document.querySelectorAll(".dv_button_container .dv_child_button_level");
+  const remove_active_all = function (root_el) {
+    const button_levels_to_deactivate = root_el.querySelectorAll(".dv_child_button_level");
     for (let idx = 0; idx < button_levels_to_deactivate.length; ++idx) {
       const current_node = button_levels_to_deactivate[[idx]];
       current_node.classList.remove("active");
     }
 
-    const tabs_to_deactivate = document.querySelectorAll(".dv_tab_container .dv_tab_content");
+    const tabs_to_deactivate = root_el.parentElement.querySelectorAll(".dv_tab_content");
     for (let idx = 0; idx < tabs_to_deactivate.length; ++idx) {
       const current_node = tabs_to_deactivate[[idx]];
       current_node.classList.remove("active");      
@@ -59,16 +59,15 @@ const dv_tab = (function () {
     }
   }
 
-  const set_clicked_active = function () {
-    let curr_el = document.querySelector(".dv_button_container .dv_root_button_level .dv_tab_activate_button.clicked");
-    let container_id = document.querySelector(".dv_button_container");
+  const set_clicked_active = function (root_el) {
+    let curr_el = root_el.querySelector(".dv_root_button_level .dv_tab_activate_button.clicked");    
 
     while (curr_el.getAttribute("data-type") !== "tab-button") {
       const curr_target_value = curr_el.getAttribute("data-value");
       const curr_button_type = curr_el.getAttribute("data-type");
 
       if (curr_button_type === "hier-button") {
-        const lvl_to_activate = document.querySelector(".dv_button_level[value='" + curr_target_value + "']");
+        const lvl_to_activate = root_el.querySelector(".dv_button_level[value='" + curr_target_value + "']");
         lvl_to_activate.classList.add("active");
         curr_el = lvl_to_activate.querySelector(".clicked")
       } else {
@@ -77,16 +76,17 @@ const dv_tab = (function () {
       }
     }
 
-    const tab_target = curr_el.getAttribute("data-value");    
-    document.querySelector(".dv_tab_container .dv_tab_content[value='" + tab_target + "']").classList.add("active");
-    notify_shiny_display_change($(".dv_tab_container .dv_tab_content[value='" + tab_target + "']"), "shown");    
+    const tab_target = curr_el.getAttribute("data-value");  
+    
+    root_el.parentElement.querySelector(".dv_tab_container .dv_tab_content[value='" + tab_target + "']").classList.add("active");
+    notify_shiny_display_change($(root_el).find(".dv_tab_content[value='" + tab_target + "']"), "shown");    
     return(tab_target);
   }
 
-  const on_click = function (e) {
+  const on_click = function (e, root_el) {
 
-    const container_id = document.querySelector(".dv_button_container").id;
-    const clicked = e !== null ? e.target : document.querySelector(".dv_button_container .dv_root_button_level.clicked");
+    const container_id = root_el.id;
+    const clicked = e !== null ? e.target : root_el.querySelector(".dv_root_button_level.clicked");
 
     if (clicked.classList.contains("dv_tab_activate_button")) {
       const unclicked = clicked.parentElement.querySelector(".dv_tab_activate_button.clicked");
@@ -95,9 +95,9 @@ const dv_tab = (function () {
       clicked.classList.add("clicked");
 
       // Hide everything
-      remove_active_all();
+      remove_active_all(root_el);
       // Show clicked
-      const active_tab = set_clicked_active();
+      const active_tab = set_clicked_active(root_el);
       const res = {
         active_tab : active_tab,
         container_id : container_id
@@ -116,39 +116,45 @@ const dv_tab = (function () {
 
   }
 
-  const on_init = function () {
-    let default_tab = document.querySelector(".dv_button_container").getAttribute("default-tab");
-    if(default_tab === null) {
-      default_tab = document.querySelector(".dv_button_container .dv_tab_activate_button[data-type='tab-button']").getAttribute("data-value");
-    }
-    const active_tab = _set_tab_by_tab_id(default_tab);    
-    return(active_tab);
-
-  }
-
-  const init = function () {
+  const init = function (id) {
+    log("Initializing: " + id);
+    
 
     // Set listeners
 
     let in_set = function () {
 
-      // Send on start
-      const response = on_init();      
-      if (!response !== null) {
-        Shiny.setInputValue(response.container_id, response.active_tab)
+      let root_el = document.getElementById(id);
+      let default_tab = root_el?.getAttribute("default-tab");
+      
+      let first_tab_button = root_el.querySelector(".dv_tab_activate_button[data-type='tab-button']");
+      let first_tab = first_tab_button !== null?first_tab_button.getAttribute("data-value"):null;
+
+      let active_tab;
+      if (default_tab !== null) {
+        active_tab = _set_tab_by_tab_id(default_tab, root_el);
+      } else if(first_tab !== null) {        
+        active_tab = _set_tab_by_tab_id(first_tab, root_el);
+      } else {
+        // No buttons in nav header, no modules in the app
+        active_tab = null;
+      }
+
+      // Send on start       
+      if (active_tab !== null) {
+        Shiny.setInputValue(id, active_tab)
       }
 
       // Set listener for button presses
-      document.getElementById('__button_container__')
-        .addEventListener('click', function (event) {
-          const response = on_click(event);
+      root_el.addEventListener('click', function (event) {
+          const response = on_click(event, root_el);
           if (!response !== null) {
-            Shiny.setInputValue(response.container_id, response.active_tab)
+            Shiny.setInputValue(id, response.active_tab)
           }
         });
 
       Shiny.addCustomMessageHandler("set_active_tab", function(message) {
-        set_tab_by_tab_id(message.tab_id)
+        set_tab_by_tab_id(id, message.tab_id) // TODO: This limits the tabbing to a single nav bar
       });
 
       // Call once and remove    
@@ -161,14 +167,12 @@ const dv_tab = (function () {
   }
 
   const res = {
-    init: init,
+    init: init,    
     set: set_tab_by_tab_id // Used in testing
   }
 
   return (res)
 })()
-
-dv_tab.init()
 
 $(document).ready(function () {
   //toggle sidebar resize  

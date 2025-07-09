@@ -45,11 +45,6 @@ run_mock_app_tab_group <- function() {
   )
 }
 
-LAYOUT <- poc( # nolint
-  ATTRIBUTE = "layout",
-  TAB_GROUP = "tab_group"
-)
-
 #' Create a Tabbed Shiny Module Collection
 #'
 #' @description
@@ -85,11 +80,7 @@ is_tab_group <- function(x) {
 
 resolve_tab_group <- function(x, nm, hierarchy, tab_group_count, nested_hierarchy) {
   message(paste("Resolving tab", nm))
-  new_tab_group_count <- tab_group_count + 1
-  # The id of the new tabset is the same as the value of the tab in the parent tabset
-  # nolint start
-  # shiny::tabSetPanel(id = parent, shiny::tabPanel(value = new_parent_tab_value, shiny::tabsetPanel(id = new_child_tabset_id)))
-  # nolint end
+  new_tab_group_count <- tab_group_count + 1  
   new_tab_group_id <- paste0("__tabset_", new_tab_group_count, "__")
 
   assert(is.na(hierarchy[[length(hierarchy)]]))
@@ -303,12 +294,16 @@ compose_ui <- function(nh, ui_fn_list, ns, footer) {
   header <- shiny::div(
     buttons_hierarchy,
     class = "dv_button_container",
-    id = ns("__button_container__")
+    id = ns(ID$NAV_HEADER)
   )
-  default_tab <- shiny::restoreInput(ns("__button_container__"), NA)
+  default_tab <- shiny::restoreInput(ns(ID$NAV_HEADER), NA)
   if (!is.na(default_tab)) header <- htmltools::tagAppendAttributes(header, "default-tab" = default_tab)
 
-  ui <- shiny::div(header, tabs, footer, class = "dv_main_panel")
+  script <- shiny::tags[["script"]](
+    sprintf("dv_tab.init(\"%s\")", ns(ID$NAV_HEADER))
+  )
+
+  ui <- shiny::div(header, script, tabs, footer, class = "dv_main_panel")
 
   return(ui)
 }
