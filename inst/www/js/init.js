@@ -12,7 +12,7 @@ const dv_tab = (function () {
     $el.trigger(visibility);
   };
 
-  const set_tab_by_tab_id = function(tab_id) {
+  const _set_tab_by_tab_id = function(tab_id) {
     const container_id = document.querySelector(".dv_button_container").id;
     let target_tab_element = document.querySelector(".dv_button_container .dv_tab_activate_button[data-value='"+tab_id+"']");
     if(target_tab_element === null) {
@@ -109,17 +109,24 @@ const dv_tab = (function () {
 
   }
 
+  const set_tab_by_tab_id = function(tab_id) {
+
+    const response = _set_tab_by_tab_id(tab_id);
+    Shiny.setInputValue(response.container_id, response.active_tab)
+
+  }
+
   const on_init = function () {
     let default_tab = document.querySelector(".dv_button_container").getAttribute("default-tab");
     if(default_tab === null) {
       default_tab = document.querySelector(".dv_button_container .dv_tab_activate_button[data-type='tab-button']").getAttribute("data-value");
     }
-    const active_tab = set_tab_by_tab_id(default_tab);    
+    const active_tab = _set_tab_by_tab_id(default_tab);    
     return(active_tab);
 
   }
 
-  const set = function () {
+  const init = function () {
 
     // Set listeners
 
@@ -154,13 +161,14 @@ const dv_tab = (function () {
   }
 
   const res = {
-    set: set
+    init: init,
+    set: set_tab_by_tab_id // Used in testing
   }
 
   return (res)
 })()
 
-dv_tab.set()
+dv_tab.init()
 
 $(document).ready(function () {
   //toggle sidebar resize  
