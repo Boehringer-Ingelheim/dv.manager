@@ -12,21 +12,21 @@ local({
     vdoc[["add_spec"]](c(specs$tab_group$group_modules)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
-    # Switch to Module tab
-    app$set_inputs("__tabset_0__" = "__tabset_1__")
-    app$wait_for_idle()
-    html_code <- app$get_html("#__tabset_1__")
-    expect_true(
-      startsWith(html_code, "<ul class=\"nav nav-pills shiny-tab-input shiny-bound-input")
+    app$run_js("dv_tab.set('mod2')")
+
+    expect_equal(
+      app$get_js("$('#__button_container__ .dv_child_button_level.active').attr('value')"),
+      "__tabset_1__"
     )
-    expect_true(
-      grepl("Simple2", html_code)
+
+    expect_equal(
+      app$get_js("$('.dv_tab_container .dv_tab_content.active').attr('value')"),
+      "mod2"
     )
-    expect_true(
-      grepl("Simple3", html_code)
-    )
-    expect_true(
-      grepl("Nested modules", html_code)
+
+    expect_equal(
+      app$get_value(input = "__button_container__"),
+      "mod2"
     )
 
     v2 <- app$get_values(output = "mod2-text")[["output"]][["mod2-text"]]
@@ -39,20 +39,51 @@ local({
     vdoc[["add_spec"]](c(specs$tab_group$allows_nesting)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
-    # Switch to Module tab
-    app$set_inputs("__tabset_0__" = "__tabset_1__")
-    app$set_inputs("__tabset_1__" = "__tabset_2__")
+    app$run_js("dv_tab.set('mod4')")
+
     app$wait_for_idle()
-    html_code <- app$get_html("#__tabset_2__")
-    expect_true(
-      startsWith(html_code, "<ul class=\"nav nav-pills shiny-tab-input shiny-bound-input")
+
+    active_tabs <- app$get_js("
+        (function(){
+            let res = {};
+          try{
+            let al = $('#__button_container__ .dv_child_button_level.active');
+            res.length = al.length;
+            res.value = [];
+            for(let idx = 0; idx < al.length; ++idx) {
+              console.lo
+              res.value.push($(al[idx]).attr('value'))
+            }
+          } catch(error) {
+            res.error = error;
+          }
+          
+          return(res);
+        })()        
+      ")
+
+    expect_equal(
+      active_tabs$length, 2      
     )
-    expect_true(
-      grepl("Simple4", html_code)
+
+    expect_equal(
+      active_tabs$value[[1]], "__tabset_1__"
     )
-    expect_true(
-      grepl("Simple5", html_code)
+
+    expect_equal(
+      active_tabs$value[[2]], "__tabset_2__"
     )
+
+    expect_equal(
+      app$get_js("$('.dv_tab_container .dv_tab_content.active').attr('value')"),
+      "mod4"
+    )
+
+    expect_equal(
+      app$get_value(input = "__button_container__"),
+      "mod4"
+    )
+
 
     v4 <- app$get_values(output = "mod4-text")[["output"]][["mod4-text"]]
     expect_equal(
@@ -65,11 +96,9 @@ local({
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
-    app$set_inputs("__tabset_0__" = "__tabset_1__")
-    app$set_inputs("__tabset_1__" = "mod_rec_2")
+    app$run_js("dv_tab.set('mod_rec_2')")    
     app$wait_for_idle()
-    app$set_inputs("__tabset_1__" = "__tabset_2__")
-    app$set_inputs("__tabset_2__" = "mod_rec_1")
+    app$run_js("dv_tab.set('mod_rec_1')")    
     app$wait_for_idle()
 
     v1 <- app$get_values(output = TRUE)[["output"]][["mod_rec_1-output"]]
@@ -86,17 +115,14 @@ local({
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
-    app$set_inputs("__tabset_0__" = "mod_switch1")
+    app$run_js("dv_tab.set('mod_switch1')")    
     app$wait_for_idle()
     app$click("mod_switch1-switch")
     app$wait_for_idle()
 
-    t0 <- app$get_values(input = TRUE)[["input"]][["__tabset_0__"]]
-    t1 <- app$get_values(input = TRUE)[["input"]][["__tabset_1__"]]
-    t2 <- app$get_values(input = TRUE)[["input"]][["__tabset_2__"]]
-
-    expect_equal(t0, "__tabset_1__")
-    expect_equal(t1, "__tabset_2__")
-    expect_equal(t2, "mod5")
+expect_equal(
+      app$get_js("$('.dv_tab_container .dv_tab_content.active').attr('value')"),
+      "mod5"
+    )
   })
 })
