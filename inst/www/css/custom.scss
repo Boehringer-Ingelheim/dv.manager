@@ -153,7 +153,8 @@ body > .container-fluid > .dv_main_panel {
 }
 
 .dv_tab_content {
-  display: none
+  display: none;
+  height: 100%;
 }
 
 .dv_tab_content.active {
