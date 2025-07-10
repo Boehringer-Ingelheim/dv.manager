@@ -81,7 +81,7 @@ app_server_ <- function(input, output, session, opts) {
         "affm[[\"utils\"]][[\"switch_function\"]]",
         msg = "Switch function has been moved to the list of arguments passed to the module"
       )
-      session$sendCustomMessage("set_active_tab", list(id = selected))      
+      session$sendCustomMessage("set_active_tab", list(tab_id = selected))      
     }
   )
 
@@ -379,7 +379,7 @@ app_server_ <- function(input, output, session, opts) {
           log_warn("selected must be a module id")
           return(NULL)
         }
-        session$sendCustomMessage("set_active_tab", list(tab_id = selected))
+        session$sendCustomMessage("set_active_tab", list(id = session[["ns"]](ID$NAV_HEADER), tab_id = selected))
       }
     )
   )

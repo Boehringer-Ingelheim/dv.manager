@@ -40,8 +40,8 @@ const dv_tab = (function () {
     } while(!clicked.parentElement.classList.contains("dv_root_button_level"));
 
     remove_active_all(root_el);    
-    const res = set_clicked_active(root_el);
-    return(res);    
+    const active_tab_id = set_clicked_active(root_el);
+    return(active_tab_id);    
   }
 
   const remove_active_all = function (root_el) {
@@ -109,10 +109,9 @@ const dv_tab = (function () {
 
   }
 
-  const set_tab_by_tab_id = function(tab_id) {
-
-    const response = _set_tab_by_tab_id(tab_id);
-    Shiny.setInputValue(response.container_id, response.active_tab)
+  const set_tab_by_tab_id = function(tab_id, container_id) {
+    const active_tab_id = _set_tab_by_tab_id(tab_id, document.getElementById(container_id));
+    Shiny.setInputValue(container_id, active_tab_id)
 
   }
 
