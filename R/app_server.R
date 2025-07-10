@@ -346,7 +346,7 @@ app_server_ <- function(input, output, session, opts) {
       switch2 = function(selected) {
         .Defunct(
           "switch2mod",
-          "switch2. is no longer available" # nolint
+          "switch2 is no longer available. Please check the documentation in switch2mod as it no longer accepts module names, but module ids." # nolint
         )
         if (!checkmate::test_string(selected, min.chars = 1)) {
           log_warn("selected must be a non-empty string")
