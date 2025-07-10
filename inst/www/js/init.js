@@ -154,7 +154,7 @@ const dv_tab = (function () {
         });
 
       Shiny.addCustomMessageHandler("set_active_tab", function(message) {
-        set_tab_by_tab_id(id, message.tab_id) // TODO: This limits the tabbing to a single nav bar
+        set_tab_by_tab_id(message.tab_id, message.id)
       });
 
       // Call once and remove    
