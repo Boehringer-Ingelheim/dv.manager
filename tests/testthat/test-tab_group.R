@@ -8,14 +8,17 @@ local({
     dv.manager:::run_mock_app_tab_group()
   })
   root_app <- start_app_driver(app_expr)
+  .._switch_to_module <- function(tab_id, app) {
+    app$run_js(sprintf("dv_tab.set_tab_by_tab_id('%s', '%s')", tab_id, ID$NAV_HEADER))
+  }
   test_that("tab_group allows grouping of modules" |>
     vdoc[["add_spec"]](c(specs$tab_group$group_modules)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
-    app$run_js("dv_tab.set('mod2')")
+    .._switch_to_module('mod2', app)
 
     expect_equal(
-      app$get_js("$('#__button_container__ .dv_child_button_level.active').attr('value')"),
+      app$get_js(sprintf("$('#%s .dv_child_button_level.active').attr('value')", ID$NAV_HEADER)),
       "__tabset_1__"
     )
 
@@ -39,15 +42,15 @@ local({
     vdoc[["add_spec"]](c(specs$tab_group$allows_nesting)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
-    app$run_js("dv_tab.set('mod4')")
+    .._switch_to_module('mod4', app)
 
     app$wait_for_idle()
 
-    active_tabs <- app$get_js("
+    active_tabs <- app$get_js(sprintf("
         (function(){
             let res = {};
           try{
-            let al = $('#__button_container__ .dv_child_button_level.active');
+            let al = $('#%s .dv_child_button_level.active');
             res.length = al.length;
             res.value = [];
             for(let idx = 0; idx < al.length; ++idx) {
@@ -60,7 +63,7 @@ local({
           
           return(res);
         })()        
-      ")
+      ", ID$NAV_HEADER))
 
     expect_equal(
       active_tabs$length, 2      
@@ -96,9 +99,9 @@ local({
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
-    app$run_js("dv_tab.set('mod_rec_2')")    
+    .._switch_to_module('mod_rec_2', app)
     app$wait_for_idle()
-    app$run_js("dv_tab.set('mod_rec_1')")    
+    .._switch_to_module('mod_rec_1', app)
     app$wait_for_idle()
 
     v1 <- app$get_values(output = TRUE)[["output"]][["mod_rec_1-output"]]
@@ -115,7 +118,7 @@ local({
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
-    app$run_js("dv_tab.set('mod_switch1')")    
+    .._switch_to_module('mod_switch1', app)  
     app$wait_for_idle()
     app$click("mod_switch1-switch")
     app$wait_for_idle()

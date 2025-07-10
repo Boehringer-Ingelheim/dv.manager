@@ -167,7 +167,7 @@ const dv_tab = (function () {
 
   const res = {
     init: init,    
-    set: set_tab_by_tab_id // Used in testing
+    set_tab_by_tab_id: set_tab_by_tab_id // Used in testing
   }
 
   return (res)
