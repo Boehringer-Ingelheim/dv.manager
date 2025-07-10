@@ -1,3 +1,6 @@
+# dv.manager 2.1.11-9000
+- Expands operations in blockly filter under development
+
 # dv.manager 2.1.11
 - Fails when modules try to access a non-existent module output
 
@@ -8,7 +11,6 @@
 - De-exports several util functions
 - `dv.manager` automatically maps `character` variables into `factors`
 - Fixes tab group menu rendering
-
 
 # dv.manager 2.1.5
 
