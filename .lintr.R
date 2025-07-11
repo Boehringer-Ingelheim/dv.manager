@@ -3,7 +3,7 @@ linters <- lintr::modify_defaults(
   linters
   , line_length_linter = NULL                 # we see how long lines are when we write them
   , indentation_linter = NULL
-  , trailing_whitespace_linter = NULL
+  # , trailing_whitespace_linter = NULL
   , cyclocomp_linter = NULL                   # prevents trivial amount of nesting and long but straightforward functions
   , object_name_linter = NULL                 # we have reasons to capitalize. nobody in our team CamelCase. shiny does
   , object_length_linter = NULL               # we don't type long var names just because
@@ -16,6 +16,6 @@ if(identical(Sys.getenv('CI'), "true")){
     linters
     , object_usage_linter = NULL              # R lacks var declarations; it's easy to assign to the wrong variable by mistake
   )                                           # We only disable this lint rule on github because it fails there because
-}                                             # of a long-standing lintr bug 
+}                                             # of a long-standing lintr bug
 
 exclusions <- list("tests")
