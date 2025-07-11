@@ -81,7 +81,7 @@ app_server_ <- function(input, output, session, opts) {
         "affm[[\"utils\"]][[\"switch_function\"]]",
         msg = "Switch function has been moved to the list of arguments passed to the module"
       )
-      session$sendCustomMessage("set_active_tab", list(tab_id = selected))      
+      session$sendCustomMessage("set_active_tab", list(tab_id = selected))
     }
   )
 
@@ -274,26 +274,26 @@ app_server_ <- function(input, output, session, opts) {
       })
 
       shiny::observeEvent(
-        {          
+        {
           input[[ID$NAV_HEADER]]
         },
         {
           all_nm <- names(datasets_filters_info)
           current_tab <- input[[ID$NAV_HEADER]]
 
-          if(!is.null(current_tab)) {
+          if (!is.null(current_tab)) {
             used_ds <- used_datasets[[current_tab]]
           } else {
             used_ds <- NULL
           }
 
-          if(!is.null(used_ds)) {
+          if (!is.null(used_ds)) {
             used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
             unused_nm <- setdiff(all_nm, used_nm)
           } else {
             used_nm <- all_nm
             unused_nm <- character(0)
-          }            
+          }
 
           for (nm in unused_nm) {
             shinyjs::hide(datasets_filters_info[[nm]][["id_cont"]])
@@ -302,7 +302,8 @@ app_server_ <- function(input, output, session, opts) {
           for (nm in used_nm) {
             shinyjs::show(datasets_filters_info[[nm]][["id_cont"]])
           }
-        }, ignoreNULL = FALSE
+        },
+        ignoreNULL = FALSE
       )
     } else {
       log_inform("Single filter server")

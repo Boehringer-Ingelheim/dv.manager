@@ -15,7 +15,7 @@ local({
     vdoc[["add_spec"]](c(specs$tab_group$group_modules)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
-    .._switch_to_module('mod2', app)
+    .._switch_to_module("mod2", app)
 
     expect_equal(
       app$get_js(sprintf("$('#%s .dv_child_button_level.active').attr('value')", ID$NAV_HEADER)),
@@ -42,7 +42,7 @@ local({
     vdoc[["add_spec"]](c(specs$tab_group$allows_nesting)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
-    .._switch_to_module('mod4', app)
+    .._switch_to_module("mod4", app)
 
     app$wait_for_idle()
 
@@ -60,13 +60,13 @@ local({
           } catch(error) {
             res.error = error;
           }
-          
+
           return(res);
-        })()        
+        })()
       ", ID$NAV_HEADER))
 
     expect_equal(
-      active_tabs$length, 2      
+      active_tabs$length, 2
     )
 
     expect_equal(
@@ -99,9 +99,9 @@ local({
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
-    .._switch_to_module('mod_rec_2', app)
+    .._switch_to_module("mod_rec_2", app)
     app$wait_for_idle()
-    .._switch_to_module('mod_rec_1', app)
+    .._switch_to_module("mod_rec_1", app)
     app$wait_for_idle()
 
     v1 <- app$get_values(output = TRUE)[["output"]][["mod_rec_1-output"]]
@@ -118,12 +118,12 @@ local({
     app <- shinytest2::AppDriver$new(root_app$get_url())
 
     # Switch to Module tab
-    .._switch_to_module('mod_switch1', app)  
+    .._switch_to_module("mod_switch1", app)
     app$wait_for_idle()
     app$click("mod_switch1-switch")
     app$wait_for_idle()
 
-expect_equal(
+    expect_equal(
       app$get_js("$('.dv_tab_container .dv_tab_content.active').attr('value')"),
       "mod5"
     )

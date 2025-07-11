@@ -64,5 +64,5 @@ start_app_driver <- function(expr, defer = TRUE) {
 }
 
 ..switch_to_module <- function(tab_id, app) {
-    app$run_js(sprintf("dv_tab.set_tab_by_tab_id('%s', '%s')", tab_id, ID$NAV_HEADER))
-  }
+  app$run_js(sprintf("dv_tab.set_tab_by_tab_id('%s', '%s')", tab_id, ID$NAV_HEADER))
+}

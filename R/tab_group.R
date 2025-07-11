@@ -80,7 +80,7 @@ is_tab_group <- function(x) {
 
 resolve_tab_group <- function(x, nm, hierarchy, tab_group_count, nested_hierarchy) {
   message(paste("Resolving tab", nm))
-  new_tab_group_count <- tab_group_count + 1  
+  new_tab_group_count <- tab_group_count + 1
   new_tab_group_id <- paste0("__tabset_", new_tab_group_count, "__")
 
   assert(is.na(hierarchy[[length(hierarchy)]]))
@@ -228,7 +228,6 @@ process_module_list <- function(module_list) {
 }
 
 compose_ui <- function(nh, ui_fn_list, ns, footer) {
-
   mod_tabs <- vector(mode = "list", length = length(ui_fn_list))
   mod_buttons <- vector(mode = "list", length = length(ui_fn_list))
   mod_nms <- names(ui_fn_list)
@@ -242,7 +241,7 @@ compose_ui <- function(nh, ui_fn_list, ns, footer) {
   buttons_hierarchy <- list()
 
   stack <- list()
-  push <- function(x) { 
+  push <- function(x) {
     stack <<- c(stack, list(x))
   }
   pop <- function() {
@@ -254,7 +253,7 @@ compose_ui <- function(nh, ui_fn_list, ns, footer) {
   push(nh)
 
   while (length(stack) > 0) {
-    curr_el <- pop()        
+    curr_el <- pop()
     curr_level <- list()
     curr_el_id <- curr_el[["tabset_id"]]
     is_root <- is.na(curr_el[["tabset_name"]])
@@ -266,17 +265,17 @@ compose_ui <- function(nh, ui_fn_list, ns, footer) {
       is_leaf <- checkmate::test_string(curr_child, min.chars = 1)
 
       if (is_tabset) {
-        curr_child_id <- curr_child[["tabset_id"]]   
-        curr_child_name <- curr_child[["tabset_name"]] 
+        curr_child_id <- curr_child[["tabset_id"]]
+        curr_child_name <- curr_child[["tabset_name"]]
         curr_level[[idx]] <- shiny::tags[["button"]]("data-value" = curr_child_id, "data-type" = "hier-button", curr_child_name, type = "button", class = "dv_tab_activate_button btn btn-primary")
-        push(curr_child)        
+        push(curr_child)
       } else if (is_leaf) {
         curr_level[[idx]] <- shiny::tags[["button"]]("data-value" = ui_fn_list[[curr_child]][["module_id"]], "data-type" = "tab-button", ui_fn_list[[curr_child]][["module_label"]], type = "button", class = "dv_tab_activate_button btn btn-primary")
       } else {
         stop("Unknown element")
       }
 
-      if (idx == 1) {        
+      if (idx == 1) {
         curr_level[[idx]] <- htmltools::tagAppendAttributes(curr_level[[idx]], class = "clicked")
       }
     }
@@ -287,7 +286,6 @@ compose_ui <- function(nh, ui_fn_list, ns, footer) {
     } else {
       buttons_hierarchy[[curr_el_id]] <- htmltools::tagAppendAttributes(buttons_hierarchy[[curr_el_id]], class = "dv_child_button_level")
     }
-
   }
 
   tabs <- shiny::div(class = "dv_tab_container", mod_tabs)

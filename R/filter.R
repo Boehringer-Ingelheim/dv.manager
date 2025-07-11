@@ -184,7 +184,7 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
     filter_dataset <- NA
     if (operation == "and") {
       assert(length(filter_element[["children"]]) >= 1, "`and` operation requires at least one child")
-      mask <- TRUE # Neutral element for &      
+      mask <- TRUE # Neutral element for &
       for (child in filter_element[["children"]]) {
         processed_element <- process_dataset_filter_element(dataset_list, child)
         mask <- mask & processed_element[["mask"]]
@@ -197,7 +197,7 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
     } else if (operation == "or") {
       assert(length(filter_element[["children"]]) >= 1, "`or` operation requires at least one child")
 
-      mask <- FALSE # Neutral element for |      
+      mask <- FALSE # Neutral element for |
       for (child in filter_element[["children"]]) {
         processed_element <- process_dataset_filter_element(dataset_list, child)
         mask <- mask | processed_element[["mask"]]
@@ -210,9 +210,9 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
     } else if (operation == "not") {
       assert(length(filter_element[["children"]]) == 1, "`not` operation requires exactly one child")
       child <- filter_element[["children"]][[1]]
-      processed_element <- process_dataset_filter_element(dataset_list, child)      
+      processed_element <- process_dataset_filter_element(dataset_list, child)
       mask <- !processed_element[["mask"]]
-      filter_dataset <- processed_element[["dataset"]]      
+      filter_dataset <- processed_element[["dataset"]]
     } else {
       stop(paste0("Operation unknown: `", operation, "`"))
     }
@@ -220,7 +220,7 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
     variable <- filter_element[["variable"]]
     operation <- filter_element[["operation"]]
     include_NA <- filter_element[["include_NA"]]
-    filter_dataset <- filter_element[["dataset"]] # TODO: Change for name table    
+    filter_dataset <- filter_element[["dataset"]] # TODO: Change for name table
     assert(variable %in% names(dataset_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, variable))
     variable_values <- dataset_list[[filter_dataset]][[variable]]
 

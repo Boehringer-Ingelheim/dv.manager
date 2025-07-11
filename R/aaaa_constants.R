@@ -22,5 +22,5 @@ LAYOUT <- poc( # nolint
 )
 
 ID <- poc(
-  NAV_HEADER = "nav_header"  
+  NAV_HEADER = "nav_header"
 )

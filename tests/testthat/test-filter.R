@@ -929,7 +929,6 @@ local({
   })
 
   test_that("set operations cannot be child of a row operation or a dataset filter", {
-
     e <- list(
       kind = "row_operation",
       operation = "not",

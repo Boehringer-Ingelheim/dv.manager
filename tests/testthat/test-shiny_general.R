@@ -147,10 +147,10 @@ local({
 
         # Get all navbar elements elements
         tabs <- app$get_js("
-          const root_buttons = document.querySelectorAll('.dv_root_button_level button');          
+          const root_buttons = document.querySelectorAll('.dv_root_button_level button');
           const button_texts = [];
           for (let i = 0; i < root_buttons.length; i++) {
-            button_texts.push(root_buttons[i].textContent);            
+            button_texts.push(root_buttons[i].textContent);
           }
           button_texts
         ")
