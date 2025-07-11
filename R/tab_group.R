@@ -78,156 +78,113 @@ is_tab_group <- function(x) {
   identical(attr(x, which = LAYOUT$ATTRIBUTE, exact = TRUE), LAYOUT$TAB_GROUP)
 }
 
-resolve_tab_group <- function(x, nm, hierarchy, tab_group_count, nested_hierarchy) {
-  message(paste("Resolving tab", nm))
-  new_tab_group_count <- tab_group_count + 1
-  new_tab_group_id <- paste0("__tabset_", new_tab_group_count, "__")
-
-  assert(is.na(hierarchy[[length(hierarchy)]]))
-  # First replace the parent one with the new id
-  hierarchy[[length(hierarchy)]] <- new_tab_group_id
-  # Then create a child tabset
-  hierarchy[[new_tab_group_id]] <- NA
-  tab_group_names <- character(0)
-  tab_group_names[[new_tab_group_id]] <- nm
-
-  this_nested_hierarchy <- list(
-    tabset_id = new_tab_group_id,
-    tabset_name = nm,
-    children = list()
-  )
-  r <- resolve_module_list(x, hierarchy, new_tab_group_count, this_nested_hierarchy)
-
-  return(
-    list(
-      ui_list = r[["ui_list"]],
-      server_list = r[["server_list"]],
-      meta_list = r[["meta_list"]],
-      module_id_list = r[["module_id_list"]],
-      module_name_list = r[["module_name_list"]],
-      tab_label_list = r[["tab_label_list"]],
-      hierarchy_list = r[["hierarchy_list"]],
-      tab_group_count = r[["tab_group_count"]],
-      tab_group_names = c(tab_group_names, r[["tab_group_names"]]),
-      nested_hierarchy = r[["nested_hierarchy"]]
-    )
-  )
-}
-
-resolve_plain <- function(x, nm, hierarchy, nested_hierarchy) {
-  ui_list <- list()
-  ui_list[[x[["module_id"]]]] <- list(
-    ui = x[["ui"]],
-    module_id = x[["module_id"]],
-    module_label = nm
-  )
-
-  server_list <- list()
-  server_list[[x[["module_id"]]]] <- list(
-    server = x[["server"]],
-    module_id = x[["module_id"]]
-  )
-
-  meta_list <- list()
-  meta_list[[x[["module_id"]]]] <- list(
-    meta = x[["meta"]],
-    module_id = x[["module_id"]]
-  )
-
-  module_id_list <- character(0)
-  module_id_list[[nm]] <- x[["module_id"]]
-
-  module_name_list <- character(0)
-  module_name_list[[x[["module_id"]]]] <- nm
-
-  # Replace last entry by module_id
-  hierarchy[[length(hierarchy)]] <- x[["module_id"]]
-
-  hierarchy_list <- list()
-  hierarchy_list[[x[["module_id"]]]] <- hierarchy
-
-  nested_hierarchy <- x[["module_id"]]
-
-  r <- list(
-    ui_list = ui_list,
-    server_list = server_list,
-    meta_list = meta_list,
-    module_id_list = module_id_list,
-    module_name_list = module_name_list,
-    hierarchy_list = hierarchy_list,
-    nested_hierarchy = nested_hierarchy
-  )
-  r
-}
-
-resolve_module_list <- function(
-    module_list,
-    hierarchy = list("__tabset_0__" = NA),
-    tab_group_count = 0,
-    nested_hierarchy = list(
-      tabset_id = "__tabset_0__",
-      tabset_name = NA,
-      children = list()
-    )) {
-  server_list <- list()
-  ui_list <- list()
-  meta_list <- list()
-  module_id_list <- character(0)
-  module_name_list <- character(0)
-  tab_group_names <- character(0)
-  nm_module_list <- names(module_list)
-  hierarchy_list <- list()
-
-  for (idx in seq_along(module_list)) {
-    module <- module_list[[idx]]
-    nm <- nm_module_list[[idx]]
-
-    if (is_tab_group(module)) {
-      r <- resolve_tab_group(module, nm, hierarchy, tab_group_count, nested_hierarchy)
-      tab_group_count <- r[["tab_group_count"]]
-    } else {
-      r <- resolve_plain(module, nm, hierarchy, nested_hierarchy)
-    }
-
-    ui_list <- c(ui_list, r[["ui_list"]])
-    module_id_list <- c(module_id_list, r[["module_id_list"]])
-    server_list <- c(server_list, r[["server_list"]])
-    meta_list <- c(meta_list, r[["meta_list"]])
-    module_name_list <- c(module_name_list, r[["module_name_list"]])
-    hierarchy_list <- c(hierarchy_list, r[["hierarchy_list"]])
-    tab_group_names <- c(tab_group_names, r[["tab_group_names"]])
-    nested_hierarchy[["children"]] <- c(nested_hierarchy[["children"]], list(r[["nested_hierarchy"]]))
-  }
+resolve_module_list <- function(module_list) {
 
   res <- list(
-    ui_list = ui_list,
-    server_list = server_list,
-    meta_list = meta_list,
-    module_id_list = module_id_list,
-    module_name_list = module_name_list,
-    hierarchy_list = hierarchy_list,
-    tab_group_count = tab_group_count,
-    tab_group_names = tab_group_names,
-    nested_hierarchy = nested_hierarchy
+    server = list(),
+    ui = list(),
+    meta = list(),
+    module_name = character(),
+    module_id = character(),
+    tab_name = character(),
+    hierarchy = list(
+      "__tabset_0__" = list(
+        name = NA_character_,
+        parent = NA_character_
+      )
+    )
   )
 
-  return(res)
+  tab_group_count <- 0
+
+  stack <- list()
+  push <- function(x) {
+    stack <<- c(stack, list(x))
+  }
+  pop <- function() {
+    x <- stack[[length(stack)]]
+    stack <<- stack[-length(stack)]
+    x
+  }
+
+  push(list(module_list = module_list, parent_id = names(res[["hierarchy"]])[[1]]))
+
+  while (length(stack) > 0) {
+    curr_el <- pop()
+    curr_parent_id <- curr_el[["parent_id"]]
+    curr_module_list <- curr_el[["module_list"]]
+    for (idx in seq_along(curr_module_list)) {
+      curr_child <- curr_module_list[[idx]]
+      curr_name <- names(curr_module_list)[[idx]]
+      if (is_tab_group(curr_child)) {
+        tab_group_count <- tab_group_count + 1
+        tab_group_id <- paste0("__tabset_", tab_group_count, "__")
+
+        hierarchy_entry <- list(list(name = curr_name, parent = curr_parent_id))
+        names(hierarchy_entry) <- tab_group_id
+        res[["hierarchy"]] <- c(res[["hierarchy"]], hierarchy_entry)
+
+        res[["hierarchy"]][[curr_parent_id]][["children"]] <- c(res[["hierarchy"]][[curr_parent_id]][["children"]], tab_group_id)
+
+        tab_name_entry <- curr_name
+        names(tab_name_entry) <- tab_group_id
+        res[["tab_name"]] <- c(res[["tab_name"]], tab_name_entry)
+
+        assert(length(curr_child) > 0, "Tab groups cannot be empty")
+
+        push(list(module_list = curr_child, parent_id = tab_group_id))
+      } else {
+        module_id <- curr_child[["module_id"]]
+
+        ui_entry <- list(curr_child[["ui"]])
+        names(ui_entry) <- module_id
+        res[["ui"]] <- c(res[["ui"]], ui_entry)
+
+        server_entry <- list(curr_child[["server"]])
+        names(server_entry) <- module_id
+        res[["server"]] <- c(res[["server"]], server_entry)
+
+        meta_entry <- list(curr_child[["meta"]])
+        names(meta_entry) <- module_id
+        res[["meta"]] <- c(res[["meta"]], meta_entry)
+
+        module_id_entry <- curr_child[["module_id"]]
+        names(module_id_entry) <- module_id
+        res[["module_id"]] <- c(res[["module_id"]], module_id_entry)
+
+        module_name_entry <- curr_name
+        names(module_name_entry) <- module_id
+        res[["module_name"]] <- c(res[["module_name"]], module_name_entry)
+
+        hierarchy_entry <- list(list(name = curr_name, parent = curr_parent_id))
+        names(hierarchy_entry) <- module_id
+        res[["hierarchy"]] <- c(res[["hierarchy"]], hierarchy_entry)
+
+        res[["hierarchy"]][[curr_parent_id]][["children"]] <- c(res[["hierarchy"]][[curr_parent_id]][["children"]], module_id)
+      }
+    }
+  }
+
+  res
 }
 
+
 process_module_list <- function(module_list) {
-  module_list <- do.call(tab_group, module_list)
   resolved_module_list <- resolve_module_list(module_list)
+
   # We need the ns to be able to invoke all ui functions
   # TODO: Consider removing namespacing it would make all these simpler
 
   resolved_module_list[["ui"]] <- function(ns, footer) {
-    compose_ui(resolved_module_list[["nested_hierarchy"]], resolved_module_list[["ui_list"]], ns, footer)
+    compose_ui(resolved_module_list[["hierarchy"]], resolved_module_list[["ui"]], ns, footer)
   }
 
   return(resolved_module_list)
 }
 
 compose_ui <- function(nh, ui_fn_list, ns, footer) {
+
+  browser()
   mod_tabs <- vector(mode = "list", length = length(ui_fn_list))
   mod_buttons <- vector(mode = "list", length = length(ui_fn_list))
   mod_nms <- names(ui_fn_list)
