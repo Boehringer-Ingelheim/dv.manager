@@ -85,10 +85,10 @@ app_server_ <- function(input, output, session, opts) {
     }
   )
 
-  module_server <- opts[["module_info"]][["server_list"]]
-  module_meta <- opts[["module_info"]][["meta_list"]]
-  module_names <- opts[["module_info"]][["module_name_list"]]
-  module_hierarchy_list <- opts[["module_info"]][["hierarchy_list"]]
+  module_server <- opts[["module_info"]][["server"]]
+  module_meta <- opts[["module_info"]][["meta"]]
+  module_names <- opts[["module_info"]][["module_name"]]
+  module_hierarchy_list <- opts[["module_info"]][["hierarchy"]]
   data <- opts[["data"]]
   filter_data <- opts[["filter_data"]]
   filter_key <- opts[["filter_key"]]
@@ -324,11 +324,11 @@ app_server_ <- function(input, output, session, opts) {
   # This mimicks a reactive, by delaying the access to module_output
   # This is required for the modules to be able to read the output of other modules that are not yet declared
 
-  module_output_func <- function() {
+  module_output_fn <- function() {
     as_dv_manager_module_output_safe_list(module_output)
   }
 
-  module_args <- list(
+  afmm <- list(
     data = data,
     unfiltered_dataset = unfiltered_dataset,
     filtered_dataset = filtered_dataset,
@@ -341,7 +341,7 @@ app_server_ <- function(input, output, session, opts) {
       name = shiny::reactive(input$selector),
       date_range = shiny::reactive(attr(unfiltered_dataset(), "date_range"))
     ),
-    module_output = module_output_func,
+    module_output = module_output_fn,
     module_names = module_names,
     utils = list(
       switch2 = function(selected) {
@@ -386,12 +386,15 @@ app_server_ <- function(input, output, session, opts) {
   used_datasets <- list()
 
   module_output <- list()
-  for (srv in module_server) {
-    mod_id <- srv[["module_id"]]
-    srv_fun <- srv[["server"]]
+  for (idx in seq_along(module_server)) {
+    fn <- module_server[[idx]]
+    id <- names(module_server)[[idx]]
 
-    module_output[[mod_id]] <- srv_fun(module_args)
-    used_datasets[[mod_id]] <- module_meta[[mod_id]][["meta"]][["dataset_info"]][["all"]]
+    assert(is.character(id), "id must be a character")
+    assert(is.function(fn), "fn must be a function")
+
+    module_output[[id]] <- fn(afmm)
+    used_datasets[[id]] <- module_meta[[id]][["meta"]][["dataset_info"]][["all"]]
   }
 
 
