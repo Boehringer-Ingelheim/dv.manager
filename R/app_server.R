@@ -394,7 +394,7 @@ app_server_ <- function(input, output, session, opts) {
     assert(is.function(fn), "fn must be a function")
 
     module_output[[id]] <- fn(afmm)
-    used_datasets[[id]] <- module_meta[[id]][["meta"]][["dataset_info"]][["all"]]
+    used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
   }
 
 
