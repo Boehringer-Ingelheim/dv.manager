@@ -55,7 +55,9 @@ decorate_ungroup2df_datasets_dataset_list <- function(f) { # nolintr
 ungroup2df_datasets_dataset_list <- function(dataset_list) { # nolintr
   dataset_names <- names(dataset_list)
   for (dataset_name in dataset_names) {
-    dataset_list[[dataset_name]] <- as.data.frame(dplyr::ungroup(dataset_list[[dataset_name]]))
+    dataset_list[[dataset_name]] <- as.data.frame( # Transform to base::data.frame, discards tibble related classes...
+      dplyr::ungroup(dataset_list[[dataset_name]])
+    )
   }
   dataset_list
 }
