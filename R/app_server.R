@@ -81,21 +81,20 @@ app_server_ <- function(input, output, session, opts) {
         "affm[[\"utils\"]][[\"switch_function\"]]",
         msg = "Switch function has been moved to the list of arguments passed to the module"
       )
-      shiny::updateTabsetPanel(session, "__tabset_0__", selected)
+      session$sendCustomMessage("set_active_tab", list(tab_id = selected))
     }
   )
 
-  module_server <- opts[["module_info"]][["server_list"]]
-  module_meta <- opts[["module_info"]][["meta_list"]]
-  module_names <- opts[["module_info"]][["module_name_list"]]
-  module_hierarchy_list <- opts[["module_info"]][["hierarchy_list"]]
+  module_server <- opts[["module_info"]][["server"]]
+  module_meta <- opts[["module_info"]][["meta"]]
+  module_names <- opts[["module_info"]][["module_name"]]
+  module_hierarchy_list <- opts[["module_info"]][["hierarchy"]]
   data <- opts[["data"]]
   filter_data <- opts[["filter_data"]]
   filter_key <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
   enable_dataset_filter <- opts[["enable_dataset_filter"]]
-
 
   ## Feature switch for new data filter
 
@@ -274,23 +273,21 @@ app_server_ <- function(input, output, session, opts) {
         )
       })
 
-      tab_ids <- c("__tabset_0__", names(opts[["module_info"]][["tab_group_names"]]))
       shiny::observeEvent(
         {
-          purrr::map(tab_ids, ~ input[[.x]])
+          input[[ID$NAV_HEADER]]
         },
         {
-          current_tab <- "__tabset_0__"
-          zero_tabs <- length(input[["__tabset_0__"]]) == 0
-          if (!zero_tabs) {
-            while (!current_tab %in% opts[["module_info"]][["module_id_list"]]) {
-              current_tab <- input[[current_tab]]
-            }
+          all_nm <- names(datasets_filters_info)
+          current_tab <- input[[ID$NAV_HEADER]]
+
+          if (!is.null(current_tab)) {
+            used_ds <- used_datasets[[current_tab]]
+          } else {
+            used_ds <- NULL
           }
 
-          used_ds <- used_datasets[[current_tab]]
-          all_nm <- names(datasets_filters_info)
-          if (!zero_tabs && !is.null(used_ds)) {
+          if (!is.null(used_ds)) {
             used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
             unused_nm <- setdiff(all_nm, used_nm)
           } else {
@@ -305,7 +302,8 @@ app_server_ <- function(input, output, session, opts) {
           for (nm in used_nm) {
             shinyjs::show(datasets_filters_info[[nm]][["id_cont"]])
           }
-        }
+        },
+        ignoreNULL = FALSE
       )
     } else {
       log_inform("Single filter server")
@@ -326,11 +324,11 @@ app_server_ <- function(input, output, session, opts) {
   # This mimicks a reactive, by delaying the access to module_output
   # This is required for the modules to be able to read the output of other modules that are not yet declared
 
-  module_output_func <- function() {
+  module_output_fn <- function() {
     as_dv_manager_module_output_safe_list(module_output)
   }
 
-  module_args <- list(
+  afmm <- list(
     data = data,
     unfiltered_dataset = unfiltered_dataset,
     filtered_dataset = filtered_dataset,
@@ -343,13 +341,13 @@ app_server_ <- function(input, output, session, opts) {
       name = shiny::reactive(input$selector),
       date_range = shiny::reactive(attr(unfiltered_dataset(), "date_range"))
     ),
-    module_output = module_output_func,
+    module_output = module_output_fn,
     module_names = module_names,
     utils = list(
       switch2 = function(selected) {
-        .Deprecated(
+        .Defunct(
           "switch2mod",
-          "switch2 is being deprecated in favor of switch2mod. switch2mod directly works on module ids and supports switching to nested tabs." # nolint
+          "switch2 is no longer available. Please check the documentation in switch2mod as it no longer accepts module names, but module ids." # nolint
         )
         if (!checkmate::test_string(selected, min.chars = 1)) {
           log_warn("selected must be a non-empty string")
@@ -380,15 +378,7 @@ app_server_ <- function(input, output, session, opts) {
           log_warn("selected must be a module id")
           return(NULL)
         }
-
-        this_hierarchy_value <- module_hierarchy_list[[selected]]
-        this_hierarchy_names <- names(this_hierarchy_value)
-
-        for (idx in seq_along(this_hierarchy_value)) {
-          tab_value <- this_hierarchy_value[[idx]]
-          tabset_id <- this_hierarchy_names[[idx]]
-          shiny::updateTabsetPanel(session, tabset_id, tab_value)
-        }
+        session$sendCustomMessage("set_active_tab", list(id = session[["ns"]](ID$NAV_HEADER), tab_id = selected))
       }
     )
   )
@@ -396,12 +386,15 @@ app_server_ <- function(input, output, session, opts) {
   used_datasets <- list()
 
   module_output <- list()
-  for (srv in module_server) {
-    mod_id <- srv[["module_id"]]
-    srv_fun <- srv[["server"]]
+  for (idx in seq_along(module_server)) {
+    fn <- module_server[[idx]]
+    id <- names(module_server)[[idx]]
 
-    module_output[[mod_id]] <- srv_fun(module_args)
-    used_datasets[[mod_id]] <- module_meta[[mod_id]][["meta"]][["dataset_info"]][["all"]]
+    assert(is.character(id), "id must be a character")
+    assert(is.function(fn), "fn must be a function")
+
+    module_output[[id]] <- fn(afmm)
+    used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
   }
 
 

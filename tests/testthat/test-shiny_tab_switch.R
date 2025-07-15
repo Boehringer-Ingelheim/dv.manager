@@ -9,8 +9,8 @@ test_that("modules can switch between tabs using switch2 and switch2mod" |>
       module_list = list(
         "Mod 1" = dv.manager:::mod_switch(
           "Mod 1",
-          "Mod 2",
-          dv.manager::mm_dispatch("utils", "switch2"),
+          "mod2",
+          dv.manager::mm_dispatch("utils", "switch2mod"),
           "mod1"
         ),
         "Mod 2" = dv.manager:::mod_switch(
@@ -27,8 +27,8 @@ test_that("modules can switch between tabs using switch2 and switch2mod" |>
 
   app$click("mod1-switch")
   app$wait_for_idle()
-  expect_equal(app$get_value(input = "__tabset_0__"), "mod2")
+  expect_equal(app$get_value(input = ID$NAV_HEADER), "mod2")
   app$click("mod2-switch")
   app$wait_for_idle()
-  expect_equal(app$get_value(input = "__tabset_0__"), "mod1")
+  expect_equal(app$get_value(input = ID$NAV_HEADER), "mod1")
 })
