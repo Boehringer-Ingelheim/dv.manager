@@ -71,7 +71,7 @@ run_app <- function(data = NULL,
   # The automatic mapping will influence reporting when it is implemented in the future
   config[["data"]] <- local({
     check_data(dataset_lists)
-    d <- char_vars_to_factor_vars_dataset_lists(check_data(dataset_lists))
+    d <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
     d <- ungroup2df_datasets_dataset_lists(d)
     d
   })
