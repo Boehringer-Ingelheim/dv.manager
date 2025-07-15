@@ -34,7 +34,7 @@ fs_spec <- specs_list(
   "selected_dataset_name_access" = "Modules will have access to the name of the selected dataset",
   "module_name_access" = "Modules will have access to its name and the name of the other modules",
   "modification_dates_access" = "Modules will have access to the earliest and latest modification dates of all the data tables.",
-  "module_tab_switching" = "dv.manager allows programatically switching from one module tab to another",  
+  "module_tab_switching" = "dv.manager allows programatically switching from one module tab to another",
   "SSO_authentication_option" = "dv.manager provides the option to enable the authentication of App Users with SSO to access the app.",
   "empty_datasets" = "dv.manager supports datasets with 0 rows"
 )
@@ -95,7 +95,7 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
   "dispatchers" = "- dispatchers: A dispatcher function that simplifies the acces to datasets from the module invocation in the module list.",
   "SSO_login_option" = "module manager offers the option of providing an SSO login. For this the app uses the AzureAuth package.",
   "AzureAuth_integration" = "module manager just passes the information to AzureAuth therefore no development testing is done at this level, as it requires an Azure AD in place and it is not available at build time in Jenkins.",
-  "data_reloading" = "Module Manager allows reloading the data after a given amount of time. The data_reload parameter will be specified by the App Creator."  
+  "data_reloading" = "Module Manager allows reloading the data after a given amount of time. The data_reload parameter will be specified by the App Creator."
 )
 
 tab_group <- list(
@@ -110,7 +110,9 @@ filtering <- list(
 )
 
 preprocessing <- list(
-  "char_to_factor_mapping" = "Module manager will automatically map character columns into factors for all the variables in all the datasets loaded in the app"
+  "char_to_factor_mapping" = "Module manager will automatically map character columns into factors for all the variables in all the datasets loaded in the app",
+  "ungroup_datasets" = "Module manager will automatically ungroup datasets",
+  "tibble2df" = "Module manager will automatically transform tibble in data.frames"
 )
 
 specs <- c(
