@@ -36,7 +36,7 @@ if (FALSE) {
   test_that(vdoc[["add_spec"]]("my test_description", my_spec), {
     ...
   })
-  
+
   test_that(vdoc[["add_spec"]]("my test_description", specs[["my"]][["hier"]][["spec"]]), {
     ...
   })
@@ -112,7 +112,7 @@ local({
         } # This should be covered by pack of constants but just in case
       } else {
         spec_id_chr <- spec_id
-      }      
+      }
       paste0(desc, "__spec_ids{", paste0(spec_id_chr, collapse = ";"), "}")
     },
     get_spec = function(test, specs) {
@@ -121,17 +121,17 @@ local({
             x = test,
             proto = list(spec = character())
           )[["spec"]]
-      
+
       spec_ids <- strsplit(spec_ids, split = ";")
 
       specs_and_id <- list()
 
-      for (idx in seq_along(spec_ids)){        
-        ids <- spec_ids[[idx]]        
+      for (idx in seq_along(spec_ids)){
+        ids <- spec_ids[[idx]]
         if (all(!is.na(ids))) {
           this_specs <- list()
         for (sub_idx in seq_along(ids)) {
-          id <- ids[[sub_idx]]       
+          id <- ids[[sub_idx]]
           this_specs[[sub_idx]] <- eval(str2expression(paste0("specs$", id)))
         }
         specs_and_id[[idx]] <- list(
@@ -142,13 +142,13 @@ local({
           specs_and_id[[idx]] <- list(
           spec_id = NULL,
           spec = NULL
-        )          
-        }        
-      }      
+        )
+        }
+      }
       specs_and_id
     }
 
-    
+
   )
 })
 
