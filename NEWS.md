@@ -1,3 +1,7 @@
+# dv.manager 2.1.13-9000
+
+- Ungroups all datasets and transform into `data.frame`
+
 # dv.manager 2.1.12-9000
 
 - Refactors UI
