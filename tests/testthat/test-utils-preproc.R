@@ -55,7 +55,8 @@ local({
     expect_identical(attr(r[["ds1"]][["char_var1"]], "label"), "char_var1_label")
   })
 
-  test_that("decorate_char_vars_to_factor_vars_dataset_list decorates a functions that returns a list of data.frames and transforms character variables into factor variables", { # nolintr
+  test_that("decorate_char_vars_to_factor_vars_dataset_list decorates a functions that returns a list of data.frames and transforms character variables into factor variables" |>
+    vdoc[["add_spec"]](c(specs$preprocessing$char_to_factor_mapping)), { # nolintr
     f <- function() dl
     dec_f <- decorate_char_vars_to_factor_vars_dataset_list(f)
     e <- edl
