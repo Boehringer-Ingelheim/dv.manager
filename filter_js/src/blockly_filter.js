@@ -600,8 +600,12 @@ const filterBlockly = (() => {
       }
     };
 
-    let append_value_input = function (block) {
+    let append_value_input_row_comb = function (block) {
       block.appendValueInput(get_random_input_id()).setCheck(["filter", "row"]);
+    }
+
+    let append_value_input_set_comb = function (block) {
+      block.appendValueInput(get_random_input_id()).setCheck(["set", "filter", "row"]);
     }
 
     let remove_value_inputs = function (block, input_names_for_removal) {
@@ -645,7 +649,7 @@ const filterBlockly = (() => {
           logger(this.inputList.map(x => x.name));
         } else {
           logger("Loading with no state");
-          append_value_input(this);
+          append_value_input_row_comb(this);
         }
       }
     };
@@ -685,7 +689,7 @@ const filterBlockly = (() => {
           logger(this.inputList.map(x => x.name));
         } else {
           logger("Loading with no state");
-          append_value_input(this);
+          append_value_input_set_comb(this);
         }
       }
     };
@@ -696,8 +700,9 @@ const filterBlockly = (() => {
           .appendField(new Blockly.FieldDropdown(
             [['complement', 'complement']]
           ), "operation")
-        this.appendValueInput("contents_fix");
-        this.setOutput(true, "set");
+        this.appendValueInput("contents_fix")
+          .setCheck(["set", "filter", "row"]);
+        this.setOutput(true, "set");        
         this.setColour(255);
       }
     };
@@ -907,9 +912,14 @@ const filterBlockly = (() => {
           }
         }
 
-        if (new_parent_block && (new_parent_block.type === C.TYPE.ROW_COMB_OPERATION || new_parent_block.type === C.TYPE.SET_COMB_OPERATION)) {
+        if (new_parent_block && new_parent_block.type === C.TYPE.ROW_COMB_OPERATION) {
           remove_empty_inputs(new_parent_block);
-          append_value_input(new_parent_block);
+          append_value_input_row_comb(new_parent_block);
+        }
+
+        if (new_parent_block && new_parent_block.type === C.TYPE.SET_COMB_OPERATION) {
+          remove_empty_inputs(new_parent_block);
+          append_value_input_set_comb(new_parent_block);
         }
       } else if (event.reason.includes("disconnect")) {
         if (old_parent_block && (old_parent_block.type === C.TYPE.ROW_COMB_OPERATION || old_parent_block.type === C.TYPE.SET_COMB_OPERATION)) {
