@@ -674,7 +674,7 @@ const filterBlockly = (() => {
             [['intersect', 'intersect'], ['union', 'union']]
           ), "operation");
           this.setOutput(true, "set");
-        this.setColour(255);
+        this.setColour(160);
       },// This is called during serialization
       saveExtraState: function () {
         let saved_inputs = this.inputList.map(x => x.name).filter(x => x.startsWith("contents_"))
@@ -703,7 +703,7 @@ const filterBlockly = (() => {
         this.appendValueInput("contents_fix")
           .setCheck(["set", "filter", "row"]);
         this.setOutput(true, "set");        
-        this.setColour(255);
+        this.setColour(160);
       }
     };
 
