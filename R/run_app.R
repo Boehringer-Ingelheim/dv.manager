@@ -30,6 +30,7 @@
 #' or a positive numeric value which is then interpreted as a lubridate duration object in days. By default NULL
 #' @param filter_type Indicates which filter type, `simple`, `datasets`, `blockly` (in development), will be used in the application.
 #' @param filter_default_state A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for `blockly` filters).
+#' @param enable_dataset_filter **DEPRECATED** A boolean flag indicating if dataset filters are enabled. The default value is FALSE.
 #' @param .launch by default it should always be TRUE. It should only be false for debugging and testing.
 #' When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.
 #' @inheritParams shiny::shinyApp
@@ -52,10 +53,15 @@ run_app <- function(data = NULL,
                     reload_period = NULL,
                     enableBookmarking = "server", # nolint
                     filter_type = "simple",
+                    enable_dataset_filter = NULL,
                     filter_default_state = NULL,
                     .launch = TRUE) {
 
   dataset_lists <- data
+
+  if (!missing(enable_dataset_filter)) {
+    stop("`enable_dataset_filter` argument has been removed. Please, use `filter_type = 'datasets' argument instead.")
+  }
 
   if (is.null(azure_options)) {
     app_args <- list(

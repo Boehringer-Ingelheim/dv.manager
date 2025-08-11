@@ -2,8 +2,8 @@
 
 - Blockly filter:
     - Improve the documentation for the blockly filter in development
-    - Removes the `run_app_dev_filter` function and includes a new option `filter_type` to set which filter should be used
-    in each of the applications. `enable_dataset_filter` is removed and replaced by `filter_type = 'datasets'` option in
+    - Removes the `run_app_dev_filter` function and includes a new arugment `filter_type` in `run_app` to set which filter should be used
+    in each of the applications. `enable_dataset_filter` is deprecated and replaced by `filter_type = 'datasets'` argument in
     the `run_app` call.
 
 # dv.manager 2.1.13-9000
