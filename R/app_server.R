@@ -52,7 +52,7 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
-    "enable_dataset_filter" = get_config("enable_dataset_filter")
+    "filter_info" = get_config("filter_info")
   )
 
   app_server_(input, output, session, opts)
@@ -65,7 +65,8 @@ app_server_module <- function(id) {
     "filter_data" = get_config("filter_data"),
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
-    "reload_period" = get_config("reload_period")
+    "reload_period" = get_config("reload_period"),
+    "filter_info" = get_config("filter_info")
   )
   shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
 }
@@ -94,11 +95,10 @@ app_server_ <- function(input, output, session, opts) {
   filter_key <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
-  enable_dataset_filter <- opts[["enable_dataset_filter"]]
+  filter_info <- opts[["filter_info"]]
 
-  ## Feature switch for new data filter
-
-  use_new_filter_switch <- isTRUE(get_config("dv.manager.use.blockly.filter"))
+  use_dataset_filter <- filter_info[["filter_type"]] == FILTER$TYPE$DATASETS
+  use_blockly_filter <- filter_info[["filter_type"]] == FILTER$TYPE$BLOCKLY
 
   ######################################
 
@@ -136,7 +136,7 @@ app_server_ <- function(input, output, session, opts) {
   })
 
 
-  if (use_new_filter_switch) {
+  if (use_blockly_filter) {
     dataset_filter <- new_filter_server("filter", shiny::reactive({
       input$selector
     }))
@@ -207,7 +207,7 @@ app_server_ <- function(input, output, session, opts) {
     )
 
 
-    if (enable_dataset_filter) {
+    if (use_dataset_filter) {
       log_inform("Dataset filter server")
 
       dataset_filters <- local({

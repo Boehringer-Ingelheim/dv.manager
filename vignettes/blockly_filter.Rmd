@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 
 **Note that this filter is still in development stage and should not be used in production apps.**
 
-To activate this functionality, you only have to replace the `run_app` call with `run_app_dev_filter`.
+To activate this functionality, you only have to set the `filter_type` argument to `blockly`.
 
 ![](images/filter_overview.png){width=100%}
 
@@ -144,7 +144,7 @@ Find below an application that allows testing the filter.
 # Notice the usage of ::: as several of the functions are not exported yet
 # until a final version of the filter is provided
 
-dv.manager:::run_app_dev_filter(
+dv.manager:::run_ap(
   data = list(
     "D0" = list(
       adsl = dv.manager:::get_pharmaverse_data("adsl"),
@@ -159,7 +159,8 @@ dv.manager:::run_app_dev_filter(
     "Listing" = dv.listings::mod_listings("mod_listing", c("adsl", "adae"))
   ),
   filter_data = "adsl",
-  filter_key = "USUBJID"
+  filter_key = "USUBJID",
+  filter_type = "blockly"
 )
 ```
 
@@ -172,9 +173,10 @@ as a preset filter.
 # Notice the usage of ::: as several of the functions are not exported yet
 # until a final version of the filter is provided
 
-dv.manager:::run_app_dev_filter(
+dv.manager:::run_app(
   ...,
-  state = "path/to/filter/file.json"
+  filter_type = "blockly",
+  filter_default_state = "path/to/filter/file.json"
 )
 ```
 

@@ -54,7 +54,7 @@ local({
       )
     )),
     filter_key = "car",
-    enable_dataset_filter = TRUE
+    filter_info = list(filter_type = "datasets", filter_default_state = NULL)
   )
 
 
@@ -180,7 +180,7 @@ local({
           )
         ),
         filter_key = "car",
-        enable_dataset_filter = TRUE
+        filter_info = list(filter_type = "datasets", filter_default_state = NULL)
       )
 
 

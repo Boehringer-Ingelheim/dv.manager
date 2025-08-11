@@ -32,7 +32,7 @@ local({
       filter_data = "d1",
       filter_key = "cyl",
       enableBookmarking = "url",
-      enable_dataset_filter = TRUE
+      filter_type = "datasets"
     )
   })
 

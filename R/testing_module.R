@@ -1037,6 +1037,6 @@ run_mock_app_labels <- function(data) {
     ),
     filter_data = names(data[[1]])[[1]],
     filter_key = names(data[[1]][[1]])[[1]],
-    enable_dataset_filter = TRUE
+    filter_type = "datasets"
   )
 }
