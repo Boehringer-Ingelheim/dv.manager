@@ -53,7 +53,7 @@ filter. These filters are used to select **rows** of a given dataset.
 
 #### Subject or subpopulation filters
 
-These filters are designed to affect all the datasets in the application. These filters are used to select a **subpopulation** that 
+These filters are designed to affect all the datasets in the application. These filters are used to select a **subpopulation**  
 across all datasets.
 
 In following sections we will explain more about both types of filters and how the filters are created.
