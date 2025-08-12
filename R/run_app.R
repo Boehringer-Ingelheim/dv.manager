@@ -60,7 +60,7 @@ run_app <- function(data = NULL,
   dataset_lists <- data
 
   if (!missing(enable_dataset_filter)) {
-    stop("`enable_dataset_filter` argument has been removed. Please, use `filter_type = 'datasets' argument instead.")
+    stop("`enable_dataset_filter` argument has been removed. Please, use `filter_type = 'datasets'` argument instead.")
   }
 
   if (is.null(azure_options)) {
