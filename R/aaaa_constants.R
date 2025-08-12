@@ -24,3 +24,11 @@ LAYOUT <- poc( # nolint
 ID <- poc(
   NAV_HEADER = "nav_header"
 )
+
+FILTER <- poc(
+  TYPE = poc(
+    SIMPLE = "simple",
+    DATASETS = "datasets",
+    BLOCKLY = "blockly"
+  )
+)

@@ -26,7 +26,7 @@ test_that(
           mod_id = "mod_2"
         )
       )),
-      enable_dataset_filter = TRUE
+      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
     )
 
 
@@ -59,7 +59,7 @@ test_that(
           mod_id = "mod_2"
         )
       )),
-      enable_dataset_filter = TRUE
+      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
     )
 
 
@@ -78,6 +78,7 @@ test_that(
 test_that(
   vdoc[["add_spec"]]("module_communication should allow passing reactive and non-reactive values between modules{did:MM-SO-675;tid:NA;WB:WB;NOR:N;}", c(specs$module_output)),
   {
+
     testing_options <- list(
       data = datasets,
       filter_data = "a",
@@ -96,7 +97,7 @@ test_that(
           mod_id = "mod_2"
         )
       )),
-      enable_dataset_filter = TRUE
+      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
     )
 
 

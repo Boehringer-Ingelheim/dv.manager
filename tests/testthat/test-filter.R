@@ -1241,7 +1241,7 @@ local({
     # Because we are reading back the processed filter we also ensure that all blocks are processed properly
 
     app <- start_app_driver(rlang::quo({
-      dv.manager:::run_app_dev_filter(
+      dv.manager:::run_app(
         data = !!dataset_lists,
         module_list = list(
           Simple3 = dv.manager:::mod_simple(
@@ -1251,7 +1251,8 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        state = !!absolute_state_file
+        filter_type = "blockly",
+        filter_default_state = !!absolute_state_file
       )
     }))
 
@@ -1265,7 +1266,7 @@ local({
     string_state <- paste(readLines(absolute_state_file), collapse = "\n")
 
     app <- start_app_driver(rlang::quo({
-      dv.manager:::run_app_dev_filter(
+      dv.manager:::run_app(
         data = !!dataset_lists,
         module_list = list(
           Simple3 = dv.manager:::mod_simple(
@@ -1275,7 +1276,8 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        state = !!string_state
+        filter_type = "blockly",
+        filter_default_state = !!string_state
       )
     }))
 
@@ -1287,26 +1289,7 @@ local({
 
   test_that("An app with no state has an empty filter", {
     app <- start_app_driver(rlang::quo({
-      dv.manager:::run_app_dev_filter(
-        data = !!dataset_lists,
-        module_list = list(
-          Simple3 = dv.manager:::mod_simple(
-            "mod13",
-            dataset = "ds1"
-          )
-        ),
-        filter_data = "ds1",
-        filter_key = "sbj_var"
-      )
-    }))
-
-    app_state <- app$get_value(input = "filter-json")
-    expect_identical(app_state, '{"filters":{"datasets_filter":{"children":[]},"subject_filter":{"children":[]}},"dataset_list_name":"dl1"}')
-  })
-
-  test_that("Filter can be exported", {
-    app <- start_app_driver(rlang::quo({
-      dv.manager:::run_app_dev_filter(
+      dv.manager:::run_app(
         data = !!dataset_lists,
         module_list = list(
           Simple3 = dv.manager:::mod_simple(
@@ -1316,7 +1299,28 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        state = !!absolute_state_file
+        filter_type = "blockly"
+      )
+    }))
+
+    app_state <- app$get_value(input = "filter-json")
+    expect_identical(app_state, '{"filters":{"datasets_filter":{"children":[]},"subject_filter":{"children":[]}},"dataset_list_name":"dl1"}')
+  })
+
+  test_that("Filter can be exported", {
+    app <- start_app_driver(rlang::quo({
+      dv.manager:::run_app(
+        data = !!dataset_lists,
+        module_list = list(
+          Simple3 = dv.manager:::mod_simple(
+            "mod13",
+            dataset = "ds1"
+          )
+        ),
+        filter_data = "ds1",
+        filter_key = "sbj_var",
+        filter_type = "blockly",
+        filter_default_state = !!absolute_state_file
       )
     }))
 
@@ -1328,7 +1332,7 @@ local({
 
   test_that("dataset filters are applied", {
     app <- start_app_driver(rlang::quo({
-      dv.manager:::run_app_dev_filter(
+      dv.manager:::run_app(
         data = dataset_lists,
         module_list = list(
           Simple3 = dv.manager:::mod_simple(
@@ -1338,7 +1342,8 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        state = '  {
+        filter_type = "blockly",
+        filter_default_state = '{
     "filters": {
         "datasets_filter": {
             "children": [
@@ -1374,7 +1379,7 @@ local({
     # Filter on ds2 see the effect on ds1
 
     app <- start_app_driver(rlang::quo({
-      dv.manager:::run_app_dev_filter(
+      dv.manager:::run_app(
         data = dataset_lists,
         module_list = list(
           Simple3 = dv.manager:::mod_simple(
@@ -1384,7 +1389,8 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        state = '  {
+        filter_type = "blockly",
+        filter_default_state = '  {
     "filters": {
         "subject_filter": {
             "children": [
@@ -1412,7 +1418,7 @@ local({
 
   local({
     root_app <- start_app_driver(rlang::quo({
-      dv.manager:::run_app_dev_filter(
+      dv.manager:::run_app(
         data = dataset_lists,
         module_list = list(
           Simple3 = dv.manager:::mod_simple(
@@ -1423,7 +1429,8 @@ local({
         filter_data = "ds1",
         filter_key = "sbj_var",
         enableBookmarking = "url",
-        state = !!absolute_state_file
+        filter_type = "blockly",
+        filter_default_state = !!absolute_state_file
       )
     }))
 
@@ -1438,7 +1445,7 @@ local({
 
     test_that("Bookmark can be restored with no state", {
       root_app <- start_app_driver(rlang::quo({
-        dv.manager:::run_app_dev_filter(
+        dv.manager:::run_app(
           data = dataset_lists,
           module_list = list(
             Simple3 = dv.manager:::mod_simple(
@@ -1448,7 +1455,8 @@ local({
           ),
           filter_data = "ds1",
           filter_key = "sbj_var",
-          enableBookmarking = "url"
+          enableBookmarking = "url",
+          filter = "blockly"
         )
       }))
 

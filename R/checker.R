@@ -205,3 +205,27 @@ check_reload_period <- function(reload_period) {
   }
   reload_period
 }
+
+check_set_filter_info <- function(filter_type, filter_default_state) {
+  checkmate::assert_subset(filter_type, choices = as.character(FILTER$TYPE), empty.ok = FALSE)
+
+  if (!is.null(filter_default_state)) {
+    if (filter_type == FILTER$TYPE$BLOCKLY) {
+      if (file.exists(filter_default_state)) {
+        msg <- paste("Loading filter state from file", filter_default_state)
+        log_inform(msg)
+        filter_default_state <- paste0(readLines(filter_default_state), collapse = "\n")
+      }
+      x <- try(jsonlite::parse_json(filter_default_state), silent = TRUE)
+      if (inherits(x, "try-error")) {
+        # We only parse to check JSON is correctly set, it will be used further down the code
+        stop("`filter_default_state` cannot be parsed as JSON")
+      }
+    } else {
+      log_warn(paste("`filter_default_state` is ignored when `filter_type` is not", FILTER$TYPE$BLOCKLY))
+      filter_default_state <- NULL
+    }
+  }
+
+  list(filter_type = filter_type, filter_default_state = filter_default_state)
+}

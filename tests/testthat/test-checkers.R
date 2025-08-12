@@ -333,4 +333,63 @@ test_that(
   }
 )
 
+test_that(
+  "check_set_filter_info should error when the filter type is not correct",
+  {
+    check_set_filter_info("UNK", NULL) %>%
+      expect_error(regexp = "^Assertion on 'filter_type' failed: Must be a subset") # nolint
+  }
+)
+
+test_that(
+  "check_set_filter_info should return the filter type when it is correct",
+  {
+    expect_identical(check_set_filter_info("simple", NULL)[["filter_type"]], "simple")
+  }
+)
+
+test_that(
+  "check_set_filter_info should ignore filter_default_state when filter_type is not blockly",
+  {
+    check_set_filter_info("simple", "") |>
+    expect_warning(regexp = "^`filter_default_state` is ignored when `filter_type` is not blockly")
+  }
+)
+
+test_that(
+  "check_set_filter_info should error when filter_default_state is not a JSON parsable string",
+  {
+    check_set_filter_info("blockly", "UNPARSABLE") |>
+    expect_error(regexp = "^`filter_default_state` cannot be parsed as JSON")
+  }
+)
+
+test_that(
+  "check_set_filter_info should return the JSON string",
+  {
+    expect_identical(check_set_filter_info("blockly", "{}")[["filter_default_state"]], "{}")
+  }
+)
+
+test_that(
+  "check_set_filter_info should error when filter_default_state is not a JSON parsable file",
+  {
+    tmp_file <- tempfile()    
+    writeLines("UNPARSABLE", tmp_file)
+    on.exit(unlink(tmp_file), add = TRUE)
+    check_set_filter_info("blockly", tmp_file) |>
+    expect_error(regexp = "^`filter_default_state` cannot be parsed as JSON")
+  }
+)
+
+test_that(
+  "check_set_filter_info should return the JSON string inside a file",
+  {
+    tmp_file <- tempfile()    
+    writeLines("{}", tmp_file)
+    on.exit(unlink(tmp_file), add = TRUE)    
+    expect_identical(check_set_filter_info("blockly", tmp_file)[["filter_default_state"]], "{}")
+  }
+)
+
 # nolint end
