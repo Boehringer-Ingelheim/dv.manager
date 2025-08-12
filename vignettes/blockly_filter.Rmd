@@ -87,7 +87,7 @@ These are purple-colored and can be found under the *Operations* section in the 
 
 ![](images/variable_operations.gif){width=100%}
 
-These pieces allow to create more complex filters, for example in the gif below we create a filter  that filters the
+These pieces allow to create more complex filters, for example in the gif above we create a filter  that filters the
 *adae* table to rows in which:
 
   - The *Lowest Level Term* is *ABDOMINAL CRAMPS* **and** the *Severity* is *SEVERE*
