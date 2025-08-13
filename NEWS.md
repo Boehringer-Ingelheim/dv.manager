@@ -1,3 +1,7 @@
+# dv.manager 2.1.15-9000
+
+- Fix bookmark overlap (TO BE REMOVED ON FINAL NOTES)
+
 # dv.manager 2.1.14-9000
 
 - Blockly filter:
