@@ -177,14 +177,14 @@ process_module_list <- function(module_list) {
   # TODO: Consider removing namespacing it would make all these simpler
 
   res <- resolved_module_list
-  res[["ui_fn"]] <- function(ns, footer) {
-    compose_ui(resolved_module_list[["hierarchy"]], resolved_module_list[["ui"]], ns, footer)
+  res[["ui_fn"]] <- function(ns, footer, top_buttons) {
+    compose_ui(resolved_module_list[["hierarchy"]], resolved_module_list[["ui"]], ns, footer, top_buttons)
   }
 
   return(res)
 }
 
-compose_ui <- function(hierarchy, ui_fn_list, ns, footer) {
+compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
 
   mod_ui_containers <- vector(mode = "list", length = length(ui_fn_list))
   mod_ids <- names(ui_fn_list)
@@ -243,11 +243,18 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer) {
   }
 
   tabs <- shiny::div(class = "dv_tab_container", mod_ui_containers)
-  header <- shiny::div(
+  buttons_hierarchy_container <- shiny::div(
     buttons_hierarchy,
     class = "dv_button_container",
     id = ns(ID$NAV_HEADER)
   )
+
+  header <- shiny::div(
+    buttons_hierarchy_container,
+    top_buttons,
+    class = "dv_manager_top_bar"
+  )
+
   default_tab <- shiny::restoreInput(ns(ID$NAV_HEADER), NA)
   if (!is.na(default_tab)) header <- htmltools::tagAppendAttributes(header, "default-tab" = default_tab)
 

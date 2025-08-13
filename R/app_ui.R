@@ -102,12 +102,12 @@ app_ui <- function(request_id) {
       )
     )
 
-  btn_group <- shiny::div(
-    id = "btn-group",
+  top_buttons <- shiny::div(
     shiny::bookmarkButton("", class = "navbar-btn"),
     # Remove export functionality until new order
     # shiny::actionButton(ns("open_report_modal"), shiny::span(shiny::icon("download")), class = "navbar-btn"), # nolint
-    shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("cogs")), class = "navbar-btn")
+    shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("cogs")), class = "navbar-btn"),
+    class = "dv_top_button_group"
   )
 
   dataset_name <-
@@ -138,8 +138,7 @@ app_ui <- function(request_id) {
         shiny::div(class = "line line-3")
       ),
       collapsable_ui
-    ),
-    btn_group # Location modified through css check custom.css
+    )
   )
 
   shiny::fluidPage(
@@ -147,6 +146,6 @@ app_ui <- function(request_id) {
     theme = get_app_theme(),
     class = "display-grid",
     sidebar,
-    module_info[["ui_fn"]](ns, dataset_name),
+    module_info[["ui_fn"]](ns, dataset_name, top_buttons),
   )
 }
