@@ -248,9 +248,9 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
     buttons_hierarchy,
     class = "dv_button_container",
     id = ns(ID$NAV_HEADER)
-  )  
-  default_tab <- shiny::restoreInput(ns(ID$NAV_HEADER), NA)  
-  if (!is.na(default_tab))  buttons_hierarchy_container <- htmltools::tagAppendAttributes( buttons_hierarchy_container, "default-tab" = default_tab)
+  )
+  default_tab <- shiny::restoreInput(ns(ID$NAV_HEADER), NA)
+  if (!is.na(default_tab))  buttons_hierarchy_container <- htmltools::tagAppendAttributes(buttons_hierarchy_container, "default-tab" = default_tab)
 
   header <- shiny::div(
     buttons_hierarchy_container,
