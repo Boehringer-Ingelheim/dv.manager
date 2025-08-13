@@ -51,7 +51,7 @@ const dv_tab = (function () {
       current_node.classList.remove("active");
     }
 
-    const tabs_to_deactivate = root_el.parentElement.querySelectorAll(".dv_tab_content");
+    const tabs_to_deactivate = root_el.parentElement.parentElement.querySelectorAll(".dv_tab_container .dv_tab_content");
     for (let idx = 0; idx < tabs_to_deactivate.length; ++idx) {
       const current_node = tabs_to_deactivate[[idx]];
       current_node.classList.remove("active");
@@ -78,7 +78,7 @@ const dv_tab = (function () {
 
     const tab_target = curr_el.getAttribute("data-value");
 
-    root_el.parentElement.querySelector(".dv_tab_container .dv_tab_content[value='" + tab_target + "']").classList.add("active");
+    root_el.parentElement.parentElement.querySelector(".dv_tab_container .dv_tab_content[value='" + tab_target + "']").classList.add("active");
     notify_shiny_display_change($(root_el).find(".dv_tab_content[value='" + tab_target + "']"), "shown");
     return (tab_target);
   }

@@ -1,16 +1,29 @@
-# dv.manager 2.2.0
+# dv.manager 2.1.15-9000
+
+- Fix bookmark overlap (TO BE REMOVED ON FINAL NOTES)
+
+# dv.manager 2.1.14-9000
 
 - Blockly filter:
-    - Expands operations in blockly filter under development
     - Improve the documentation for the blockly filter in development
-    - Removes the `run_app_dev_filter` function and includes a new argument `filter_type` in `run_app` to set which filter should be used
+    - Removes the `run_app_dev_filter` function and includes a new arugment `filter_type` in `run_app` to set which filter should be used
     in each of the applications. `enable_dataset_filter` is deprecated and replaced by `filter_type = 'datasets'` argument in
     the `run_app` call.
+
+# dv.manager 2.1.13-9000
+
 - Ungroups all datasets and transform into `data.frame`
+
+# dv.manager 2.1.12-9000
+
 - Refactors UI
     - Top menus are no longer shiny tabsets and all is managed directly by css and javascript
     - Module UIs are no longer nested as required by shiny tabsets and all are child of the same container divisor.
     - All module containers have an absolute height.
+
+# dv.manager 2.1.11-9000
+
+- Expands operations in blockly filter under development
 
 # dv.manager 2.1.11
 

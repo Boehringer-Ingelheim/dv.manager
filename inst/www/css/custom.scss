@@ -24,13 +24,18 @@ body {
   display: flex;
   flex-wrap: wrap;
   flex-direction: column;
-  justify-content: start; /* or content-start */ 
+  justify-content: start; /* or content-start */   
 }
 
 .dv_button_level {
   background-color: $primary;
   box-shadow: $color-shadow;
   margin-bottom: 1rem;
+}
+
+.dv_manager_top_bar {
+  display:grid;
+  grid-template-columns: auto 90px;
 }
 
 .dv_button_level {
@@ -50,7 +55,6 @@ body {
   display:inline-flex;
   width: auto;
 }
-
 
 .dv_tab_activate_button { 
   padding: 14px 20px;
@@ -79,12 +83,9 @@ body {
   border-radius: 0;
 }
 
-#btn-group {
-  position: fixed;
-  right: 1em;
-  top: 0.1em;
-  z-index: 999;
-
+.dv_top_button_group {
+  background-color: $primary;
+  margin-bottom: 1rem;
   .navbar-btn.navbar-btn {
     background: none;
     border: none;
