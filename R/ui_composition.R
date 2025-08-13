@@ -243,20 +243,20 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
   }
 
   tabs <- shiny::div(class = "dv_tab_container", mod_ui_containers)
+
   buttons_hierarchy_container <- shiny::div(
     buttons_hierarchy,
     class = "dv_button_container",
     id = ns(ID$NAV_HEADER)
-  )
+  )  
+  default_tab <- shiny::restoreInput(ns(ID$NAV_HEADER), NA)  
+  if (!is.na(default_tab))  buttons_hierarchy_container <- htmltools::tagAppendAttributes( buttons_hierarchy_container, "default-tab" = default_tab)
 
   header <- shiny::div(
     buttons_hierarchy_container,
     top_buttons,
     class = "dv_manager_top_bar"
   )
-
-  default_tab <- shiny::restoreInput(ns(ID$NAV_HEADER), NA)
-  if (!is.na(default_tab)) header <- htmltools::tagAppendAttributes(header, "default-tab" = default_tab)
 
   script <- shiny::tags[["script"]](
     sprintf("dv_tab.init(\"%s\")", ns(ID$NAV_HEADER))
