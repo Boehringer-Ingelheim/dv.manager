@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,53 +89,177 @@
 </h2>
 <p><strong>Note that this filter is still in development stage and
 should not be used in production apps.</strong></p>
-<p>To activate this functionality, you only have to replace the
-<code>run_app</code> call with <code>run_app_dev_filter</code>.</p>
-<p><img src="../reference/figures/filter_overview.png" style="width:100.0%"></p>
+<p>To activate this functionality, you only have to set the
+<code>filter_type</code> argument to <code>blockly</code>.</p>
+<p><img src="images%2Ffilter_overview.png" style="width:100.0%"></p>
 <p>On this application you will notice that there are no filters on the
 left side but only a “Show filter” (1) button appears. When clicked this
 button will open the filter modal where you can design your filter.</p>
 <p>The filter works by selecting blocks from the categories (3), or by
 searching using the search box in (4), in to the canvas (2) that then
 are connected to create a filter.</p>
+<div class="alert alert-info" role="alert">
 <p>Once a filter is created it can be applied by pressing the “Apply
 filter” (5). Notice that, opposed to the previous filter, it is not
 applied automatically and it must be applied explicitely.</p>
 </div>
+</div>
 <div class="section level2">
-<h2 id="subject-filter">Subject filter<a class="anchor" aria-label="anchor" href="#subject-filter"></a>
+<h2 id="description-of-pieces">Description of pieces<a class="anchor" aria-label="anchor" href="#description-of-pieces"></a>
 </h2>
-<p>This filter is used to select a subpopulation. You can find it in the
-<em>“Filter Types”</em> category.</p>
-<p>It will filter all the tables for the subjects that match a specific
-set of conditions. For example, in the image below we have created a
-filter that filters for all subjets that:</p>
+<div class="section level3">
+<h3 id="filter-type-pieces">Filter Type pieces<a class="anchor" aria-label="anchor" href="#filter-type-pieces"></a>
+</h3>
+<p>All filters start with one of the pieces under the <strong>Filter
+Types</strong> section at the root of the filter. Only one of each of
+these pieces can be present in the canvas at any moment, one describing
+the filtering for the <em>adae</em> dataset, another for the
+<em>adlb</em> dataset, etc.</p>
+<p><img src="images%2Ffilter_types.gif" style="width:100.0%"></p>
+<p>Notice that there two main types of filters, <em>Dataset Filters</em>
+and <em>Subject Filters</em>.</p>
+<div class="section level4">
+<h4 id="dataset-filters">Dataset filters<a class="anchor" aria-label="anchor" href="#dataset-filters"></a>
+</h4>
+<p>These filters are designed to affect a single dataset, the name of
+the piece indicates which dataset is affected by the filter. These
+filters are used to select <strong>rows</strong> of a given dataset.</p>
+</div>
+<div class="section level4">
+<h4 id="subject-or-subpopulation-filters">Subject or subpopulation filters<a class="anchor" aria-label="anchor" href="#subject-or-subpopulation-filters"></a>
+</h4>
+<p>These filters are designed to affect all the datasets in the
+application. These filters are used to select a
+<strong>subpopulation</strong><br>
+across all datasets.</p>
+<p>In following sections we will explain more about both types of
+filters and how the filters are created.</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="variable-pieces">Variable pieces<a class="anchor" aria-label="anchor" href="#variable-pieces"></a>
+</h3>
+<p>In the toolbox there will be one section per dataset in the
+application. Under each of this sections you will find a piece for each
+of the variables in the dataset.</p>
+<p>You can drag these pieces to create filters.</p>
+<p><img src="images%2Fdataset_pieces.gif" style="width:100.0%"></p>
+<p>In the animation above we have created a simple filter that filters
+the <em>adae</em> table to rows in which the <em>Lowest Level Term</em>
+is <em>ABDOMINAL CRAMPS</em></p>
+<p>To create more complex filters we will use the combination operations
+available in the <em>Operations</em> toolbox section.</p>
+</div>
+<div class="section level3">
+<h3 id="operation-pieces">Operation pieces<a class="anchor" aria-label="anchor" href="#operation-pieces"></a>
+</h3>
+<p>Operation pieces are divided in two big groups:</p>
 <ul>
-<li>Are Female</li>
-<li>Are not in the 63 to 73 range</li>
-<li>And have had Erythema or a Serious Adverse Event</li>
+<li>Pieces used to combine variable pieces</li>
+<li>Pieces used to combine sets</li>
 </ul>
-<p><img src="../reference/figures/subject_filter_example.png" style="width:100.0%"></p>
+<div class="section level4">
+<h4 id="combining-variable-pieces">Combining variable pieces<a class="anchor" aria-label="anchor" href="#combining-variable-pieces"></a>
+</h4>
+<p>First we will describe the <strong>and</strong>, <strong>or</strong>
+and <strong>not</strong> operations used to combine variable pieces from
+the same dataset. These are purple-colored and can be found under the
+<em>Operations</em> section in the toolbox.</p>
+<p><img src="images%2Fvariable_operations.gif" style="width:100.0%"></p>
+<p>These pieces allow to create more complex filters, for example in the
+gif above we create a filter that filters the <em>adae</em> table to
+rows in which:</p>
+<ul>
+<li>The <em>Lowest Level Term</em> is <em>ABDOMINAL CRAMPS</em>
+<strong>and</strong> the <em>Severity</em> is <em>SEVERE</em>
+</li>
+<li>The <em>Lowest Level Term</em> is <em>ABDOMINAL CRAMPS</em>
+<strong>or</strong> the <em>Severity</em> is <em>SEVERE</em>
+</li>
+<li>The <em>Lowest Level Term</em> is <em>ABDOMINAL CRAMPS</em>
+<strong>or</strong> the <em>Severity</em> is <strong>not</strong>
+<em>SEVERE</em>
+</li>
+</ul>
+<p>There is not a single way of expressing a filter, therefore the same
+filter may be expressed, by different selections in the variable menus,
+or by different Combining Operations.</p>
+</div>
+<div class="section level4">
+<h4 id="combining-sets">Combining sets<a class="anchor" aria-label="anchor" href="#combining-sets"></a>
+</h4>
+<p>First we will describe the <strong>union</strong>,
+<strong>intersect</strong> and <strong>complement</strong> operations
+(<a href="https://en.wikipedia.org/wiki/Set_(mathematics)#Basic_operations" class="external-link">see</a>)
+used to combine sets to select a subpopulation of interest across the
+whole application.</p>
+<p>These are green-colored and can be found under the
+<em>Operations</em> section in the toolbox.</p>
+<p>For example in the gif below we create a filter selects a
+subpopulation that contains:</p>
+<ul>
+<li>All <em>Female</em> subjects between <em>60</em> and <em>70</em>
+<strong>intersect</strong> all subjects that have had any adverse event
+with <em>Severity</em> <em>Severe</em>.</li>
+<li>All <em>Female</em> subjects between <em>60</em> and <em>70</em>
+<strong>union</strong> all subjects that have had any adverse event with
+<em>Severity</em> <em>Severe</em>
+</li>
+<li>All <em>Female</em> subjects between <em>60</em> and <em>70</em>
+<strong>union</strong> with the <strong>complement</strong> of all
+subjects that have had any adverse event with <em>Severity</em>
+<em>Severe</em>
+</li>
+</ul>
+<p><img src="images%2Fset_operations.gif" style="width:100.0%"></p>
+</div>
+<div class="section level4">
+<h4 id="piece-restrictions">Piece restrictions<a class="anchor" aria-label="anchor" href="#piece-restrictions"></a>
+</h4>
+<p>Several restrictions are in place to avoid incorrect configurations
+of the filter:</p>
+<ul>
+<li>
+<em>Variable</em> and <em>Combining variable</em> pieces can have
+any parent.</li>
+<li>
+<em>Combining variable</em> pieces can only have as children another
+<em>Combining variable</em> piece or a <em>variable</em> piece.</li>
+<li>Any <em>variable</em> pieces under a given <em>combining
+variable</em> piece, regardless of depth, must belong to the same
+dataset.</li>
+<li>
+<em>Combining set</em> pieces can have as parent another
+<em>combining set</em> piece or the <em>Subject Filter</em> piece.</li>
+<li>
+<em>Combining set</em> pieces can have any piece as children.</li>
+</ul>
+<p>The controls in the application prevent that any of the above actions
+is performed in the filter canvas.</p>
+<p><img src="images%2Fpieces_restriction.gif" style="width:100.0%"></p>
+</div>
+<div class="section level4">
+<h4 id="searching-for-pieces">Searching for pieces<a class="anchor" aria-label="anchor" href="#searching-for-pieces"></a>
+</h4>
+<p>The toolbox include a search box on top that allows searching for
+pieces across all sections.</p>
+<p><img src="images%2Fsearching.gif" style="width:100.0%"></p>
+<div class="alert alert-info" role="alert">
+<p>At least three characters must be used in the search box before it
+starts searching.</p>
+</div>
+</div>
+</div>
 </div>
 <div class="section level2">
-<h2 id="dataset-filter">Dataset filter<a class="anchor" aria-label="anchor" href="#dataset-filter"></a>
+<h2 id="example-application">Example application<a class="anchor" aria-label="anchor" href="#example-application"></a>
 </h2>
-<p>These set of filters are used to filter a single table from the
-dataset. You can find them in the <em>“Filter Types”</em> category.</p>
-<p>It will filter a single table, and will have no impact on the rest of
-the tables. For example, in the image below we have created a filter for
-the “adae” table, where only “Erythemas” or “Adverse Event” rows are
-included.</p>
-<p><img src="../reference/figures/dataset_filter_example.png" style="width:100.0%"></p>
-</div>
-<div class="section level2">
-<h2 id="creating-our-first-filter">Creating our first filter<a class="anchor" aria-label="anchor" href="#creating-our-first-filter"></a>
-</h2>
+<p>Find below an application that allows testing the filter.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Notice the usage of ::: as several of the functions are not exported yet</span></span>
 <span><span class="co"># until a final version of the filter is provided</span></span>
 <span></span>
-<span><span class="fu">dv.manager</span><span class="fu">:::</span><span class="fu">run_app_dev_filter</span><span class="op">(</span></span>
+<span><span class="fu">dv.manager</span><span class="fu">:::</span><span class="fu">run_ap</span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    <span class="st">"D0"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>      adsl <span class="op">=</span> <span class="fu">dv.manager</span><span class="fu">:::</span><span class="fu">get_pharmaverse_data</span><span class="op">(</span><span class="st">"adsl"</span><span class="op">)</span>,</span>
@@ -150,56 +274,24 @@ included.</p>
 <span>    <span class="st">"Listing"</span> <span class="op">=</span> <span class="fu">dv.listings</span><span class="fu">::</span><span class="fu">mod_listings</span><span class="op">(</span><span class="st">"mod_listing"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"adsl"</span>, <span class="st">"adae"</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span>,</span>
-<span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span></span>
+<span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span>,</span>
+<span>  filter_type <span class="op">=</span> <span class="st">"blockly"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<ul>
-<li>Open the “Filter” modal.</li>
-<li>Click on the “Filter Types” category.</li>
-<li>Drag the “Subject Filter” block into the canvas.</li>
-<li>Open the “adsl” category and drag the “AGE” block into the canvas.
-<ul>
-<li>Alternatively, type “AGE” in the search box.</li>
-</ul>
-</li>
-<li>Connect the “AGE” block to the “Subject Filter” block.</li>
-<li>Click on any of the values in the “AGE” block to open the slider and
-select a range.</li>
-<li>Close the slider.</li>
-<li>Apply the filter.</li>
-</ul>
-<p>Now lets modify it:</p>
-<ul>
-<li>Disconnect the “AGE” block by dragging it away from the “Subject
-Filter” block.</li>
-<li>Open the “Operations” category.</li>
-<li>Drag an “AND” block into the canvas.
-<ul>
-<li>You can change the operation using the dropdown in the block.</li>
-</ul>
-</li>
-<li>Connect the “Subject Filter” block to the “AND” block.</li>
-<li>Connect the “AGE” block to the “AND” block.</li>
-<li>Drag the “SEX” block from the “adsl” category into the canvas and
-connect it to the “AND” block.</li>
-<li>Click on the selected values in the “SEX” block to open the dropdown
-menu and select only the “F” value.</li>
-<li>Close the dropdown menu.</li>
-<li>Apply the filter.</li>
-</ul>
 </div>
 <div class="section level2">
 <h2 id="exporting-a-filter-and-using-it-as-a-preset-filter">Exporting a filter and using it as a preset filter<a class="anchor" aria-label="anchor" href="#exporting-a-filter-and-using-it-as-a-preset-filter"></a>
 </h2>
-<p>Now you can export a filter to a file using the “Export Filter”
-button. This file can then be used in the app call as a preset
-filter.</p>
+<p>A given state of the filter can export a filter to a file using the
+“Export Filter” button. This file can then be used in the app call as a
+preset filter.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Notice the usage of ::: as several of the functions are not exported yet</span></span>
 <span><span class="co"># until a final version of the filter is provided</span></span>
 <span></span>
-<span><span class="fu">dv.manager</span><span class="fu">:::</span><span class="fu">run_app_dev_filter</span><span class="op">(</span></span>
+<span><span class="fu">dv.manager</span><span class="fu">:::</span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span></span>
 <span>  <span class="va">...</span>,</span>
-<span>  state <span class="op">=</span> <span class="st">"path/to/filter/file.json"</span></span>
+<span>  filter_type <span class="op">=</span> <span class="st">"blockly"</span>,</span>
+<span>  filter_default_state <span class="op">=</span> <span class="st">"path/to/filter/file.json"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">

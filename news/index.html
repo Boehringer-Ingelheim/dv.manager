@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,8 +56,22 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.2.0" id="dvmanager-220">dv.manager 2.2.0<a class="anchor" aria-label="anchor" href="#dvmanager-220"></a></h2>
+<ul><li>Blockly filter:
+<ul><li>Expands operations in blockly filter under development</li>
+<li>Improve the documentation for the blockly filter in development</li>
+<li>Removes the <code>run_app_dev_filter</code> function and includes a new arugment <code>filter_type</code> in <code>run_app</code> to set which filter should be used in each of the applications. <code>enable_dataset_filter</code> is deprecated and replaced by <code>filter_type = 'datasets'</code> argument in the <code>run_app</code> call.</li>
+</ul></li>
+<li>Refactors UI
+<ul><li>Top menus are no longer shiny tabsets and all is managed directly by css and javascript</li>
+<li>Module UIs are no longer nested as required by shiny tabsets and all are child of the same container divisor.</li>
+<li>All module containers have an absolute height.</li>
+<li>Filter menus height is fixed, to avoid sizing errors depending on the sidebar vertical localtion of the filter menus.</li>
+</ul></li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.1.11" id="dvmanager-2111">dv.manager 2.1.11<a class="anchor" aria-label="anchor" href="#dvmanager-2111"></a></h2>
-<ul><li>Fails when modules try to access a non-existant module output</li>
+<ul><li>Fails when modules try to access a non-existent module output</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.1.10" id="dvmanager-2110">dv.manager 2.1.10<a class="anchor" aria-label="anchor" href="#dvmanager-2110"></a></h2>

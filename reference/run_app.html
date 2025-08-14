@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,9 @@
 <span>  azure_options <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  reload_period <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  enableBookmarking <span class="op">=</span> <span class="st">"server"</span>,</span>
-<span>  enable_dataset_filter <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  filter_type <span class="op">=</span> <span class="st">"simple"</span>,</span>
+<span>  enable_dataset_filter <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  filter_default_state <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  .launch <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -135,8 +137,16 @@ any previous calls to  <code><a href="https://rdrr.io/pkg/shiny/man/enableBookma
 for more information on bookmarking your app.</p></dd>
 
 
+<dt id="arg-filter-type">filter_type<a class="anchor" aria-label="anchor" href="#arg-filter-type"></a></dt>
+<dd><p>Indicates which filter type, <code>simple</code>, <code>datasets</code>, <code>blockly</code> (in development), will be used in the application.</p></dd>
+
+
 <dt id="arg-enable-dataset-filter">enable_dataset_filter<a class="anchor" aria-label="anchor" href="#arg-enable-dataset-filter"></a></dt>
-<dd><p>A boolean flag indicating if dataset filters are enabled. The default value is FALSE.</p></dd>
+<dd><p><strong>DEPRECATED</strong> A boolean flag indicating if dataset filters are enabled. The default value is FALSE.</p></dd>
+
+
+<dt id="arg-filter-default-state">filter_default_state<a class="anchor" aria-label="anchor" href="#arg-filter-default-state"></a></dt>
+<dd><p>A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for <code>blockly</code> filters).</p></dd>
 
 
 <dt id="arg--launch">.launch<a class="anchor" aria-label="anchor" href="#arg--launch"></a></dt>
