@@ -7,8 +7,6 @@
 #'
 #' @keywords internal
 
-
-
 app_ui <- function(request_id) {
   if (is.environment(request_id)) {
     log_inform("I am the ui of an app")
@@ -22,17 +20,16 @@ app_ui <- function(request_id) {
 
   ns <- shiny::NS(id)
 
-  ## Feature switch for new data filter
-
-  use_new_filter_switch <- get_config("dv.manager.use.blockly.filter")
-  new_filter_state <- get_config("dv.manager.blockly.predefined.filter")
-
   ######################################
 
   data <- get_config("data")
   module_info <- get_config("module_info")
   filter_data <- get_config("filter_data")
-  enable_dataset_filter <- get_config("enable_dataset_filter")
+  filter_info <- get_config("filter_info")
+
+  use_dataset_filter <- filter_info[["filter_type"]] == FILTER$TYPE$DATASETS
+  use_blockly_filter <- filter_info[["filter_type"]] == FILTER$TYPE$BLOCKLY
+  filter_default_state <- filter_info[["filter_default_state"]]
 
   log_inform("Initializing HTML template UI")
   log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
@@ -45,7 +42,7 @@ app_ui <- function(request_id) {
     ns
   )
 
-  if (use_new_filter_switch) {
+  if (use_blockly_filter) {
     filter_ui <- shiny::div(
       class = "c-well shiny_filter",
       shiny::tags$label(
@@ -56,7 +53,7 @@ app_ui <- function(request_id) {
       shiny::div(
         class = "filter-control  filter-filters",
         unnamespaced_filter_modal(list(
-          new_filter_ui(ns("filter"), data, state = new_filter_state)[["combined_ui"]]
+          new_filter_ui(ns("filter"), data, state = filter_default_state)[["combined_ui"]]
         )),
       )
     )
@@ -74,7 +71,7 @@ app_ui <- function(request_id) {
           subject_filter_ui
         )
       ),
-      if (enable_dataset_filter) {
+      if (use_dataset_filter) {
         shiny::div(
           class = "c-well shiny_filter",
           shiny::tags$label(
@@ -105,12 +102,12 @@ app_ui <- function(request_id) {
       )
     )
 
-  btn_group <- shiny::div(
-    id = "btn-group",
+  top_buttons <- shiny::div(
     shiny::bookmarkButton("", class = "navbar-btn"),
     # Remove export functionality until new order
     # shiny::actionButton(ns("open_report_modal"), shiny::span(shiny::icon("download")), class = "navbar-btn"), # nolint
-    shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("cogs")), class = "navbar-btn")
+    shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("cogs")), class = "navbar-btn"),
+    class = "dv_top_button_group"
   )
 
   dataset_name <-
@@ -141,8 +138,7 @@ app_ui <- function(request_id) {
         shiny::div(class = "line line-3")
       ),
       collapsable_ui
-    ),
-    btn_group # Location modified through css check custom.css
+    )
   )
 
   shiny::fluidPage(
@@ -150,7 +146,6 @@ app_ui <- function(request_id) {
     theme = get_app_theme(),
     class = "display-grid",
     sidebar,
-    module_info[["ui"]](ns),
-    dataset_name
+    module_info[["ui_fn"]](ns, dataset_name, top_buttons),
   )
 }

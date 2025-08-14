@@ -36,6 +36,8 @@ export class rangeSliderField extends Blockly.FieldNumber {
      */
     showEditor_(e, quietInput) {
         super.showEditor_(e, true);
+        this.old_unclicked_value = this.name === "max" ? this.getSourceBlock().getFieldValue("min") : this.getSourceBlock().getFieldValue("max");        
+
         // Build the DOM.
         const editor = this.dropdownCreate_();
         Blockly.DropDownDiv.getContentDiv().appendChild(editor);
@@ -105,6 +107,18 @@ export class rangeSliderField extends Blockly.FieldNumber {
         this.ionSliderInstance.destroy();
         this.ionSliderInstance = null;
         this.sliderInput = null;
+
+        // Send extra event now
+        // This block only sends an event automatically when the value of the clicked input changes
+        // But it does not do it for the unclicked element. Therefore, we do it manually.
+
+        const name_unclicked = this.name === "max" ? "min" : "max";
+        const current_unclicked_value = this.getSourceBlock().getFieldValue(name_unclicked);
+        if(this.old_unclicked_value !== current_unclicked_value) {
+            Blockly.Events.fire(new Blockly.Events.BlockChange(
+                this.getSourceBlock(), 'field', this.name_unclicked, this.old_unclicked_value, current_unclicked_value
+              ));                        
+        }
     }
     /**
      * Sets the text to match the slider's position.

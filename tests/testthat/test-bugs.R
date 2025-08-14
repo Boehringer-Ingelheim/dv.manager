@@ -9,7 +9,7 @@ test_that("values are returned when datafilter returns are false", {
     data = datasets,
     filter_data = "a",
     module_list = list(),
-    enable_dataset_filter = TRUE,
+    filter_info = list(filter_type = "datasets", filter_default_state = NULL),
     filter_key = "mpg" # This filter key is not really good as it is not unique!
   )
 
@@ -48,7 +48,7 @@ test_that(
         module_list = list(module = dv.manager::mod_simple2(dataset_name = "empty", module_id = "module")),
         filter_data = "a",
         filter_key = "a",
-        enable_dataset_filter = TRUE
+        filter_type = "datasets"
       )
     }) |> suppressWarnings()
 

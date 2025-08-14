@@ -28,7 +28,9 @@
 #' externally.
 #' @param reload_period Either a lubridate object to specify a duration
 #' or a positive numeric value which is then interpreted as a lubridate duration object in days. By default NULL
-#' @param enable_dataset_filter A boolean flag indicating if dataset filters are enabled. The default value is FALSE.
+#' @param filter_type Indicates which filter type, `simple`, `datasets`, `blockly` (in development), will be used in the application.
+#' @param filter_default_state A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for `blockly` filters).
+#' @param enable_dataset_filter **DEPRECATED** A boolean flag indicating if dataset filters are enabled. The default value is FALSE.
 #' @param .launch by default it should always be TRUE. It should only be false for debugging and testing.
 #' When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.
 #' @inheritParams shiny::shinyApp
@@ -50,11 +52,16 @@ run_app <- function(data = NULL,
                     azure_options = NULL,
                     reload_period = NULL,
                     enableBookmarking = "server", # nolint
-                    enable_dataset_filter = FALSE,
+                    filter_type = "simple",
+                    enable_dataset_filter = NULL,
+                    filter_default_state = NULL,
                     .launch = TRUE) {
-  check_deprecated_calls(filter_data)
 
   dataset_lists <- data
+
+  if (!missing(enable_dataset_filter)) {
+    stop("`enable_dataset_filter` argument has been removed. Please, use `filter_type = 'datasets'` argument instead.")
+  }
 
   if (is.null(azure_options)) {
     app_args <- list(
@@ -68,19 +75,35 @@ run_app <- function(data = NULL,
 
   config <- list()
   config[["module_info"]] <- check_resolved_modules(process_module_list(module_list))
+
   # The automatic mapping will influence reporting when it is implemented in the future
-  config[["data"]] <- char_vars_to_factor_vars_dataset_lists(check_data(dataset_lists))
+  config[["data"]] <- local({
+    check_data(dataset_lists)
+    d <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
+    d <- ungroup2df_datasets_dataset_lists(d)
+    d
+  })
+
   config[["filter_data"]] <- check_filter_data(filter_data, dataset_lists)
   config[["filter_key"]] <- check_filter_key(filter_key, dataset_lists)
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
-  config[["enable_dataset_filter"]] <- enable_dataset_filter
+  config[["filter_info"]] <- check_set_filter_info(filter_type, filter_default_state)
 
-  # NEW DATAFILTER OPTIONS
-  config[["dv.manager.use.blockly.filter"]] <- isTRUE(getOption("dv.manager.use.blockly.filter"))
-  config[["dv.manager.blockly.predefined.filter"]] <- getOption("dv.manager.blockly.predefined.filter")
-  # NEW DATAFILTER OPTIONS (F)
+  if (config[["filter_info"]][["filter_type"]] == FILTER$TYPE$BLOCKLY) {
+    msg <- paste(
+      "",
+      "#############################################################",
+      "# You are using using an experimental filter not ready for  #",
+      "# production.                                               #",
+      "# If this is not intended, please use 'simple' or 'datasets #",
+      "# in `filter_type` argument.                                #",
+      "#############################################################",
+      sep = "\n"
+    )
+    log_warn(msg)
+  }
 
   check_meta_mtime_attribute(dataset_lists)
 
@@ -227,43 +250,4 @@ build_secure_arguments <- function(azure_options, app_ui, app_server) {
     srv_func = sec_server,
     options = list(port = port)
   )
-}
-
-run_app_dev_filter <- function(..., state = NULL) {
-  msg <- paste(
-    "##############################################################",
-    "# You are using the application using an experimental filter #",
-    "# If this is not intended, please use the regular `run_app`  #",
-    "#                                                            #",
-    "# This function is NOT SUPPORTED for production              #",
-    "# This function WILL BREAK and WILL DISAPPEAR without notice #",
-    "##############################################################",
-    sep = "\n"
-  )
-  warning(msg)
-
-  old_use <- getOption("dv.manager.use.blockly.filter")
-  old_state <- getOption("dv.manager.blockly.predefined.filter")
-  on.exit(
-    {
-      options(dv.manager.use.blockly.filter = old_use)
-    },
-    add = TRUE
-  )
-  on.exit(options(dv.manager.blockly.predefined.filter = old_state), add = TRUE)
-
-  if (!is.null(state)) {
-    if (file.exists(state)) {
-      state <- paste0(readLines(state), collapse = "\n")
-    }
-    x <- try(jsonlite::parse_json(state), silent = TRUE)
-    if (inherits(x, "try-error")) {
-      message(state)
-      stop("`state` string file cannot be parsed JSON")
-    }
-  }
-
-  options(dv.manager.use.blockly.filter = TRUE)
-  options(dv.manager.blockly.predefined.filter = state)
-  run_app(...)
 }

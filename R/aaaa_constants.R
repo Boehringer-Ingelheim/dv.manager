@@ -14,3 +14,21 @@ TT <- local({
 })
 
 # nolint end
+
+
+LAYOUT <- poc( # nolint
+  ATTRIBUTE = "layout",
+  TAB_GROUP = "tab_group"
+)
+
+ID <- poc(
+  NAV_HEADER = "nav_header"
+)
+
+FILTER <- poc(
+  TYPE = poc(
+    SIMPLE = "simple",
+    DATASETS = "datasets",
+    BLOCKLY = "blockly"
+  )
+)

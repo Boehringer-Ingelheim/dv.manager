@@ -1,6 +1,6 @@
 // variable definitions
 $primary: $brand-primary;
-$secondary: #7292fc;
+$secondary: #7292fc;;
 $color-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 $color-text: #ffffff;
 $border-radius: $border-radius-base;
@@ -9,63 +9,83 @@ $sidebar-width-collapsed: 60px;
 $color-scrollbar: #9b9b9b7f;
 // end variable definitions
 
+
+.fas.fa-filter{ // Overwrite hardcoded color
+  color: $primary;
+}
+
 body {
   font-size: $font-size-base;
 }
 
 /* navigation */
-#__tabset_0__ {
-  &.nav {
-    display: flex;
-    flex-wrap: wrap;
-    background-color: $primary;
-    box-shadow: $color-shadow;
-    z-index: 998;
-    padding-right: 12rem;
 
-    &:first-child {
-      & li:first-child > a::after {
-        border-bottom-left-radius: $border-radius;
-      }
-      border-bottom-left-radius: $border-radius;
-    }
-
-    li {
-      a {
-        padding: 16px 20px;
-        color: $color-text;
-        background-color: $primary;
-        color: $color-text;
-
-        &::after {
-          content: "";
-          position: absolute;
-          display: block;
-          left: 0;
-          width: 0;
-          bottom: 0;
-          height: 4px;
-          background: $secondary;
-          transition: width 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955);
-        }
-      }
-
-      &:hover,
-      &.active {
-        a::after {
-          width: 100%;
-        }
-      }
-    }
-  }
+.dv_button_container {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  justify-content: start; /* or content-start */   
 }
 
-#btn-group {
-  position: fixed;
-  right: 1em;
-  top: 0.1em;
-  z-index: 999;
+.dv_button_level {
+  background-color: $primary;
+  box-shadow: $color-shadow;
+  margin-bottom: 1rem;
+}
 
+.dv_manager_top_bar {
+  display:grid;
+  grid-template-columns: auto 90px;
+}
+
+.dv_button_level {
+  display: inline-flex;
+  flex-wrap: wrap;    
+}
+
+.dv_button_level.dv_root_button_level {
+  display:block;
+}
+
+.dv_button_level.dv_child_button_level {
+  display:none;
+}
+
+.dv_button_level.dv_child_button_level.active {
+  display:inline-flex;
+  width: auto;
+}
+
+.dv_tab_activate_button { 
+  padding: 14px 20px;
+  color: $color-text;
+  background-color: $primary;
+  color: $color-text;
+}
+
+.dv_child_button_level .dv_tab_activate_button { 
+  padding: 5px 20px;
+  color: $color-text;
+  background-color: $primary;
+  color: $color-text;
+}
+
+.dv_tab_activate_button.clicked {
+  border-top-style: hidden;
+  border-left-style: hidden;
+  border-right-style: hidden;
+  border-right-width: 0px;
+  border-left-width: 0px;
+  border-top-width: 0px;
+  border-bottom: $secondary;
+  border-bottom-width: 3px;
+  border-bottom-style: solid;
+  border-radius: 0;
+}
+
+.dv_top_button_group {
+  background-color: $primary;
+  margin-bottom: 1rem;
   .navbar-btn.navbar-btn {
     background: none;
     border: none;
@@ -98,7 +118,7 @@ body {
   width: $sidebar-width-collapsed;
 }
 
-body > .container-fluid > .tabbable {
+body > .container-fluid > .dv_main_panel {
   grid-column: 2 / -1;
   grid-row: 1 / 3;
   display: grid;
@@ -124,6 +144,25 @@ body > .container-fluid > .tabbable {
     left 0.3s ease-in-out 0.1s;
   box-shadow: $color-shadow;
 }
+
+.dv_tab_container {
+  overflow: auto;
+  padding-bottom: 2rem;
+  padding-right: 1.6rem;
+  height: 100%;
+  position:relative;
+}
+
+.dv_tab_content {
+  display: none;
+  height: 100%;
+}
+
+.dv_tab_content.active {
+  display: block
+}
+
+
 
 .tab-content {
   grid-column: 1 / -1;
@@ -227,9 +266,15 @@ input[type="checkbox"]#click {
       position: fixed;
       left: $sidebar-width-open;
       top: 25vh;
-      max-height: 75vh !important;
+      max-height: 70vh !important;
+      min-height: 0px !important;
+      height: 70vh !important;
+      overflow-y: hidden;
       .inner.open{
-        max-height: 75vh !important;        
+        max-height: 70vh !important;
+        min-height: 0px !important;
+        height: calc(100% - 75px); // Hardcoded heigth of top search buttons
+        overflow-y: auto;
       }
     }
     

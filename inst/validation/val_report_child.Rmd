@@ -17,7 +17,7 @@
 vdoc <- local({
   #                      ##########
   # package_name is used # INSIDE # the sourced file below
-  #                      ##########  
+  #                      ##########
   package_name <- params[["package"]]
   utils_file_path <- system.file("validation", "utils-validation.R", package = package_name, mustWork = TRUE)
   source(utils_file_path, local = TRUE)[["value"]]
@@ -95,7 +95,7 @@ The following document generates a report for R packages, to satisfy the criteri
 - **Session Info and System Configuration**
 
 ::: {.infobox .warning}
-Please be advised that the QC report generated for this module does not imply validation according to any other GxP criteria. 
+Please be advised that the QC report generated for this module does not imply validation according to any other GxP criteria.
 The QC report only satisfies our internally developed quality checks for non-GxP criteria.
 For clinical reporting purposes, it is essential to note that any outputs generated using this module must be checked and verified within a validated system that adheres to the appropriate GxP guidelines.
 :::
