@@ -266,9 +266,15 @@ input[type="checkbox"]#click {
       position: fixed;
       left: $sidebar-width-open;
       top: 25vh;
-      max-height: 75vh !important;
+      max-height: 70vh !important;
+      min-height: 0px !important;
+      height: 70vh !important;
+      overflow-y: hidden;
       .inner.open{
-        max-height: 75vh !important;        
+        max-height: 70vh !important;
+        min-height: 0px !important;
+        height: calc(100% - 75px); // Hardcoded heigth of top search buttons
+        overflow-y: auto;
       }
     }
     

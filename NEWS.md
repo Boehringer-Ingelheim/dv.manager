@@ -1,3 +1,7 @@
+# dv.manager 2.1.16-9000
+
+- Filter menus height is fixed, to avoid sizing errors depending on the sidebar vertical localtion of the filter menus.
+
 # dv.manager 2.1.15-9000
 
 - Fix bookmark overlap (TO BE REMOVED ON FINAL NOTES)
