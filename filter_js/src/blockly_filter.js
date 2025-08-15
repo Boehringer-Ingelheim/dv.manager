@@ -472,7 +472,7 @@ const filterBlockly = (() => {
     return (stringified_res)
   }
 
-  const init = function (id, dataset_name) {
+  const init = function (id, dataset_name, filter_data, init_state) {
     {
       /* Clear previous block definitions
       Otherwise block definitions are kept from one dataset to the other
@@ -499,7 +499,7 @@ const filterBlockly = (() => {
     }
 
     const container_div = document.getElementById(id);
-    const script_tag = container_div.querySelector("script[type='application/json']");
+    
 
     // Preface start
 
@@ -566,16 +566,6 @@ const filterBlockly = (() => {
     json_generator.forBlock[C.TYPE.SET_COMPLEMENT_OPERATION] = set_operation_generator;
 
     // Preface End
-
-    let json_data;
-
-    try {
-      json_data = JSON.parse(script_tag.textContent.trim());
-    } catch (error) {
-      console.error('Error parsing JSON:', error);
-    }
-
-    let filter_data = json_data.data;
 
     let selected_dataset_name = dataset_name;
 
@@ -951,17 +941,8 @@ const filterBlockly = (() => {
 
     ws.addChangeListener(onChange);
 
-    let state_for_restore;
-
-    if(script_tag.hasAttribute("bookmark")) {
-      state_for_restore = json_data.bookmark;
-      script_tag.toggleAttribute("bookmark");
-    } else {
-      state_for_restore = json_data.state;
-    }
-
     let filter_state, filter_state_log;
-    [filter_state, filter_state_log] = filter_to_state(state_for_restore, selected_datasets);
+    [filter_state, filter_state_log] = filter_to_state(init_state, selected_datasets);
 
     if (filter_state) {      
       try {        
@@ -1003,34 +984,54 @@ const chaff = filterBlockly.chaff;
 
 let send_code = null;
 
-let init_blockly_handler = function (msg) {
+let init_filter_handler = function (msg) {
 
   // // let logger = console.log;
-  let logger = function(x){}
+  let logger = function(x){console.log(x)}
 
-  const container_id = msg[["container_id"]];
   const dataset = msg[["dataset"]];
-  const button_id = msg[["gen_code_button_id"]];
   const json_input_id = msg[["json_input_id"]];
   const log_input_id = msg[["log_input_id"]];
+  const filter_container_id = msg[["filter_container_id"]];
+  
+  debugger;
+  const container_div = document.getElementById(filter_container_id);
+  let payload_data;
+  const payload_tag = container_div.querySelector("script[type='application/json']");
+  try {
+    payload_data = JSON.parse(payload_tag.textContent.trim());
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+  }
+
+  let init_state;
+  if(payload_tag.hasAttribute("bookmark")) {
+    init_state = payload_data.bookmark;
+    payload_tag.toggleAttribute("bookmark");
+  } else {
+    init_state = payload_data.state;
+  }
+
+  const blockly_container_id = msg[["blockly"]][["container_id"]];
+  const blockly_gen_code_button_id = msg[["blockly"]][["gen_code_button_id"]];
 
   // Remove first if present
-  if ($("#filter-filter_container").data("filter") !== undefined) {
+  if ($("#"+blockly_container_id).data("filter") !== undefined) {
     logger("Disposing");
-    const filter = $("#filter-filter_container").data("filter");
+    const filter = $("#" + blockly_container_id).data("filter");
     filter.workspace.dispose();
-    $("#filter-filter_container").data("filter", undefined);
+    $("#"+blockly_container_id).data("filter", undefined);
   }
 
   if(send_code !== null) {
-    document.getElementById(button_id).removeEventListener('click', send_code);
+    document.getElementById(blockly_gen_code_button_id).removeEventListener('click', send_code);
   }
 
   // Initialize
   logger("Initializing: " + dataset);
-  $('#' + container_id).data('filter', blockly_filter.init(container_id, dataset));
+  $('#' + blockly_container_id).data('filter', blockly_filter.init(blockly_container_id, dataset, payload_data.data, init_state));
   send_code = function () {
-    const filter = $('#' + container_id).data('filter');
+    const filter = $('#' + blockly_container_id).data('filter');
     const code = blockly_filter.get_code(filter);
     logger("sending to " + json_input_id);
     logger(code);
@@ -1038,7 +1039,7 @@ let init_blockly_handler = function (msg) {
   };  
 
   send_log = function () {
-    const filter = $('#' + container_id).data('filter');
+    const filter = $('#' + blockly_container_id).data('filter');
     const log = filter.log;
     logger("sending to " + log_input_id);
     logger(log);
@@ -1047,10 +1048,10 @@ let init_blockly_handler = function (msg) {
 
   send_log();
   send_code(); // Send code on init in case there is a preloaded state
-  document.getElementById(button_id).addEventListener('click', send_code);
+  document.getElementById(blockly_gen_code_button_id).addEventListener('click', send_code);
 }
 
-Shiny.addCustomMessageHandler("init_blockly_filter", init_blockly_handler);
+Shiny.addCustomMessageHandler("init_filter", init_filter_handler);
 
 
 export { init, get_code, chaff }

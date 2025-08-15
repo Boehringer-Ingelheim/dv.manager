@@ -402,7 +402,7 @@ add_blockly_dependency <- function() {
   )
 }
 
-new_filter_ui <- function(id, dataset_lists, state = NULL) {
+new_filter_ui <- function(id,dataset_lists, state = NULL) {
   ns <- shiny::NS(id)
 
   if (!is.null(state)) {
@@ -413,68 +413,109 @@ new_filter_ui <- function(id, dataset_lists, state = NULL) {
     state <- "null" # Acts as a no filter JSON
   }
 
-  bookmark <- shiny::restoreInput(ns("json"), "null")
+  bookmark <- shiny::restoreInput(ns(ID$FILTER_JSON_INPUT), "null")
   current_filter_data <- jsonlite::toJSON(get_filter_data(dataset_lists))
   assert(to_filter_validate(current_filter_data), "failed to validate message to filter")
-  payload <- sprintf("{\"state\": %s, \"data\": %s, \"bookmark\": %s}", state, current_filter_data, bookmark)
+  payload_tag <- shiny::tags[["script"]](
+          type = "application/json",
+          shiny::HTML(
+            sprintf(
+              "{\"state\": %s, \"data\": %s, \"bookmark\": %s}",
+              state, current_filter_data, bookmark
+            )
+          ), # Avoids scaping of > and other HTML special characters
+          bookmark = if (bookmark != "null") NA else NULL
+        )
 
-  apply_button_ui <- shiny::tags[["button"]](id = ns("gen_code"), "Apply filter", class = "btn btn-primary btn-lg")
-  export_button_ui <- shiny::downloadButton(
-    outputId = ns("export_code"),
-    "Export filter",
-    class = "btn btn-primary btn-lg"
-  )
-  filter_ui <- list(
-    add_blockly_dependency(),
-    shiny:::ionRangeSliderDependency(),
-    shiny:::datePickerDependency(),
-    # When attaching the dependencies on my own an error occurs when using multiple
-    # When including an input perse the error disappears, this should be explored
-    shiny::div(
-      style = "display:none;",
-      shinyWidgets::pickerInput(ns("IGNORE_INPUT"), choices = c("A", "B"), multiple = TRUE),
-    ),
-    shiny::div(
-      id = ns("filter_container"),
-      style = "height: 100%;",
-      shiny::tags[["script"]](
-        type = "application/json",
-        shiny::HTML(payload), # Avoids scaping of > and other HTML special characters
-        bookmark = if (bookmark != "null") NA else NULL
+  blockly_ui <- local({
+    apply_button_ui <- shiny::tags[["button"]](id = ns(ID$BLOCKLY$GEN_CODE), "Apply filter", class = "btn btn-primary btn-lg")
+    export_button_ui <- shiny::downloadButton(
+      outputId = ns(ID$BLOCKLY$EXPORT_CODE),
+      "Export filter",
+      class = "btn btn-primary btn-lg"
+    )
+    ui <- list(
+      add_blockly_dependency(),
+      shiny:::ionRangeSliderDependency(),
+      shiny:::datePickerDependency(),
+      # When attaching the dependencies on my own an error occurs when using multiple
+      # When including an input perse the error disappears, this should be explored
+      shiny::div(
+        style = "display:none;",
+        shinyWidgets::pickerInput(ns("IGNORE_INPUT"), choices = c("A", "B"), multiple = TRUE),
+      ),
+      shiny::div(
+        id = ns(ID$BLOCKLY$INNER_CONTAINER),
+        style = "height: 100%;"
       )
     )
-  )
 
-  combined_ui <- shiny::div(
-    style = "display: grid;
+    combined_ui <- shiny::div(
+      style = "display: grid;
             grid-template-rows: 1fr auto; /* First row takes remaining space, second row based on content */
             height: 100%;
             ",
-    shiny::div(
-      style = "
+      shiny::div(
+        style = "
             text-align: center;
             padding: 10px;
         ",
-      filter_ui
-    ),
-    shiny::div(
-      style = "
+        ui
+      ),
+      shiny::div(
+        style = "
             padding: 10px;
             text-align: center;
       ",
-      apply_button_ui,
-      export_button_ui
+        apply_button_ui,
+        export_button_ui
+      )
     )
-  )
 
-  list(
-    combined_ui = combined_ui,
-    split_ui = list(
-      filter_ui = filter_ui,
-      apply_button_ui = apply_button_ui,
-      export_button_ui = export_button_ui
+    combined_ui
+  })
+
+  combined_ui <- local({
+    t <- shiny::tags
+    filter_selector <- shiny::div(
+      t[["label"]](
+        "Filter:",
+        t[["select"]](
+          t[["option"]](value = "simple", "Simple"),
+          t[["option"]](value = "datasets", "Datasets"),
+          t[["option"]](value = "blockly", "Blockly")
+        )
+      )
     )
-  )
+
+    simple_ui <- "SIMPLE UI"
+    datasets_ui <- "DATASETS UI"
+
+    filter_container <- shiny::div(
+      id = ns(ID$FILTER_CONTAINER),
+      shiny::div(
+        id = ns(ID$SIMPLE$CONTAINER),
+        simple_ui
+      ),
+      shiny::div(
+        id = ns(ID$DATASETS$CONTAINER),
+        datasets_ui
+      ),
+      shiny::div(
+        id = ns(ID$BLOCKLY$CONTAINER),
+        unnamespaced_filter_modal(blockly_ui)
+      ),
+      payload_tag
+    )
+
+    shiny::div(
+      class = "c-well shiny_filter",
+      filter_selector,
+      filter_container
+    )
+  })
+
+  combined_ui
 }
 
 new_filter_server <- function(id, selected_dataset_name, strict = FALSE) {
@@ -482,30 +523,33 @@ new_filter_server <- function(id, selected_dataset_name, strict = FALSE) {
     shiny::setBookmarkExclude("IGNORE_INPUT")
     ns <- session[["ns"]]
 
-    message(paste("Listening to:", ns("json")))
+    message(paste("Listening to:", ns(ID$FILTER_JSON_INPUT)))
 
     shiny::observeEvent(selected_dataset_name(), {
       session[["sendCustomMessage"]](
-        "init_blockly_filter",
+        "init_filter",
         list(
-          container_id = ns("filter_container"),
           dataset = selected_dataset_name(),
-          gen_code_button_id = ns("gen_code"),
-          json_input_id = ns("json"),
-          log_input_id = ns("log")
+          blockly = list(
+            container_id = ns(ID$BLOCKLY$INNER_CONTAINER),
+            gen_code_button_id = ns(ID$BLOCKLY$GEN_CODE)
+          ),
+          filter_container_id = ns(ID$FILTER_CONTAINER),
+          json_input_id = ns(ID$FILTER_JSON_INPUT),
+          log_input_id = ns(ID$FILTER_LOG_INPUT)
         )
       )
     })
 
-    shiny::observeEvent(input[["log"]], {
-      for (msg in input[["log"]]) {
+    shiny::observeEvent(input[[ID$FILTER_LOG_INPUT]], {
+      for (msg in input[[ID$FILTER_LOG_INPUT]]) {
         shiny::showNotification(msg, type = "warn", duration = NULL)
       }
     })
 
 
     res <- shiny::reactive({
-      json_r <- input[["json"]]
+      json_r <- input[[ID$FILTER_JSON_INPUT]]
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
         val_res <- from_filter_validate(json_r)
@@ -523,14 +567,14 @@ new_filter_server <- function(id, selected_dataset_name, strict = FALSE) {
       }
     })
 
-    output[["export_code"]] <- shiny::downloadHandler(
+    output[[ID$BLOCKLY$EXPORT_CODE]] <- shiny::downloadHandler(
       filename = "filter.txt",
       content = function(file) {
-        if (!checkmate::test_string(input[["json"]])) {
+        if (!checkmate::test_string(input[[ID$FILTER_JSON_INPUT]])) {
           data <- "null"
           shiny::showNotification("Empty filter exported. Please apply filter before exporting.", type = "warn")
         } else {
-          data <- jsonlite::prettify(input[["json"]])
+          data <- jsonlite::prettify(input[[ID$FILTER_JSON_INPUT]])
         }
         writeLines(
           data,
@@ -539,10 +583,10 @@ new_filter_server <- function(id, selected_dataset_name, strict = FALSE) {
       },
       contentType = "application/json"
     )
-    shiny::outputOptions(output, "export_code", suspendWhenHidden = FALSE)
+    shiny::outputOptions(output, ID$BLOCKLY$EXPORT_CODE, suspendWhenHidden = FALSE)
 
     return(
-      structure(res, raw = shiny::reactive(input[["json"]]))
+      structure(res, raw = shiny::reactive(input[[ID$FILTER_JSON_INPUT]]))
     )
   }
   shiny::moduleServer(id, mod)
@@ -563,7 +607,7 @@ mock_new_filter <- function(data = list(
     shiny::fluidPage(
       shiny::bookmarkButton(),
       shiny::div(
-        new_filter_ui("filter", data, state = filter_state)[["combined_ui"]],
+        new_filter_ui(ID$FILTER, data, state = filter_state)[["combined_ui"]],
         style = "height: 400px"
       ),
       shiny::verbatimTextOutput("raw_json"),
@@ -575,7 +619,7 @@ mock_new_filter <- function(data = list(
 
   server <- function(input, output, session) {
     selected_data <- "D1"
-    x <- new_filter_server("filter", selected_dataset = shiny::reactive(selected_data), strict = TRUE)
+    x <- new_filter_server(ID$FILTER_JSON_INPUT, selected_dataset = shiny::reactive(selected_data), strict = TRUE)
 
     output[["raw_json"]] <- shiny::renderPrint({
       json <- x()[["raw"]]

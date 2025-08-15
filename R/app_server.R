@@ -137,7 +137,7 @@ app_server_ <- function(input, output, session, opts) {
 
 
   if (use_blockly_filter) {
-    dataset_filter <- new_filter_server("filter", shiny::reactive({
+    dataset_filter <- new_filter_server(ID$FILTER, shiny::reactive({
       input$selector
     }))
 
