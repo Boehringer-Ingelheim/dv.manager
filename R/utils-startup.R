@@ -28,7 +28,7 @@ insert_header_add_resources <- function(app_title = NULL, ...) {
 add_manager_dependency <- function() {
   htmltools::htmlDependency(
     name = "dv.manager",
-    version = utils::packageVersion("dv.manager"),
+    version = "0.0.1",
     src = app_sys("www/js"),
     script = "init.js"
   )
