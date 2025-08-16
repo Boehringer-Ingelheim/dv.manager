@@ -402,7 +402,7 @@ add_blockly_dependency <- function() {
   )
 }
 
-new_filter_ui <- function(id,dataset_lists, state = NULL) {
+new_filter_ui <- function(id, dataset_lists, state = NULL) {
   ns <- shiny::NS(id)
 
   if (!is.null(state)) {
@@ -426,6 +426,21 @@ new_filter_ui <- function(id,dataset_lists, state = NULL) {
           ), # Avoids scaping of > and other HTML special characters
           bookmark = if (bookmark != "null") NA else NULL
         )
+
+  init_tag <- shiny::tags[["script"]](
+    shiny::HTML(
+      sprintf(
+        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+        ns(ID$FILTER_CONTAINER),
+        ns(ID$SIMPLE$CONTAINER),
+        ns(ID$DATASETS$CONTAINER),
+        ns(ID$BLOCKLY$CONTAINER),
+        ns(ID$FILTER_JSON_INPUT),
+        ns(ID$FILTER_LOG_INPUT),
+        ns(ID$SELECT)
+      )
+    )
+  )
 
   blockly_ui <- local({
     apply_button_ui <- shiny::tags[["button"]](id = ns(ID$BLOCKLY$GEN_CODE), "Apply filter", class = "btn btn-primary btn-lg")
@@ -477,13 +492,17 @@ new_filter_ui <- function(id,dataset_lists, state = NULL) {
 
   combined_ui <- local({
     t <- shiny::tags
+
+    select_bookmark <- shiny::restoreInput(ns(ID$SELECT), FILTER$TYPE$BLOCKLY)
+
     filter_selector <- shiny::div(
       t[["label"]](
         "Filter:",
         t[["select"]](
-          t[["option"]](value = "simple", "Simple"),
-          t[["option"]](value = "datasets", "Datasets"),
-          t[["option"]](value = "blockly", "Blockly")
+          id = ns(ID$SELECT),
+          t[["option"]](value = FILTER$TYPE$SIMPLE, "Simple", selected = if (identical(select_bookmark, FILTER$TYPE$SIMPLE)) NA else NULL),
+          t[["option"]](value = FILTER$TYPE$DATASETS, "Datasets", selected = if (identical(select_bookmark, FILTER$TYPE$DATASETS)) NA else NULL),
+          t[["option"]](value = FILTER$TYPE$BLOCKLY, "Blockly", selected = if (identical(select_bookmark, FILTER$TYPE$BLOCKLY)) NA else NULL)
         )
       )
     )
@@ -491,8 +510,10 @@ new_filter_ui <- function(id,dataset_lists, state = NULL) {
     simple_ui <- "SIMPLE UI"
     datasets_ui <- "DATASETS UI"
 
-    filter_container <- shiny::div(
+    shiny::div(
       id = ns(ID$FILTER_CONTAINER),
+      class = "c-well shiny_filter",
+      filter_selector,
       shiny::div(
         id = ns(ID$SIMPLE$CONTAINER),
         simple_ui
@@ -505,13 +526,8 @@ new_filter_ui <- function(id,dataset_lists, state = NULL) {
         id = ns(ID$BLOCKLY$CONTAINER),
         unnamespaced_filter_modal(blockly_ui)
       ),
-      payload_tag
-    )
-
-    shiny::div(
-      class = "c-well shiny_filter",
-      filter_selector,
-      filter_container
+      payload_tag,
+      init_tag
     )
   })
 

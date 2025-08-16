@@ -1031,14 +1031,50 @@ let init_filter_handler = function (msg) {
     json_input_id, log_input_id
   );
 
-  debugger;
   // send_log();
   send_code(); // Send code on init in case there is a preloaded state
   
 }
 
-Shiny.addCustomMessageHandler("init_filter", init_filter_handler);
+// let state = {
+//   ID: {
+//     simple: null,
+//     datasets: null,
+//     blockly: null,
+//     filter_json_input: null,
+//     filter_log_input_id: null
+//   }
 
-export { chaff }
+// }
+
+const init = function(root_id, simple_id, datasets_id, blockly_id, filter_json_input_id, filter_log_input_id, select_id) {
+  logger("Filter root id: " + root_id);
+
+  let change_filter = function(val){    
+    $('#' + simple_id).hide()
+    $('#' + datasets_id).hide()
+    $('#' + blockly_id).hide()
+
+    if (val === "simple") {
+      $('#' + simple_id).show();
+    } else if (val === "datasets") {
+      $('#' + datasets_id).show();
+    } else if (val === "blockly") {
+      $('#' + blockly_id).show();
+    } else {
+      console.error ("Unknown filter value " + val);
+    }    
+  };
+
+  $('#' + select_id).on('change', function(e){change_filter($(e.target).val())});
+  change_filter($('#' + select_id).val());
+  
+  Shiny.addCustomMessageHandler("init_filter", init_filter_handler);
+}
+
+
+
+
+export { init, chaff }
 
 
