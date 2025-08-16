@@ -397,8 +397,8 @@ add_blockly_dependency <- function() {
     name = "filter_blockly",
     version = utils::packageVersion("dv.manager"),
     src = app_sys("filter/"),
-    script = c("blockly_filter_minified.js"),
-    style = c("blockly_filter.css"),
+    script = c("dv_filter_minified.js"),
+    style = c("dv_filter.css"),
   )
 }
 
@@ -758,7 +758,7 @@ unnamespaced_filter_modal <- function(filter_ui) {
         });
     $('#filter-checkbox').change(function () {
       window.dispatchEvent(new Event('resize'));
-      blockly_filter.chaff();
+      dv_filter.chaff();
     });
 });
     ")
