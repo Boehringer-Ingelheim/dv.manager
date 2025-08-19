@@ -493,7 +493,7 @@ new_filter_ui <- function(id, dataset_lists, state = NULL) {
   combined_ui <- local({
     t <- shiny::tags
 
-    select_bookmark <- shiny::restoreInput(ns(ID$SELECT), FILTER$TYPE$BLOCKLY)
+    select_bookmark <- shiny::restoreInput(ns(ID$SELECT), FILTER$TYPE$SIMPLE)
 
     filter_selector <- shiny::div(
       t[["label"]](
@@ -534,18 +534,25 @@ new_filter_ui <- function(id, dataset_lists, state = NULL) {
   combined_ui
 }
 
-new_filter_server <- function(id, selected_dataset_name, strict = FALSE) {
+new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dataset_name, strict = FALSE) {
   mod <- function(input, output, session) {
     shiny::setBookmarkExclude("IGNORE_INPUT")
     ns <- session[["ns"]]
 
     message(paste("Listening to:", ns(ID$FILTER_JSON_INPUT)))
 
-    shiny::observeEvent(selected_dataset_name(), {
+    shiny::observeEvent(selected_dataset_list_name(), {
       session[["sendCustomMessage"]](
         "init_filter",
         list(
-          dataset = selected_dataset_name(),
+          dataset_list_name = selected_dataset_list_name(),
+          simple = list(
+            container_id = ns(ID$SIMPLE$CONTAINER),
+            subject_filter_dataset_name = subject_filter_dataset_name
+          ),
+          datasets = list(
+            container_id = ns(ID$DATASETS$CONTAINER)
+          ),
           blockly = list(
             container_id = ns(ID$BLOCKLY$INNER_CONTAINER),
             gen_code_button_id = ns(ID$BLOCKLY$GEN_CODE)
@@ -562,7 +569,6 @@ new_filter_server <- function(id, selected_dataset_name, strict = FALSE) {
         shiny::showNotification(msg, type = "warn", duration = NULL)
       }
     })
-
 
     res <- shiny::reactive({
       json_r <- input[[ID$FILTER_JSON_INPUT]]

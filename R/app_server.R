@@ -139,7 +139,9 @@ app_server_ <- function(input, output, session, opts) {
   if (use_blockly_filter) {
     dataset_filter <- new_filter_server(ID$FILTER, shiny::reactive({
       input$selector
-    }))
+    }),
+    subject_filter_dataset_name = filter_data
+    )
 
     filtered_dataset <- shinymeta::metaReactive({
       ufd <- shiny::isolate(unfiltered_dataset())

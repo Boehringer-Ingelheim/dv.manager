@@ -33,32 +33,14 @@ import './toolbox-search/index.js'
 /* TODO: Filter data structure generation is slow, it is generated everytime the UI starts, it could be moved to a 
 step previous to the UI, to avoid running it everytime we start the application. Memoize the operation?
 
-/* TODO: Control for incorrect filter definitions that should never be sent to the server. e.g. ands with not children
-
-Several dataset or subjet filters blocks
-
-*/
-
-/* TODO: Define behavior of unplugged blocks */
-
 /* TODO: Should a warning appear when a preset filters uses an out of range value. They are corrected by blockly but there is no warning*/
 
 /* TODO: name consitency */
 
-/* TODO: Clean, clean, clean!!!!
-
 /* TODO: # When attaching the dependencies on my own an error occurs when using multiple
     # When including shinyWidget picker_input itself the error disappears, this should be explored
-    */
+  */
 
-/* TODO: Add validation rules so bounds of the ranges cannot be inverted, min_range > max_range. At the moment we only 
-do not confuse with them being within the bounds of the column this is already controlled. */
-
-/*TODO: Consider statements inside of puzzle pieces
-*/
-
-/*TODO: Include Subject filter and Dataset filter as singlenton non deletebale pieces
-*/
 
 /*TODO: Split in two workspaces one for the subject filters and another for the table filters
 */
@@ -72,15 +54,29 @@ do not confuse with them being within the bounds of the column this is already c
 /*TODO: Create an alternative UI that matches the current dv.filter while using the same backend
 */
 
-/*TODO: Terms dataset and table are used interchangeably in the code that would bring some headaches in the future
-Coheren usage of the terms is recommended. Table will be the recommended word*/
+/* TODO: Think about having, at least, an initial state. Ids of elements, etc.
+
+/* TODO: Use data for attributes with the ids of the filter inside to avoid passing ids all the time and just trust
+in a given internal structure.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 let logger = function (x) { console.log(x) }
 
+let debounce = function (func, delay = 1000) {
+  let timeoutId;
+  return function (...args) {
+    const context = this;
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func.apply(context, args);
+    }, delay);
+  };
+}
 
-// BLOCKLY FILTER
+
+//#region BLOCKLY FILTER
 
 const BC = {
   TYPE: {
@@ -1000,12 +996,82 @@ let chaff = function () {
   }
 }
 
+//#endregion BLOCKLY FILTER
+
+//#region Simple filter
+
+const SC = {
+
+}
+
+let simple_init = function(container_id, dataset_list_name, subject_filter_dataset_name, filter_data, init_state, json_input_id, log_input_id) {
+  logger("Initializing simple: " + container_id);  
+  const container_el = document.getElementById(container_id);
+  
+  const current_dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
+  if (current_dataset_list === undefined) {
+    throw new Error(`Dataset list with name ${dataset_list_name} not found`);
+  }
+
+  const current_subject_dataset = current_dataset_list.dataset_list.find(obj=>obj.name === subject_filter_dataset_name);
+  if (current_subject_dataset === undefined) {
+    throw new Error(`Dataset with name ${subject_filter_dataset_name} not found`);
+  }
+
+  let control_container = document.createElement('div');
+  control_container.className = 'dv_filter-control-container';
+
+  let select = document.createElement('select');
+  select.className = 'selectpicker';
+  select.setAttribute('multiple', '');
+  select.setAttribute('title', 'Choose an option');
+  select.setAttribute('data-live-search', 'true');
+
+  for(let i = 0; i < current_subject_dataset.variables.length; ++i) {
+    logger(current_subject_dataset.variables[i]);
+    let option = document.createElement('option');
+    option.value = current_subject_dataset.variables[i].name;
+    option.textContent = `${current_subject_dataset.variables[i].name} - ${current_subject_dataset.variables[i].label}`;
+    select.appendChild(option);
+  }
+ 
+  container_el.appendChild(select);
+  $(select).selectpicker();
+  container_el.appendChild(control_container);
+
+  let update_filter_controls = function(new_control_list) {
+    control_container.innerHTML = '';
+    // let current_controls = control_container.querySelectorAll("div");
+
+    logger(new_control_list);
+
+    for(let i = 0; i < new_control_list.length; ++i) {
+      let new_p = document.createElement('p');
+      new_p.textContent = new_control_list[i];
+      control_container.appendChild(new_p);
+    }
+
+  };
+
+  let debounced_update_filter_controls = debounce(update_filter_controls);
+
+  $(select).on('changed.bs.select', function () {
+    debounced_update_filter_controls($(this).val());    
+  });  
+}
+
+//#endregion
+
+
+
+//#region General init
+
 let init_filter_handler = function (msg) {
 
-  const dataset = msg.dataset;
+  const dataset_list_name = msg.dataset_list_name;
   const json_input_id = msg.json_input_id;
   const log_input_id = msg.log_input_id;
-  const filter_container_id = msg.filter_container_id;
+  const filter_container_id = msg.filter_container_id;  
 
   const container_div = document.getElementById(filter_container_id);
   let payload_data;
@@ -1027,7 +1093,16 @@ let init_filter_handler = function (msg) {
   let send_code = outer_blockly_init(
     msg.blockly.container_id,
     msg.blockly.gen_code_button_id,
-    dataset, payload_data.data, init_state,
+    dataset_list_name,    
+    payload_data.data, init_state,
+    json_input_id, log_input_id
+  );
+
+  simple_init(
+    msg.simple.container_id,
+    dataset_list_name,
+    msg.simple.subject_filter_dataset_name,
+    payload_data.data, init_state,
     json_input_id, log_input_id
   );
 
@@ -1071,6 +1146,8 @@ const init = function(root_id, simple_id, datasets_id, blockly_id, filter_json_i
   
   Shiny.addCustomMessageHandler("init_filter", init_filter_handler);
 }
+
+//#endregion
 
 
 
