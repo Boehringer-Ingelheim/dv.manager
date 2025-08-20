@@ -413,43 +413,36 @@ new_filter_ui <- function(id, dataset_lists, state = NULL) {
     state <- "null" # Acts as a no filter JSON
   }
 
-  bookmark <- shiny::restoreInput(ns(ID$FILTER_JSON_INPUT), "null")
+  filter_bookmark <- shiny::restoreInput(ns(ID$FILTER_JSON_INPUT), "null")
   current_filter_data <- jsonlite::toJSON(get_filter_data(dataset_lists))
   assert(to_filter_validate(current_filter_data), "failed to validate message to filter")
+
   payload_tag <- shiny::tags[["script"]](
           type = "application/json",
           shiny::HTML(
             sprintf(
               "{\"state\": %s, \"data\": %s, \"bookmark\": %s}",
-              state, current_filter_data, bookmark
+              state, current_filter_data, filter_bookmark
             )
           ), # Avoids scaping of > and other HTML special characters
-          bookmark = if (bookmark != "null") NA else NULL
+          bookmark = if (filter_bookmark != "null") NA else NULL
         )
 
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
-        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+        "dv_filter.init('%s', '%s', '%s')",
         ns(ID$FILTER_CONTAINER),
-        ns(ID$SIMPLE$CONTAINER),
-        ns(ID$DATASETS$CONTAINER),
-        ns(ID$BLOCKLY$CONTAINER),
         ns(ID$FILTER_JSON_INPUT),
-        ns(ID$FILTER_LOG_INPUT),
-        ns(ID$SELECT)
+        ns(ID$FILTER_LOG_INPUT)
       )
     )
   )
-
-  blockly_ui <- local({
-    apply_button_ui <- shiny::tags[["button"]](id = ns(ID$BLOCKLY$GEN_CODE), "Apply filter", class = "btn btn-primary btn-lg")
-    export_button_ui <- shiny::downloadButton(
-      outputId = ns(ID$BLOCKLY$EXPORT_CODE),
-      "Export filter",
-      class = "btn btn-primary btn-lg"
-    )
-    ui <- list(
+  
+  combined_ui <- local({
+    shiny::div(
+      id = ns(ID$FILTER_CONTAINER),
+      class = "c-well shiny_filter",
       add_blockly_dependency(),
       shiny:::ionRangeSliderDependency(),
       shiny:::datePickerDependency(),
@@ -458,73 +451,6 @@ new_filter_ui <- function(id, dataset_lists, state = NULL) {
       shiny::div(
         style = "display:none;",
         shinyWidgets::pickerInput(ns("IGNORE_INPUT"), choices = c("A", "B"), multiple = TRUE),
-      ),
-      shiny::div(
-        id = ns(ID$BLOCKLY$INNER_CONTAINER),
-        style = "height: 100%;"
-      )
-    )
-
-    combined_ui <- shiny::div(
-      style = "display: grid;
-            grid-template-rows: 1fr auto; /* First row takes remaining space, second row based on content */
-            height: 100%;
-            ",
-      shiny::div(
-        style = "
-            text-align: center;
-            padding: 10px;
-        ",
-        ui
-      ),
-      shiny::div(
-        style = "
-            padding: 10px;
-            text-align: center;
-      ",
-        apply_button_ui,
-        export_button_ui
-      )
-    )
-
-    combined_ui
-  })
-
-  combined_ui <- local({
-    t <- shiny::tags
-
-    select_bookmark <- shiny::restoreInput(ns(ID$SELECT), FILTER$TYPE$SIMPLE)
-
-    filter_selector <- shiny::div(
-      t[["label"]](
-        "Filter:",
-        t[["select"]](
-          id = ns(ID$SELECT),
-          t[["option"]](value = FILTER$TYPE$SIMPLE, "Simple", selected = if (identical(select_bookmark, FILTER$TYPE$SIMPLE)) NA else NULL),
-          t[["option"]](value = FILTER$TYPE$DATASETS, "Datasets", selected = if (identical(select_bookmark, FILTER$TYPE$DATASETS)) NA else NULL),
-          t[["option"]](value = FILTER$TYPE$BLOCKLY, "Blockly", selected = if (identical(select_bookmark, FILTER$TYPE$BLOCKLY)) NA else NULL)
-        )
-      )
-    )
-
-    simple_ui <- "SIMPLE UI"
-    datasets_ui <- "DATASETS UI"
-
-    shiny::div(
-      id = ns(ID$FILTER_CONTAINER),
-      class = "c-well shiny_filter",
-      filter_selector,
-      shiny::div(
-        id = ns(ID$SIMPLE$CONTAINER),
-        simple_ui
-      ),
-      shiny::div(
-        id = ns(ID$DATASETS$CONTAINER),
-        datasets_ui
-      ),
-      shiny::div(
-        id = ns(ID$BLOCKLY$CONTAINER),
-        unnamespaced_filter_modal(blockly_ui)
       ),
       payload_tag,
       init_tag
@@ -547,11 +473,9 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
         list(
           dataset_list_name = selected_dataset_list_name(),
           simple = list(
-            container_id = ns(ID$SIMPLE$CONTAINER),
             subject_filter_dataset_name = subject_filter_dataset_name
           ),
           datasets = list(
-            container_id = ns(ID$DATASETS$CONTAINER)
           ),
           blockly = list(
             container_id = ns(ID$BLOCKLY$INNER_CONTAINER),
@@ -696,94 +620,5 @@ mock_new_filter <- function(data = list(
     ui = ui,
     server = server,
     enableBookmarking = "url"
-  )
-}
-
-unnamespaced_filter_modal <- function(filter_ui) {
-  # WARNING: This, as it name implies, is not a module and is not namespaced.
-  # This should be adressed before releasing
-
-  warning("Using unnamespaced modal, DO NOT USE IN PRODUCTION")
-  shiny::div(
-    shiny::tags[["label"]]("Show filter", "for" = "filter-checkbox", class = "btn btn-primary"),
-    shiny::tags[["input"]](type = "checkbox", id = "filter-checkbox", style = "display:none;"),
-    shiny::div(
-      id = "filter_overlay",
-      shiny::tags[["style"]](
-        '
-            /* Overlay style */
-        #filter_overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none; /* Hidden by default */
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-        }
-
-        /* Modal content style */
-        #filter_modal {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 80vw;
-            height: 80vh;
-            text-align: center;
-        }
-
-        /* Close button style */
-        #filter_close-btn {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 5px 10px;
-            background-color: #ccc;
-            text-decoration: none;
-            border-radius: 3px;
-        }
-
-        #filter_close-btn:hover {
-            background-color: #aaa;
-        }
-
-        /* Show the modal when the checkbox is checked */
-        input[type="checkbox"]:checked + #filter_overlay {
-            display: flex;
-        }
-
-            '
-      ),
-      shiny::div(
-        id = "filter_modal",
-        style = "display: grid;
-            grid-template-rows: auto 1fr auto; /* First row takes remaining space, second row based on content */
-            ",
-        shiny::h4("Filter"),
-        filter_ui,
-        shiny::tags[["label"]]("Close filter", "for" = "filter-checkbox", id = "filter_close-btn")
-      ),
-      shiny::tags[["script"]]("
-    $(document).ready(function () {
-    const overlay = document.getElementById('filter_overlay');
-            overlay.addEventListener('click', function(event){
-            let $target = $(event.target);
-                    if(!$target.closest('#filter_modal').length) {
-                      console.log('Inner Hit')
-                      document.getElementById('filter-checkbox').checked = false;
-            $('#filter-checkbox').trigger('change');
-
-                    }
-        });
-    $('#filter-checkbox').change(function () {
-      window.dispatchEvent(new Event('resize'));
-      dv_filter.chaff();
-    });
-});
-    ")
-    )
   )
 }

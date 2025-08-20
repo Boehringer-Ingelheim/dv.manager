@@ -462,7 +462,7 @@ const get_blockly_code = function ({ workspace, generator, dataset_name }) {
   return (stringified_res)
 }
 
-const init_blockly = function (id, dataset_name, filter_data, init_state) {
+const init_blockly = function (el, dataset_name, filter_data, init_state) {
   {
     /* Clear previous block definitions
     Otherwise block definitions are kept from one dataset to the other
@@ -488,7 +488,7 @@ const init_blockly = function (id, dataset_name, filter_data, init_state) {
 
   }
 
-  const container_div = document.getElementById(id);
+  const container_div = el;
 
 
   // Preface start
@@ -954,40 +954,102 @@ const init_blockly = function (id, dataset_name, filter_data, init_state) {
 }
 
 let blockly_disposal = function(){};
-let outer_blockly_init = function (container_id, gen_code_button_id, dataset, filter_data, init_state, json_input_id, log_input_id) {
+let outer_blockly_init = function (container_el, dataset_name, filter_data, init_state) {
 
   blockly_disposal();
+
+  //# region blockly UI
+
+  let show_label = document.createElement('label');
+  show_label.textContent = "Show filter";
+  show_label.setAttribute("for", "blockly-filter-checkbox");
+  show_label.className = "btn btn-primary";
+
+  let show_checkbox = document.createElement("input");
+  show_checkbox.type = "checkbox";
+  show_checkbox.id = "blockly-filter-checkbox";
+  show_checkbox.style.display = "none";
+
+  container_el.appendChild(show_label);
+  container_el.appendChild(show_checkbox);
+
+  let modal_overlay = document.createElement('div');
+  modal_overlay.className = "blockly_overlay";
+
+  let modal = document.createElement('div');
+  modal.className = "blockly_modal";
+
+  let title = document.createElement("h4");
+  title.textContent = "Filter";
+
+  let outer_filter_el = document.createElement("div");
+  outer_filter_el.className = "blockly_filter outer";  
+
+  let inner_filter_el = document.createElement("div");
+  inner_filter_el.className = "blockly_filter inner";
   
-  logger("Initializing: " + dataset);
-  $('#' + container_id).data('filter', init_blockly(container_id, dataset, filter_data, init_state));
+  let gen_code_button = document.createElement("button");
+  gen_code_button.type = "button";
+  gen_code_button.className = "btn btn-primary btn-lg";
+  gen_code_button.textContent = "Apply Filter";
+
+  let export_code_button = document.createElement("button");
+  export_code_button.type = "button";
+  export_code_button.className = "btn btn-primary btn-lg";
+  export_code_button.textContent = "Export Filter";
+
+  outer_filter_el.appendChild(inner_filter_el);
+  outer_filter_el.appendChild(gen_code_button);
+  outer_filter_el.appendChild(export_code_button);
+
+  let hide_label = document.createElement('label');
+  hide_label.textContent = "close filter";
+  hide_label.setAttribute("for", "blockly-filter-checkbox");
+  hide_label.className = "btn btn-primary";
+
+  modal.appendChild(title);
+  modal.appendChild(outer_filter_el);
+  modal.appendChild(hide_label);
+
+  modal_overlay.append(modal);
+  container_el.appendChild(modal_overlay);
+  
+  logger("Initializing: " + dataset_name);
+
+  $(show_checkbox).change(function () {
+    window.dispatchEvent(new Event('resize')); //Otherwise blockly is wrongly sized
+    chaff();
+  });
+
+  modal_overlay.addEventListener('click', function(event){
+    let $target = $(event.target);
+      if(!$target.closest('.blockly_modal').length) {
+        logger('Inner Hit')
+        show_checkbox.checked = false;
+        $(show_checkbox).trigger('change');
+      }
+  });
+
+  $(inner_filter_el).data('filter', init_blockly(inner_filter_el, dataset_name, filter_data, init_state));
   let send_code = function () {
-    const filter = $('#' + container_id).data('filter');
+    const filter = $(inner_filter_el).data('filter');
     const code = get_blockly_code(filter);
-    logger("sending to " + json_input_id);
-    logger(code);
-    Shiny.setInputValue(json_input_id, code, { priority: 'event' });
+    const event = new CustomEvent(FC.UPDATED_FILTER_EVENT, {
+      detail: {filter: code, mode: FC.MODES.BLOCKLY},
+      bubbles: true,
+      cancelable: true
+    });
+    container_el.dispatchEvent(event);
   };
 
   blockly_disposal = function(){
     logger("Disposing");
-    const filter = $("#" + container_id).data("filter");
+    const filter = $(inner_filter_el).data("filter");
     filter.workspace.dispose();
-    $("#" + container_id).data("filter", undefined);
-    document.getElementById(gen_code_button_id).removeEventListener('click', send_code);    
+    $(inner_filter_el).data("filter", undefined);    
+    gen_code_button.removeEventListener('click', send_code);
   }
-  document.getElementById(gen_code_button_id).addEventListener('click', send_code);
-
-  return (send_code);
-
-  // send_log = function () {
-  //   const filter = $('#' + blockly_container_id).data('filter');
-  //   const log = filter.log;
-  //   logger("sending to " + log_input_id);
-  //   logger(log);
-  //   Shiny.setInputValue(log_input_id, log, { priority: 'event' });
-  // };
-
-
+  gen_code_button.addEventListener('click', send_code);
 }
 
 let chaff = function () {
@@ -1004,9 +1066,11 @@ const SC = {
 
 }
 
-let simple_init = function(container_id, dataset_list_name, subject_filter_dataset_name, filter_data, init_state, json_input_id, log_input_id) {
-  logger("Initializing simple: " + container_id);  
-  const container_el = document.getElementById(container_id);
+let simple_init = function(container_el, dataset_list_name, subject_filter_dataset_name, filter_data, init_state, json_input_id, log_input_id) {
+  
+  if(!container_el) {
+    throw new Error(`container_el found not found`);
+  }
   
   const current_dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
   if (current_dataset_list === undefined) {
@@ -1253,16 +1317,12 @@ let simple_init = function(container_id, dataset_list_name, subject_filter_datas
 
 //#region General init
 
-let init_filter_handler = function (msg) {
+let init_filter_handler = function (msg, root_el, json_input_id, log_input_id) {
 
-  const dataset_list_name = msg.dataset_list_name;
-  const json_input_id = msg.json_input_id;
-  const log_input_id = msg.log_input_id;
-  const filter_container_id = msg.filter_container_id;  
+  const dataset_list_name = msg.dataset_list_name;  
 
-  const container_div = document.getElementById(filter_container_id);
   let payload_data;
-  const payload_tag = container_div.querySelector("script[type='application/json']");
+  const payload_tag = root_el.querySelector("script[type='application/json']");
   try {
     payload_data = JSON.parse(payload_tag.textContent.trim());
   } catch (error) {
@@ -1277,16 +1337,18 @@ let init_filter_handler = function (msg) {
     init_state = payload_data.state;
   }
 
-  let send_code = outer_blockly_init(
-    msg.blockly.container_id,
-    msg.blockly.gen_code_button_id,
+  let blockly_el = root_el.querySelector(`[data-filter-mode="${FC.MODES.BLOCKLY}"]`)
+  outer_blockly_init(
+    blockly_el,    
     dataset_list_name,    
-    payload_data.data, init_state,
-    json_input_id, log_input_id
+    payload_data.data, init_state    
   );
 
+  
+  let simple_el = root_el.querySelector(`[data-filter-mode="${FC.MODES.SIMPLE}"]`)
+  
   simple_init(
-    msg.simple.container_id,
+    simple_el,
     dataset_list_name,
     msg.simple.subject_filter_dataset_name,
     payload_data.data, init_state,
@@ -1294,55 +1356,74 @@ let init_filter_handler = function (msg) {
   );
 
   // send_log();
-  send_code(); // Send code on init in case there is a preloaded state
+  // send_code(); // Send code on init in case there is a preloaded state
   
 }
 
-// let state = {
-//   ID: {
-//     simple: null,
-//     datasets: null,
-//     blockly: null,
-//     filter_json_input: null,
-//     filter_log_input_id: null
-//   }
+let FC = {
+  MODES: {
+    SIMPLE: "simple",
+    DATASETS: "datasets",
+    BLOCKLY: "blockly"
+  },
+  UPDATED_FILTER_EVENT: "updated_filter"
+}
 
-// }
-
-const init = function(root_id, simple_id, datasets_id, blockly_id, filter_json_input_id, filter_log_input_id, select_id) {
+const init = function(root_id, filter_json_input_id, filter_log_input_id) {
   logger("Filter root id: " + root_id);
 
-  let filter_mode_select = document.getElementById(select_id);
+  let root_el = document.getElementById(root_id);
+  let select = document.createElement('select'); 
+  
+  root_el.appendChild(select);
 
-  let change_filter = function(val){    
-    $('#' + simple_id).hide()
-    $('#' + datasets_id).hide()
-    $('#' + blockly_id).hide()
+  const mode_keys = Object.keys(FC.MODES); // ["SIMPLE", "DATASETS", "BLOCKLY"]
+  for (let i = 0; i < mode_keys.length; i++) {
+    const current_mode = FC.MODES[mode_keys[i]];
+    let option = document.createElement('option');
+    option.value = current_mode;
+    option.textContent = current_mode;
+    select.appendChild(option);
+    
+    let mode_div = document.createElement("div");
+    mode_div.setAttribute("data-filter-mode", current_mode);
+    mode_div.textContent = current_mode;    
+    root_el.appendChild(mode_div);
+  }
+  
+  let change_filter_mode = function() {    
+    let filter_divs = root_el.querySelectorAll(`[data-filter-mode]`);    
+    let new_selection = select.value;
+    logger(`Changing to: ${new_selection}`);
 
-    if (val === "simple") {
-      $('#' + simple_id).show();
-    } else if (val === "datasets") {
-      $('#' + datasets_id).show();
-    } else if (val === "blockly") {
-      $('#' + blockly_id).show();
-    } else {
-      console.error ("Unknown filter value " + val);
+    for(let i = 0; i < filter_divs.length; ++i) {
+      let current_div_filter = filter_divs[i];
+      let current_mode = current_div_filter.getAttribute("data-filter-mode");
+
+      if (new_selection === current_mode) {
+        current_div_filter.style.display = 'block';
+      } else {
+        current_div_filter.style.display = 'none';
+      }            
     }    
   };
 
-  $(control_container).trigger('dv_filter:changed');
+  select.value = FC.MODES.BLOCKLY;
 
-  $('#' + select_id).on('change', function(e){change_filter($(e.target).val())});
-  change_filter($('#' + select_id).val());
+  select.addEventListener('change', change_filter_mode);
+  change_filter_mode();
+
+  root_el.addEventListener(FC.UPDATED_FILTER_EVENT, function(event){
+    debugger;
+  });
+
+  let baked_init_filter_handler = function(msg) {
+    init_filter_handler(msg, root_el, filter_json_input_id, filter_log_input_id);
+  };
   
-  Shiny.addCustomMessageHandler("init_filter", init_filter_handler);
+  Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
 }
 
 //#endregion
 
-
-
-
-export { init, chaff }
-
-
+export {init}

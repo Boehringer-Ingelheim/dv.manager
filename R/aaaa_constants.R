@@ -27,13 +27,6 @@ ID <- poc(
   FILTER_JSON_INPUT = "filter_json_input",
   FILTER_LOG_INPUT = "filter_log_input",
   FILTER_CONTAINER = "filter_container",
-  SELECT = "select",
-  SIMPLE = poc(
-    CONTAINER = "simple_container"
-  ),
-  DATASETS = poc(
-    CONTAINER = "datasets_container"
-  ),
   BLOCKLY = poc(
     CONTAINER = "blockly_container",
     GEN_CODE = "gen_code_button",
