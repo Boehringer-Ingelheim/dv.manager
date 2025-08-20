@@ -259,6 +259,12 @@ input[type="checkbox"]#click {
   height: 94vh;
   overflow-y: auto;  
   overflow-x: hidden;
+
+  .filter_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
   
   .shiny_filter{
     .dropdown-menu.open{

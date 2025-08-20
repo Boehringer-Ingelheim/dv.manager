@@ -1018,8 +1018,14 @@ let simple_init = function(container_id, dataset_list_name, subject_filter_datas
     throw new Error(`Dataset with name ${subject_filter_dataset_name} not found`);
   }
 
+  let dataset_filter_container = document.createElement('div');
+  dataset_filter_container.setAttribute('data-dataset', current_subject_dataset.name);
+  dataset_filter_container.className = 'dv_filter-dataset-filter-container';
+  
   let control_container = document.createElement('div');
   control_container.className = 'dv_filter-control-container';
+
+  // REMOVE SELECT PICKER IF IT IS ALREADY THERE TO AVOID MEMORY LEAKS
 
   let select = document.createElement('select');
   select.className = 'selectpicker';
@@ -1028,36 +1034,217 @@ let simple_init = function(container_id, dataset_list_name, subject_filter_datas
   select.setAttribute('data-live-search', 'true');
 
   for(let i = 0; i < current_subject_dataset.variables.length; ++i) {
-    logger(current_subject_dataset.variables[i]);
     let option = document.createElement('option');
     option.value = current_subject_dataset.variables[i].name;
     option.textContent = `${current_subject_dataset.variables[i].name} - ${current_subject_dataset.variables[i].label}`;
     select.appendChild(option);
   }
  
-  container_el.appendChild(select);
+  dataset_filter_container.appendChild(select);
+  dataset_filter_container.appendChild(control_container);
+  container_el.appendChild(dataset_filter_container);
   $(select).selectpicker();
-  container_el.appendChild(control_container);
 
-  let update_filter_controls = function(new_control_list) {
-    control_container.innerHTML = '';
-    // let current_controls = control_container.querySelectorAll("div");
+  let update_filter_controls = function() {
+    let new_control_list = $(this).val();
+    control_container.innerHTML = ''; 
+    logger(current_subject_dataset.variables);        
 
-    logger(new_control_list);
+    for(let i = 0; i < new_control_list.length; ++i) {      
+      let current_variable = current_subject_dataset.variables.find((obj)=> obj.name===new_control_list[i]);
 
-    for(let i = 0; i < new_control_list.length; ++i) {
-      let new_p = document.createElement('p');
-      new_p.textContent = new_control_list[i];
-      control_container.appendChild(new_p);
+      // categorical, date, numerical
+
+      // TODO: IMPORTANT REMOVE ALL MENUS AND LISTENERS WHEN THEY DISAPPEAR!!!!
+      
+      // #region common header
+      let variable_div = document.createElement("div");
+      variable_div.setAttribute("data-variable", current_variable.name);
+      variable_div.setAttribute("data-kind", current_variable.kind);
+      let variable_header = document.createElement("div");
+      variable_header.className = "filter_header";
+
+      variable_header.style.display = "flex";
+      variable_header.style.justifyContent = "space-between";
+      variable_header.style.alignItems = "center";
+
+      let variable_label = document.createElement("span");
+      variable_label.textContent = current_variable.name;
+
+      let variable_close_button = document.createElement("button");
+      variable_close_button.type = "button";
+      variable_close_button.className = "btn btn-danger";
+      variable_close_button.setAttribute("data-action", "remove");
+
+      let variable_close_icon = document.createElement("span");      
+      variable_close_icon.className = "glyphicon glyphicon-remove-sign";
+
+      variable_close_button.appendChild(variable_close_icon);
+
+      variable_header.appendChild(variable_label);
+      variable_header.appendChild(variable_close_button);
+      variable_div.appendChild(variable_header);
+
+      //#endregion
+
+      if(current_variable.kind === "categorical") {
+        let variable_select = document.createElement('select');
+        variable_select.className = 'selectpicker';
+        variable_select.setAttribute('multiple', '');        
+        variable_select.setAttribute('data-live-search', 'true');
+
+        for(let i = 0; i < current_variable.values_count.length; ++i) {
+          let option = document.createElement('option');
+          option.value = current_variable.values_count[i].value;
+          option.textContent = current_variable.values_count[i].value;
+          option.setAttribute("selected", '');
+          variable_select.appendChild(option);
+        }
+
+        variable_div.appendChild(variable_select);
+        control_container.appendChild(variable_div);
+        $(variable_select).selectpicker();        
+        
+      } else if (current_variable.kind === "date") {
+        variable_select = document.createElement("p");
+        variable_select.textContent = `${current_variable.name} - ${current_variable.kind}`;
+        variable_div.appendChild(variable_select);
+        control_container.appendChild(variable_div);
+      } else if (current_variable.kind === "numerical") {
+        let variable_input = document.createElement("input");
+        variable_div.appendChild(variable_input);
+        control_container.appendChild(variable_div);
+
+        $(variable_input).ionRangeSlider({
+            min: current_variable.min,
+            max: current_variable.max,
+            type: "double",
+            from: current_variable.min,
+            to: current_variable.max,
+            skin: "shiny",
+            grid: "true"            
+        });
+      } else {
+        variable_select = document.createElement("p");
+        variable_select.textContent = `${current_variable.name} - ${current_variable.kind}`;
+        variable_div.appendChild(variable_select);
+        control_container.appendChild(variable_div);
+      }  
     }
 
+    $(control_container).trigger('dv_filter:changed');
   };
 
-  let debounced_update_filter_controls = debounce(update_filter_controls);
+  // let debounced_update_filter_controls = debounce(update_filter_controls);
+  $(select).on('changed.bs.select', update_filter_controls);
 
-  $(select).on('changed.bs.select', function () {
-    debounced_update_filter_controls($(this).val());    
-  });  
+  let get_filter_state = function (event) {
+    logger("updating filter");
+
+    let subject_filters = [];
+    
+    let variable_selectors = event.target.querySelectorAll("[data-variable]");
+
+    let include_NA = false; // TODO: cover NA cases
+
+    for (let i = 0; i < variable_selectors.length; ++i) {
+      let current_variable = variable_selectors[i];  
+      let kind = current_variable.getAttribute("data-kind");
+      let variable_name = current_variable.getAttribute("data-variable");      
+      
+      let dataset_parent = current_variable.closest('[data-dataset]');
+      if (!dataset_parent) {
+          throw new Error(`No data-dataset parent found for element: ${current_variable.outerHTML}`);
+      }
+      let dataset_name = dataset_parent.getAttribute("data-dataset");      
+      let curr_filter;
+        
+      // Find the select inside that parent
+      if (kind === "categorical") {
+
+        let select = current_variable.querySelector("select");
+        if (!select) {
+          throw new Error(`No select element found inside: ${current_variable.outerHTML}`);
+        }  
+
+        let values = $(select).val();
+        
+        curr_filter = {
+          kind: "filter",
+          dataset: "dataset_name",
+          operation: "select_subset",
+          variable: variable_name,
+          values: values,
+          include_NA: include_NA
+        }
+
+      } else if (kind === "date") {
+
+      } else if (kind === "numerical") {
+
+        let input = current_variable.querySelector("input");
+        if (!input) {
+          throw new Error(`No input element found inside: ${current_variable.outerHTML}`);
+        }  
+
+        let value = $(input).val();
+
+        curr_filter = {
+          kind: "filter",
+          dataset: "dataset_name",
+          operation: "select_range",
+          variable: variable_name,
+          min: value[0],
+          max: value[1],
+          include_NA: include_NA
+        }
+
+      } else {
+        throw new Error(`Unknown kind '${kind}' in ${dataset_name} - ${variable_name}`);        
+      }
+      subject_filters.push(curr_filter);
+  }
+
+  let state = {
+    filters : {
+      dataset_filter : {
+        children:[]
+      },
+      subject_filter : {
+        children: [
+          {
+            kind: "row_operation",
+            operation: "and",
+            children: subject_filters
+          }
+        ]
+      }
+    }
+  };
+
+  logger(state);
+  return(state);
+
+
+  };
+  $(control_container).on('dv_filter:changed', get_filter_state);
+  
+  let handle_action = function() {
+    
+    let handlers = {
+      remove: function(el) {
+        const variable_to_be_removed = el.closest("[data-variable]").getAttribute("data-variable"); 
+        const select = el.closest("[data-dataset]").querySelector("select");
+        let current_selection = $(select).val();
+        let new_selection = current_selection.filter(item => item != variable_to_be_removed);
+        $(select).val(new_selection).selectpicker('refresh').trigger('changed.bs.select');
+      }
+    };
+    handlers[this.getAttribute('data-action')](this);
+  };
+
+  $(control_container).on('click', "[data-action]", handle_action);
+
 }
 
 //#endregion
@@ -1125,6 +1312,8 @@ let init_filter_handler = function (msg) {
 const init = function(root_id, simple_id, datasets_id, blockly_id, filter_json_input_id, filter_log_input_id, select_id) {
   logger("Filter root id: " + root_id);
 
+  let filter_mode_select = document.getElementById(select_id);
+
   let change_filter = function(val){    
     $('#' + simple_id).hide()
     $('#' + datasets_id).hide()
@@ -1140,6 +1329,8 @@ const init = function(root_id, simple_id, datasets_id, blockly_id, filter_json_i
       console.error ("Unknown filter value " + val);
     }    
   };
+
+  $(control_container).trigger('dv_filter:changed');
 
   $('#' + select_id).on('change', function(e){change_filter($(e.target).val())});
   change_filter($('#' + select_id).val());
