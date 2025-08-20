@@ -1414,8 +1414,10 @@ const init = function(root_id, filter_json_input_id, filter_log_input_id) {
   change_filter_mode();
 
   root_el.addEventListener(FC.UPDATED_FILTER_EVENT, function(event){
-    debugger;
+    Shiny.setInputValue(filter_json_input_id, event.detail.filter, { priority: 'event' });
   });
+
+  // TODO: WHAT DO WE DO IN THE INITIAL PASS? THERE SHOULD BE AT LEAST ONE FILTER READY
 
   let baked_init_filter_handler = function(msg) {
     init_filter_handler(msg, root_el, filter_json_input_id, filter_log_input_id);
