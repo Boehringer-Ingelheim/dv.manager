@@ -1251,15 +1251,16 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
           throw new Error(`No input element found inside: ${current_variable.outerHTML}`);
         }  
 
-        let value = $(input).val();
+        let from = $(input).data("ionRangeSlider").result.from;
+        let to = $(input).data("ionRangeSlider").result.to;
 
         curr_filter = {
           kind: "filter",
-          dataset: "dataset_name",
+          dataset: dataset_name,
           operation: "select_range",
           variable: variable_name,
-          min: value[0],
-          max: value[1],
+          min: from,
+          max: to,
           include_NA: include_NA
         }
 
