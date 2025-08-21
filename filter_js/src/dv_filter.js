@@ -1220,11 +1220,11 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
   $(container_el).on("changed.bs.select", "div[data-variable][data-kind='categorical'] select", dispatch_simple_filter_changed);
   $(container_el).on("finished.ion.range.slider", "div[data-variable][data-kind='numerical'] input", dispatch_simple_filter_changed);
 
-  let get_filter_state = function (event) {    
+  let get_filter_state = function () {    
 
     let subject_filters = [];
     
-    let variable_selectors = event.target.querySelectorAll("[data-variable]");
+    let variable_selectors = container_el.querySelectorAll("[data-variable]");
 
     let include_NA = false; // TODO: cover NA cases
 
@@ -1443,7 +1443,7 @@ const init = function(root_id, filter_json_input_id, filter_log_input_id) {
     }    
   };
 
-  select.value = FC.MODES.BLOCKLY;
+  select.value = FC.MODES.SIMPLE;
 
   select.addEventListener('change', change_filter_mode);
   change_filter_mode();
