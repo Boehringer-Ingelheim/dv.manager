@@ -1295,7 +1295,7 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
   };
 
   logger(state);
-  return(state);
+  return(JSON.stringify(state));
 
 
   };
