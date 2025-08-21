@@ -1121,17 +1121,20 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
 
     // Redraw on filter changes? Redraw on show?
     // Redraw smartly and only remove or include specific divs
+    // Clean UI and listeners
+    let ion_range_slider_to_destroy = control_container.querySelectorAll("[data-kind='numerical'] input");
+    logger("Destroying: " + ion_range_slider_to_destroy.length + " ion.range.sliders");
+    for(let i = 0; i < ion_range_slider_to_destroy.length; ++i) {
+      $(ion_range_slider_to_destroy[i]).data("ionRangeSlider").destroy();
+    }
+    control_container.innerHTML = ''; // Last step to remove actual DOM elements
 
-    let new_control_list = $(this).val();
-    control_container.innerHTML = ''; 
+    let new_control_list = $(this).val();    
+
     logger(current_subject_dataset.variables);        
 
     for(let i = 0; i < new_control_list.length; ++i) {      
       let current_variable = current_subject_dataset.variables.find((obj)=> obj.name===new_control_list[i]);
-
-      // categorical, date, numerical
-
-      // TODO: IMPORTANT REMOVE ALL MENUS AND LISTENERS WHEN THEY DISAPPEAR!!!!
       
       // #region common header
       let variable_div = document.createElement("div");
