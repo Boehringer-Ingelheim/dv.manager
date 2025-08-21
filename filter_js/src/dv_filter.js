@@ -1109,7 +1109,11 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
   container_el.appendChild(dataset_filter_container);
   $(select).selectpicker();
 
-  let dispatch_filter_changed = function() {container_el.dispatchEvent(new CustomEvent('dv_filter:changed'));};
+  let dispatch_filter_changed = function(event) {
+    logger("Original event:")
+    logger(event.target)
+    container_el.dispatchEvent(new CustomEvent('dv_filter:changed'));
+  };
 
   let update_filter_controls = function() {
 
@@ -1204,8 +1208,7 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
       }  
     };
 
-    dispatch_filter_changed();
-
+    dispatch_filter_changed({target: "update_filter_controls call"});
   };
 
   // let debounced_update_filter_controls = debounce(update_filter_controls);
