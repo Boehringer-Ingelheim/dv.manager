@@ -43,7 +43,7 @@ app_ui <- function(request_id) {
   )
 
   if (use_blockly_filter) {
-    filter_ui <- new_filter_ui(ns(ID$FILTER), data, state = filter_default_state)
+    filter_ui <- new_filter_ui(ns(ID$FILTER), data, filter_data, state = filter_default_state)
   } else {
     filter_ui <- list(
       shiny::div(

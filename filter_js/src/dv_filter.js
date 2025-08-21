@@ -1069,10 +1069,17 @@ const SC = {
 }
 
 let update_dataset_filter = function(container_el, dataset, filter_state, is_subject_filter) {
+  logger("Updating UI for " + dataset.name);
   let dataset_filter_container = document.createElement('div');
   dataset_filter_container.setAttribute('data-dataset', dataset.name);
   dataset_filter_container.setAttribute('data-subject-filter', is_subject_filter);
   dataset_filter_container.className = 'dv_filter-dataset-filter-container';
+
+  let title = document.createElement("p");
+  title.className = "dv-filter-simple-title";
+  title.textContent = dataset.name;
+
+  dataset_filter_container.appendChild(title);
   
   let control_container = document.createElement('div');
   control_container.className = 'dv_filter-control-container';
@@ -1113,8 +1120,6 @@ let update_filter_controls = function(container_el, dataset, selected_variables)
   for(let i = 0; i < selected_variables.length; ++i) {      
     let current_variable = dataset.variables.find((obj)=> obj.name===selected_variables[i]);
 
-    debugger;
-    
     // #region common header
     let variable_div = document.createElement("div");
     variable_div.setAttribute("data-variable", current_variable.name);
@@ -1192,12 +1197,10 @@ let update_filter_controls = function(container_el, dataset, selected_variables)
   };
 };
 
-let get_filter_state = function (container_el) {    
+let get_filter_state = function (container_el, dataset_list_name) {    
 
   let subject_filters = [];
 
-  let dataset_list_name = container_el.getAttribute("data-dataset-list");
-  
   let variable_selectors = container_el.querySelectorAll("[data-variable]");
 
   let include_NA = false; // TODO: cover NA cases
@@ -1309,7 +1312,8 @@ let simple_static_init = function(container_el) {
   
   let send_code = function() {
     logger("Simple sending code");
-    let code = JSON.stringify(get_filter_state(container_el));
+    let dataset_list_name = get_filter_property(container_el, FC.PROPERTIES.DATASET_LIST_NAME);
+    let code = JSON.stringify(get_filter_state(container_el, dataset_list_name));
     const new_event = new CustomEvent(FC.EVENTS.UPDATED_FILTER, {
       detail: {filter: code, mode: FC.MODES.SIMPLE},
       bubbles: true,
@@ -1322,12 +1326,19 @@ let simple_static_init = function(container_el) {
     container_el.dispatchEvent(new CustomEvent(SC.EVENTS.CHANGED_FILTER));
   };
   
-  $(container_el).on('changed.bs.select', "div[data-dataset] select", function(event) {
+  $(container_el).on('changed.bs.select', "div[data-dataset] > div.dropdown select", function(event) { //FIXME: This selector is ugly it can be done better
     let dataset_div = event.target.closest("div[data-dataset]");
     let dataset_name = dataset_div.getAttribute("data-dataset");
+    let dataset_list_name = get_filter_property(container_el, FC.PROPERTIES.DATASET_LIST_NAME);
+
+    let current_dataset_list = get_filter_property(container_el, FC.PROPERTIES.DATA).dataset_lists.find(obj=>obj.name === dataset_list_name);
     let dataset = current_dataset_list.dataset_list.find(obj=>obj.name === dataset_name);
+
     let selected_variables = $(event.target).val();
-    update_filter_controls(dataset_div, dataset, selected_variables);
+
+    let dataset_control_div = dataset_div.querySelector(".dv_filter-control-container");
+
+    update_filter_controls(dataset_control_div, dataset, selected_variables);
     dispatch_simple_filter_changed();
   });
 
@@ -1339,24 +1350,28 @@ let simple_static_init = function(container_el) {
   $(container_el).on('click', "[data-action]", handle_action);
 }
 
-let simple_dynamic_init = function(container_el, dataset_list_name, subject_filter_dataset_name, filter_data, init_state, json_input_id, log_input_id) {
-  
-  if(!container_el) {
-    throw new Error(`container_el found not found`);
-  }
-  
-  const current_dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
-  if (current_dataset_list === undefined) {
-    throw new Error(`Dataset list with name ${dataset_list_name} not found`);
-  }
+let simple_dynamic_init = function(container_el, filter_data, subject_dataset_name, filter_state) {
 
-  const current_subject_dataset = current_dataset_list.dataset_list.find(obj=>obj.name === subject_filter_dataset_name);
-  if (current_subject_dataset === undefined) {
-    throw new Error(`Dataset with name ${subject_filter_dataset_name} not found`);
-  }
+  // Subject filter
+
+  let subject_dataset = filter_data.dataset_list.find(obj=>obj.name === subject_dataset_name);
+  let other_datasets = filter_data.dataset_list.filter(obj=>obj.name !== subject_dataset_name);
   
-  container_el.setAttribute("data-dataset-list", dataset_list_name);
-  update_dataset_filter(container_el, current_subject_dataset, init_state, true);
+  update_dataset_filter(
+    container_el,
+    subject_dataset,
+    filter_state,
+    true
+  );
+
+  for(let i = 0; i < other_datasets.length; ++i) {    
+    update_dataset_filter(
+      container_el,
+      other_datasets[i],
+      filter_state,
+      false
+    )
+  }
 }
 
 //#endregion
@@ -1364,9 +1379,16 @@ let simple_dynamic_init = function(container_el, dataset_list_name, subject_filt
 
 //#region General init
 
-let init_filter_handler = function (msg, root_el, json_input_id, log_input_id) {
+let init_filter_handler = function (msg, root_el) {
 
-  const dataset_list_name = msg.dataset_list_name;  
+  let dataset_list_name = msg.dataset_list_name;
+  set_filter_property(root_el, FC.PROPERTIES.DATASET_LIST_NAME, dataset_list_name);  
+
+  let filter_data = get_filter_property(root_el, FC.PROPERTIES.DATA);
+  let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTIES.SUBJECT_DATASET_NAME);
+  let filter_state = get_filter_property(root_el, FC.PROPERTIES.STATE);
+
+  let dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
 
   let payload_data;
   const payload_tag = root_el.querySelector("script[type='application/json']");
@@ -1384,16 +1406,15 @@ let init_filter_handler = function (msg, root_el, json_input_id, log_input_id) {
     init_state = payload_data.state;
   }
 
-  let simple_el = root_el.querySelector(`[data-filter-mode="${FC.MODES.SIMPLE}"]`)  
+  let simple_el = root_el.querySelector(`[${FC.ATTRIBUTES.FILTER_MODE}="${FC.MODES.SIMPLE}"]`)  
   simple_dynamic_init(
     simple_el,
-    dataset_list_name,
-    msg.simple.subject_filter_dataset_name,
-    payload_data.data, init_state,
-    json_input_id, log_input_id
+    dataset_list,
+    subject_filter_dataset_name,
+    filter_state
   );
 
-  let blockly_el = root_el.querySelector(`[data-filter-mode="${FC.MODES.BLOCKLY}"]`)
+  let blockly_el = root_el.querySelector(`[${FC.ATTRIBUTES.FILTER_MODE}="${FC.MODES.BLOCKLY}"]`)
   outer_blockly_init(
     blockly_el,    
     dataset_list_name,    
@@ -1409,15 +1430,51 @@ let FC = {
   },
   EVENTS: {
     UPDATED_FILTER: "updated_filter"
+  },
+  ATTRIBUTES: {
+    ROOT: "data-root",
+    FILTER_MODE: "data-filter-mode"
+  },
+  PROPERTIES: {
+    DATA: "filter_data",
+    STATE: "filter_state",
+    DATASET_LIST_NAME: "dataset_list_name",
+    SUBJECT_DATASET_NAME: "subject_dataset_name"
   }
 }
 
-const init = function(root_id, filter_json_input_id, filter_log_input_id) {
+let get_root_el = function(el) {
+  let root_el;
+  if(el.hasAttribute(FC.ATTRIBUTES.ROOT)) {
+    root_el = el;
+  } else {
+    root_el = el.closest(`[${FC.ATTRIBUTES.ROOT}]`)    
+  }
+  
+  if(!root_el) {
+    throw new Error("no root found from" + el);
+  }
+  return(root_el);
+}
+
+let get_filter_property = function(el, property) {
+  return(get_root_el(el)[property]);
+}
+
+let set_filter_property = function(el, property, val) {
+  return(get_root_el(el)[property] = val);
+}
+
+const init = function(root_id, filter_data, filter_state, subject_dataset_name, filter_json_input_id, filter_log_input_id) {
   logger("Filter root id: " + root_id);
 
   let root_el = document.getElementById(root_id);
-  let select = document.createElement('select'); 
-  
+  root_el.setAttribute(FC.ATTRIBUTES.ROOT, '');  
+  root_el[FC.PROPERTIES.DATA] = filter_data;
+  root_el[FC.PROPERTIES.STATE] = filter_state;
+  root_el[FC.PROPERTIES.SUBJECT_DATASET_NAME] = subject_dataset_name;
+  let select = document.createElement('select');
+
   root_el.appendChild(select);
 
   // Simple
@@ -1428,11 +1485,11 @@ const init = function(root_id, filter_json_input_id, filter_log_input_id) {
   select.appendChild(simple_option);
   
   let simple_div = document.createElement("div");
-  simple_div.setAttribute("data-filter-mode", FC.MODES.SIMPLE);
+  simple_div.setAttribute(FC.ATTRIBUTES.FILTER_MODE, FC.MODES.SIMPLE);
   simple_div.textContent = FC.MODES.SIMPLE;    
   root_el.appendChild(simple_div);
 
-  simple_static_init(simple_div, filter_json_input_id, filter_log_input_id);
+  simple_static_init(simple_div);
 
   // Blockly
 
@@ -1442,18 +1499,18 @@ const init = function(root_id, filter_json_input_id, filter_log_input_id) {
   select.appendChild(blockly_option);
   
   let blockly_div = document.createElement("div");
-  blockly_div.setAttribute("data-filter-mode", FC.MODES.BLOCKLY);
+  blockly_div.setAttribute(FC.ATTRIBUTES.FILTER_MODE, FC.MODES.BLOCKLY);
   blockly_div.textContent = FC.MODES.BLOCKLY;    
   root_el.appendChild(blockly_div);
   
   let change_filter_mode = function() {    
-    let filter_divs = root_el.querySelectorAll(`[data-filter-mode]`);    
+    let filter_divs = root_el.querySelectorAll(`[${FC.ATTRIBUTES.FILTER_MODE}]`);    
     let new_selection = select.value;
     logger(`Changing to: ${new_selection}`);
 
     for(let i = 0; i < filter_divs.length; ++i) {
       let current_div_filter = filter_divs[i];
-      let current_mode = current_div_filter.getAttribute("data-filter-mode");
+      let current_mode = current_div_filter.getAttribute(FC.ATTRIBUTES.FILTER_MODE);
 
       if (new_selection === current_mode) {
         current_div_filter.style.display = 'block';
@@ -1469,13 +1526,15 @@ const init = function(root_id, filter_json_input_id, filter_log_input_id) {
   change_filter_mode();
 
   root_el.addEventListener(FC.EVENTS.UPDATED_FILTER, function(event){
+    logger("Sending to Shiny " + filter_json_input_id);
+    set_filter_property(event.target, FC.PROPERTIES.STATE, event.detail.filter);
     Shiny.setInputValue(filter_json_input_id, event.detail.filter, { priority: 'event' });
   });
 
   // TODO: WHAT DO WE DO IN THE INITIAL PASS? THERE SHOULD BE AT LEAST ONE FILTER READY
 
   let baked_init_filter_handler = function(msg) {
-    init_filter_handler(msg, root_el, filter_json_input_id, filter_log_input_id);
+    init_filter_handler(msg, root_el);
   };
   
   Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);

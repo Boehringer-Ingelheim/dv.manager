@@ -402,7 +402,7 @@ add_blockly_dependency <- function() {
   )
 }
 
-new_filter_ui <- function(id, dataset_lists, state = NULL) {
+new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL) {
   ns <- shiny::NS(id)
 
   if (!is.null(state)) {
@@ -413,16 +413,16 @@ new_filter_ui <- function(id, dataset_lists, state = NULL) {
     state <- "null" # Acts as a no filter JSON
   }
 
-  filter_bookmark <- shiny::restoreInput(ns(ID$FILTER_JSON_INPUT), "null")
-  current_filter_data <- jsonlite::toJSON(get_filter_data(dataset_lists))
-  assert(to_filter_validate(current_filter_data), "failed to validate message to filter")
+  filter_bookmark <- shiny::restoreInput(ns(ID$FILTER_JSON_INPUT), state)
+  filter_data <- jsonlite::toJSON(get_filter_data(dataset_lists))
+  assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
   payload_tag <- shiny::tags[["script"]](
           type = "application/json",
           shiny::HTML(
             sprintf(
               "{\"state\": %s, \"data\": %s, \"bookmark\": %s}",
-              state, current_filter_data, filter_bookmark
+              state, filter_data, filter_bookmark
             )
           ), # Avoids scaping of > and other HTML special characters
           bookmark = if (filter_bookmark != "null") NA else NULL
@@ -431,14 +431,17 @@ new_filter_ui <- function(id, dataset_lists, state = NULL) {
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
-        "dv_filter.init('%s', '%s', '%s')",
+        "dv_filter.init('%s', %s, %s, '%s', '%s', '%s')",
         ns(ID$FILTER_CONTAINER),
+        filter_data,
+        filter_bookmark,
+        subject_dataset_name,
         ns(ID$FILTER_JSON_INPUT),
         ns(ID$FILTER_LOG_INPUT)
       )
     )
   )
-  
+
   combined_ui <- local({
     shiny::div(
       id = ns(ID$FILTER_CONTAINER),
@@ -488,6 +491,10 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
       )
     })
 
+    shiny::observeEvent(input[[ID$FILTER_JSON_INPUT]], {
+      message("RECEIVED FILTER")
+    })
+
     shiny::observeEvent(input[[ID$FILTER_LOG_INPUT]], {
       for (msg in input[[ID$FILTER_LOG_INPUT]]) {
         shiny::showNotification(msg, type = "warn", duration = NULL)
@@ -495,17 +502,20 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     })
 
     res <- shiny::reactive({
+      message("PROCESSING FILTER")
       json_r <- input[[ID$FILTER_JSON_INPUT]]
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
         val_res <- from_filter_validate(json_r)
         if (strict) assert(val_res, "failed to validate message from filter")
         parsed_json <- jsonlite::fromJSON(json_r, simplifyVector = FALSE)
+        message("PROCESSING FILTER PARSED")
         list(
           parsed = parsed_json %||% NA_character_,
           raw = json_r
         )
       } else {
+        message("PROCESSING FILTER NA")
         list(
           parsed = NA_character_,
           raw = NA_character_
