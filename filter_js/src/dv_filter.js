@@ -1235,7 +1235,7 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
         
         curr_filter = {
           kind: "filter",
-          dataset: "dataset_name",
+          dataset: dataset_name,
           operation: "select_subset",
           variable: variable_name,
           values: values,
