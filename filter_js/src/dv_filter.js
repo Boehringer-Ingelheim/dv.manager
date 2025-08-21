@@ -1034,7 +1034,7 @@ let outer_blockly_init = function (container_el, dataset_name, filter_data, init
   let send_code = function () {
     const filter = $(inner_filter_el).data('filter');
     const code = get_blockly_code(filter);
-    const event = new CustomEvent(FC.UPDATED_FILTER_EVENT, {
+    const event = new CustomEvent(FC.EVENTS.UPDATED_FILTER, {
       detail: {filter: code, mode: FC.MODES.BLOCKLY},
       bubbles: true,
       cancelable: true
@@ -1063,7 +1063,9 @@ let chaff = function () {
 //#region Simple filter
 
 const SC = {
-
+  EVENTS: {
+    CHANGED_FILTER: 'dv_filter:changed'
+  }
 }
 
 let simple_init = function(container_el, dataset_list_name, subject_filter_dataset_name, filter_data, init_state, json_input_id, log_input_id) {
@@ -1109,10 +1111,10 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
   container_el.appendChild(dataset_filter_container);
   $(select).selectpicker();
 
-  let dispatch_filter_changed = function(event) {
+  let dispatch_simple_filter_changed = function(event) {
     logger("Original event:")
     logger(event.target)
-    container_el.dispatchEvent(new CustomEvent('dv_filter:changed'));
+    container_el.dispatchEvent(new CustomEvent(SC.EVENTS.CHANGED_FILTER));
   };
 
   let update_filter_controls = function() {
@@ -1197,8 +1199,8 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
             to: current_variable.max,
             skin: "shiny",
             grid: "true",
-            onFinish: dispatch_filter_changed,
-            onUpdate: dispatch_filter_changed
+            onFinish: dispatch_simple_filter_changed,
+            onUpdate: dispatch_simple_filter_changed
         });
       } else {
         variable_select = document.createElement("p");
@@ -1208,13 +1210,13 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
       }  
     };
 
-    dispatch_filter_changed({target: "update_filter_controls call"});
+    dispatch_simple_filter_changed({target: "update_filter_controls call"});
   };
 
   // let debounced_update_filter_controls = debounce(update_filter_controls);
   $(select).on('changed.bs.select', update_filter_controls);
-  $(container_el).on("changed.bs.select", "div[data-variable][data-kind='categorical'] select", dispatch_filter_changed)
-  $(container_el).on("changed.bs.select", "div[data-variable][data-kind='numerical'] input", dispatch_filter_changed)
+  $(container_el).on("changed.bs.select", "div[data-variable][data-kind='categorical'] select", dispatch_simple_filter_changed)
+  $(container_el).on("changed.bs.select", "div[data-variable][data-kind='numerical'] input", dispatch_simple_filter_changed)
 
   let get_filter_state = function (event) {    
 
@@ -1312,14 +1314,14 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
   let send_code = function(event) {
     logger("Simple sending code");
     let code = get_filter_state(event)
-    const new_event = new CustomEvent(FC.UPDATED_FILTER_EVENT, {
+    const new_event = new CustomEvent(FC.EVENTS.UPDATED_FILTER, {
       detail: {filter: code, mode: FC.MODES.SIMPLE},
       bubbles: true,
       cancelable: true
     });
     container_el.dispatchEvent(new_event);
   }
-  container_el.addEventListener('dv_filter:changed', send_code);
+  container_el.addEventListener(SC.EVENTS.CHANGED_FILTER, send_code);
   
   let handle_action = function() {
     
@@ -1395,7 +1397,9 @@ let FC = {
     DATASETS: "datasets",
     BLOCKLY: "blockly"
   },
-  UPDATED_FILTER_EVENT: "updated_filter"
+  EVENTS: {
+    UPDATED_FILTER: "updated_filter"
+  }
 }
 
 const init = function(root_id, filter_json_input_id, filter_log_input_id) {
@@ -1442,7 +1446,7 @@ const init = function(root_id, filter_json_input_id, filter_log_input_id) {
   select.addEventListener('change', change_filter_mode);
   change_filter_mode();
 
-  root_el.addEventListener(FC.UPDATED_FILTER_EVENT, function(event){
+  root_el.addEventListener(FC.EVENTS.UPDATED_FILTER, function(event){
     Shiny.setInputValue(filter_json_input_id, event.detail.filter, { priority: 'event' });
   });
 
