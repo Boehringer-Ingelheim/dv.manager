@@ -1109,7 +1109,13 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
   container_el.appendChild(dataset_filter_container);
   $(select).selectpicker();
 
+  let dispatch_filter_changed = function() {container_el.dispatchEvent(new CustomEvent('dv_filter:changed'));};
+
   let update_filter_controls = function() {
+
+    // Redraw on filter changes? Redraw on show?
+    // Redraw smartly and only remove or include specific divs
+
     let new_control_list = $(this).val();
     control_container.innerHTML = ''; 
     logger(current_subject_dataset.variables);        
@@ -1186,7 +1192,9 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
             from: current_variable.min,
             to: current_variable.max,
             skin: "shiny",
-            grid: "true"            
+            grid: "true",
+            onFinish: dispatch_filter_changed,
+            onUpdate: dispatch_filter_changed
         });
       } else {
         variable_select = document.createElement("p");
@@ -1194,16 +1202,18 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
         variable_div.appendChild(variable_select);
         control_container.appendChild(variable_div);
       }  
-    }
+    };
 
-    $(control_container).trigger('dv_filter:changed');
+    dispatch_filter_changed();
+
   };
 
   // let debounced_update_filter_controls = debounce(update_filter_controls);
   $(select).on('changed.bs.select', update_filter_controls);
+  $(container_el).on("changed.bs.select", "div[data-variable][data-kind='categorical'] select", dispatch_filter_changed)
+  $(container_el).on("changed.bs.select", "div[data-variable][data-kind='numerical'] input", dispatch_filter_changed)
 
-  let get_filter_state = function (event) {
-    logger("updating filter");
+  let get_filter_state = function (event) {    
 
     let subject_filters = [];
     
@@ -1291,15 +1301,22 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
       }
     )
   } 
-    }
-  };
 
   logger(state);
   return(JSON.stringify(state));
-
-
   };
-  $(control_container).on('dv_filter:changed', get_filter_state);
+
+  let send_code = function(event) {
+    logger("Simple sending code");
+    let code = get_filter_state(event)
+    const new_event = new CustomEvent(FC.UPDATED_FILTER_EVENT, {
+      detail: {filter: code, mode: FC.MODES.SIMPLE},
+      bubbles: true,
+      cancelable: true
+    });
+    container_el.dispatchEvent(new_event);
+  }
+  container_el.addEventListener('dv_filter:changed', send_code);
   
   let handle_action = function() {
     
@@ -1352,9 +1369,10 @@ let init_filter_handler = function (msg, root_el, json_input_id, log_input_id) {
     payload_data.data, init_state    
   );
 
+  // I should be drawing everything at once and then show on demand, simple init should draw everything and hide it
+  // ON simple only show simple, on simple, show simple and dataset.
   
-  let simple_el = root_el.querySelector(`[data-filter-mode="${FC.MODES.SIMPLE}"]`)
-  
+  let simple_el = root_el.querySelector(`[data-filter-mode="${FC.MODES.SIMPLE}"]`)  
   simple_init(
     simple_el,
     dataset_list_name,
