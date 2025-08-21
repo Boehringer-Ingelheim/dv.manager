@@ -3,7 +3,7 @@
  * Copyright Copyright 2024 Boehringer-Ingelheim Pharma GmbH & Co.KG
  * SPDX-License-Identifier: Apache-2.0
  * 
- * See repository root for full license
+ * See repository root for full license and individual files for specific licenses
  * 
  */
 
@@ -1068,7 +1068,278 @@ const SC = {
   }
 }
 
-let simple_init = function(container_el, dataset_list_name, subject_filter_dataset_name, filter_data, init_state, json_input_id, log_input_id) {
+let update_dataset_filter = function(container_el, dataset, filter_state, is_subject_filter) {
+  let dataset_filter_container = document.createElement('div');
+  dataset_filter_container.setAttribute('data-dataset', dataset.name);
+  dataset_filter_container.setAttribute('data-subject-filter', is_subject_filter);
+  dataset_filter_container.className = 'dv_filter-dataset-filter-container';
+  
+  let control_container = document.createElement('div');
+  control_container.className = 'dv_filter-control-container';
+
+  let select = document.createElement('select');
+  select.className = 'selectpicker';
+  select.setAttribute('multiple', '');
+  select.setAttribute('title', 'Choose an option');
+  select.setAttribute('data-live-search', 'true');
+
+  for(let i = 0; i < dataset.variables.length; ++i) {
+    let option = document.createElement('option');
+    option.value = dataset.variables[i].name;
+    option.textContent = `${dataset.variables[i].name} - ${dataset.variables[i].label}`;
+    select.appendChild(option);
+  }
+ 
+  dataset_filter_container.appendChild(select);
+  dataset_filter_container.appendChild(control_container);
+  container_el.appendChild(dataset_filter_container);
+  $(select).selectpicker();  
+}
+
+let update_filter_controls = function(container_el, dataset, selected_variables) {
+
+  // Redraw on filter changes? Redraw on show?
+  // Redraw smartly and only remove or include specific divs
+  // Clean UI and listeners
+  let ion_range_slider_to_destroy = container_el.querySelectorAll("[data-kind='numerical'] input");
+  logger("Destroying: " + ion_range_slider_to_destroy.length + " ion.range.sliders");
+  for(let i = 0; i < ion_range_slider_to_destroy.length; ++i) {
+    $(ion_range_slider_to_destroy[i]).data("ionRangeSlider").destroy();
+  }
+  container_el.innerHTML = ''; // Last step to remove actual DOM elements
+
+  logger(dataset.variables);        
+
+  for(let i = 0; i < selected_variables.length; ++i) {      
+    let current_variable = dataset.variables.find((obj)=> obj.name===selected_variables[i]);
+
+    debugger;
+    
+    // #region common header
+    let variable_div = document.createElement("div");
+    variable_div.setAttribute("data-variable", current_variable.name);
+    variable_div.setAttribute("data-kind", current_variable.kind);
+    let variable_header = document.createElement("div");
+    variable_header.className = "filter_header";
+
+    variable_header.style.display = "flex";
+    variable_header.style.justifyContent = "space-between";
+    variable_header.style.alignItems = "center";
+
+    let variable_label = document.createElement("span");
+    variable_label.textContent = current_variable.name;
+
+    let variable_close_button = document.createElement("button");
+    variable_close_button.type = "button";
+    variable_close_button.className = "btn btn-danger";
+    variable_close_button.setAttribute("data-action", "remove");
+
+    let variable_close_icon = document.createElement("span");      
+    variable_close_icon.className = "glyphicon glyphicon-remove-sign";
+
+    variable_close_button.appendChild(variable_close_icon);
+
+    variable_header.appendChild(variable_label);
+    variable_header.appendChild(variable_close_button);
+    variable_div.appendChild(variable_header);
+
+    //#endregion
+
+    if(current_variable.kind === "categorical") {
+      let variable_select = document.createElement('select');
+      variable_select.className = 'selectpicker';
+      variable_select.setAttribute('multiple', '');        
+      variable_select.setAttribute('data-live-search', 'true');
+
+      for(let i = 0; i < current_variable.values_count.length; ++i) {
+        let option = document.createElement('option');
+        option.value = current_variable.values_count[i].value;
+        option.textContent = current_variable.values_count[i].value;
+        option.setAttribute("selected", '');
+        variable_select.appendChild(option);
+      }
+
+      variable_div.appendChild(variable_select);
+      container_el.appendChild(variable_div);
+      $(variable_select).selectpicker();        
+      
+    } else if (current_variable.kind === "date") {
+      variable_select = document.createElement("p");
+      variable_select.textContent = `${current_variable.name} - ${current_variable.kind}`;
+      variable_div.appendChild(variable_select);
+      container_el.appendChild(variable_div);
+    } else if (current_variable.kind === "numerical") {
+      let variable_input = document.createElement("input");
+      variable_div.appendChild(variable_input);
+      container_el.appendChild(variable_div);
+
+      $(variable_input).ionRangeSlider({
+          min: current_variable.min,
+          max: current_variable.max,
+          type: "double",
+          from: current_variable.min,
+          to: current_variable.max,
+          skin: "shiny",
+          grid: "true",
+          onFinish: function () {$(variable_input).trigger("finished.ion.range.slider");}
+      });
+    } else {
+      variable_select = document.createElement("p");
+      variable_select.textContent = `${current_variable.name} - ${current_variable.kind}`;
+      variable_div.appendChild(variable_select);
+      container_el.appendChild(variable_div);
+    }  
+  };
+};
+
+let get_filter_state = function (container_el) {    
+
+  let subject_filters = [];
+
+  let dataset_list_name = container_el.getAttribute("data-dataset-list");
+  
+  let variable_selectors = container_el.querySelectorAll("[data-variable]");
+
+  let include_NA = false; // TODO: cover NA cases
+
+  for (let i = 0; i < variable_selectors.length; ++i) {
+    let current_variable = variable_selectors[i];  
+    let kind = current_variable.getAttribute("data-kind");
+    let variable_name = current_variable.getAttribute("data-variable");      
+    
+    let dataset_parent = current_variable.closest('[data-dataset]');
+    if (!dataset_parent) {
+        throw new Error(`No data-dataset parent found for element: ${current_variable.outerHTML}`);
+    }
+    let dataset_name = dataset_parent.getAttribute("data-dataset");      
+    let curr_filter;
+      
+    // Find the select inside that parent
+    if (kind === "categorical") {
+
+      let select = current_variable.querySelector("select");
+      if (!select) {
+        throw new Error(`No select element found inside: ${current_variable.outerHTML}`);
+      }  
+
+      let values = $(select).val();
+      
+      curr_filter = {
+        kind: "filter",
+        dataset: dataset_name,
+        operation: "select_subset",
+        variable: variable_name,
+        values: values,
+        include_NA: include_NA
+      }
+
+    } else if (kind === "date") {
+
+    } else if (kind === "numerical") {
+
+      let input = current_variable.querySelector("input");
+      if (!input) {
+        throw new Error(`No input element found inside: ${current_variable.outerHTML}`);
+      }  
+
+      let from = $(input).data("ionRangeSlider").result.from;
+      let to = $(input).data("ionRangeSlider").result.to;
+
+      curr_filter = {
+        kind: "filter",
+        dataset: dataset_name,
+        operation: "select_range",
+        variable: variable_name,
+        min: from,
+        max: to,
+        include_NA: include_NA
+      }
+
+    } else {
+      throw new Error(`Unknown kind '${kind}' in ${dataset_name} - ${variable_name}`);        
+    }
+    subject_filters.push(curr_filter);
+}
+
+let state = {
+  filters : {
+    datasets_filter : {
+      children:[]
+    },
+    subject_filter : {
+      children: []
+    }
+  },
+  dataset_list_name: dataset_list_name
+};
+
+if (subject_filters.length > 0) {
+  state.filters.subject_filter.children.push(
+    {
+      kind: "row_operation",
+      operation: "and",
+      children: subject_filters
+    }
+  )
+} 
+
+logger(state);
+return(state);
+};
+
+let handle_action = function() {
+    
+  let handlers = {
+    remove: function(el) {
+      const variable_to_be_removed = el.closest("[data-variable]").getAttribute("data-variable"); 
+      const select = el.closest("[data-dataset]").querySelector("select");
+      let current_selection = $(select).val();
+      let new_selection = current_selection.filter(item => item != variable_to_be_removed);
+      $(select).val(new_selection).selectpicker('refresh').trigger('changed.bs.select');
+    }
+  };
+  handlers[this.getAttribute('data-action')](this);
+};
+
+let simple_static_init = function(container_el) {
+  
+  if(!container_el) {
+    throw new Error(`container_el found not found`);
+  }
+  
+  let send_code = function() {
+    logger("Simple sending code");
+    let code = JSON.stringify(get_filter_state(container_el));
+    const new_event = new CustomEvent(FC.EVENTS.UPDATED_FILTER, {
+      detail: {filter: code, mode: FC.MODES.SIMPLE},
+      bubbles: true,
+      cancelable: true
+    });
+    container_el.dispatchEvent(new_event);
+  }
+
+  let dispatch_simple_filter_changed = function() {  
+    container_el.dispatchEvent(new CustomEvent(SC.EVENTS.CHANGED_FILTER));
+  };
+  
+  $(container_el).on('changed.bs.select', "div[data-dataset] select", function(event) {
+    let dataset_div = event.target.closest("div[data-dataset]");
+    let dataset_name = dataset_div.getAttribute("data-dataset");
+    let dataset = current_dataset_list.dataset_list.find(obj=>obj.name === dataset_name);
+    let selected_variables = $(event.target).val();
+    update_filter_controls(dataset_div, dataset, selected_variables);
+    dispatch_simple_filter_changed();
+  });
+
+  $(container_el).on("changed.bs.select", "div[data-variable][data-kind='categorical'] select", dispatch_simple_filter_changed);
+  $(container_el).on("finished.ion.range.slider", "div[data-variable][data-kind='numerical'] input", dispatch_simple_filter_changed);
+
+  //TODO: Consider debounce
+  container_el.addEventListener(SC.EVENTS.CHANGED_FILTER, send_code);  
+  $(container_el).on('click', "[data-action]", handle_action);
+}
+
+let simple_dynamic_init = function(container_el, dataset_list_name, subject_filter_dataset_name, filter_data, init_state, json_input_id, log_input_id) {
   
   if(!container_el) {
     throw new Error(`container_el found not found`);
@@ -1083,268 +1354,12 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
   if (current_subject_dataset === undefined) {
     throw new Error(`Dataset with name ${subject_filter_dataset_name} not found`);
   }
-
-  let dataset_filter_container = document.createElement('div');
-  dataset_filter_container.setAttribute('data-dataset', current_subject_dataset.name);
-  dataset_filter_container.className = 'dv_filter-dataset-filter-container';
   
-  let control_container = document.createElement('div');
-  control_container.className = 'dv_filter-control-container';
-
-  // REMOVE SELECT PICKER IF IT IS ALREADY THERE TO AVOID MEMORY LEAKS
-
-  let select = document.createElement('select');
-  select.className = 'selectpicker';
-  select.setAttribute('multiple', '');
-  select.setAttribute('title', 'Choose an option');
-  select.setAttribute('data-live-search', 'true');
-
-  for(let i = 0; i < current_subject_dataset.variables.length; ++i) {
-    let option = document.createElement('option');
-    option.value = current_subject_dataset.variables[i].name;
-    option.textContent = `${current_subject_dataset.variables[i].name} - ${current_subject_dataset.variables[i].label}`;
-    select.appendChild(option);
-  }
- 
-  dataset_filter_container.appendChild(select);
-  dataset_filter_container.appendChild(control_container);
-  container_el.appendChild(dataset_filter_container);
-  $(select).selectpicker();
-
-  let dispatch_simple_filter_changed = function(event) {
-    logger("Original event:")
-    logger(event.target)
-    container_el.dispatchEvent(new CustomEvent(SC.EVENTS.CHANGED_FILTER));
-  };
-
-  let update_filter_controls = function() {
-
-    // Redraw on filter changes? Redraw on show?
-    // Redraw smartly and only remove or include specific divs
-    // Clean UI and listeners
-    let ion_range_slider_to_destroy = control_container.querySelectorAll("[data-kind='numerical'] input");
-    logger("Destroying: " + ion_range_slider_to_destroy.length + " ion.range.sliders");
-    for(let i = 0; i < ion_range_slider_to_destroy.length; ++i) {
-      $(ion_range_slider_to_destroy[i]).data("ionRangeSlider").destroy();
-    }
-    control_container.innerHTML = ''; // Last step to remove actual DOM elements
-
-    let new_control_list = $(this).val();    
-
-    logger(current_subject_dataset.variables);        
-
-    for(let i = 0; i < new_control_list.length; ++i) {      
-      let current_variable = current_subject_dataset.variables.find((obj)=> obj.name===new_control_list[i]);
-      
-      // #region common header
-      let variable_div = document.createElement("div");
-      variable_div.setAttribute("data-variable", current_variable.name);
-      variable_div.setAttribute("data-kind", current_variable.kind);
-      let variable_header = document.createElement("div");
-      variable_header.className = "filter_header";
-
-      variable_header.style.display = "flex";
-      variable_header.style.justifyContent = "space-between";
-      variable_header.style.alignItems = "center";
-
-      let variable_label = document.createElement("span");
-      variable_label.textContent = current_variable.name;
-
-      let variable_close_button = document.createElement("button");
-      variable_close_button.type = "button";
-      variable_close_button.className = "btn btn-danger";
-      variable_close_button.setAttribute("data-action", "remove");
-
-      let variable_close_icon = document.createElement("span");      
-      variable_close_icon.className = "glyphicon glyphicon-remove-sign";
-
-      variable_close_button.appendChild(variable_close_icon);
-
-      variable_header.appendChild(variable_label);
-      variable_header.appendChild(variable_close_button);
-      variable_div.appendChild(variable_header);
-
-      //#endregion
-
-      if(current_variable.kind === "categorical") {
-        let variable_select = document.createElement('select');
-        variable_select.className = 'selectpicker';
-        variable_select.setAttribute('multiple', '');        
-        variable_select.setAttribute('data-live-search', 'true');
-
-        for(let i = 0; i < current_variable.values_count.length; ++i) {
-          let option = document.createElement('option');
-          option.value = current_variable.values_count[i].value;
-          option.textContent = current_variable.values_count[i].value;
-          option.setAttribute("selected", '');
-          variable_select.appendChild(option);
-        }
-
-        variable_div.appendChild(variable_select);
-        control_container.appendChild(variable_div);
-        $(variable_select).selectpicker();        
-        
-      } else if (current_variable.kind === "date") {
-        variable_select = document.createElement("p");
-        variable_select.textContent = `${current_variable.name} - ${current_variable.kind}`;
-        variable_div.appendChild(variable_select);
-        control_container.appendChild(variable_div);
-      } else if (current_variable.kind === "numerical") {
-        let variable_input = document.createElement("input");
-        variable_div.appendChild(variable_input);
-        control_container.appendChild(variable_div);
-
-        $(variable_input).ionRangeSlider({
-            min: current_variable.min,
-            max: current_variable.max,
-            type: "double",
-            from: current_variable.min,
-            to: current_variable.max,
-            skin: "shiny",
-            grid: "true",
-            onFinish: function () {$(variable_input).trigger("finished.ion.range.slider");}
-        });
-      } else {
-        variable_select = document.createElement("p");
-        variable_select.textContent = `${current_variable.name} - ${current_variable.kind}`;
-        variable_div.appendChild(variable_select);
-        control_container.appendChild(variable_div);
-      }  
-    };
-
-    dispatch_simple_filter_changed({target: "update_filter_controls call"});
-  };
-
-  // let debounced_update_filter_controls = debounce(update_filter_controls);
-  $(select).on('changed.bs.select', update_filter_controls);
-  $(container_el).on("changed.bs.select", "div[data-variable][data-kind='categorical'] select", dispatch_simple_filter_changed);
-  $(container_el).on("finished.ion.range.slider", "div[data-variable][data-kind='numerical'] input", dispatch_simple_filter_changed);
-
-  let get_filter_state = function () {    
-
-    let subject_filters = [];
-    
-    let variable_selectors = container_el.querySelectorAll("[data-variable]");
-
-    let include_NA = false; // TODO: cover NA cases
-
-    for (let i = 0; i < variable_selectors.length; ++i) {
-      let current_variable = variable_selectors[i];  
-      let kind = current_variable.getAttribute("data-kind");
-      let variable_name = current_variable.getAttribute("data-variable");      
-      
-      let dataset_parent = current_variable.closest('[data-dataset]');
-      if (!dataset_parent) {
-          throw new Error(`No data-dataset parent found for element: ${current_variable.outerHTML}`);
-      }
-      let dataset_name = dataset_parent.getAttribute("data-dataset");      
-      let curr_filter;
-        
-      // Find the select inside that parent
-      if (kind === "categorical") {
-
-        let select = current_variable.querySelector("select");
-        if (!select) {
-          throw new Error(`No select element found inside: ${current_variable.outerHTML}`);
-        }  
-
-        let values = $(select).val();
-        
-        curr_filter = {
-          kind: "filter",
-          dataset: dataset_name,
-          operation: "select_subset",
-          variable: variable_name,
-          values: values,
-          include_NA: include_NA
-        }
-
-      } else if (kind === "date") {
-
-      } else if (kind === "numerical") {
-
-        let input = current_variable.querySelector("input");
-        if (!input) {
-          throw new Error(`No input element found inside: ${current_variable.outerHTML}`);
-        }  
-
-        let from = $(input).data("ionRangeSlider").result.from;
-        let to = $(input).data("ionRangeSlider").result.to;
-
-        curr_filter = {
-          kind: "filter",
-          dataset: dataset_name,
-          operation: "select_range",
-          variable: variable_name,
-          min: from,
-          max: to,
-          include_NA: include_NA
-        }
-
-      } else {
-        throw new Error(`Unknown kind '${kind}' in ${dataset_name} - ${variable_name}`);        
-      }
-      subject_filters.push(curr_filter);
-  }
-
-  let state = {
-    filters : {
-      datasets_filter : {
-        children:[]
-      },
-      subject_filter : {
-        children: []
-      }
-    },
-    dataset_list_name: dataset_list_name
-  };
-
-  if (subject_filters.length > 0) {
-    state.filters.subject_filter.children.push(
-      {
-        kind: "row_operation",
-        operation: "and",
-        children: subject_filters
-      }
-    )
-  } 
-
-  logger(state);
-  return(state);
-  };
-
-  let send_code = function() {
-    logger("Simple sending code");
-    let code = JSON.stringify(get_filter_state());
-    const new_event = new CustomEvent(FC.EVENTS.UPDATED_FILTER, {
-      detail: {filter: code, mode: FC.MODES.SIMPLE},
-      bubbles: true,
-      cancelable: true
-    });
-    container_el.dispatchEvent(new_event);
-  }
-  container_el.addEventListener(SC.EVENTS.CHANGED_FILTER, send_code);
-  
-  let handle_action = function() {
-    
-    let handlers = {
-      remove: function(el) {
-        const variable_to_be_removed = el.closest("[data-variable]").getAttribute("data-variable"); 
-        const select = el.closest("[data-dataset]").querySelector("select");
-        let current_selection = $(select).val();
-        let new_selection = current_selection.filter(item => item != variable_to_be_removed);
-        $(select).val(new_selection).selectpicker('refresh').trigger('changed.bs.select');
-      }
-    };
-    handlers[this.getAttribute('data-action')](this);
-  };
-
-  $(control_container).on('click', "[data-action]", handle_action);
-
+  container_el.setAttribute("data-dataset-list", dataset_list_name);
+  update_dataset_filter(container_el, current_subject_dataset, init_state, true);
 }
 
 //#endregion
-
 
 
 //#region General init
@@ -1369,18 +1384,8 @@ let init_filter_handler = function (msg, root_el, json_input_id, log_input_id) {
     init_state = payload_data.state;
   }
 
-  let blockly_el = root_el.querySelector(`[data-filter-mode="${FC.MODES.BLOCKLY}"]`)
-  outer_blockly_init(
-    blockly_el,    
-    dataset_list_name,    
-    payload_data.data, init_state    
-  );
-
-  // I should be drawing everything at once and then show on demand, simple init should draw everything and hide it
-  // ON simple only show simple, on simple, show simple and dataset.
-  
   let simple_el = root_el.querySelector(`[data-filter-mode="${FC.MODES.SIMPLE}"]`)  
-  simple_init(
+  simple_dynamic_init(
     simple_el,
     dataset_list_name,
     msg.simple.subject_filter_dataset_name,
@@ -1388,9 +1393,12 @@ let init_filter_handler = function (msg, root_el, json_input_id, log_input_id) {
     json_input_id, log_input_id
   );
 
-  // send_log();
-  // send_code(); // Send code on init in case there is a preloaded state
-  
+  let blockly_el = root_el.querySelector(`[data-filter-mode="${FC.MODES.BLOCKLY}"]`)
+  outer_blockly_init(
+    blockly_el,    
+    dataset_list_name,    
+    payload_data.data, init_state    
+  );  
 }
 
 let FC = {
@@ -1412,19 +1420,31 @@ const init = function(root_id, filter_json_input_id, filter_log_input_id) {
   
   root_el.appendChild(select);
 
-  const mode_keys = Object.keys(FC.MODES); // ["SIMPLE", "DATASETS", "BLOCKLY"]
-  for (let i = 0; i < mode_keys.length; i++) {
-    const current_mode = FC.MODES[mode_keys[i]];
-    let option = document.createElement('option');
-    option.value = current_mode;
-    option.textContent = current_mode;
-    select.appendChild(option);
-    
-    let mode_div = document.createElement("div");
-    mode_div.setAttribute("data-filter-mode", current_mode);
-    mode_div.textContent = current_mode;    
-    root_el.appendChild(mode_div);
-  }
+  // Simple
+
+  let simple_option = document.createElement('option');
+  simple_option.value = FC.MODES.SIMPLE;
+  simple_option.textContent = FC.MODES.SIMPLE;
+  select.appendChild(simple_option);
+  
+  let simple_div = document.createElement("div");
+  simple_div.setAttribute("data-filter-mode", FC.MODES.SIMPLE);
+  simple_div.textContent = FC.MODES.SIMPLE;    
+  root_el.appendChild(simple_div);
+
+  simple_static_init(simple_div, filter_json_input_id, filter_log_input_id);
+
+  // Blockly
+
+  let blockly_option = document.createElement('option');
+  blockly_option.value = FC.MODES.BLOCKLY;
+  blockly_option.textContent = FC.MODES.BLOCKLY;
+  select.appendChild(blockly_option);
+  
+  let blockly_div = document.createElement("div");
+  blockly_div.setAttribute("data-filter-mode", FC.MODES.BLOCKLY);
+  blockly_div.textContent = FC.MODES.BLOCKLY;    
+  root_el.appendChild(blockly_div);
   
   let change_filter_mode = function() {    
     let filter_divs = root_el.querySelectorAll(`[data-filter-mode]`);    
