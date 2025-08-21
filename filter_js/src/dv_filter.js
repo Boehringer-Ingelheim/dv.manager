@@ -1299,7 +1299,7 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
     dataset_list_name: dataset_list_name
   };
 
-  if ( subject_filters.length >0 ) {
+  if (subject_filters.length > 0) {
     state.filters.subject_filter.children.push(
       {
         kind: "row_operation",
@@ -1310,12 +1310,12 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
   } 
 
   logger(state);
-  return(JSON.stringify(state));
+  return(state);
   };
 
-  let send_code = function(event) {
+  let send_code = function() {
     logger("Simple sending code");
-    let code = get_filter_state(event)
+    let code = JSON.stringify(get_filter_state());
     const new_event = new CustomEvent(FC.EVENTS.UPDATED_FILTER, {
       detail: {filter: code, mode: FC.MODES.SIMPLE},
       bubbles: true,
