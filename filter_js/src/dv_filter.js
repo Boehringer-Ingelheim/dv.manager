@@ -1271,18 +1271,25 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
 
   let state = {
     filters : {
-      dataset_filter : {
+      datasets_filter : {
         children:[]
       },
       subject_filter : {
-        children: [
-          {
-            kind: "row_operation",
-            operation: "and",
-            children: subject_filters
-          }
-        ]
+        children: []
       }
+    },
+    dataset_list_name: dataset_list_name
+  };
+
+  if ( subject_filters.length >0 ) {
+    state.filters.subject_filter.children.push(
+      {
+        kind: "row_operation",
+        operation: "and",
+        children: subject_filters
+      }
+    )
+  } 
     }
   };
 
