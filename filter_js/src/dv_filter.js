@@ -1199,8 +1199,7 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
             to: current_variable.max,
             skin: "shiny",
             grid: "true",
-            onFinish: dispatch_simple_filter_changed,
-            onUpdate: dispatch_simple_filter_changed
+            onFinish: function () {$(variable_input).trigger("finished.ion.range.slider");}
         });
       } else {
         variable_select = document.createElement("p");
@@ -1215,8 +1214,8 @@ let simple_init = function(container_el, dataset_list_name, subject_filter_datas
 
   // let debounced_update_filter_controls = debounce(update_filter_controls);
   $(select).on('changed.bs.select', update_filter_controls);
-  $(container_el).on("changed.bs.select", "div[data-variable][data-kind='categorical'] select", dispatch_simple_filter_changed)
-  $(container_el).on("changed.bs.select", "div[data-variable][data-kind='numerical'] input", dispatch_simple_filter_changed)
+  $(container_el).on("changed.bs.select", "div[data-variable][data-kind='categorical'] select", dispatch_simple_filter_changed);
+  $(container_el).on("finished.ion.range.slider", "div[data-variable][data-kind='numerical'] input", dispatch_simple_filter_changed);
 
   let get_filter_state = function (event) {    
 
