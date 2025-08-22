@@ -1079,8 +1079,53 @@ const SC = {
   }
 }
 
-let update_dataset_filter = function(container_el, dataset, filter_state, is_subject_filter) {
-  logger("Updating UI for " + dataset.name);
+let check_state_compatibility = function(state, subject_dataset_name) {
+
+  let check_single_dataset = function (state) {
+    let dataset_name = state.name;
+    let compatible = true;
+    compatible = compatible && state.children.length <= 1;
+
+    if (state.children.length === 1) {
+      compatible = compatible && (state.children[0].kind === "filter" || (state.children[0].kind === "row_operation" && state.children[0].operation === "and"));
+      if (state.children[0].kind === "row_operation" && state.children[0].operation === "and") {
+        let ok_all_child = state.children[0].children.reduce(function (acc, obj) { return (acc && obj.kind === "filter" && obj.name === dataset_name) }, true);
+        compatible = compatible && ok_all_child;
+      } else {
+        compatible = compatible && state.children[0].kind === "filter" && state.children[0].name === dataset_name;
+      }
+    }
+
+    return (compatible);
+  }
+
+  logger(state)
+
+  if (state !==null) {
+
+    let sbj_filter = {
+      name: subject_dataset_name,
+      children: state.filters.subject_filter.children
+    };
+
+    let dataset_filters = state.filters.datasets_filter.children;
+    dataset_filters.push(sbj_filter);
+
+    logger(dataset_filters)
+
+    let compatible = dataset_filters.reduce(function (acc, obj) { return (acc && check_single_dataset(obj)) }, true)
+
+    return (compatible);
+  } else {
+    return (true);
+  }
+}
+  
+  
+
+
+let update_dataset_filter = function(container_el, dataset, filter_state, is_subject_filter) {  
+  logger("Updating UI for " + dataset.name);  
   let dataset_filter_container = document.createElement('div');
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.DATASET, dataset.name);
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
@@ -1114,8 +1159,7 @@ let update_dataset_filter = function(container_el, dataset, filter_state, is_sub
   $(select).selectpicker();  
 }
 
-let update_filter_controls = function(container_el, dataset, selected_variables) {
-
+let update_filter_controls = function(container_el, dataset, selected_variables) {  
   // Redraw on filter changes? Redraw on show?
   // Redraw smartly and only remove or include specific divs
   // Clean UI and listeners
@@ -1358,7 +1402,7 @@ let simple_static_init = function(container_el) {
   
   let send_code = function() {
     logger("Simple sending code");
-    let dataset_list_name = get_filter_property(container_el, FC.PROPERTIE.DATASET_LIST_NAME);
+    let dataset_list_name = get_filter_property(container_el, FC.PROPERTY.DATASET_LIST_NAME);
     let code = JSON.stringify(get_filter_state(container_el, dataset_list_name));
     const new_event = new CustomEvent(FC.EVENT.UPDATED_FILTER, {
       detail: {filter: code, mode: FC.MODE.SIMPLE},
@@ -1375,9 +1419,9 @@ let simple_static_init = function(container_el) {
   $(container_el).on('changed.bs.select', `div[${SC.ATTRIBUTE.DATASET}] > div.dropdown > select`, function(event) { //FIXME: This selector is ugly it can be done better
     let dataset_div = event.target.closest(`div[${SC.ATTRIBUTE.DATASET}]`);
     let dataset_name = dataset_div.getAttribute(SC.ATTRIBUTE.DATASET);
-    let dataset_list_name = get_filter_property(container_el, FC.PROPERTIE.DATASET_LIST_NAME);
+    let dataset_list_name = get_filter_property(container_el, FC.PROPERTY.DATASET_LIST_NAME);
 
-    let current_dataset_list = get_filter_property(container_el, FC.PROPERTIE.DATA).dataset_lists.find(obj=>obj.name === dataset_list_name);
+    let current_dataset_list = get_filter_property(container_el, FC.PROPERTY.DATA).dataset_lists.find(obj=>obj.name === dataset_list_name);
     let dataset = current_dataset_list.dataset_list.find(obj=>obj.name === dataset_name);
 
     let selected_variables = $(event.target).val();
@@ -1405,6 +1449,12 @@ let simple_static_init = function(container_el) {
 let simple_dynamic_init = function(container_el, filter_data, subject_dataset_name, filter_state) {
 
   // Subject filter
+
+  if(!check_state_compatibility(filter_state, subject_dataset_name)) {
+    console.error("State not compatible")
+  } else {
+    logger("State compatible")
+  }
 
   let subject_dataset = filter_data.dataset_list.find(obj=>obj.name === subject_dataset_name);
   let other_datasets = filter_data.dataset_list.filter(obj=>obj.name !== subject_dataset_name);
@@ -1434,11 +1484,11 @@ let simple_dynamic_init = function(container_el, filter_data, subject_dataset_na
 let init_filter_handler = function (msg, root_el, initial_send_code) {
 
   let dataset_list_name = msg.dataset_list_name;
-  set_filter_property(root_el, FC.PROPERTIE.DATASET_LIST_NAME, dataset_list_name);  
+  set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, dataset_list_name);  
 
-  let filter_data = get_filter_property(root_el, FC.PROPERTIE.DATA);
-  let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTIE.SUBJECT_DATASET_NAME);
-  let filter_state = get_filter_property(root_el, FC.PROPERTIE.STATE);
+  let filter_data = get_filter_property(root_el, FC.PROPERTY.DATA);
+  let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME);
+  let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
 
   let dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
 
@@ -1489,7 +1539,7 @@ let FC = {
     ROOT: "data-root",
     FILTER_MODE: "data-filter-mode"
   },
-  PROPERTIE: {
+  PROPERTY: {
     DATA: "filter_data",
     STATE: "filter_state",
     DATASET_LIST_NAME: "dataset_list_name",
@@ -1528,9 +1578,9 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 
   let root_el = document.getElementById(root_id);
   root_el.setAttribute(FC.ATTRIBUTE.ROOT, '');  
-  root_el[FC.PROPERTIE.DATA] = filter_data;
-  root_el[FC.PROPERTIE.STATE] = filter_state;
-  root_el[FC.PROPERTIE.SUBJECT_DATASET_NAME] = subject_dataset_name;
+  root_el[FC.PROPERTY.DATA] = filter_data;
+  root_el[FC.PROPERTY.STATE] = filter_state;
+  root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
   let select = document.createElement('select');
 
   root_el.appendChild(select);
@@ -1589,7 +1639,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 
   root_el.addEventListener(FC.EVENT.UPDATED_FILTER, function(event){
     logger("Sending to Shiny " + filter_json_input_id);
-    set_filter_property(event.target, FC.PROPERTIE.STATE, event.detail.filter);
+    set_filter_property(event.target, FC.PROPERTY.STATE, event.detail.filter);
     Shiny.setInputValue(filter_json_input_id, event.detail.filter, { priority: 'event' });
   });
 
