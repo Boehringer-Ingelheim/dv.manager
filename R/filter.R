@@ -444,19 +444,21 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
 
   combined_ui <- local({
     shiny::div(
-      id = ns(ID$FILTER_CONTAINER),
-      class = "c-well shiny_filter",
-      add_blockly_dependency(),
-      shiny:::ionRangeSliderDependency(),
-      shiny:::datePickerDependency(),
-      # When attaching the dependencies on my own an error occurs when using multiple
-      # When including an input perse the error disappears, this should be explored
       shiny::div(
         style = "display:none;",
-        shinyWidgets::pickerInput(ns("IGNORE_INPUT"), choices = c("A", "B"), multiple = TRUE),
+        add_blockly_dependency(),
+        shiny:::ionRangeSliderDependency(),
+        shiny:::datePickerDependency(),
+        # When attaching the dependencies on my own an error occurs when using multiple
+        # When including an input perse the error disappears, this should be explored
+        shinyWidgets::pickerInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES"), choices = c("A", "B"), multiple = TRUE)
       ),
-      payload_tag,
-      init_tag
+      shiny::div(
+        id = ns(ID$FILTER_CONTAINER),
+        class = "c-well shiny_filter",
+        payload_tag,
+        init_tag
+      )
     )
   })
 
@@ -465,7 +467,7 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
 
 new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dataset_name, strict = FALSE) {
   mod <- function(input, output, session) {
-    shiny::setBookmarkExclude("IGNORE_INPUT")
+    shiny::setBookmarkExclude("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES")
     ns <- session[["ns"]]
 
     message(paste("Listening to:", ns(ID$FILTER_JSON_INPUT)))
