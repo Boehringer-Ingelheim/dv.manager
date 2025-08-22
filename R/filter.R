@@ -221,7 +221,7 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
     operation <- filter_element[["operation"]]
     include_NA <- filter_element[["include_NA"]]
     filter_dataset <- filter_element[["dataset"]] # TODO: Change for name table
-    assert(variable %in% names(dataset_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, variable))
+    assert(variable %in% names(dataset_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, if(is.null(variable)) "NULL" else variable))
     variable_values <- dataset_list[[filter_dataset]][[variable]]
 
     if (operation == "select_subset") {
