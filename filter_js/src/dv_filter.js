@@ -1420,7 +1420,7 @@ let handle_action = function() {
       const select = el.closest(`[${SC.ATTRIBUTE.DATASET}]`).querySelector("select");
       let current_selection = $(select).val();
       let new_selection = current_selection.filter(item => item != variable_to_be_removed);
-      $(select).val(new_selection).selectpicker('refresh').trigger('changed.bs.select');
+      $(select).selectpicker('val', new_selection);      
     }
   };
   handlers[this.getAttribute('data-action')](this);
