@@ -1595,8 +1595,8 @@ let get_root_el = function(el) {
   return(root_el);
 }
 
-let get_filter_property = function(el, property) {
-  return(get_root_el(el)[property]);
+let get_filter_property = function(el, property) {  
+  return(structuredClone(get_root_el(el)[property]));
 }
 
 let set_filter_property = function(el, property, val) {
