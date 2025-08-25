@@ -1072,7 +1072,8 @@ const SC = {
     DATASET: "data-dataset",
     SUBJECT_FILTER: 'data-subject-filter',
     VARIABLE: "data-variable",
-    KIND: "data-kind"
+    KIND: "data-kind",
+    FILTER_CONTROL: "data-filter-control"
   },
   VARIABLE: {
     NUMERICAL: "numerical",
@@ -1166,24 +1167,24 @@ let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   if(prev_div) {prev_div.remove();};
   
   let dataset_filter_container = document.createElement('div');
+  dataset_filter_container.className = "panel panel-primary";
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.DATASET, dataset.name);
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
-  dataset_filter_container.className = 'dv_filter-dataset-filter-container';
-
-  let title = document.createElement("p");
-  title.className = "dv-filter-simple-title";
+  
+  let title = document.createElement("div");
+  title.className = "panel-heading";
   title.textContent = dataset.name;
-
   dataset_filter_container.appendChild(title);
   
   let control_container = document.createElement('div');
-  control_container.className = 'dv_filter-control-container';
+  control_container.className = 'panel-body';
+  control_container.setAttribute(SC.ATTRIBUTE.FILTER_CONTROL, '');
 
   let select = document.createElement('select');
   select.className = 'selectpicker';
   select.setAttribute('multiple', '');
   select.setAttribute('title', 'Choose an option');
-  select.setAttribute('data-live-search', 'true');
+  select.setAttribute('data-live-search', 'true');  
 
   for(let i = 0; i < dataset.variables.length; ++i) {
     let option = document.createElement('option');
@@ -1223,23 +1224,24 @@ let update_filter_controls = function(control_container_el, dataset, selected_va
     let variable_div = document.createElement("div");
     variable_div.setAttribute(SC.ATTRIBUTE.VARIABLE, current_variable.name);
     variable_div.setAttribute(SC.ATTRIBUTE.KIND, current_variable.kind);
-    let variable_header = document.createElement("div");
-    variable_header.className = "filter_header";
+    variable_div.style = "margin-bottom: 20px";
 
+    let variable_header = document.createElement("div");    
     variable_header.style.display = "flex";
     variable_header.style.justifyContent = "space-between";
     variable_header.style.alignItems = "center";
 
     let variable_label = document.createElement("span");
+    variable_label.className = "label label-default";
     variable_label.textContent = current_variable.name;
 
     let variable_close_button = document.createElement("button");
     variable_close_button.type = "button";
-    variable_close_button.className = "btn btn-danger";
+    variable_close_button.className = "btn btn-danger close";
     variable_close_button.setAttribute("data-action", "remove");
 
     let variable_close_icon = document.createElement("span");      
-    variable_close_icon.className = "glyphicon glyphicon-remove-sign";
+    variable_close_icon.innerHTML = "&times;"    
 
     variable_close_button.appendChild(variable_close_icon);
 
@@ -1254,6 +1256,7 @@ let update_filter_controls = function(control_container_el, dataset, selected_va
       variable_select.className = 'selectpicker';
       variable_select.setAttribute('multiple', '');        
       variable_select.setAttribute('data-live-search', 'true');
+      variable_select.setAttribute('data-actions-box', 'true');
 
       for(let i = 0; i < current_variable.values_count.length; ++i) {
         let option = document.createElement('option');
@@ -1493,7 +1496,7 @@ let simple_static_init = function(simple_root_el) {
 
     let selected_variables = $(event.target).val();
 
-    let dataset_control_div = dataset_div.querySelector(".dv_filter-control-container");
+    let dataset_control_div = dataset_div.querySelector(`[${SC.ATTRIBUTE.FILTER_CONTROL}]`);
 
     let dataset_filter_state = check_state_compatibility(get_filter_state(get_simple_root_el(dataset_div), dataset_list_name), get_filter_property(simple_root_el, FC.PROPERTY.SUBJECT_DATASET_NAME)).state[dataset_name];
 
@@ -1547,7 +1550,6 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
     )
   }
 }
-
 
 
 //#endregion
@@ -1665,7 +1667,6 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   
   let simple_div = document.createElement("div");
   simple_div.setAttribute(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.SIMPLE);
-  simple_div.textContent = FC.MODE.SIMPLE;    
   root_el.appendChild(simple_div);
 
   let simple_init_ret = simple_static_init(simple_div);
@@ -1679,7 +1680,6 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   
   let blockly_div = document.createElement("div");
   blockly_div.setAttribute(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.BLOCKLY);
-  blockly_div.textContent = FC.MODE.BLOCKLY;    
   root_el.appendChild(blockly_div);
 
   let blockly_init_ret = blockly_static_init(blockly_div);
@@ -1713,7 +1713,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
     }    
   };
 
-  select.value = FC.MODE.BLOCKLY;
+  select.value = FC.MODE.SIMPLE;
 
   select.addEventListener('change', change_filter_mode);
   change_filter_mode();
