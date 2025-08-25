@@ -1144,10 +1144,18 @@ let check_state_compatibility = function(state, subject_dataset_name) {
   return({state:states, compatible: compatible})
 };
   
-
-
-let update_dataset_filter = function(container_el, dataset, filter_state, is_subject_filter) {  
+let update_dataset_filter = function(container_el, dataset, filter_state, is_subject_filter) {
+    
+  let selected_variables = [];
+  for(let i = 0; i < filter_state.length; ++i) {
+    selected_variables.push(filter_state[i].variable)
+  }
+  
   logger("Updating UI for " + dataset.name);  
+
+  let prev_div = container_el.querySelector(`[${SC.ATTRIBUTE.DATASET} = '${dataset.name}]`);
+  if(prev_div) {prev_div.remove();};
+  
   let dataset_filter_container = document.createElement('div');
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.DATASET, dataset.name);
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
@@ -1178,8 +1186,10 @@ let update_dataset_filter = function(container_el, dataset, filter_state, is_sub
   dataset_filter_container.appendChild(select);
   dataset_filter_container.appendChild(control_container);
   container_el.appendChild(dataset_filter_container);
-  $(select).selectpicker();  
-}
+  $(select).selectpicker();
+  $(select).selectpicker('val', selected_variables);
+  
+};
 
 let update_filter_controls = function(container_el, dataset, selected_variables) {  
   // Redraw on filter changes? Redraw on show?
