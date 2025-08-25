@@ -86,6 +86,10 @@ const BC = {
     SET_COMPLEMENT_OPERATION: 'c_set_complement_operation',
     DATASETS_FILTER: 'datasets_filter',
     SUBJECT_FILTER: 'subject_filter'
+  },
+  ATTRIBUTE: {
+    INNER_FILTER: "data-inner-filter",
+    MODAL: "data-blockly-modal"
   }
 }
 
@@ -454,12 +458,10 @@ const get_blockly_code = function ({ workspace, generator, dataset_name }) {
     dataset_list_name: dataset_name
   };
 
-  let stringified_res = JSON.stringify(res_state)
-
   const end = new Date();
   logger("Get code: " + (end.getTime() - start.getTime()) + " ms");
 
-  return (stringified_res)
+  return (res_state)
 }
 
 const init_blockly = function (el, dataset_name, filter_data, init_state) {
@@ -954,11 +956,8 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
 }
 
 let blockly_disposal = function(){};
-let outer_blockly_init = function (container_el, dataset_name, filter_data, init_state) {
 
-  blockly_disposal();
-
-  //# region blockly UI
+let blockly_static_init = function(blockly_root_el) {
 
   let show_label = document.createElement('label');
   show_label.textContent = "Show filter";
@@ -970,14 +969,15 @@ let outer_blockly_init = function (container_el, dataset_name, filter_data, init
   show_checkbox.id = "blockly-filter-checkbox";
   show_checkbox.style.display = "none";
 
-  container_el.appendChild(show_label);
-  container_el.appendChild(show_checkbox);
+  blockly_root_el.appendChild(show_label);
+  blockly_root_el.appendChild(show_checkbox);
 
   let modal_overlay = document.createElement('div');
   modal_overlay.className = "blockly_overlay";
 
   let modal = document.createElement('div');
   modal.className = "blockly_modal";
+  modal.setAttribute(BC.ATTRIBUTE.MODAL, '');
 
   let title = document.createElement("h4");
   title.textContent = "Filter";
@@ -987,6 +987,7 @@ let outer_blockly_init = function (container_el, dataset_name, filter_data, init
 
   let inner_filter_el = document.createElement("div");
   inner_filter_el.className = "blockly_filter inner";
+  inner_filter_el.setAttribute(BC.ATTRIBUTE.INNER_FILTER, '');
   
   let gen_code_button = document.createElement("button");
   gen_code_button.type = "button";
@@ -1012,10 +1013,8 @@ let outer_blockly_init = function (container_el, dataset_name, filter_data, init
   modal.appendChild(hide_label);
 
   modal_overlay.append(modal);
-  container_el.appendChild(modal_overlay);
+  blockly_root_el.appendChild(modal_overlay);
   
-  logger("Initializing: " + dataset_name);
-
   $(show_checkbox).change(function () {
     window.dispatchEvent(new Event('resize')); //Otherwise blockly is wrongly sized
     chaff();
@@ -1023,14 +1022,12 @@ let outer_blockly_init = function (container_el, dataset_name, filter_data, init
 
   modal_overlay.addEventListener('click', function(event){
     let $target = $(event.target);
-      if(!$target.closest('.blockly_modal').length) {
-        logger('Inner Hit')
+      if(!$target.closest(`[${BC.ATTRIBUTE.MODAL}]`).length) {
         show_checkbox.checked = false;
         $(show_checkbox).trigger('change');
       }
   });
-
-  $(inner_filter_el).data('filter', init_blockly(inner_filter_el, dataset_name, filter_data, init_state));
+  
   let send_code = function () {
     const filter = $(inner_filter_el).data('filter');
     const code = get_blockly_code(filter);
@@ -1039,18 +1036,23 @@ let outer_blockly_init = function (container_el, dataset_name, filter_data, init
       bubbles: true,
       cancelable: true
     });
-    container_el.dispatchEvent(event);
+    blockly_root_el.dispatchEvent(event);
   };
 
   blockly_disposal = function(){
-    logger("Disposing");
     const filter = $(inner_filter_el).data("filter");
     filter.workspace.dispose();
-    $(inner_filter_el).data("filter", undefined);    
-    gen_code_button.removeEventListener('click', send_code);
+    $(inner_filter_el).data("filter", undefined);        
   }
   gen_code_button.addEventListener('click', send_code);
-}
+
+
+  let res = {
+    send_code: send_code
+  };
+
+  return(res);
+};
 
 let chaff = function () {
   if (Blockly.getMainWorkspace() !== undefined) {
@@ -1086,7 +1088,7 @@ let get_simple_root_el = function(el){
 // Returns a simplified filter state or null if the filter_state is not compatible with the simple filter
 // This can happen because the simple filter can express a subset of the concepts available in the blockly one
 let check_state_compatibility = function(state, subject_dataset_name) {
-  
+
   let check_single_dataset = function (state) {
     let dataset_name = state.name;
     let compatible = true;
@@ -1153,7 +1155,6 @@ let check_state_compatibility = function(state, subject_dataset_name) {
 // Container_el is the parent container in which the container for all the selectors will be created. We look for the container itself
 // Only called on from the simple dynamic init
 let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
-    
   let selected_variables = [];
   for(let i = 0; i < dataset_filter_state.length; ++i) {
     selected_variables.push(dataset_filter_state[i].variable)
@@ -1161,7 +1162,7 @@ let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   
   logger("Updating UI for " + dataset.name);  
 
-  let prev_div = simple_root_el.querySelector(`[${SC.ATTRIBUTE.DATASET} = '${dataset.name}]`);
+  let prev_div = simple_root_el.querySelector(`[${SC.ATTRIBUTE.DATASET} = '${dataset.name}']`);
   if(prev_div) {prev_div.remove();};
   
   let dataset_filter_container = document.createElement('div');
@@ -1471,7 +1472,7 @@ let simple_static_init = function(simple_root_el) {
   let send_code = function() {
     logger("Simple sending code");
     let dataset_list_name = get_filter_property(simple_root_el, FC.PROPERTY.DATASET_LIST_NAME);
-    let code = JSON.stringify(get_filter_state(simple_root_el, dataset_list_name));
+    let code = get_filter_state(simple_root_el, dataset_list_name);
     const new_event = new CustomEvent(FC.EVENT.UPDATED_FILTER, {
       detail: {filter: code, mode: FC.MODE.SIMPLE},
       bubbles: true,
@@ -1547,10 +1548,16 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
   }
 }
 
+
+
 //#endregion
 
 
 //#region General init
+
+let get_blockly_root_el = function(el){
+  return(get_root_el(el).querySelector(`[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
+}
 
 let init_filter_handler = function (msg, root_el, initial_send_code) {
 
@@ -1563,22 +1570,6 @@ let init_filter_handler = function (msg, root_el, initial_send_code) {
 
   let dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
 
-  let payload_data;
-  const payload_tag = root_el.querySelector("script[type='application/json']");
-  try {
-    payload_data = JSON.parse(payload_tag.textContent.trim());
-  } catch (error) {
-    console.error('Error parsing JSON:', error);
-  }
-
-  let init_state;
-  if (payload_tag.hasAttribute("bookmark")) {
-    init_state = payload_data.bookmark;
-    payload_tag.toggleAttribute("bookmark");
-  } else {
-    init_state = payload_data.state;
-  }
-
   simple_dynamic_init(
     get_simple_root_el(root_el),
     dataset_list,
@@ -1586,14 +1577,24 @@ let init_filter_handler = function (msg, root_el, initial_send_code) {
     filter_state
   );
 
-  let blockly_el = root_el.querySelector(`[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`)
-  outer_blockly_init(
+  let blockly_el = get_blockly_root_el(root_el);  
+  blockly_dynamic_init(
     blockly_el,    
     dataset_list_name,    
-    payload_data.data, init_state    
+    filter_data, filter_state
   );
   
   initial_send_code();
+}
+
+let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state) {
+  let inner_filter_el = blockly_root_el.querySelector(`[${BC.ATTRIBUTE.INNER_FILTER}]`);
+  const filter = $(inner_filter_el).data("filter");
+  if (filter) {
+    filter.workspace.dispose();
+    $(inner_filter_el).data("filter", undefined);
+  }
+  $(inner_filter_el).data('filter', init_blockly(inner_filter_el, dataset_list_name, filter_data, filter_state));
 }
 
 let FC = {
@@ -1681,11 +1682,9 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   blockly_div.textContent = FC.MODE.BLOCKLY;    
   root_el.appendChild(blockly_div);
 
-  let blockly_init_ret = {
-    send_code: function(){}
-  };
+  let blockly_init_ret = blockly_static_init(blockly_div);
   
-  let change_filter_mode = function() {    
+  let change_filter_mode = function(event) {    
     let filter_divs = root_el.querySelectorAll(`[${FC.ATTRIBUTE.FILTER_MODE}]`);    
     let new_selection = select.value;
     logger(`Changing to: ${new_selection}`);
@@ -1699,10 +1698,22 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
       } else {
         current_div_filter.style.display = 'none';
       }            
+    }
+
+    let initial_send_code;
+    if(new_selection === FC.MODE.SIMPLE) {
+      initial_send_code = simple_init_ret.send_code;
+    } else if (new_selection === FC.MODE.BLOCKLY) {
+      initial_send_code = blockly_init_ret.send_code;
+    } else {
+      throw new Error("Unknown mode: " + new_selection);
+    }
+    if(event) { //FIXME: Terrible we should not be distinguising by event
+      init_filter_handler({dataset_list_name: get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME)}, root_el, initial_send_code);
     }    
   };
 
-  select.value = FC.MODE.SIMPLE;
+  select.value = FC.MODE.BLOCKLY;
 
   select.addEventListener('change', change_filter_mode);
   change_filter_mode();
@@ -1710,7 +1721,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   root_el.addEventListener(FC.EVENT.UPDATED_FILTER, function(event){
     logger("Sending to Shiny " + filter_json_input_id);
     set_filter_property(event.target, FC.PROPERTY.STATE, event.detail.filter);
-    Shiny.setInputValue(filter_json_input_id, event.detail.filter, { priority: 'event' });
+    Shiny.setInputValue(filter_json_input_id, JSON.stringify(event.detail.filter), { priority: 'event' });
   });
 
   // TODO: WHAT DO WE DO IN THE INITIAL PASS? THERE SHOULD BE AT LEAST ONE FILTER READY
