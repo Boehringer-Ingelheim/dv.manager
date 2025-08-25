@@ -1482,8 +1482,10 @@ let simple_dynamic_init = function(container_el, filter_data, subject_dataset_na
 
   // Subject filter
 
-  if(!check_state_compatibility(filter_state, subject_dataset_name)) {
-    console.error("State not compatible")
+  let simple_filter_state = check_state_compatibility(filter_state, subject_dataset_name);
+
+  if(!simple_filter_state.compatible) {
+    console.error("State not compatible")    
   } else {
     logger("State compatible")
   }
@@ -1494,7 +1496,7 @@ let simple_dynamic_init = function(container_el, filter_data, subject_dataset_na
   update_dataset_filter(
     container_el,
     subject_dataset,
-    filter_state,
+    simple_filter_state.state[subject_dataset_name],
     true
   );
 
@@ -1502,7 +1504,7 @@ let simple_dynamic_init = function(container_el, filter_data, subject_dataset_na
     update_dataset_filter(
       container_el,
       other_datasets[i],
-      filter_state,
+      simple_filter_state.state[other_datasets[i].name],
       false
     )
   }
