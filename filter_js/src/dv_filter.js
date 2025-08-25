@@ -1143,7 +1143,9 @@ let check_state_compatibility = function(state, subject_dataset_name) {
 
   return({state:states, compatible: compatible})
 };
-  
+
+// Creates the variable selector for each of the datasets
+// Container_el is the parent container in which the container for all the selectors will be created. We look for the container itself
 let update_dataset_filter = function(container_el, dataset, filter_state, is_subject_filter) {
     
   let selected_variables = [];
@@ -1191,6 +1193,8 @@ let update_dataset_filter = function(container_el, dataset, filter_state, is_sub
   
 };
 
+// Creates each of the selected variable filters
+// Container_el is the container itself where each of the container, it is the container itself
 let update_filter_controls = function(container_el, dataset, selected_variables) {  
   // Redraw on filter changes? Redraw on show?
   // Redraw smartly and only remove or include specific divs
@@ -1282,6 +1286,7 @@ let update_filter_controls = function(container_el, dataset, selected_variables)
   };
 };
 
+// Gets the state of an specific dataset
 let get_single_dataset_filter_state = function (dataset_el) {
   let filter_state = [];
   let dataset_name = dataset_el.getAttribute(SC.ATTRIBUTE.DATASET);
@@ -1374,7 +1379,7 @@ let get_single_dataset_filter_state = function (dataset_el) {
  * @param dataset_list_name name of the current data_list
  * 
 */
-
+// Gets the state of the whole simple filter
 let get_filter_state = function (container_el, dataset_list_name) {
 
   let subject_div = container_el.querySelector(`[${SC.ATTRIBUTE.SUBJECT_FILTER}=true]`);
@@ -1412,6 +1417,8 @@ let get_filter_state = function (container_el, dataset_list_name) {
   return (state);
 };
 
+
+// Handles actions buttons. For not it is only one, maybe it is an unrequired generalization
 let handle_action = function() {
     
   let handlers = {
@@ -1426,6 +1433,7 @@ let handle_action = function() {
   handlers[this.getAttribute('data-action')](this);
 };
 
+// Initialize all listeners, no listener should happen outside here
 let simple_static_init = function(container_el) {
   
   if(!container_el) {
@@ -1478,6 +1486,7 @@ let simple_static_init = function(container_el) {
   return(res);
 }
 
+// Handles the changes of datasets
 let simple_dynamic_init = function(container_el, filter_data, subject_dataset_name, filter_state) {
 
   // Subject filter
