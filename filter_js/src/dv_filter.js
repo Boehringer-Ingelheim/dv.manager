@@ -1078,49 +1078,71 @@ const SC = {
     DATE: "date"
   }
 }
-
+// Returns a simplified filter state or null if the filter_state is not compatible with the simple filter
+// This can happen because the simple filter can express a subset of the concepts available in the blockly one
 let check_state_compatibility = function(state, subject_dataset_name) {
-
+  
   let check_single_dataset = function (state) {
     let dataset_name = state.name;
     let compatible = true;
+    let simple_state = [];
     compatible = compatible && state.children.length <= 1;
+    
+    if(!(state.children.length <= 1)) {
+      console.error("First child length > 1");
+    }
 
     if (state.children.length === 1) {
       compatible = compatible && (state.children[0].kind === "filter" || (state.children[0].kind === "row_operation" && state.children[0].operation === "and"));
       if (state.children[0].kind === "row_operation" && state.children[0].operation === "and") {
-        let ok_all_child = state.children[0].children.reduce(function (acc, obj) { return (acc && obj.kind === "filter" && obj.name === dataset_name) }, true);
+        let ok_all_child = state.children[0].children.reduce(function (acc, obj) { return (acc && obj.kind === "filter" && obj.dataset === dataset_name) }, true);
+        if (!ok_all_child) {
+          console.error("At least one child is not of kind filter or does not belong to the correct dataset")
+        }
         compatible = compatible && ok_all_child;
+        simple_state = state.children[0].children;
       } else {
-        compatible = compatible && state.children[0].kind === "filter" && state.children[0].name === dataset_name;
+        let filter_and_correct_dataset = state.children[0].kind === "filter" && state.children[0].dataset === dataset_name;
+        compatible = compatible && filter_and_correct_dataset;
+        if (!filter_and_correct_dataset) {
+          console.error("First child is not and or filter with correct dataset")
+        }
+        simple_state = [state.children[0]];
       }
     }
 
-    return (compatible);
-  }
+    let res = {
+      compatible: compatible,
+      state: compatible ? simple_state : null
+    };    
 
-  logger(state)
+    return (res);
+  }
+  
+  let compatible = true;
+  let states = {};
 
   if (state !==null) {
 
+    let dataset_filters_to_be_checked = structuredClone(state.filters.datasets_filter.children);
+
     let sbj_filter = {
       name: subject_dataset_name,
-      children: state.filters.subject_filter.children
+      children: structuredClone(state.filters.subject_filter.children)
     };
 
-    let dataset_filters = state.filters.datasets_filter.children;
-    dataset_filters.push(sbj_filter);
+    dataset_filters_to_be_checked.push(sbj_filter);
 
-    logger(dataset_filters)
+    for(let i = 0; i < dataset_filters_to_be_checked.length; ++i) {
+      let current_check = check_single_dataset(dataset_filters_to_be_checked[i]);
+      compatible = compatible && current_check.compatible;
+      states[dataset_filters_to_be_checked[i].name] = current_check.state;
+    }
 
-    let compatible = dataset_filters.reduce(function (acc, obj) { return (acc && check_single_dataset(obj)) }, true)
-
-    return (compatible);
-  } else {
-    return (true);
   }
-}
-  
+
+  return({state:states, compatible: compatible})
+};
   
 
 
