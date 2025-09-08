@@ -64,6 +64,14 @@ in a given internal structure.
 
 let logger = function (x) { console.log(x) }
 
+const DEV_MODE = true;
+
+function assert(condition, message) {
+  if (DEV_MODE && !condition()) {
+    throw new Error(message || condition.toString());
+  }
+}
+
 let debounce = function (func, delay = 1000) {
   let timeoutId;
   return function (...args) {
@@ -1156,10 +1164,13 @@ let check_state_compatibility = function(state, subject_dataset_name) {
 // Container_el is the parent container in which the container for all the selectors will be created. We look for the container itself
 // Only called on from the simple dynamic init
 let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
-  let selected_variables = [];
+
+  assert(() => Array.isArray(dataset_filter_state));
+
+  let selected_variables = [];  
   for(let i = 0; i < dataset_filter_state.length; ++i) {
     selected_variables.push(dataset_filter_state[i].variable)
-  }
+  }  
   
   logger("Updating UI for " + dataset.name);  
 
