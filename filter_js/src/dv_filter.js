@@ -40,6 +40,10 @@ function assert(condition, message) {
   }
 }
 
+function is_html_element(obj) {
+  return obj instanceof HTMLElement && !!obj.tagName;
+}
+
 let debounce = function (func, delay = 1000) {
   let timeoutId;
   return function (...args) {
@@ -1089,7 +1093,7 @@ let simplify_filter_state = function(state, subject_dataset_name) {
         let filter_and_correct_dataset = state.children[0].kind === "filter" && state.children[0].dataset === dataset_name;
         compatible = compatible && filter_and_correct_dataset;
         if (!filter_and_correct_dataset) {
-          console.error("First child is not and or filter with correct dataset")
+          console.error("First child is not an `and` operation or a single filter with correct dataset")
         }
         simple_state = [state.children[0]];
       }
@@ -1446,10 +1450,8 @@ let dispatch_simple_filter_changed = function(event) {
 };
 
 // Initialize all listeners, no listener should happen outside here
-let simple_static_init = function(simple_root_el) {  
-  if(!simple_root_el) {
-    throw new Error(`simple_root_e found not found`);
-  }
+let simple_static_init = function(simple_root_el) {
+  assert(()=>is_html_element(simple_root_el))    
   
   let send_code = function() {
     logger("Simple sending code");
@@ -1566,6 +1568,8 @@ let init_filter_handler = function (msg, root_el, initial_send_code) {
 }
 
 let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state) {
+  assert(()=>is_html_element(blockly_root_el))
+
   let inner_filter_el = blockly_root_el.querySelector(`[${BC.ATTRIBUTE.INNER_FILTER}]`);
   const filter = $(inner_filter_el).data("filter");
   if (filter) {
