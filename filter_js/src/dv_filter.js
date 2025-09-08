@@ -1728,10 +1728,19 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   select.addEventListener('change', change_filter_mode);
   change_filter_mode();
 
+  let dev_current_filter_div;
+  if(DEV_MODE) {
+    dev_current_filter_div = document.createElement("div");
+    root_el.appendChild(dev_current_filter_div);
+  }
+
   root_el.addEventListener(FC.EVENT.UPDATED_FILTER, function(event){
     logger("Sending to Shiny " + filter_json_input_id);
     set_filter_property(event.target, FC.PROPERTY.STATE, event.detail.filter);
     Shiny.setInputValue(filter_json_input_id, JSON.stringify(event.detail.filter), { priority: 'event' });
+    if(DEV_MODE) {
+      dev_current_filter_div.textContent = JSON.stringify(event.detail.filter, null, 2);
+    }
   });
 
   // TODO: WHAT DO WE DO IN THE INITIAL PASS? THERE SHOULD BE AT LEAST ONE FILTER READY
