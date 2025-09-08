@@ -19,8 +19,6 @@
   - Remove the filters, apply preset one always
 - Bookmarked only applied once
 - Client should strive to send only applicable filter states. But server must always check that those are correct.
-
-
 */
 
 import * as Blockly from 'blockly';
@@ -30,37 +28,7 @@ import { multiPickerField } from './multi_picker.js';
 import './toolbox-search/index.js'
 
 
-/* TODO: Filter data structure generation is slow, it is generated everytime the UI starts, it could be moved to a 
-step previous to the UI, to avoid running it everytime we start the application. Memoize the operation?
 
-/* TODO: Should a warning appear when a preset filters uses an out of range value. They are corrected by blockly but there is no warning*/
-
-/* TODO: name consitency */
-
-/* TODO: # When attaching the dependencies on my own an error occurs when using multiple
-    # When including shinyWidget picker_input itself the error disappears, this should be explored
-  */
-
-
-/*TODO: Split in two workspaces one for the subject filters and another for the table filters
-*/
-
-/*TODO: Include buttons to save filter states and recover them later with names, etc.
-*/
-
-/*TODO: Let the user know when the filter is a non-finished state when pressing the apply filter button.
-*/
-
-/*TODO: Create an alternative UI that matches the current dv.filter while using the same backend
-*/
-
-/* TODO: Think about having, at least, an initial state. Ids of elements, etc.
-
-/* TODO: Use data for attributes with the ids of the filter inside to avoid passing ids all the time and just trust
-in a given internal structure.
-*/
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 let logger = function (x) { console.log(x) }
 
@@ -1494,8 +1462,6 @@ let simple_static_init = function(simple_root_el) {
     });
     simple_root_el.dispatchEvent(new_event);
   }
-
-  
   
   $(simple_root_el).on('changed.bs.select', `div[${SC.ATTRIBUTE.DATASET}] > div.dropdown > select`, function(event) { //FIXME: This selector is ugly it can be done better
     let dataset_div = event.target.closest(`div[${SC.ATTRIBUTE.DATASET}]`);
@@ -1780,3 +1746,35 @@ Who is responsible for this is unclear:
 - As it is implemented now we do it adhoc, simplest but probably not the best (or yes if this system is not supposed to grow)
 
 */
+
+/* TODO: Filter data structure generation is slow, it is generated everytime the UI starts, it could be moved to a 
+step previous to the UI, to avoid running it everytime we start the application. Memoize the operation?
+
+/* TODO: Should a warning appear when a preset filters uses an out of range value. They are corrected by blockly but there is no warning*/
+
+/* TODO: name consitency */
+
+/* TODO: # When attaching the dependencies on my own an error occurs when using multiple
+    # When including shinyWidget picker_input itself the error disappears, this should be explored
+  */
+
+
+/*TODO: Split in two workspaces one for the subject filters and another for the table filters
+*/
+
+/*TODO: Include buttons to save filter states and recover them later with names, etc.
+*/
+
+/*TODO: Let the user know when the filter is a non-finished state when pressing the apply filter button.
+*/
+
+/*TODO: Create an alternative UI that matches the current dv.filter while using the same backend
+*/
+
+/* TODO: Think about having, at least, an initial state. Ids of elements, etc.
+
+/* TODO: Use data for attributes with the ids of the filter inside to avoid passing ids all the time and just trust
+in a given internal structure.
+*/
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
