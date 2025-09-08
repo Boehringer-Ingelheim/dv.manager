@@ -1096,7 +1096,7 @@ let get_simple_root_el = function(el){
 
 // Returns a simplified filter state or null if the filter_state is not compatible with the simple filter
 // This can happen because the simple filter can express a subset of the concepts available in the blockly one
-let check_state_compatibility = function(state, subject_dataset_name) {
+let simplify_filter_state = function(state, subject_dataset_name) {
 
   let check_single_dataset = function (state) {
     let dataset_name = state.name;
@@ -1508,8 +1508,7 @@ let simple_static_init = function(simple_root_el) {
     let selected_variables = $(event.target).val();
 
     let dataset_control_div = dataset_div.querySelector(`[${SC.ATTRIBUTE.FILTER_CONTROL}]`);
-
-    let dataset_filter_state = check_state_compatibility(get_filter_state(get_simple_root_el(dataset_div), dataset_list_name), get_filter_property(simple_root_el, FC.PROPERTY.SUBJECT_DATASET_NAME)).state[dataset_name];
+    let dataset_filter_state = simplify_filter_state(get_filter_state(get_simple_root_el(dataset_div), dataset_list_name), get_filter_property(simple_root_el, FC.PROPERTY.SUBJECT_DATASET_NAME)).state[dataset_name]  ?? []; //FIXME: loiuhb who is reponsible for this is not well defined
 
     update_filter_controls(dataset_control_div, dataset, selected_variables, dataset_filter_state);
     dispatch_simple_filter_changed(event);
@@ -1534,7 +1533,7 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
 
   // Subject filter
 
-  let simple_filter_state = check_state_compatibility(filter_state, subject_dataset_name);
+  let simple_filter_state = simplify_filter_state(filter_state, subject_dataset_name);
 
   if(!simple_filter_state.compatible) {
     console.error("State not compatible")    
@@ -1548,7 +1547,7 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
   update_dataset_filter(
     simple_root_el,
     subject_dataset,
-    simple_filter_state.state[subject_dataset_name],
+    simple_filter_state.state[subject_dataset_name] ?? [], //FIXME: loiuhb who is reponsible for this is not well defined
     true
   );
 
@@ -1556,7 +1555,7 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
     update_dataset_filter(
       simple_root_el,
       other_datasets[i],
-      simple_filter_state.state[other_datasets[i].name],
+      simple_filter_state.state[other_datasets[i].name] ?? [], //FIXME: loiuhb who is reponsible for this is not well defined
       false
     )
   }
@@ -1757,3 +1756,18 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 //#endregion
 
 export {init}
+
+/*FIXME: loiuhb
+
+Problem is when I simplify the dataset if the dataset is not present in the filter state we have an undefined.
+This is not bad per se but functions downstream expect an empty dataset as they use .length and such.
+
+Who is responsible for this is unclear:
+- Should simplify_filter_state be responsible? It cannot directly be but:
+  - a method can be included in the object
+  - We can pass a list with all dataset names and those not included in the state will have an empty array.
+- Should a helper be included? It receives the object and a possible dataset.
+- Should functions downstream shield themselves? (an assertion is defensively included to catch errors)
+- As it is implemented now we do it adhoc, simplest but probably not the best (or yes if this system is not supposed to grow)
+
+*/
