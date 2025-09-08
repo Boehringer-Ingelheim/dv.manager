@@ -414,7 +414,8 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
   }
 
   filter_bookmark <- shiny::restoreInput(ns(ID$FILTER_JSON_INPUT), state)
-  filter_data <- jsonlite::toJSON(get_filter_data(dataset_lists))
+  d <- get_filter_data(dataset_lists)
+  filter_data <- jsonlite::toJSON(d) # FIXME: This is SLOOOOOOOOOOOO...OW it is the main bottleneck when starting the app (filter-wise)
   assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
   payload_tag <- shiny::tags[["script"]](
