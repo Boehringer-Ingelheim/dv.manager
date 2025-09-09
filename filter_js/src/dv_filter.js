@@ -1192,6 +1192,13 @@ let update_filter_controls = function(control_container_el, dataset, selected_va
   // Redraw on filter changes? Redraw on show?
   // Redraw smartly and only remove or include specific divs
   // Clean UI and listeners
+
+  let select_pickers_to_destroy = control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] input`);
+  logger("Destroying: " + select_pickers_to_destroy.length + " selectpickers");
+  for(let i = 0; i < select_pickers_to_destroy.length; ++i) {
+    $(select_pickers_to_destroy[i]).selectpicker("destroy");
+  }
+
   let ion_range_slider_to_destroy = control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`);
   logger("Destroying: " + ion_range_slider_to_destroy.length + " ion.range.sliders");
   for(let i = 0; i < ion_range_slider_to_destroy.length; ++i) {
