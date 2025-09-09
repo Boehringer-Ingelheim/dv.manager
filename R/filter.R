@@ -122,7 +122,7 @@ get_single_filter_data <- function(dataset) {
     if (is.logical(var)) var <- factor(var)
 
     if (is.character(var) || is.factor(var)) {
-      l[["kind"]] <- jsonlite::unbox("categorical")
+      # FIXME: factor levels are ignored and only the values really present in the dataset are used
       l[["kind"]] <- yyjsonr::as_scalar("categorical")
       l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
