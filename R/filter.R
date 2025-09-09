@@ -77,6 +77,22 @@ get_single_filter_data <- function(dataset) {
   n_var <- length(nm_var)
   res <- vector(mode = "list", length = n_var)
 
+  inf_to_str <- function(x) {
+    if (is.infinite(x)) {
+      num_x <- as.numeric(x)
+      if (sign(num_x) < 0) {
+        res <- "-Inf"
+      } else {
+        res <- "Inf"
+      }
+    } else {
+      res <- x
+    }
+    return(res)
+  }
+
+  empty_named_list <- setNames(list(), character(0))
+
   # In R all elements are vectors by default this makes complicated to transform into json as c("a") can be enconded
   # as "a" or ["a"]. To disambiguate this jsonlite offers `unbox`.
 
@@ -95,10 +111,11 @@ get_single_filter_data <- function(dataset) {
   for (idx in seq_len(n_var)) {
     name <- nm_var[[idx]]
     var <- dataset[[name]]
+    label <- attr(var, "label") %||% empty_named_list #FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
 
     l <- list(
-      name = jsonlite::unbox(name),
-      label = jsonlite::unbox(attr(var, "label"))
+      name = yyjsonr::as_scalar(name),
+      label = yyjsonr::as_scalar(label)
     )
 
     # Logical is treated as a factor in the client
@@ -106,36 +123,37 @@ get_single_filter_data <- function(dataset) {
 
     if (is.character(var) || is.factor(var)) {
       l[["kind"]] <- jsonlite::unbox("categorical")
-      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(var)))
+      l[["kind"]] <- yyjsonr::as_scalar("categorical")
+      l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
-
       count <- table(na_clean_var)
       values <- names(count)
       count <- unname(count)
       l[["values_count"]] <- vector(mode = "list", length = length(l[["values"]]))
       for (v_idx in seq_along(values)) {
         l[["values_count"]][[v_idx]] <- list(
-          value = jsonlite::unbox(values[[v_idx]]),
-          count = jsonlite::unbox(count[[v_idx]])
+          value = yyjsonr::as_scalar(values[[v_idx]]),
+          count = yyjsonr::as_scalar(count[[v_idx]])
         )
       }
     } else if (is.numeric(var)) {
-      l[["kind"]] <- jsonlite::unbox("numerical")
-      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(var)))
+      l[["kind"]] <- yyjsonr::as_scalar("numerical")
+      l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- jsonlite::unbox(min(Inf, na_clean_var, na.rm = TRUE))
-      l[["max"]] <- jsonlite::unbox(max(-Inf, na_clean_var, na.rm = TRUE))
+      l[["min"]] <- yyjsonr::as_scalar(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
+      l[["max"]] <- yyjsonr::as_scalar(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
+
     } else if (inherits(var, "POSIXct") || inherits(var, "Date")) {
       if (inherits(var, "POSIXct")) {
         var <- as.Date(var)
       }
-      l[["kind"]] <- jsonlite::unbox("date")
-      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(var)))
+      l[["kind"]] <- yyjsonr::as_scalar("date")
+      l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- jsonlite::unbox(min(as.Date(Inf), na_clean_var, na.rm = TRUE))
-      l[["max"]] <- jsonlite::unbox(max(as.Date(-Inf), na_clean_var, na.rm = TRUE))
+      l[["min"]] <- yyjsonr::as_scalar(inf_to_str(min(as.Date(Inf), na_clean_var, na.rm = TRUE)))
+      l[["max"]] <- yyjsonr::as_scalar(inf_to_str(max(as.Date(-Inf), na_clean_var, na.rm = TRUE)))
     } else {
       stop(paste("variable type unsupported:", typeof(var)))
     }
@@ -159,12 +177,12 @@ get_filter_data <- function(dataset_lists) {
       current_dataset <- current_dataset_list[[jdx]]
       current_dataset_name <- nm_datasets[[jdx]]
       current_dataset_res[[jdx]] <- list(
-        name = jsonlite::unbox(current_dataset_name),
+        name = yyjsonr::as_scalar(current_dataset_name),
         variables = get_single_filter_data(current_dataset)
       )
     }
     res[[idx]] <- list(
-      name = jsonlite::unbox(current_dataset_list_name),
+      name = yyjsonr::as_scalar(current_dataset_list_name),
       dataset_list = current_dataset_res
     )
   }
@@ -415,7 +433,9 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
 
   filter_bookmark <- shiny::restoreInput(ns(ID$FILTER_JSON_INPUT), state)
   d <- get_filter_data(dataset_lists)
-  filter_data <- jsonlite::toJSON(d) # FIXME: This is SLOOOOOOOOOOOO...OW it is the main bottleneck when starting the app (filter-wise)
+
+  filter_data <- yyjsonr::write_json_str(d) # FIXME: This is SLOOOOOOOOOOOO...OW it is the main bottleneck when starting the app (filter-wise)
+
   assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
   payload_tag <- shiny::tags[["script"]](
@@ -511,7 +531,7 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
       if (checkmate::test_string(json_r, min.chars = 1)) {
         val_res <- from_filter_validate(json_r)
         if (strict) assert(val_res, "failed to validate message from filter")
-        parsed_json <- jsonlite::fromJSON(json_r, simplifyVector = FALSE)
+        parsed_json <- yyjsonr::read_json_str(json_r, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
         message("PROCESSING FILTER PARSED")
         list(
           parsed = parsed_json %||% NA_character_,
@@ -595,7 +615,7 @@ mock_new_filter <- function(data = list(
 
     output[["output_json"]] <- shiny::renderPrint({
       shiny::req(!is.na(x()[["parsed"]]))
-      jsonlite::fromJSON(x()[["parsed"]], simplifyVector = FALSE)
+      yyjsonr::read_json_str(x()[["parsed"]])
     })
 
     filtered_datasets <- shiny::reactive({
