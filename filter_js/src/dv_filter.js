@@ -55,6 +55,31 @@ let debounce = function (func, delay = 1000) {
   };
 }
 
+let max_str_date = function(date1, date2) {
+  let num_date1 = new Date(date1).getTime();
+  let num_date2 = new Date(date2).getTime();
+
+  let res = date1;
+  if (num_date2>num_date1) {
+    res = date2;  
+  }
+  return(res);
+}
+
+let min_str_date = function(date1, date2) {
+  let num_date1 = new Date(date1).getTime();
+  let num_date2 = new Date(date2).getTime();
+
+  let res = date1;
+  if (num_date2<num_date1) {
+    res = date2;  
+  }
+  return(res);
+}
+
+
+
+
 
 //#region BLOCKLY FILTER
 
@@ -1204,6 +1229,13 @@ let update_filter_controls = function(control_container_el, dataset, selected_va
   for(let i = 0; i < ion_range_slider_to_destroy.length; ++i) {
     $(ion_range_slider_to_destroy[i]).data("ionRangeSlider").destroy();
   }
+
+  let date_range_to_destroy = control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`);
+  logger("Destroying: " + date_range_to_destroy.length + " date pickers");
+  for(let i = 0; i < date_range_to_destroy.length; ++i) {
+    $(date_range_to_destroy[i]).bsDatepicker("destroy");
+  }
+
   control_container_el.innerHTML = ''; // Last step to remove actual DOM elements
 
   for(let i = 0; i < selected_variables.length; ++i) {      
@@ -1267,10 +1299,59 @@ let update_filter_controls = function(control_container_el, dataset, selected_va
       $(variable_select).selectpicker();
             
     } else if (current_variable.kind === SC.VARIABLE.DATE) {
-      variable_select = document.createElement("p");
-      variable_select.textContent = `${current_variable.name} - ${current_variable.kind}`;
-      variable_div.appendChild(variable_select);
+
+      let from;
+      let to;
+      if(current_state) {
+        
+        // FIXME: DATE FIGHT FORMATTING can use ISO as the new DATE has no timezone
+        let num_state_min_date = new Date(current_state.min).getTime();
+        let num_variable_min_date = new Date(current_variable.min).getTime();
+
+        let num_state_max_date = new Date(current_state.max).getTime();
+        let num_variable_max_date = new Date(current_variable.max).getTime();
+
+        from = max_str_date(current_state.min, current_variable.min);
+        to = min_str_date(current_state.max, current_variable.max);
+      } else {
+        from = current_variable.min;
+        to = current_variable.max;
+      }
+
+      let input_group = document.createElement("div");
+      input_group.className = "input-daterange input-group";
+
+      // from input
+      let from_control = document.createElement("input");
+      from_control.type = "text";
+      from_control.value = from;
+      from_control.className = "form-control";
+
+      // separator
+      let to_separator = document.createElement("span");
+      to_separator.className = "input-group-addon";
+      to_separator.textContent = "to";
+
+      // to input
+      let to_control = document.createElement("input");
+      to_control.type = "text";
+      to_control.value = to;
+      to_control.className = "form-control";
+
+      // assemble
+      input_group.appendChild(from_control);
+      input_group.appendChild(to_separator);
+      input_group.appendChild(to_control);
+
+      variable_div.appendChild(input_group);
       control_container_el.appendChild(variable_div);
+
+      $(input_group).bsDatepicker({
+        format: "yyyy-mm-dd",
+        autoclose: true,
+        startDate: current_variable.min,
+        endDate: current_variable.max
+      });      
     } else if (current_variable.kind === SC.VARIABLE.NUMERICAL) {
       let variable_input = document.createElement("input");
       variable_div.appendChild(variable_input);
@@ -1347,6 +1428,24 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
       }
 
     } else if (kind === SC.VARIABLE.DATE) {
+
+      let input = current_variable.querySelectorAll("input");
+      if (!input || input.length !=2) {
+        throw new Error(`No 2 input elements found inside: ${current_variable.outerHTML}`);
+      }
+
+      let from = $(input[0]).val();
+      let to = $(input[1]).val();
+
+      curr_filter = {
+        kind: "filter",
+        dataset: dataset_name,
+        operation: "select_date",
+        variable: variable_name,
+        min: from,
+        max: to,
+        include_NA: include_NA
+      }
 
     } else if (kind === SC.VARIABLE.NUMERICAL) {
 
@@ -1491,6 +1590,7 @@ let simple_static_init = function(simple_root_el) {
 
   $(simple_root_el).on("changed.bs.select", `div[${SC.ATTRIBUTE.VARIABLE}][${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] select`, dispatch_simple_filter_changed);
   $(simple_root_el).on("finished.ion.range.slider", `div[${SC.ATTRIBUTE.VARIABLE}][${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`, dispatch_simple_filter_changed);
+  $(simple_root_el).on("changeDate", `div[${SC.ATTRIBUTE.VARIABLE}][${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`, dispatch_simple_filter_changed);
 
   //TODO: Consider debounce
   simple_root_el.addEventListener(SC.EVENTS.CHANGED_FILTER, send_code);  
@@ -1742,6 +1842,11 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 //#endregion
 
 export {init}
+
+// TODO: Add support for selectin NA values
+// TODO: Add histograms and graphical helps
+// TODO: Move export button outside from blockly
+// TODO: Add saving states with name support
 
 /*FIXME: loiuhb
 
