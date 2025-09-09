@@ -34,13 +34,13 @@ let logger = function (x) { console.log(x) }
 
 const DEV_MODE = true;
 
-function assert(condition, message) {
+let assert = function (condition, message) {
   if (DEV_MODE && !condition()) {
     throw new Error(message || condition.toString());
   }
 }
 
-function is_html_element(obj) {
+let is_html_element = function(obj) {
   return obj instanceof HTMLElement && !!obj.tagName;
 }
 
