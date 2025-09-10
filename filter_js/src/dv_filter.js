@@ -1078,7 +1078,7 @@ const SC = {
     SUBJECT_FILTER: 'data-subject-filter',
     VARIABLE: "data-variable",
     KIND: "data-kind",
-    FILTER_CONTROL: "data-filter-control"
+    FILTER_CONTROL_CONTAINER: "data-filter-control"
   },
   VARIABLE: {
     NUMERICAL: "numerical",
@@ -1157,22 +1157,16 @@ let simplify_filter_state = function(state, subject_dataset_name) {
   return({state:states, compatible: compatible})
 };
 
-// Creates the variable selector for each of the datasets
-// Container_el is the parent container in which the container for all the selectors will be created. We look for the container itself
-// Only called on from the simple dynamic init
-let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
-
+let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {  
   assert(() => Array.isArray(dataset_filter_state));
-
+  assert(()=> !simple_root_el.querySelector(`[${SC.ATTRIBUTE.DATASET} = '${dataset.name}']`));
+  
   let selected_variables = [];  
   for(let i = 0; i < dataset_filter_state.length; ++i) {
     selected_variables.push(dataset_filter_state[i].variable)
   }  
   
-  logger("Updating UI for " + dataset.name);  
-
-  let prev_div = simple_root_el.querySelector(`[${SC.ATTRIBUTE.DATASET} = '${dataset.name}']`);
-  if(prev_div) {prev_div.remove();};
+  logger("Creating UI for " + dataset.name);  
   
   let dataset_filter_container = document.createElement('div');
   dataset_filter_container.className = "panel panel-primary";
@@ -1184,9 +1178,9 @@ let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   title.textContent = dataset.name;
   dataset_filter_container.appendChild(title);
   
-  let control_container = document.createElement('div');
-  control_container.className = 'panel-body';
-  control_container.setAttribute(SC.ATTRIBUTE.FILTER_CONTROL, '');
+  let variable_filter_control_container = document.createElement('div');
+  variable_filter_control_container.className = 'panel-body';
+  variable_filter_control_container.setAttribute(SC.ATTRIBUTE.FILTER_CONTROL_CONTAINER, '');
 
   let select = document.createElement('select');
   select.className = 'selectpicker';
@@ -1205,38 +1199,64 @@ let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   }
  
   dataset_filter_container.appendChild(select);
-  dataset_filter_container.appendChild(control_container);
+  dataset_filter_container.appendChild(variable_filter_control_container);
   simple_root_el.appendChild(dataset_filter_container);
   $(select).selectpicker();
-  update_filter_controls(control_container, dataset, selected_variables,  dataset_filter_state);
-};
 
-// Creates each of the selected variable filters
-// Container_el is the container itself where each of the container, it is the container itself
-let update_filter_controls = function(control_container_el, dataset, selected_variables, dataset_filter_state) {
-  // Redraw on filter changes? Redraw on show?
-  // Redraw smartly and only remove or include specific divs
-  // Clean UI and listeners
+  create_variable_filter_controls(variable_filter_control_container, dataset, selected_variables,  dataset_filter_state);
+}
 
-  let select_pickers_to_destroy = control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] input`);
+let destroy_dataset_filter = function(dataset_el) {
+  assert(()=> dataset_el.hasAttribute(SC.ATTRIBUTE.DATASET));
+
+  let variable_filter_control_container = dataset_el.querySelector(`[${SC.ATTRIBUTE.FILTER_CONTROL_CONTAINER} = '${dataset.name}']`);
+  destroy_variable_filter_controls(variable_filter_control_container);
+
+  let select = dataset_el.querySelector('select');
+  if(!$(select).data('selectpicker')) {
+    throw new Error("Attempt to destroy non selectpicker element");
+  }
+  $(select).selectpicker("destroy");
+
+  dataset_filter_container.remove();
+}
+
+let destroy_variable_filter_controls = function(variable_filter_control_container_el) {
+  assert(()=> variable_filter_control_container_el.hasAttribute(SC.ATTRIBUTE.FILTER_CONTROL_CONTAINER))
+
+  let select_pickers_to_destroy = variable_filter_control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] select`);
   logger("Destroying: " + select_pickers_to_destroy.length + " selectpickers");
   for(let i = 0; i < select_pickers_to_destroy.length; ++i) {
+    if(!$(select_pickers_to_destroy[i]).data('selectpicker')) {
+      throw new Error("Attempt to destroy non selectpicker element");
+    }
     $(select_pickers_to_destroy[i]).selectpicker("destroy");
   }
 
-  let ion_range_slider_to_destroy = control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`);
+  let ion_range_slider_to_destroy = variable_filter_control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`);
   logger("Destroying: " + ion_range_slider_to_destroy.length + " ion.range.sliders");
   for(let i = 0; i < ion_range_slider_to_destroy.length; ++i) {
+    if(!$(ion_range_slider_to_destroy[i]).data('ionRangeSlider')) {
+      throw new Error("Attempt to destroy non ionRangeSlider element");
+    }
     $(ion_range_slider_to_destroy[i]).data("ionRangeSlider").destroy();
   }
 
-  let date_range_to_destroy = control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`);
+  let date_range_to_destroy = variable_filter_control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`);
   logger("Destroying: " + date_range_to_destroy.length + " date pickers");
   for(let i = 0; i < date_range_to_destroy.length; ++i) {
+    if(!$(date_range_to_destroy[i]).data('datepicker')) {
+      throw new Error("Attempt to destroy non datepicker element");
+    }
     $(date_range_to_destroy[i]).bsDatepicker("destroy");
   }
 
-  control_container_el.innerHTML = ''; // Last step to remove actual DOM elements
+  variable_filter_control_container_el.innerHTML='';
+}
+
+let create_variable_filter_controls = function(variable_filter_control_container_el, dataset, selected_variables, dataset_filter_state) {
+  assert(() => Array.isArray(dataset_filter_state));
+  assert(()=> variable_filter_control_container_el.hasAttribute(SC.ATTRIBUTE.FILTER_CONTROL_CONTAINER));
 
   for(let i = 0; i < selected_variables.length; ++i) {      
     let current_variable = dataset.variables.find((obj)=> obj.name===selected_variables[i]);
@@ -1295,7 +1315,7 @@ let update_filter_controls = function(control_container_el, dataset, selected_va
       }
 
       variable_div.appendChild(variable_select);
-      control_container_el.appendChild(variable_div);
+      variable_filter_control_container_el.appendChild(variable_div);
       $(variable_select).selectpicker();
             
     } else if (current_variable.kind === SC.VARIABLE.DATE) {
@@ -1344,7 +1364,7 @@ let update_filter_controls = function(control_container_el, dataset, selected_va
       input_group.appendChild(to_control);
 
       variable_div.appendChild(input_group);
-      control_container_el.appendChild(variable_div);
+      variable_filter_control_container_el.appendChild(variable_div);
 
       $(input_group).bsDatepicker({
         format: "yyyy-mm-dd",
@@ -1355,7 +1375,7 @@ let update_filter_controls = function(control_container_el, dataset, selected_va
     } else if (current_variable.kind === SC.VARIABLE.NUMERICAL) {
       let variable_input = document.createElement("input");
       variable_div.appendChild(variable_input);
-      control_container_el.appendChild(variable_div);
+      variable_filter_control_container_el.appendChild(variable_div);
 
       let from;
       let to;
@@ -1382,9 +1402,30 @@ let update_filter_controls = function(control_container_el, dataset, selected_va
       variable_select = document.createElement("p");
       variable_select.textContent = `${current_variable.name} - ${current_variable.kind}`;
       variable_div.appendChild(variable_select);
-      control_container_el.appendChild(variable_div);
+      variable_filter_control_container_el.appendChild(variable_div);
     }  
   };
+}
+
+// Creates the variable selector for each of the datasets
+// Container_el is the parent container in which the container for all the selectors will be created. We look for the container itself
+// Only called on from the simple dynamic init
+let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
+  assert(() => Array.isArray(dataset_filter_state));
+
+  let prev_dataset_filter_el = simple_root_el.querySelector(`[${SC.ATTRIBUTE.DATASET} = '${dataset.name}']`);
+
+  if(prev_dataset_filter_el) {
+    destroy_dataset_filter(prev_dataset_filter_el);
+  }
+  create_dataset_filter(simple_root_el, dataset, dataset_filter_state, is_subject_filter);
+};
+
+// Creates each of the selected variable filters
+// Container_el is the container itself where each of the container, it is the container itself
+let update_filter_controls = function(variable_filter_control_container_el, dataset, selected_variables, dataset_filter_state) {
+  destroy_variable_filter_controls(variable_filter_control_container_el);
+  create_variable_filter_controls(variable_filter_control_container_el, dataset, selected_variables, dataset_filter_state);
 };
 
 // Gets the state of an specific dataset
@@ -1581,7 +1622,7 @@ let simple_static_init = function(simple_root_el) {
 
     let selected_variables = $(event.target).val();
 
-    let dataset_control_div = dataset_div.querySelector(`[${SC.ATTRIBUTE.FILTER_CONTROL}]`);
+    let dataset_control_div = dataset_div.querySelector(`[${SC.ATTRIBUTE.FILTER_CONTROL_CONTAINER}]`);
     let dataset_filter_state = simplify_filter_state(get_filter_state(get_simple_root_el(dataset_div), dataset_list_name), get_filter_property(simple_root_el, FC.PROPERTY.SUBJECT_DATASET_NAME)).state[dataset_name]  ?? []; //FIXME: loiuhb who is reponsible for this is not well defined
 
     update_filter_controls(dataset_control_div, dataset, selected_variables, dataset_filter_state);
@@ -1847,6 +1888,7 @@ export {init}
 // TODO: Add histograms and graphical helps
 // TODO: Move export button outside from blockly
 // TODO: Add saving states with name support
+// TODO: Replaces all the attribute dance with custom html tags
 
 /*FIXME: loiuhb
 
