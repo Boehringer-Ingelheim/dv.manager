@@ -1304,16 +1304,25 @@ let create_variable_filter_controls = function(variable_filter_control_container
     name_label.className = "label label-default";
     name_label.textContent = current_variable.name;
 
-    let na_group = document.createElement("div");    
-    na_group.setAttribute(SC.ATTRIBUTE.NA_CONTROL, '');
-    let na_tag = document.createElement("span");
-    na_tag.className = current_variable.NA_count > 0 ? "label label-warning" : "label label-default";
-    na_tag.textContent = `NA: ${current_variable.NA_count}`;
-    na_group.appendChild(na_tag);
+    let na_group = document.createElement("div");
+    na_group.className = "input-group";
+    na_group.setAttribute(SC.ATTRIBUTE.NA_CONTROL, "");
+    
+    // --- Label (LEFT) ---
+    let na_label = document.createElement("span");
+    na_label.className = "form-control";
+    na_label.textContent = `NA: ${current_variable.NA_count}`;
+    na_group.appendChild(na_label);
+    
+    // --- Checkbox addon (RIGHT) ---
+    let na_checkbox_addon = document.createElement("span");
+    na_checkbox_addon.className = "input-group-addon na_checkbox";
     
     let na_checkbox = document.createElement("input");
     na_checkbox.type = "checkbox";
-    na_group.appendChild(na_checkbox);
+    
+    na_checkbox_addon.appendChild(na_checkbox);
+    na_group.appendChild(na_checkbox_addon);
 
     if(current_state) {
       na_checkbox.checked = current_state.include_NA;   
