@@ -1070,11 +1070,16 @@ let chaff = function () {
 //#region Simple filter
 
 const SC = {
+  TAG: {
+    DATASET_FILTER : "dv-filter-dataset-filter",
+    VARIABLE_FILTER_CONTAINER : "dv-filter-variable-filter-container",
+    VARIABLE_FILTER: "dv-filter-variable-filter"
+  },
   EVENTS: {
     CHANGED_FILTER: 'dv_filter:changed'
   },
   ATTRIBUTE: {
-    DATASET: "data-dataset",
+    DATASET_NAME: "data-dataset-name",
     SUBJECT_FILTER: 'data-subject-filter',
     VARIABLE: "data-variable",
     KIND: "data-kind",
@@ -1088,7 +1093,7 @@ const SC = {
 }
 
 let get_simple_root_el = function(el){
-  return(get_root_el(el).querySelector(`[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.SIMPLE}"]`));
+  return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.SIMPLE}"]`));
 }
 
 // Returns a simplified filter state or null if the filter_state is not compatible with the simple filter
@@ -1159,7 +1164,7 @@ let simplify_filter_state = function(state, subject_dataset_name) {
 
 let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {  
   assert(() => Array.isArray(dataset_filter_state));
-  assert(()=> !simple_root_el.querySelector(`[${SC.ATTRIBUTE.DATASET} = '${dataset.name}']`));
+  assert(()=> !simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`));
   
   let selected_variables = [];  
   for(let i = 0; i < dataset_filter_state.length; ++i) {
@@ -1168,9 +1173,9 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   
   logger("Creating UI for " + dataset.name);  
   
-  let dataset_filter_container = document.createElement('div');
+  let dataset_filter_container = document.createElement(SC.TAG.DATASET_FILTER);
   dataset_filter_container.className = "panel panel-primary";
-  dataset_filter_container.setAttribute(SC.ATTRIBUTE.DATASET, dataset.name);
+  dataset_filter_container.setAttribute(SC.ATTRIBUTE.DATASET_NAME, dataset.name);
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
   
   let title = document.createElement("div");
@@ -1178,9 +1183,8 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   title.textContent = dataset.name;
   dataset_filter_container.appendChild(title);
   
-  let variable_filter_control_container = document.createElement('div');
+  let variable_filter_control_container = document.createElement(SC.TAG.VARIABLE_FILTER_CONTAINER);
   variable_filter_control_container.className = 'panel-body';
-  variable_filter_control_container.setAttribute(SC.ATTRIBUTE.FILTER_CONTROL_CONTAINER, '');
 
   let select = document.createElement('select');
   select.className = 'selectpicker';
@@ -1207,9 +1211,9 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
 }
 
 let destroy_dataset_filter = function(dataset_el) {
-  assert(()=> dataset_el.hasAttribute(SC.ATTRIBUTE.DATASET));
+  assert(()=> dataset_el.hasAttribute(SC.ATTRIBUTE.DATASET_NAME));
 
-  let variable_filter_control_container = dataset_el.querySelector(`[${SC.ATTRIBUTE.FILTER_CONTROL_CONTAINER} = '${dataset.name}']`);
+  let variable_filter_control_container = dataset_el.querySelector(SC.TAG.VARIABLE_FILTER_CONTAINER);
   destroy_variable_filter_controls(variable_filter_control_container);
 
   let select = dataset_el.querySelector('select');
@@ -1222,9 +1226,9 @@ let destroy_dataset_filter = function(dataset_el) {
 }
 
 let destroy_variable_filter_controls = function(variable_filter_control_container_el) {
-  assert(()=> variable_filter_control_container_el.hasAttribute(SC.ATTRIBUTE.FILTER_CONTROL_CONTAINER))
+  assert(()=> variable_filter_control_container_el.tagName.toLowerCase() === SC.TAG.VARIABLE_FILTER_CONTAINER);
 
-  let select_pickers_to_destroy = variable_filter_control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] select`);
+  let select_pickers_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] select`);
   logger("Destroying: " + select_pickers_to_destroy.length + " selectpickers");
   for(let i = 0; i < select_pickers_to_destroy.length; ++i) {
     if(!$(select_pickers_to_destroy[i]).data('selectpicker')) {
@@ -1233,7 +1237,7 @@ let destroy_variable_filter_controls = function(variable_filter_control_containe
     $(select_pickers_to_destroy[i]).selectpicker("destroy");
   }
 
-  let ion_range_slider_to_destroy = variable_filter_control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`);
+  let ion_range_slider_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`);
   logger("Destroying: " + ion_range_slider_to_destroy.length + " ion.range.sliders");
   for(let i = 0; i < ion_range_slider_to_destroy.length; ++i) {
     if(!$(ion_range_slider_to_destroy[i]).data('ionRangeSlider')) {
@@ -1242,7 +1246,7 @@ let destroy_variable_filter_controls = function(variable_filter_control_containe
     $(ion_range_slider_to_destroy[i]).data("ionRangeSlider").destroy();
   }
 
-  let date_range_to_destroy = variable_filter_control_container_el.querySelectorAll(`[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`);
+  let date_range_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`);
   logger("Destroying: " + date_range_to_destroy.length + " date pickers");
   for(let i = 0; i < date_range_to_destroy.length; ++i) {
     if(!$(date_range_to_destroy[i]).data('datepicker')) {
@@ -1256,14 +1260,14 @@ let destroy_variable_filter_controls = function(variable_filter_control_containe
 
 let create_variable_filter_controls = function(variable_filter_control_container_el, dataset, selected_variables, dataset_filter_state) {
   assert(() => Array.isArray(dataset_filter_state));
-  assert(()=> variable_filter_control_container_el.hasAttribute(SC.ATTRIBUTE.FILTER_CONTROL_CONTAINER));
+  assert(()=> variable_filter_control_container_el.tagName.toLowerCase() === SC.TAG.VARIABLE_FILTER_CONTAINER);
 
   for(let i = 0; i < selected_variables.length; ++i) {      
     let current_variable = dataset.variables.find((obj)=> obj.name===selected_variables[i]);
     let current_state = dataset_filter_state.find((obj)=> obj.variable===current_variable.name);
 
     // #region common header
-    let variable_div = document.createElement("div");
+    let variable_div = document.createElement(SC.TAG.VARIABLE_FILTER);
     variable_div.setAttribute(SC.ATTRIBUTE.VARIABLE, current_variable.name);
     variable_div.setAttribute(SC.ATTRIBUTE.KIND, current_variable.kind);
     variable_div.style = "margin-bottom: 20px";
@@ -1413,7 +1417,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
 let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
   assert(() => Array.isArray(dataset_filter_state));
 
-  let prev_dataset_filter_el = simple_root_el.querySelector(`[${SC.ATTRIBUTE.DATASET} = '${dataset.name}']`);
+  let prev_dataset_filter_el = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`);
 
   if(prev_dataset_filter_el) {
     destroy_dataset_filter(prev_dataset_filter_el);
@@ -1431,9 +1435,9 @@ let update_filter_controls = function(variable_filter_control_container_el, data
 // Gets the state of an specific dataset
 let get_single_dataset_filter_state = function (dataset_container_el) {
   let filter_state = [];
-  let dataset_name = dataset_container_el.getAttribute(SC.ATTRIBUTE.DATASET);
+  let dataset_name = dataset_container_el.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
 
-  let variable_selectors = dataset_container_el.querySelectorAll(`[${SC.ATTRIBUTE.VARIABLE}]`);
+  let variable_selectors = dataset_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}`);
 
   let include_NA = false; // TODO: cover NA cases
 
@@ -1442,11 +1446,11 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
     let kind = current_variable.getAttribute(SC.ATTRIBUTE.KIND);
     let variable_name = current_variable.getAttribute(SC.ATTRIBUTE.VARIABLE);
 
-    let dataset_parent = current_variable.closest(`[${SC.ATTRIBUTE.DATASET}]`);
+    let dataset_parent = current_variable.closest(SC.TAG.DATASET_FILTER);
     if (!dataset_parent) {
       throw new Error(`No data-dataset parent found for element: ${current_variable.outerHTML}`);
     }
-    let dataset_name = dataset_parent.getAttribute(SC.ATTRIBUTE.DATASET);
+    let dataset_name = dataset_parent.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
     let curr_filter;
 
     // Find the select inside that parent
@@ -1542,8 +1546,8 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
 // Gets the state of the whole simple filter
 let get_filter_state = function (simple_root_el, dataset_list_name) {
 
-  let subject_div = simple_root_el.querySelector(`[${SC.ATTRIBUTE.SUBJECT_FILTER}=true]`);
-  let other_div = simple_root_el.querySelectorAll(`[${SC.ATTRIBUTE.SUBJECT_FILTER}=false]`);
+  let subject_div = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=true]`);
+  let other_div = simple_root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=false]`);
 
   let subject_filter = get_single_dataset_filter_state(subject_div);
   let dataset_filters = [];
@@ -1582,8 +1586,8 @@ let handle_action = function() {
     
   let handlers = {
     remove: function(el) {
-      const variable_to_be_removed = el.closest(`[${SC.ATTRIBUTE.VARIABLE}]`).getAttribute(SC.ATTRIBUTE.VARIABLE); 
-      const select = el.closest(`[${SC.ATTRIBUTE.DATASET}]`).querySelector("select");
+      const variable_to_be_removed = el.closest(SC.TAG.VARIABLE_FILTER).getAttribute(SC.ATTRIBUTE.VARIABLE); 
+      const select = el.closest(SC.TAG.DATASET_FILTER).querySelector("select");
       let current_selection = $(select).val();
       let new_selection = current_selection.filter(item => item != variable_to_be_removed);
       $(select).selectpicker('val', new_selection);      
@@ -1612,9 +1616,9 @@ let simple_static_init = function(simple_root_el) {
     simple_root_el.dispatchEvent(new_event);
   }
   
-  $(simple_root_el).on('changed.bs.select', `div[${SC.ATTRIBUTE.DATASET}] > div.dropdown > select`, function(event) { //FIXME: This selector is ugly it can be done better
-    let dataset_div = event.target.closest(`div[${SC.ATTRIBUTE.DATASET}]`);
-    let dataset_name = dataset_div.getAttribute(SC.ATTRIBUTE.DATASET);
+  $(simple_root_el).on('changed.bs.select', `${SC.TAG.DATASET_FILTER} > div.dropdown > select`, function(event) { //FIXME: This selector is ugly it can be done better
+    let dataset_div = event.target.closest(`${SC.TAG.DATASET_FILTER}`);
+    let dataset_name = dataset_div.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
     let dataset_list_name = get_filter_property(simple_root_el, FC.PROPERTY.DATASET_LIST_NAME);
 
     let current_dataset_list = get_filter_property(simple_root_el, FC.PROPERTY.DATA).dataset_lists.find(obj=>obj.name === dataset_list_name);
@@ -1622,16 +1626,16 @@ let simple_static_init = function(simple_root_el) {
 
     let selected_variables = $(event.target).val();
 
-    let dataset_control_div = dataset_div.querySelector(`[${SC.ATTRIBUTE.FILTER_CONTROL_CONTAINER}]`);
+    let dataset_control_div = dataset_div.querySelector(SC.TAG.VARIABLE_FILTER_CONTAINER);
     let dataset_filter_state = simplify_filter_state(get_filter_state(get_simple_root_el(dataset_div), dataset_list_name), get_filter_property(simple_root_el, FC.PROPERTY.SUBJECT_DATASET_NAME)).state[dataset_name]  ?? []; //FIXME: loiuhb who is reponsible for this is not well defined
 
     update_filter_controls(dataset_control_div, dataset, selected_variables, dataset_filter_state);
     dispatch_simple_filter_changed(event);
   });
 
-  $(simple_root_el).on("changed.bs.select", `div[${SC.ATTRIBUTE.VARIABLE}][${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] select`, dispatch_simple_filter_changed);
-  $(simple_root_el).on("finished.ion.range.slider", `div[${SC.ATTRIBUTE.VARIABLE}][${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`, dispatch_simple_filter_changed);
-  $(simple_root_el).on("changeDate", `div[${SC.ATTRIBUTE.VARIABLE}][${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`, dispatch_simple_filter_changed);
+  $(simple_root_el).on("changed.bs.select", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] select`, dispatch_simple_filter_changed);
+  $(simple_root_el).on("finished.ion.range.slider", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`, dispatch_simple_filter_changed);
+  $(simple_root_el).on("changeDate", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`, dispatch_simple_filter_changed);
 
   //TODO: Consider debounce
   simple_root_el.addEventListener(SC.EVENTS.CHANGED_FILTER, send_code);  
@@ -1683,8 +1687,8 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
 
 //#region General init
 
-let get_blockly_root_el = function(el){
-  return(get_root_el(el).querySelector(`[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
+let get_blockly_root_el = function(el){  
+  return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
 }
 
 let init_filter_handler = function (msg, root_el, initial_send_code) {
@@ -1728,6 +1732,10 @@ let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_d
 }
 
 let FC = {
+  TAG:{
+    ROOT: "dv-filter-root",
+    FILTER: "dv-filter-filter"
+  },
   MODE: {
     SIMPLE: "simple",
     DATASETS: "datasets",
@@ -1750,10 +1758,10 @@ let FC = {
 
 let get_root_el = function(el) {
   let root_el;
-  if(el.hasAttribute(FC.ATTRIBUTE.ROOT)) {
+  if(el && el.tagName && el.tagName.toLowerCase() === FC.TAG.ROOT) {
     root_el = el;
   } else {
-    root_el = el.closest(`[${FC.ATTRIBUTE.ROOT}]`)    
+    root_el = el.closest(FC.TAG.ROOT)    
   }
   
   if(!root_el) {
@@ -1778,7 +1786,6 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   logger("Filter root id: " + root_id);
 
   let root_el = document.getElementById(root_id);
-  root_el.setAttribute(FC.ATTRIBUTE.ROOT, '');  
   root_el[FC.PROPERTY.DATA] = filter_data;
   root_el[FC.PROPERTY.STATE] = filter_state;
   root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
@@ -1793,7 +1800,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   simple_option.textContent = FC.MODE.SIMPLE;
   select.appendChild(simple_option);
   
-  let simple_div = document.createElement("div");
+  let simple_div = document.createElement(FC.TAG.FILTER);
   simple_div.setAttribute(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.SIMPLE);
   root_el.appendChild(simple_div);
 
@@ -1806,7 +1813,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   blockly_option.textContent = FC.MODE.BLOCKLY;
   select.appendChild(blockly_option);
   
-  let blockly_div = document.createElement("div");
+  let blockly_div = document.createElement(FC.TAG.FILTER);
   blockly_div.setAttribute(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.BLOCKLY);
   root_el.appendChild(blockly_div);
 
@@ -1815,9 +1822,11 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   let change_filter_mode = function(event) {    
     let filter_divs = root_el.querySelectorAll(`[${FC.ATTRIBUTE.FILTER_MODE}]`);    
     let new_selection = select.value;
+
     logger(`Changing to: ${new_selection}`);
 
     for(let i = 0; i < filter_divs.length; ++i) {
+
       let current_div_filter = filter_divs[i];
       let current_mode = current_div_filter.getAttribute(FC.ATTRIBUTE.FILTER_MODE);
 
@@ -1836,6 +1845,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
     } else {
       throw new Error("Unknown mode: " + new_selection);
     }
+
     if(event) { //FIXME: Terrible we should not be distinguising by event
       init_filter_handler({dataset_list_name: get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME)}, root_el, initial_send_code);
     }    

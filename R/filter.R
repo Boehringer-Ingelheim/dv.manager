@@ -444,17 +444,6 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
 
   assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
-  payload_tag <- shiny::tags[["script"]](
-          type = "application/json",
-          shiny::HTML(
-            sprintf(
-              "{\"state\": %s, \"data\": %s, \"bookmark\": %s}",
-              state, filter_data, filter_bookmark
-            )
-          ), # Avoids scaping of > and other HTML special characters
-          bookmark = if (filter_bookmark != "null") NA else NULL
-        )
-
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
@@ -469,9 +458,21 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
     )
   )
 
-  combined_ui <- local({
-    shiny::div(
-      shiny::div(
+  tag_dv_filter_wrapper <- function(...){
+    shiny::tag("dv-filter-wrapper", list(...))
+  }
+
+  tag_dv_filter_dependencies <- function(...){
+    shiny::tag("dv-filter-dependencies", list(...))
+  }
+
+  tag_dv_filter_root <- function(...){
+    shiny::tag("dv-filter-root", list(...))
+  }
+
+  dependencies <- shiny::singleton(
+    tag_dv_filter_dependencies(
+      shiny::span(
         style = "display:none;",
         add_blockly_dependency(),
         shiny:::ionRangeSliderDependency(),
@@ -479,11 +480,17 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
         # When attaching the dependencies on my own an error occurs when using multiple
         # When including an input perse the error disappears, this should be explored
         shinyWidgets::pickerInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES"), choices = c("A", "B"), multiple = TRUE)
-      ),
-      shiny::div(
+      )
+    )
+  ) 
+
+
+  combined_ui <- local({
+    tag_dv_filter_wrapper( 
+      dependencies,
+      tag_dv_filter_root(
         id = ns(ID$FILTER_CONTAINER),
-        class = "c-well shiny_filter",
-        payload_tag,
+        class = "c-well",
         init_tag
       )
     )

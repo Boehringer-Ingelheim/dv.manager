@@ -47,7 +47,7 @@ app_ui <- function(request_id) {
   } else {
     filter_ui <- list(
       shiny::div(
-        class = "c-well shiny_filter",
+        class = "c-well",
         shiny::tags$label(
           "Subject Level Filter",
           shiny::icon("circle-info", title = TT[["SUBJECT_LEVEL_FILTER"]]),
@@ -135,4 +135,4 @@ app_ui <- function(request_id) {
     sidebar,
     module_info[["ui_fn"]](ns, dataset_name, top_buttons),
   )
-}
+} 
