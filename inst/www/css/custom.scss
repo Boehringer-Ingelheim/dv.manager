@@ -264,8 +264,9 @@ dv-filter-wrapper {
     display: block;
     dv-filter-dataset-filter {
       display: block;
-      dv-filter-control-container {
+      dv-filter-variable-filter-container {
         display:block;
+        margin-top: 10px;
       }
     }    
 

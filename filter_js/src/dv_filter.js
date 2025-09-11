@@ -27,8 +27,6 @@ import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
 import './toolbox-search/index.js'
 
-
-
 const DEV_MODE = true;
 
 let logger = function(x){};
@@ -42,8 +40,6 @@ if(DEV_MODE) {
     }
   };
 }
-
-
 
 let is_html_element = function(obj) {
   return obj instanceof HTMLElement && !!obj.tagName;
@@ -1088,7 +1084,8 @@ const SC = {
     SUBJECT_FILTER: 'data-subject-filter',
     VARIABLE: "data-variable",
     KIND: "data-kind",
-    FILTER_CONTROL_CONTAINER: "data-filter-control"
+    FILTER_CONTROL_CONTAINER: "data-filter-control",
+    VARIABLE_SELECTOR: "variable_selector"
   },
   VARIABLE: {
     NUMERICAL: "numerical",
@@ -1183,29 +1180,30 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.DATASET_NAME, dataset.name);
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
   
-  let title = document.createElement("div");
-  title.className = "panel-heading";
-  title.textContent = dataset.name;
+  let panel_heading = document.createElement("div");
+  panel_heading.className = "panel-heading";
+  panel_heading.textContent = dataset.name;
   if (is_subject_filter) {
-    title.style.display = "flex";
-    title.style.justifyContent = "space-between";
-    title.style.alignItems = "center";
+    panel_heading.style.display = "flex";
+    panel_heading.style.justifyContent = "space-between";
+    panel_heading.style.alignItems = "center";
     let icon = document.createElement("span");
     icon.className = "glyphicon glyphicon-user";  
-    title.appendChild(document.createTextNode(" "));
-    title.appendChild(icon);
+    panel_heading.appendChild(document.createTextNode(" "));
+    panel_heading.appendChild(icon);
   }
   
-  dataset_filter_container.appendChild(title);
-  
-  let variable_filter_control_container = document.createElement(SC.TAG.VARIABLE_FILTER_CONTAINER);
-  variable_filter_control_container.className = 'panel-body';
+  dataset_filter_container.appendChild(panel_heading);
 
+  let panel_body = document.createElement("div");
+  panel_body.className = 'panel-body';
+    
   let select = document.createElement('select');
   select.className = 'selectpicker';
   select.setAttribute('multiple', '');
   select.setAttribute('title', 'Choose an option');
-  select.setAttribute('data-live-search', 'true');  
+  select.setAttribute('data-live-search', 'true');
+  select.setAttribute(SC.ATTRIBUTE.VARIABLE_SELECTOR, '');
 
   for(let i = 0; i < dataset.variables.length; ++i) {
     let option = document.createElement('option');
@@ -1217,10 +1215,18 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
     select.appendChild(option);
   }
  
-  dataset_filter_container.appendChild(select);
-  dataset_filter_container.appendChild(variable_filter_control_container);
+  panel_body.appendChild(select);
+
+
+  let variable_filter_control_container = document.createElement(SC.TAG.VARIABLE_FILTER_CONTAINER);
+  panel_body.appendChild(document.createElement("hr"))
+  panel_body.appendChild(variable_filter_control_container);
+
+  dataset_filter_container.appendChild(panel_body);
   simple_root_el.appendChild(dataset_filter_container);
+
   $(select).selectpicker();
+
 
   create_variable_filter_controls(variable_filter_control_container, dataset, selected_variables,  dataset_filter_state);
 }
@@ -1631,7 +1637,7 @@ let simple_static_init = function(simple_root_el) {
     simple_root_el.dispatchEvent(new_event);
   }
   
-  $(simple_root_el).on('changed.bs.select', `${SC.TAG.DATASET_FILTER} > div.dropdown > select`, function(event) { //FIXME: This selector is ugly it can be done better
+  $(simple_root_el).on('changed.bs.select', `${SC.TAG.DATASET_FILTER} select[${SC.ATTRIBUTE.VARIABLE_SELECTOR}]`, function(event) {
     let dataset_div = event.target.closest(`${SC.TAG.DATASET_FILTER}`);
     let dataset_name = dataset_div.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
     let dataset_list_name = get_filter_property(simple_root_el, FC.PROPERTY.DATASET_LIST_NAME);
