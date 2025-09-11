@@ -1205,6 +1205,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   select.setAttribute('multiple', '');
   select.setAttribute('title', 'Choose an option');
   select.setAttribute('data-live-search', 'true');
+  select.setAttribute('data-width', '100%');
   select.setAttribute(SC.ATTRIBUTE.VARIABLE_SELECTOR, '');
 
   for(let i = 0; i < dataset.variables.length; ++i) {
@@ -1345,6 +1346,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       categorical_select.setAttribute('multiple', '');        
       categorical_select.setAttribute('data-live-search', 'true');
       categorical_select.setAttribute('data-actions-box', 'true');
+      categorical_select.setAttribute('data-width', '100%');
       categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
       for(let i = 0; i < current_variable.values_count.length; ++i) {
