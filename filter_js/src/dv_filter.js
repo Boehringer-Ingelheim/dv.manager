@@ -1085,7 +1085,9 @@ const SC = {
     VARIABLE: "data-variable",
     KIND: "data-kind",
     FILTER_CONTROL_CONTAINER: "data-filter-control",
-    VARIABLE_SELECTOR: "variable_selector"
+    VARIABLE_SELECTOR: "variable_selector",
+    NA_CONTROL: "na_control",
+    FILTER_VALUE: "filter_value"
   },
   VARIABLE: {
     NUMERICAL: "numerical",
@@ -1249,7 +1251,7 @@ let destroy_dataset_filter = function(dataset_el) {
 let destroy_variable_filter_controls = function(variable_filter_control_container_el) {
   assert(()=> variable_filter_control_container_el.tagName.toLowerCase() === SC.TAG.VARIABLE_FILTER_CONTAINER);
 
-  let select_pickers_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] select`);
+  let select_pickers_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] [${SC.ATTRIBUTE.FILTER_VALUE}] select`);
   logger("Destroying: " + select_pickers_to_destroy.length + " selectpickers");
   for(let i = 0; i < select_pickers_to_destroy.length; ++i) {
     if(!$(select_pickers_to_destroy[i]).data('selectpicker')) {
@@ -1258,7 +1260,7 @@ let destroy_variable_filter_controls = function(variable_filter_control_containe
     $(select_pickers_to_destroy[i]).selectpicker("destroy");
   }
 
-  let ion_range_slider_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`);
+  let ion_range_slider_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] [${SC.ATTRIBUTE.FILTER_VALUE}] input`);
   logger("Destroying: " + ion_range_slider_to_destroy.length + " ion.range.sliders");
   for(let i = 0; i < ion_range_slider_to_destroy.length; ++i) {
     if(!$(ion_range_slider_to_destroy[i]).data('ionRangeSlider')) {
@@ -1267,7 +1269,7 @@ let destroy_variable_filter_controls = function(variable_filter_control_containe
     $(ion_range_slider_to_destroy[i]).data("ionRangeSlider").destroy();
   }
 
-  let date_range_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`);
+  let date_range_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] [${SC.ATTRIBUTE.FILTER_VALUE}] input`);
   logger("Destroying: " + date_range_to_destroy.length + " date pickers");
   for(let i = 0; i < date_range_to_destroy.length; ++i) {
     if(!$(date_range_to_destroy[i]).data('datepicker')) {
@@ -1288,42 +1290,58 @@ let create_variable_filter_controls = function(variable_filter_control_container
     let current_state = dataset_filter_state.find((obj)=> obj.variable===current_variable.name);
 
     // #region common header
-    let variable_div = document.createElement(SC.TAG.VARIABLE_FILTER);
-    variable_div.setAttribute(SC.ATTRIBUTE.VARIABLE, current_variable.name);
-    variable_div.setAttribute(SC.ATTRIBUTE.KIND, current_variable.kind);
-    variable_div.style = "margin-bottom: 20px";
+    let container = document.createElement(SC.TAG.VARIABLE_FILTER);
+    container.setAttribute(SC.ATTRIBUTE.VARIABLE, current_variable.name);
+    container.setAttribute(SC.ATTRIBUTE.KIND, current_variable.kind);
+    container.style = "margin-bottom: 20px";
 
-    let variable_header = document.createElement("div");    
-    variable_header.style.display = "flex";
-    variable_header.style.justifyContent = "space-between";
-    variable_header.style.alignItems = "center";
+    let header = document.createElement("div");    
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "center";
 
-    let variable_label = document.createElement("span");
-    variable_label.className = "label label-default";
-    variable_label.textContent = current_variable.name;
+    let name_label = document.createElement("span");
+    name_label.className = "label label-default";
+    name_label.textContent = current_variable.name;
 
-    let variable_close_button = document.createElement("button");
-    variable_close_button.type = "button";
-    variable_close_button.className = "btn btn-danger close";
-    variable_close_button.setAttribute("data-action", "remove");
+    let na_group = document.createElement("div");    
+    na_group.setAttribute(SC.ATTRIBUTE.NA_CONTROL, '');
+    let na_tag = document.createElement("span");
+    na_tag.className = current_variable.NA_count > 0 ? "label label-warning" : "label label-default";
+    na_tag.textContent = `NA: ${current_variable.NA_count}`;
+    na_group.appendChild(na_tag);
 
-    let variable_close_icon = document.createElement("span");      
-    variable_close_icon.innerHTML = "&times;"    
+    let na_checkbox_input = document.createElement("input");
+    na_checkbox_input.type = "checkbox";           
+    
+    let na_checkbox = document.createElement("input");
+    na_checkbox.type = "checkbox";
+    na_group.appendChild(na_checkbox);
 
-    variable_close_button.appendChild(variable_close_icon);
+    let close_button = document.createElement("button");
+    close_button.type = "button";
+    close_button.className = "btn btn-danger close";
+    close_button.setAttribute("data-action", "remove");
 
-    variable_header.appendChild(variable_label);
-    variable_header.appendChild(variable_close_button);
-    variable_div.appendChild(variable_header);
+    let close_icon = document.createElement("span");      
+    close_icon.innerHTML = "&times;"    
+
+    close_button.appendChild(close_icon);
+
+    header.appendChild(name_label);
+    header.appendChild(na_group);
+    header.appendChild(close_button);
+    container.appendChild(header);
 
     //#endregion
 
     if(current_variable.kind === SC.VARIABLE.CATEGORICAL) {
-      let variable_select = document.createElement('select');
-      variable_select.className = 'selectpicker';
-      variable_select.setAttribute('multiple', '');        
-      variable_select.setAttribute('data-live-search', 'true');
-      variable_select.setAttribute('data-actions-box', 'true');
+      let categorical_select = document.createElement('select');
+      categorical_select.className = 'selectpicker';
+      categorical_select.setAttribute('multiple', '');        
+      categorical_select.setAttribute('data-live-search', 'true');
+      categorical_select.setAttribute('data-actions-box', 'true');
+      categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
       for(let i = 0; i < current_variable.values_count.length; ++i) {
         let option = document.createElement('option');
@@ -1336,26 +1354,18 @@ let create_variable_filter_controls = function(variable_filter_control_container
         } else {
           option.setAttribute("selected", '');          
         }
-        variable_select.appendChild(option);
+        categorical_select.appendChild(option);
       }
 
-      variable_div.appendChild(variable_select);
-      variable_filter_control_container_el.appendChild(variable_div);
-      $(variable_select).selectpicker();
+      container.appendChild(categorical_select);
+      variable_filter_control_container_el.appendChild(container);
+      $(categorical_select).selectpicker();
             
     } else if (current_variable.kind === SC.VARIABLE.DATE) {
 
       let from;
       let to;
       if(current_state) {
-        
-        // FIXME: DATE FIGHT FORMATTING can use ISO as the new DATE has no timezone
-        let num_state_min_date = new Date(current_state.min).getTime();
-        let num_variable_min_date = new Date(current_variable.min).getTime();
-
-        let num_state_max_date = new Date(current_state.max).getTime();
-        let num_variable_max_date = new Date(current_variable.max).getTime();
-
         from = max_str_date(current_state.min, current_variable.min);
         to = min_str_date(current_state.max, current_variable.max);
       } else {
@@ -1363,8 +1373,9 @@ let create_variable_filter_controls = function(variable_filter_control_container
         to = current_variable.max;
       }
 
-      let input_group = document.createElement("div");
-      input_group.className = "input-daterange input-group";
+      let date_group = document.createElement("div");
+      date_group.className = "input-daterange input-group";
+      date_group.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
       // from input
       let from_control = document.createElement("input");
@@ -1384,23 +1395,24 @@ let create_variable_filter_controls = function(variable_filter_control_container
       to_control.className = "form-control";
 
       // assemble
-      input_group.appendChild(from_control);
-      input_group.appendChild(to_separator);
-      input_group.appendChild(to_control);
+      date_group.appendChild(from_control);
+      date_group.appendChild(to_separator);
+      date_group.appendChild(to_control);
 
-      variable_div.appendChild(input_group);
-      variable_filter_control_container_el.appendChild(variable_div);
+      container.appendChild(date_group);
+      variable_filter_control_container_el.appendChild(container);
 
-      $(input_group).bsDatepicker({
+      $(date_group).bsDatepicker({
         format: "yyyy-mm-dd",
         autoclose: true,
         startDate: current_variable.min,
         endDate: current_variable.max
       });      
     } else if (current_variable.kind === SC.VARIABLE.NUMERICAL) {
-      let variable_input = document.createElement("input");
-      variable_div.appendChild(variable_input);
-      variable_filter_control_container_el.appendChild(variable_div);
+      let numerical_input = document.createElement("input");
+      numerical_input.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
+      container.appendChild(numerical_input);
+      variable_filter_control_container_el.appendChild(container);
 
       let from;
       let to;
@@ -1412,7 +1424,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
         to = current_variable.max;
       }
 
-      $(variable_input).ionRangeSlider({
+      $(numerical_input).ionRangeSlider({
           min: current_variable.min,
           max: current_variable.max,
           type: "double",
@@ -1420,14 +1432,14 @@ let create_variable_filter_controls = function(variable_filter_control_container
           to: to,
           skin: "shiny",
           grid: "true",
-          onFinish: function () {$(variable_input).trigger("finished.ion.range.slider");}
+          onFinish: function () {$(numerical_input).trigger("finished.ion.range.slider");}
       });
 
     } else {
-      variable_select = document.createElement("p");
-      variable_select.textContent = `${current_variable.name} - ${current_variable.kind}`;
-      variable_div.appendChild(variable_select);
-      variable_filter_control_container_el.appendChild(variable_div);
+      let fallback_content = document.createElement("p");
+      fallback_content.textContent = `${current_variable.name} - ${current_variable.kind}`;
+      container.appendChild(fallback_content);
+      variable_filter_control_container_el.appendChild(container);
     }  
   };
 }
@@ -1457,29 +1469,23 @@ let update_filter_controls = function(variable_filter_control_container_el, data
 let get_single_dataset_filter_state = function (dataset_container_el) {
   let filter_state = [];
   let dataset_name = dataset_container_el.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
+  let variable_selector_els = dataset_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}`);
 
-  let variable_selectors = dataset_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}`);
+  for (let i = 0; i < variable_selector_els.length; ++i) {
+    let current_variable_el = variable_selector_els[i];
+    let kind = current_variable_el.getAttribute(SC.ATTRIBUTE.KIND);
+    let variable_name = current_variable_el.getAttribute(SC.ATTRIBUTE.VARIABLE);
 
-  let include_NA = false; // TODO: cover NA cases
-
-  for (let i = 0; i < variable_selectors.length; ++i) {
-    let current_variable = variable_selectors[i];
-    let kind = current_variable.getAttribute(SC.ATTRIBUTE.KIND);
-    let variable_name = current_variable.getAttribute(SC.ATTRIBUTE.VARIABLE);
-
-    let dataset_parent = current_variable.closest(SC.TAG.DATASET_FILTER);
-    if (!dataset_parent) {
-      throw new Error(`No data-dataset parent found for element: ${current_variable.outerHTML}`);
-    }
-    let dataset_name = dataset_parent.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
     let curr_filter;
+
+    let include_NA = current_variable_el.querySelector(`[${SC.ATTRIBUTE.NA_CONTROL}] input`).checked;
 
     // Find the select inside that parent
     if (kind === SC.VARIABLE.CATEGORICAL) {
 
-      let select = current_variable.querySelector("select");
+      let select = current_variable_el.querySelector(`[${SC.ATTRIBUTE.FILTER_VALUE}]`);
       if (!select) {
-        throw new Error(`No select element found inside: ${current_variable.outerHTML}`);
+        throw new Error(`No select element found inside: ${current_variable_el.outerHTML}`);
       }
 
       let values = $(select).val();
@@ -1495,9 +1501,9 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
 
     } else if (kind === SC.VARIABLE.DATE) {
 
-      let input = current_variable.querySelectorAll("input");
+      let input = current_variable_el.querySelectorAll(`[${SC.ATTRIBUTE.FILTER_VALUE}] input`);
       if (!input || input.length !=2) {
-        throw new Error(`No 2 input elements found inside: ${current_variable.outerHTML}`);
+        throw new Error(`No 2 input elements found inside: ${current_variable_el.outerHTML}`);
       }
 
       let from = $(input[0]).val();
@@ -1515,9 +1521,9 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
 
     } else if (kind === SC.VARIABLE.NUMERICAL) {
 
-      let input = current_variable.querySelector("input");
+      let input = current_variable_el.querySelector(`[${SC.ATTRIBUTE.FILTER_VALUE}]`);
       if (!input) {
-        throw new Error(`No input element found inside: ${current_variable.outerHTML}`);
+        throw new Error(`No input element found inside: ${current_variable_el.outerHTML}`);
       }
 
       let from = $(input).data("ionRangeSlider").result.from;
@@ -1657,6 +1663,7 @@ let simple_static_init = function(simple_root_el) {
   $(simple_root_el).on("changed.bs.select", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] select`, dispatch_simple_filter_changed);
   $(simple_root_el).on("finished.ion.range.slider", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`, dispatch_simple_filter_changed);
   $(simple_root_el).on("changeDate", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`, dispatch_simple_filter_changed);
+  $(simple_root_el).on("change", `${SC.TAG.VARIABLE_FILTER} [${SC.ATTRIBUTE.NA_CONTROL}] input`, dispatch_simple_filter_changed);
 
   //TODO: Consider debounce
   simple_root_el.addEventListener(SC.EVENTS.CHANGED_FILTER, send_code);  

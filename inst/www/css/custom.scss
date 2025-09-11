@@ -267,6 +267,10 @@ dv-filter-wrapper {
       dv-filter-variable-filter-container {
         display:block;
         margin-top: 10px;
+        div[na_control]{
+          display: flex;
+          justify-items: center;
+        }
       }
     }    
 
