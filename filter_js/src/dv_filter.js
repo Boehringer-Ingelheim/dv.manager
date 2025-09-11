@@ -29,16 +29,21 @@ import './toolbox-search/index.js'
 
 
 
-
-let logger = function (x) { console.log(x) }
-
 const DEV_MODE = true;
 
-let assert = function (condition, message) {
-  if (DEV_MODE && !condition()) {
-    throw new Error(message || condition.toString());
-  }
+let logger = function(x){};
+let assert = function(condition, message){};
+
+if(DEV_MODE) {
+  logger = function(x) { console.log(x) };
+  assert = function (condition, message) {
+    if (DEV_MODE && !condition()) {
+      throw new Error(message || condition.toString());
+    }
+  };
 }
+
+
 
 let is_html_element = function(obj) {
   return obj instanceof HTMLElement && !!obj.tagName;
