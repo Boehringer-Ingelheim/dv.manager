@@ -1219,9 +1219,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
  
   panel_body.appendChild(select);
 
-
   let variable_filter_control_container = document.createElement(SC.TAG.VARIABLE_FILTER_CONTAINER);
-  panel_body.appendChild(document.createElement("hr"))
   panel_body.appendChild(variable_filter_control_container);
 
   dataset_filter_container.appendChild(panel_body);
@@ -1292,52 +1290,47 @@ let create_variable_filter_controls = function(variable_filter_control_container
     // #region common header
     let container = document.createElement(SC.TAG.VARIABLE_FILTER);
     container.setAttribute(SC.ATTRIBUTE.VARIABLE, current_variable.name);
-    container.setAttribute(SC.ATTRIBUTE.KIND, current_variable.kind);
-    container.style = "margin-bottom: 20px";
+    container.setAttribute(SC.ATTRIBUTE.KIND, current_variable.kind);    
 
-    let header = document.createElement("div");    
-    header.style.display = "flex";
-    header.style.justifyContent = "space-between";
-    header.style.alignItems = "center";
-
+    let header = document.createElement("div");
+    header.className = "variable-header";
+    
     let name_label = document.createElement("span");
-    name_label.className = "label label-default";
+    name_label.className = "label label-info"; // styled like a pill
     name_label.textContent = current_variable.name;
-
+    
     let na_group = document.createElement("div");
-    na_group.className = "input-group";
+    na_group.className = "na-control";
     na_group.setAttribute(SC.ATTRIBUTE.NA_CONTROL, "");
     
-    // --- Label (LEFT) ---
     let na_label = document.createElement("span");
-    na_label.className = "form-control";
+    na_label.className = "na-label";
     na_label.textContent = `NA: ${current_variable.NA_count}`;
     na_group.appendChild(na_label);
     
-    // --- Checkbox addon (RIGHT) ---
     let na_checkbox_addon = document.createElement("span");
-    na_checkbox_addon.className = "input-group-addon na_checkbox";
+    na_checkbox_addon.className = "na-checkbox";
     
     let na_checkbox = document.createElement("input");
     na_checkbox.type = "checkbox";
     
+    if (current_state) {
+      na_checkbox.checked = current_state.include_NA;
+    }
+    
     na_checkbox_addon.appendChild(na_checkbox);
     na_group.appendChild(na_checkbox_addon);
-
-    if(current_state) {
-      na_checkbox.checked = current_state.include_NA;   
-    }
-
-
+    
     let close_button = document.createElement("button");
     close_button.type = "button";
-    close_button.className = "btn btn-danger close";
+    close_button.className = "close-btn";
     close_button.setAttribute("data-action", "remove");
-
-    let close_icon = document.createElement("span");      
-    close_icon.innerHTML = "&times;"    
-
-    close_button.appendChild(close_icon);
+    close_button.innerHTML = "&times;";
+    
+    // Assemble header
+    header.appendChild(name_label);
+    header.appendChild(na_group);
+    header.appendChild(close_button);
 
     header.appendChild(name_label);
     header.appendChild(na_group);

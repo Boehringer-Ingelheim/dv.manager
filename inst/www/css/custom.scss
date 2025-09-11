@@ -1,6 +1,7 @@
 // variable definitions
 $primary: $brand-primary;
-$secondary: #7292fc;;
+$secondary: #7292fc;
+;
 $color-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 $color-text: #ffffff;
 $border-radius: $border-radius-base;
@@ -10,7 +11,8 @@ $color-scrollbar: #9b9b9b7f;
 // end variable definitions
 
 
-.fas.fa-filter{ // Overwrite hardcoded color
+.fas.fa-filter {
+  // Overwrite hardcoded color
   color: $primary;
 }
 
@@ -24,7 +26,8 @@ body {
   display: flex;
   flex-wrap: wrap;
   flex-direction: column;
-  justify-content: start; /* or content-start */   
+  justify-content: start;
+  /* or content-start */
 }
 
 .dv_button_level {
@@ -34,36 +37,36 @@ body {
 }
 
 .dv_manager_top_bar {
-  display:grid;
+  display: grid;
   grid-template-columns: auto 90px;
 }
 
 .dv_button_level {
   display: inline-flex;
-  flex-wrap: wrap;    
+  flex-wrap: wrap;
 }
 
 .dv_button_level.dv_root_button_level {
-  display:block;
+  display: block;
 }
 
 .dv_button_level.dv_child_button_level {
-  display:none;
+  display: none;
 }
 
 .dv_button_level.dv_child_button_level.active {
-  display:inline-flex;
+  display: inline-flex;
   width: auto;
 }
 
-.dv_tab_activate_button { 
+.dv_tab_activate_button {
   padding: 14px 20px;
   color: $color-text;
   background-color: $primary;
   color: $color-text;
 }
 
-.dv_child_button_level .dv_tab_activate_button { 
+.dv_child_button_level .dv_tab_activate_button {
   padding: 5px 20px;
   color: $color-text;
   background-color: $primary;
@@ -86,6 +89,7 @@ body {
 .dv_top_button_group {
   background-color: $primary;
   margin-bottom: 1rem;
+
   .navbar-btn.navbar-btn {
     background: none;
     border: none;
@@ -93,6 +97,7 @@ body {
     color: $color-text;
   }
 }
+
 /* end navigation */
 
 .container-fluid {
@@ -118,7 +123,7 @@ body {
   width: $sidebar-width-collapsed;
 }
 
-body > .container-fluid > .dv_main_panel {
+body>.container-fluid>.dv_main_panel {
   grid-column: 2 / -1;
   grid-row: 1 / 3;
   display: grid;
@@ -150,7 +155,7 @@ body > .container-fluid > .dv_main_panel {
   padding-bottom: 2rem;
   padding-right: 1.6rem;
   height: 100%;
-  position:relative;
+  position: relative;
 }
 
 .dv_tab_content {
@@ -203,18 +208,17 @@ input[type="checkbox"]#click {
 @keyframes logo {
   from {
     opacity: 0;
-    transform: translateY(45px)
-      translateX($sidebar-width-open - $sidebar-width-collapsed);
+    transform: translateY(45px) translateX($sidebar-width-open - $sidebar-width-collapsed);
   }
+
   to {
-    transform: translateY(45px)
-      translateX($sidebar-width-open - $sidebar-width-collapsed);
+    transform: translateY(45px) translateX($sidebar-width-open - $sidebar-width-collapsed);
     opacity: 1;
   }
 }
 
 .checkbox {
-  &:not(:checked) ~ .sidebar {
+  &:not(:checked)~.sidebar {
     left: $sidebar-width-collapsed - $sidebar-width-open;
 
     .menu-contents,
@@ -227,7 +231,7 @@ input[type="checkbox"]#click {
     }
   }
 
-  &:checked ~ .sidebar {
+  &:checked~.sidebar {
     left: 0;
 
     .line-1 {
@@ -253,24 +257,90 @@ input[type="checkbox"]#click {
   margin-bottom: 30px;
   flex-grow: 1;
   opacity: 1;
-} 
+}
 
 dv-filter-wrapper {
   display: block;
-  dv-filter-dependencies{
+
+  dv-filter-dependencies {
     display: block;
   }
+
   dv-filter-root {
     display: block;
+
     dv-filter-dataset-filter {
       display: block;
-      dv-filter-variable-filter-container {
-        display:block;
-        margin-top: 10px;        
-      }
-    }    
 
-    .dropdown-menu.open{
+      dv-filter-variable-filter-container {
+        display: block;
+        margin-top: 10px;
+
+        dv-filter-variable-filter {
+          display: block;
+          margin-bottom: 20px;
+          background: #f7f7f7;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          margin-bottom: 6px;
+          padding-bottom: 8px;
+          padding-left: 4px;
+          padding-right: 4px;
+
+          .variable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px;
+            margin-bottom: 2px;            
+          }
+
+          .variable-header .label {
+            font-size: 12px;
+            padding: 4px 6px;
+            background-color: #5bc0de;
+            /* info-like color */
+            border-radius: 10px;
+          }
+
+          .na-control {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+            font-size: 12px;
+          }
+
+          .na-control .na-label {
+            padding: 2px 6px;
+            background-color: #fafafa;
+          }
+
+          .na-control .na-checkbox {
+            background-color: #fff;
+            padding: 2px 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .variable-header .close-btn {
+            border: none;
+            background: none;
+            color: #d9534f;
+            font-size: 14px;
+            margin-left: 6px;
+          }
+
+          .variable-header .close-btn:hover {
+            color: #c9302c;
+          }
+        }
+      }
+    }
+
+    .dropdown-menu.open {
       min-width: min-content;
       position: fixed;
       left: $sidebar-width-open;
@@ -279,19 +349,20 @@ dv-filter-wrapper {
       min-height: 0px !important;
       height: 70vh !important;
       overflow-y: hidden;
-      .inner.open{
+
+      .inner.open {
         max-height: 70vh !important;
         min-height: 0px !important;
         height: calc(100% - 75px); // Hardcoded heigth of top search buttons
         overflow-y: auto;
       }
-    }    
+    }
   }
-}  
+}
 
-#shiny_filter_panel {  
+#shiny_filter_panel {
   height: 94vh;
-  overflow-y: auto;  
+  overflow-y: auto;
   overflow-x: hidden;
 
   .filter_header {
@@ -301,64 +372,67 @@ dv-filter-wrapper {
   }
 
   [data-filter-mode="blockly"] {
-    
-        .blockly_filter.outer {
-          display: grid;
-          grid-template-rows: 1fr auto; /* First row takes remaining space, second row based on content */
-          height: 100%;
-        }
 
-        .blockly_filter.inner {          
-          height: 100%;
-        }
+    .blockly_filter.outer {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      /* First row takes remaining space, second row based on content */
+      height: 100%;
+    }
 
-        .blockly_overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none; /* Hidden by default */
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-        }
+    .blockly_filter.inner {
+      height: 100%;
+    }
 
-        /* Modal content style */
-        .blockly_modal {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 80vw;
-            height: 80vh;
-            text-align: center;
-            display: grid;
-            grid-template-rows: auto 1fr auto; /* First row takes remaining space, second row based on content */
-        }
+    .blockly_overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      /* Hidden by default */
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
 
-        /* Close button style */
-        .blockly_close_button {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 5px 10px;
-            background-color: #ccc;
-            text-decoration: none;
-            border-radius: 3px;
-        }
+    /* Modal content style */
+    .blockly_modal {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      width: 80vw;
+      height: 80vh;
+      text-align: center;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      /* First row takes remaining space, second row based on content */
+    }
 
-        .blockly_close_button:hover {
-            background-color: #aaa;
-        }
+    /* Close button style */
+    .blockly_close_button {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 5px 10px;
+      background-color: #ccc;
+      text-decoration: none;
+      border-radius: 3px;
+    }
 
-        /* Show the modal when the checkbox is checked */
-        [type="checkbox"]:checked + .blockly_overlay {
-            display: flex;
-        }
+    .blockly_close_button:hover {
+      background-color: #aaa;
+    }
+
+    /* Show the modal when the checkbox is checked */
+    [type="checkbox"]:checked+.blockly_overlay {
+      display: flex;
+    }
 
   }
-  
+
   .c-well {
     min-height: 20px;
     padding: 15px;
@@ -427,6 +501,7 @@ dv-filter-wrapper {
     }
   }
 }
+
 /* end sidebar */
 
 #dataset_date,
