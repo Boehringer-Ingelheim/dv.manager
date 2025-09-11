@@ -309,7 +309,10 @@ apply_dataset_filter_masks <- function(dataset_list, mask_list) {
   filtered_data_list <- dataset_list
   for (current_mask_name in names(mask_list)) {
     current_mask <- mask_list[[current_mask_name]]
-    filtered_data_list[[current_mask_name]] <- filtered_data_list[[current_mask_name]][current_mask, , drop = FALSE]
+    current_dataset <- filtered_data_list[[current_mask_name]]
+    lbls <- get_lbls(current_dataset)
+    filtered_dataset <- current_dataset[current_mask, , drop = FALSE]
+    filtered_data_list[[current_mask_name]] <- set_lbls(filtered_dataset, lbls)
   }
   return(filtered_data_list)
 }
@@ -318,7 +321,10 @@ apply_subject_set <- function(dataset_list, subject_set, subj_var) {
   filtered_data_list <- dataset_list
   for (current_ds_name in names(dataset_list)) {
     current_mask <- dataset_list[[current_ds_name]][[subj_var]] %in% subject_set
-    filtered_data_list[[current_ds_name]] <- filtered_data_list[[current_ds_name]][current_mask, , drop = FALSE]
+    current_dataset <- filtered_data_list[[current_ds_name]]
+    lbls <- get_lbls(current_dataset)
+    filtered_dataset <- current_dataset[current_mask, , drop = FALSE]
+    filtered_data_list[[current_ds_name]] <- set_lbls(filtered_dataset, lbls)
   }
   return(filtered_data_list)
 }

@@ -1482,3 +1482,7 @@ test_that("modules bookmark state works with filter", {
 
   skip("skipped until we can set a state programatically")
 })
+
+test_that("filter labels are preserved", {
+  expect_true(FALSE)
+})
