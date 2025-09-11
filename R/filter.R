@@ -91,8 +91,6 @@ get_single_filter_data <- function(dataset) {
     return(res)
   }
 
-  empty_named_list <- setNames(list(), character(0))
-
   # In R all elements are vectors by default this makes complicated to transform into json as c("a") can be enconded
   # as "a" or ["a"]. To disambiguate this jsonlite offers `unbox`.
 
@@ -111,7 +109,7 @@ get_single_filter_data <- function(dataset) {
   for (idx in seq_len(n_var)) {
     name <- nm_var[[idx]]
     var <- dataset[[name]]
-    label <- attr(var, "label") %||% empty_named_list #FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
+    label <- attr(var, "label") %||% name #FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
 
     l <- list(
       name = yyjsonr::as_scalar(name),
