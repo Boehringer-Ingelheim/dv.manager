@@ -1184,7 +1184,19 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   
   let panel_heading = document.createElement("div");
   panel_heading.className = "panel-heading";
-  panel_heading.textContent = dataset.name;
+
+  let panel_title = document.createElement("h6");  
+  panel_title.className = "panel-title";
+
+  let panel_collapse_link = document.createElement("a");
+  panel_collapse_link.textContent = dataset.name;
+  panel_collapse_link.setAttribute("data-toggle", "collapse");
+  panel_collapse_link.setAttribute("data-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .panel-body`);
+
+
+  panel_title.appendChild(panel_collapse_link);
+  panel_heading.appendChild(panel_title);
+
   if (is_subject_filter) {
     panel_heading.style.display = "flex";
     panel_heading.style.justifyContent = "space-between";
@@ -1198,8 +1210,8 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   dataset_filter_container.appendChild(panel_heading);
 
   let panel_body = document.createElement("div");
-  panel_body.className = 'panel-body';
-    
+  panel_body.className = 'panel-body collapse in';
+
   let select = document.createElement('select');
   select.className = 'selectpicker';
   select.setAttribute('multiple', '');
@@ -1969,3 +1981,4 @@ Who is responsible for this is unclear:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
