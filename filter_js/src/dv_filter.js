@@ -1298,19 +1298,19 @@ let create_variable_filter_controls = function(variable_filter_control_container
     
     let name_label = document.createElement("span");
     name_label.className = "label label-info"; // styled like a pill
-    name_label.textContent = current_variable.name;
+    name_label.textContent = current_variable.label !== "" ? current_variable.label : current_variable.name;
     
     let na_group = document.createElement("div");
-    na_group.className = "na-control";
+    na_group.className = `na-control ${current_variable.NA_count > 0 ? "na_warning" : ""}`;
     na_group.setAttribute(SC.ATTRIBUTE.NA_CONTROL, "");
     
     let na_label = document.createElement("span");
     na_label.className = "na-label";
     na_label.textContent = `NA: ${current_variable.NA_count}`;
     na_group.appendChild(na_label);
-    
+
     let na_checkbox_addon = document.createElement("span");
-    na_checkbox_addon.className = "na-checkbox";
+    na_checkbox_addon.className = `na-checkbox ${current_variable.NA_count > 0 ? "" : "hide"}`;
     
     let na_checkbox = document.createElement("input");
     na_checkbox.type = "checkbox";
@@ -1318,9 +1318,13 @@ let create_variable_filter_controls = function(variable_filter_control_container
     if (current_state) {
       na_checkbox.checked = current_state.include_NA;
     }
-    
+
     na_checkbox_addon.appendChild(na_checkbox);
     na_group.appendChild(na_checkbox_addon);
+
+    if(current_variable.NA_count > 0) {
+     
+    }
     
     let close_button = document.createElement("button");
     close_button.type = "button";

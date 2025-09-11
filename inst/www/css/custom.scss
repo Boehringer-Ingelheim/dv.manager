@@ -292,7 +292,20 @@ dv-filter-wrapper {
             justify-content: space-between;
             align-items: center;
             padding: 4px 8px;
-            margin-bottom: 2px;            
+            margin-bottom: 2px;    
+            flex-wrap: wrap;      
+            row-gap: 2px;  
+          }
+
+          .hide{
+            display: none;
+          }
+
+          .na_warning {
+            background-color: #fcf8e3;       /* Bootstrap warning bg */
+            color: #8a6d3b;                  /* Bootstrap warning text */
+            border: 1px solid #faebcc;       /* warning border */
+            border-radius: 4px;              /* rounded corners */            
           }
 
           .variable-header .label {
@@ -301,6 +314,8 @@ dv-filter-wrapper {
             background-color: #5bc0de;
             /* info-like color */
             border-radius: 10px;
+            word-wrap: break-word;
+            white-space: normal;
           }
 
           .na-control {
