@@ -1239,13 +1239,13 @@ let destroy_dataset_filter = function(dataset_el) {
   let variable_filter_control_container = dataset_el.querySelector(SC.TAG.VARIABLE_FILTER_CONTAINER);
   destroy_variable_filter_controls(variable_filter_control_container);
 
-  let select = dataset_el.querySelector('select');
+  let select = dataset_el.querySelector(`select[${SC.ATTRIBUTE.VARIABLE_SELECTOR}]`);
   if(!$(select).data('selectpicker')) {
     throw new Error("Attempt to destroy non selectpicker element");
   }
   $(select).selectpicker("destroy");
 
-  dataset_filter_container.remove();
+  dataset_el.remove();
 }
 
 let destroy_variable_filter_controls = function(variable_filter_control_container_el) {
@@ -1310,13 +1310,15 @@ let create_variable_filter_controls = function(variable_filter_control_container
     na_tag.className = current_variable.NA_count > 0 ? "label label-warning" : "label label-default";
     na_tag.textContent = `NA: ${current_variable.NA_count}`;
     na_group.appendChild(na_tag);
-
-    let na_checkbox_input = document.createElement("input");
-    na_checkbox_input.type = "checkbox";           
     
     let na_checkbox = document.createElement("input");
     na_checkbox.type = "checkbox";
     na_group.appendChild(na_checkbox);
+
+    if(current_state) {
+      na_checkbox.checked = current_state.include_NA;   
+    }
+
 
     let close_button = document.createElement("button");
     close_button.type = "button";
@@ -1954,6 +1956,8 @@ Who is responsible for this is unclear:
 
 /*TODO: Let the user know when the filter is a non-finished state when pressing the apply filter button.
 */
+
+/*TODO: Unapplied changes in blockly are easy to miss. */
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
