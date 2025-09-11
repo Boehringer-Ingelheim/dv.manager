@@ -1190,7 +1190,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
 
   let panel_collapse_link = document.createElement("a");
   panel_collapse_link.textContent = dataset.name;
-  panel_collapse_link.setAttribute("data-toggle", "collapse");
+  panel_collapse_link.setAttribute("data-toggle", "collapse-disabled"); //TODO: Activate collapse if required
   panel_collapse_link.setAttribute("data-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .panel-body`);
 
 
@@ -1431,9 +1431,16 @@ let create_variable_filter_controls = function(variable_filter_control_container
         endDate: current_variable.max
       });      
     } else if (current_variable.kind === SC.VARIABLE.NUMERICAL) {
+
+      let box = document.createElement("div");
+      box.style.backgroundColor = "blue";
+      box.style.height = "20px";
+      box.style.width = "100%";
+
       let numerical_input = document.createElement("input");
-      numerical_input.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
+      numerical_input.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');      
       container.appendChild(numerical_input);
+
       variable_filter_control_container_el.appendChild(container);
 
       let from;
@@ -1456,6 +1463,8 @@ let create_variable_filter_controls = function(variable_filter_control_container
           grid: "true",
           onFinish: function () {$(numerical_input).trigger("finished.ion.range.slider");}
       });
+
+      container.querySelector(".irs-min").parentNode.insertBefore(box, container.querySelector(".irs-min"));
 
     } else {
       let fallback_content = document.createElement("p");
@@ -1944,6 +1953,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 
 export {init}
 
+// TODO: Add tags with the number of filters in each dataset so information is available when collapsed
 // TODO: Add histograms and graphical helps
 // TODO: Move export button outside from blockly
 // TODO: Add saving states with name support
