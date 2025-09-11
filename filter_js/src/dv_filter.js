@@ -1922,7 +1922,6 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 
 export {init}
 
-// TODO: Add support for selectin NA values
 // TODO: Add histograms and graphical helps
 // TODO: Move export button outside from blockly
 // TODO: Add saving states with name support
@@ -1943,34 +1942,18 @@ Who is responsible for this is unclear:
 
 */
 
-/* TODO: Filter data structure generation is slow, it is generated everytime the UI starts, it could be moved to a 
-step previous to the UI, to avoid running it everytime we start the application. Memoize the operation?
-
 /* TODO: Should a warning appear when a preset filters uses an out of range value. They are corrected by blockly but there is no warning*/
 
-/* TODO: name consitency */
 
 /* TODO: # When attaching the dependencies on my own an error occurs when using multiple
     # When including shinyWidget picker_input itself the error disappears, this should be explored
   */
 
-
 /*TODO: Split in two workspaces one for the subject filters and another for the table filters
-*/
-
-/*TODO: Include buttons to save filter states and recover them later with names, etc.
 */
 
 /*TODO: Let the user know when the filter is a non-finished state when pressing the apply filter button.
 */
 
-/*TODO: Create an alternative UI that matches the current dv.filter while using the same backend
-*/
-
-/* TODO: Think about having, at least, an initial state. Ids of elements, etc.
-
-/* TODO: Use data for attributes with the ids of the filter inside to avoid passing ids all the time and just trust
-in a given internal structure.
-*/
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
