@@ -1181,6 +1181,16 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   let title = document.createElement("div");
   title.className = "panel-heading";
   title.textContent = dataset.name;
+  if (is_subject_filter) {
+    title.style.display = "flex";
+    title.style.justifyContent = "space-between";
+    title.style.alignItems = "center";
+    let icon = document.createElement("span");
+    icon.className = "glyphicon glyphicon-user";  
+    title.appendChild(document.createTextNode(" "));
+    title.appendChild(icon);
+  }
+  
   dataset_filter_container.appendChild(title);
   
   let variable_filter_control_container = document.createElement(SC.TAG.VARIABLE_FILTER_CONTAINER);
