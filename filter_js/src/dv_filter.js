@@ -1152,6 +1152,18 @@ const SC = {
     NUMERICAL: "numerical",
     CATEGORICAL: "categorical",
     DATE: "date"
+  },
+  CLASS_ICON: {    
+    "numeric": "sort-by-order",
+    "integer": "sort-by-order",
+    "Date": "calendar",
+    "POSIXct": "calendar",
+    "POSIXlt": "calendar",
+    "ordered": "sort-by-attributes",
+    "factor": "tags",
+    "character": "font",
+    "logical": "ok-circle",
+    "unknown": "question-sign"    
   }
 }
 
@@ -1253,7 +1265,6 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   panel_collapse_link.setAttribute("data-toggle", "collapse-disabled"); //TODO: Activate collapse if required
   panel_collapse_link.setAttribute("data-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .panel-body`);
 
-
   panel_title.appendChild(panel_collapse_link);
   panel_heading.appendChild(panel_title);
 
@@ -1275,15 +1286,25 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   let select = document.createElement('select');
   select.className = 'selectpicker';
   select.setAttribute('multiple', '');
-  select.setAttribute('title', 'Choose an option');
+  select.setAttribute('title', 'Add / Remove Filters');
   select.setAttribute('data-live-search', 'true');
   select.setAttribute('data-width', '100%');
+  select.setAttribute('data-style', 'btn');
+  select.setAttribute('data-selected-text-format', 'static');
   select.setAttribute(SC.ATTRIBUTE.VARIABLE_SELECTOR, '');
 
   for(let i = 0; i < dataset.variables.length; ++i) {
     let option = document.createElement('option');
     option.value = dataset.variables[i].name;
-    option.textContent = `${dataset.variables[i].name} - ${dataset.variables[i].label}`;
+    option.setAttribute('data-content', `
+      <span class="glyphicon glyphicon-${SC.CLASS_ICON[dataset.variables[i].class]}"></span>
+      ${dataset.variables[i].name}
+      <code style="color:darkblue;">${dataset.variables[i].class}</code>
+      ${dataset.variables[i].NA_count>0?`<small style="color:darkred;">(${dataset.variables[i].NA_count} missing)</small>` : ""}      
+      </br>
+      <small class="text-muted">${dataset.variables[i].label}</small>
+    `);
+    option.setAttribute('data-subtext', `Description for`);
     if(selected_variables.includes(option.value)) {
       option.setAttribute("selected", "");
     }
@@ -1438,6 +1459,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
         let option = document.createElement('option');
         option.value = current_variable.values_count[i].value;
         option.textContent = current_variable.values_count[i].value;
+        option.setAttribute("data-subtext", `${current_variable.values_count[i].count} / ${dataset.nrow}`);
         if(current_state) {
           if(current_state.values.includes(option.value)) {
             option.setAttribute("selected", '');         
@@ -2044,7 +2066,13 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 
 export {init}
 
+/* TODO: Return an structure after filtering with the relevant info after filtering to:
+  - Inform of remaining subjects
+  - Inform of remaining rows per dataset
+  - Inform of remaining values for category in each of the categorical selectors  
+  */ 
 // TODO: Add tags with the number of filters in each dataset so information is available when collapsed
+// TODO: Order categorical variables from most common to less common
 // TODO: Add histograms and graphical helps
 // TODO: Move export button outside from blockly
 // TODO: Add saving states with name support

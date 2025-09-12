@@ -113,8 +113,10 @@ get_single_filter_data <- function(dataset) {
 
     l <- list(
       name = yyjsonr::as_scalar(name),
-      label = yyjsonr::as_scalar(label)
+      label = yyjsonr::as_scalar(label),
+      class = yyjsonr::as_scalar(class(var)[1])
     )
+    
 
     # Logical is treated as a factor in the client
     if (is.logical(var)) var <- factor(var)
@@ -179,6 +181,7 @@ get_filter_data <- function(dataset_lists) {
       current_dataset_name <- nm_datasets[[jdx]]
       current_dataset_res[[jdx]] <- list(
         name = yyjsonr::as_scalar(current_dataset_name),
+        nrow = yyjsonr::as_scalar(nrow(current_dataset)),
         variables = get_single_filter_data(current_dataset)
       )
     }
