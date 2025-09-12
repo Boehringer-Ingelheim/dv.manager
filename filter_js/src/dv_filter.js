@@ -27,18 +27,80 @@ import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
 import './toolbox-search/index.js'
 
-const DEV_MODE = true;
+const __DEV_MODE = true;
+const __LOGGER = false;
+const __TIMER = true;
 
-let logger = function(x){};
-let assert = function(condition, message){};
+let __logger = function(x){};
+let __assert = function(condition, message){};
+let __time_function_start = function(caller_name) {};
+let __time_function_end = function(caller_name) {};
+let __get_caller_name = function() {};
+  
+if(__DEV_MODE) {
 
-if(DEV_MODE) {
-  logger = function(x) { console.log(x) };
-  assert = function (condition, message) {
-    if (DEV_MODE && !condition()) {
+  let timed_functions = [
+    "simple_dynamic_init"
+    // ,"create_variable_filter_controls"
+    // ,"get_single_dataset_filter_state"
+    // ,"get_filter_state"
+    // ,"create_dataset_filter"
+    // ,"simple_static_init"  
+    // ,"update_filter_controls"
+    // ,"update_dataset_filter" 
+  ];
+
+  if(__LOGGER) {
+    __logger = function(x) {console.log(x)};
+  }
+  
+  __assert = function (condition, message) {
+    if (__DEV_MODE && !condition()) {
       throw new Error(message || condition.toString());
     }
   };
+
+  if(__TIMER) {
+    __get_caller_name = function() {
+      // console.time("__get_caller_name");
+      const stack = new Error().stack;
+      if (!stack) return undefined;
+    
+      const lines = stack.split("\n");
+      // lines[0] = "Error"
+      // lines[1] = "at getCallerName ..."
+      // lines[2] = "at <CALLER_NAME> ..."
+      const line = lines[3]?.trim();
+      if (!line) return undefined;
+  
+      // Remove the "at " prefix and everything after the first space or (
+      // Example: "at myFunction (file.js:10:5)" → "myFunction"
+      const match = line.match(/at\s+([^\s(]+)/);    
+      // console.timeEnd("__get_caller_name");
+      return match ? match[1] : undefined; 
+    };
+  
+    // Times are poisoned by get_caller_name in the order of 0.017 to 0.03 ms locally.
+    __time_function_start = function(caller_name){
+      if(!caller_name) {
+        caller_name = __get_caller_name();        
+      };
+      
+      if(timed_functions.includes(caller_name)) {
+        // console.log("starting " + caller_name);
+        console.time(caller_name);
+      }
+    };
+    __time_function_end = function(caller_name){
+      if(!caller_name) {
+        caller_name = __get_caller_name();        
+      };    
+      if(timed_functions.includes(caller_name)) {
+        // console.log("ending " + caller_name);
+        console.timeEnd(caller_name)
+      }
+    };
+  }  
 }
 
 let is_html_element = function(obj) {
@@ -77,9 +139,6 @@ let min_str_date = function(date1, date2) {
   }
   return(res);
 }
-
-
-
 
 
 //#region BLOCKLY FILTER
@@ -140,9 +199,9 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
         let current_block, current_filter;
         [current_block, current_filter] = stack.pop();
 
-        logger("Processing");
-        logger(current_block);
-        logger(current_filter);
+        __logger("Processing");
+        __logger(current_block);
+        __logger(current_filter);
 
         if (current_filter.kind === "filter") {
           current_block.type = get_block_filter_type(current_filter.dataset, current_filter.variable);
@@ -171,8 +230,8 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
           }
 
           if (current_filter.operation === "select_subset") {
-            logger("as subset");
-            logger(current_filter);
+            __logger("as subset");
+            __logger(current_filter);
             let dataset_idx = dataset_list.map((x) => x.name).indexOf(current_filter.dataset);
             let variable_names = dataset_list[dataset_idx].variables.map((x) => x.name);
             let variable_idx = variable_names.indexOf(current_filter.variable);
@@ -188,16 +247,16 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
               include_NA: current_filter.include_NA
             };
           } else if (current_filter.operation === "select_range") {
-            logger("as range");
-            logger(current_filter);
+            __logger("as range");
+            __logger(current_filter);
             current_block.fields = {
               min: current_filter.min,
               max: current_filter.max,
               include_NA: current_filter.include_NA
             };
           } else if (current_filter.operation === "select_date") {
-            logger("as date");
-            logger(current_filter);
+            __logger("as date");
+            __logger(current_filter);
             current_block.fields = {
               min: current_filter.min,
               max: current_filter.max,
@@ -465,7 +524,7 @@ const get_blockly_code = function ({ workspace, generator, dataset_name }) {
   };
 
   const end = new Date();
-  logger("Get code: " + (end.getTime() - start.getTime()) + " ms");
+  __logger("Get code: " + (end.getTime() - start.getTime()) + " ms");
 
   return (res_state)
 }
@@ -602,7 +661,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       if (block.inputList.map(x => x.name).includes(element)) {
         block.removeInput(element)
       } else {
-        logger("Skipping removal of " + element + "not found");
+        __logger("Skipping removal of " + element + "not found");
       }
     });
   }
@@ -626,17 +685,17 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     },// This is called during serialization
     saveExtraState: function () {
       let saved_inputs = this.inputList.map(x => x.name).filter(x => x.startsWith("contents_"))
-      logger(saved_inputs);
+      __logger(saved_inputs);
       return { data: saved_inputs };
     },
 
     loadExtraState: function (state) {
       if (state && state.data !== undefined && state.data.length > 0) {
-        logger("Loading with state")
+        __logger("Loading with state")
         populate_inputs(this, state.data);
-        logger(this.inputList.map(x => x.name));
+        __logger(this.inputList.map(x => x.name));
       } else {
-        logger("Loading with no state");
+        __logger("Loading with no state");
         append_value_input_row_comb(this);
       }
     }
@@ -666,17 +725,17 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     },// This is called during serialization
     saveExtraState: function () {
       let saved_inputs = this.inputList.map(x => x.name).filter(x => x.startsWith("contents_"))
-      logger(saved_inputs);
+      __logger(saved_inputs);
       return { data: saved_inputs };
     },
 
     loadExtraState: function (state) {
       if (state && state.data !== undefined && state.data.length > 0) {
-        logger("Loading with state")
+        __logger("Loading with state")
         populate_inputs(this, state.data);
-        logger(this.inputList.map(x => x.name));
+        __logger(this.inputList.map(x => x.name));
       } else {
-        logger("Loading with no state");
+        __logger("Loading with no state");
         append_value_input_set_comb(this);
       }
     }
@@ -740,7 +799,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
 
     json_generator.forBlock[dataset_type] = dataset_filter_generator;
 
-    logger(toolbox);
+    __logger(toolbox);
 
     for (let variable of dataset["variables"]) {
       const variable_name = variable["name"];
@@ -881,18 +940,18 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
         // We travel the whole tree this is can be optimized but as trees should not be too deep it is left as is.
 
         let dataset_name = root_block.is_top_dataset ? root_block.dataset_name : null;
-        logger("Before loop: " + dataset_name)
+        __logger("Before loop: " + dataset_name)
         let stack = [];
         stack.push(root_block);
         while (stack.length) {
           let b = stack.pop();
           if (b.dataset_name && dataset_name === null) {
             dataset_name = b.dataset_name
-            logger("Set in loop: " + dataset_name)
+            __logger("Set in loop: " + dataset_name)
           }
-          logger("b.dataset_name: " + b.dataset_name)
+          __logger("b.dataset_name: " + b.dataset_name)
           if (b.dataset_name && b.dataset_name !== dataset_name) {
-            logger("Incorrect piece in stack");
+            __logger("Incorrect piece in stack");
             current_block.unplug();
             break;
           }
@@ -1166,16 +1225,17 @@ let simplify_filter_state = function(state, subject_dataset_name) {
   return({state:states, compatible: compatible})
 };
 
-let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {  
-  assert(() => Array.isArray(dataset_filter_state));
-  assert(()=> !simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`));
+let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
+  __time_function_start() 
+  __assert(() => Array.isArray(dataset_filter_state));
+  __assert(()=> !simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`));
   
   let selected_variables = [];  
   for(let i = 0; i < dataset_filter_state.length; ++i) {
     selected_variables.push(dataset_filter_state[i].variable)
   }  
   
-  logger("Creating UI for " + dataset.name);  
+  __logger("Creating UI for " + dataset.name);  
   
   let dataset_filter_container = document.createElement(SC.TAG.DATASET_FILTER);
   dataset_filter_container.className = "panel panel-primary";
@@ -1242,10 +1302,12 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
 
 
   create_variable_filter_controls(variable_filter_control_container, dataset, selected_variables,  dataset_filter_state);
+  __time_function_end() 
 }
 
 let destroy_dataset_filter = function(dataset_el) {
-  assert(()=> dataset_el.hasAttribute(SC.ATTRIBUTE.DATASET_NAME));
+  __time_function_start() 
+  __assert(()=> dataset_el.hasAttribute(SC.ATTRIBUTE.DATASET_NAME));
 
   let variable_filter_control_container = dataset_el.querySelector(SC.TAG.VARIABLE_FILTER_CONTAINER);
   destroy_variable_filter_controls(variable_filter_control_container);
@@ -1257,13 +1319,15 @@ let destroy_dataset_filter = function(dataset_el) {
   $(select).selectpicker("destroy");
 
   dataset_el.remove();
+  __time_function_end() 
 }
 
 let destroy_variable_filter_controls = function(variable_filter_control_container_el) {
-  assert(()=> variable_filter_control_container_el.tagName.toLowerCase() === SC.TAG.VARIABLE_FILTER_CONTAINER);
+  __time_function_start()  
+  __assert(()=> variable_filter_control_container_el.tagName.toLowerCase() === SC.TAG.VARIABLE_FILTER_CONTAINER);
 
   let select_pickers_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] [${SC.ATTRIBUTE.FILTER_VALUE}] select`);
-  logger("Destroying: " + select_pickers_to_destroy.length + " selectpickers");
+  __logger("Destroying: " + select_pickers_to_destroy.length + " selectpickers");
   for(let i = 0; i < select_pickers_to_destroy.length; ++i) {
     if(!$(select_pickers_to_destroy[i]).data('selectpicker')) {
       throw new Error("Attempt to destroy non selectpicker element");
@@ -1272,7 +1336,7 @@ let destroy_variable_filter_controls = function(variable_filter_control_containe
   }
 
   let ion_range_slider_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] [${SC.ATTRIBUTE.FILTER_VALUE}] input`);
-  logger("Destroying: " + ion_range_slider_to_destroy.length + " ion.range.sliders");
+  __logger("Destroying: " + ion_range_slider_to_destroy.length + " ion.range.sliders");
   for(let i = 0; i < ion_range_slider_to_destroy.length; ++i) {
     if(!$(ion_range_slider_to_destroy[i]).data('ionRangeSlider')) {
       throw new Error("Attempt to destroy non ionRangeSlider element");
@@ -1281,7 +1345,7 @@ let destroy_variable_filter_controls = function(variable_filter_control_containe
   }
 
   let date_range_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] [${SC.ATTRIBUTE.FILTER_VALUE}] input`);
-  logger("Destroying: " + date_range_to_destroy.length + " date pickers");
+  __logger("Destroying: " + date_range_to_destroy.length + " date pickers");
   for(let i = 0; i < date_range_to_destroy.length; ++i) {
     if(!$(date_range_to_destroy[i]).data('datepicker')) {
       throw new Error("Attempt to destroy non datepicker element");
@@ -1290,11 +1354,14 @@ let destroy_variable_filter_controls = function(variable_filter_control_containe
   }
 
   variable_filter_control_container_el.innerHTML='';
+  __time_function_end()
 }
 
 let create_variable_filter_controls = function(variable_filter_control_container_el, dataset, selected_variables, dataset_filter_state) {
-  assert(() => Array.isArray(dataset_filter_state));
-  assert(()=> variable_filter_control_container_el.tagName.toLowerCase() === SC.TAG.VARIABLE_FILTER_CONTAINER);
+
+  __time_function_start();
+  __assert(() => Array.isArray(dataset_filter_state));
+  __assert(()=> variable_filter_control_container_el.tagName.toLowerCase() === SC.TAG.VARIABLE_FILTER_CONTAINER);
 
   for(let i = 0; i < selected_variables.length; ++i) {      
     let current_variable = dataset.variables.find((obj)=> obj.name===selected_variables[i]);
@@ -1329,6 +1396,8 @@ let create_variable_filter_controls = function(variable_filter_control_container
     
     if (current_state) {
       na_checkbox.checked = current_state.include_NA;
+    } else {
+      na_checkbox.checked = true;
     }
 
     na_checkbox_addon.appendChild(na_checkbox);
@@ -1434,6 +1503,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       
       const MAGIC_NEGATIVE_MARGIN = -25;  // This is the distance between of the ion.range.slider top and the slider line
       const histogram_container = document.createElement("div");
+      histogram_container.className = "histogram";
       histogram_container.style = `display:flex; align-items:flex-end; margin-bottom: ${MAGIC_NEGATIVE_MARGIN}px;`
       const density = current_variable.density;
       // Find max density to scale heights
@@ -1443,11 +1513,10 @@ let create_variable_filter_controls = function(variable_filter_control_container
         const bar = document.createElement("div");
         bar.style.flex = "1";               // equal width
         bar.style.marginRight = "2px";      // spacing between bars
+        bar.style.backgroundColor = "DodgerBlue";        
         bar.style.height = (d / max_density) * 25 + "px"; // scale height
-        bar.style.backgroundColor = "#4285F4";        
         histogram_container.appendChild(bar);
       });
-
       container.appendChild(histogram_container);      
 
       let numerical_input = document.createElement("input");
@@ -1486,13 +1555,15 @@ let create_variable_filter_controls = function(variable_filter_control_container
       variable_filter_control_container_el.appendChild(container);
     }  
   };
+  __time_function_end();
 }
 
 // Creates the variable selector for each of the datasets
 // Container_el is the parent container in which the container for all the selectors will be created. We look for the container itself
 // Only called on from the simple dynamic init
 let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
-  assert(() => Array.isArray(dataset_filter_state));
+  __time_function_start();
+  __assert(() => Array.isArray(dataset_filter_state));
 
   let prev_dataset_filter_el = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`);
 
@@ -1500,17 +1571,21 @@ let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
     destroy_dataset_filter(prev_dataset_filter_el);
   }
   create_dataset_filter(simple_root_el, dataset, dataset_filter_state, is_subject_filter);
+  __time_function_end();
 };
 
 // Creates each of the selected variable filters
 // Container_el is the container itself where each of the container, it is the container itself
 let update_filter_controls = function(variable_filter_control_container_el, dataset, selected_variables, dataset_filter_state) {
+  __time_function_start();
   destroy_variable_filter_controls(variable_filter_control_container_el);
   create_variable_filter_controls(variable_filter_control_container_el, dataset, selected_variables, dataset_filter_state);
+  __time_function_end();
 };
 
 // Gets the state of an specific dataset
 let get_single_dataset_filter_state = function (dataset_container_el) {
+  __time_function_start();
   let filter_state = [];
   let dataset_name = dataset_container_el.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
   let variable_selector_els = dataset_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}`);
@@ -1602,7 +1677,7 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
     state: filter_state,
     dataset_name: dataset_name
   }
-
+  __time_function_end() 
   return(res);
 };
 
@@ -1616,7 +1691,7 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
 */
 // Gets the state of the whole simple filter
 let get_filter_state = function (simple_root_el, dataset_list_name) {
-
+  __time_function_start() 
   let subject_div = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=true]`);
   let other_div = simple_root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=false]`);
 
@@ -1648,7 +1723,8 @@ let get_filter_state = function (simple_root_el, dataset_list_name) {
     dataset_list_name: dataset_list_name
   };
 
-  logger(state);
+  __logger(state);
+  __time_function_end() 
   return (state);
 };
 
@@ -1673,10 +1749,11 @@ let dispatch_simple_filter_changed = function(event) {
 
 // Initialize all listeners, no listener should happen outside here
 let simple_static_init = function(simple_root_el) {
-  assert(()=>is_html_element(simple_root_el))    
+  __time_function_start();
+  __assert(()=>is_html_element(simple_root_el))    
   
   let send_code = function() {
-    logger("Simple sending code");
+    __logger("Simple sending code");
     let dataset_list_name = get_filter_property(simple_root_el, FC.PROPERTY.DATASET_LIST_NAME);
     let code = get_filter_state(simple_root_el, dataset_list_name);
     const new_event = new CustomEvent(FC.EVENT.UPDATED_FILTER, {
@@ -1716,13 +1793,13 @@ let simple_static_init = function(simple_root_el) {
   let res = {
     send_code: send_code
   }
-
+  __time_function_end();
   return(res);
 }
 
 // Handles the changes of datasets
 let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_name, filter_state) {
-
+  __time_function_start();
   // Subject filter
 
   let simple_filter_state = simplify_filter_state(filter_state, subject_dataset_name);
@@ -1730,7 +1807,7 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
   if(!simple_filter_state.compatible) {
     console.error("State not compatible")    
   } else {
-    logger("State compatible")
+    __logger("State compatible")
   }
 
   let subject_dataset = filter_data.dataset_list.find(obj=>obj.name === subject_dataset_name);
@@ -1751,6 +1828,7 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
       false
     )
   }
+  __time_function_end();
 }
 
 
@@ -1792,7 +1870,7 @@ let init_filter_handler = function (msg, root_el, initial_send_code) {
 }
 
 let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state) {
-  assert(()=>is_html_element(blockly_root_el))
+  __assert(()=>is_html_element(blockly_root_el))
 
   let inner_filter_el = blockly_root_el.querySelector(`[${BC.ATTRIBUTE.INNER_FILTER}]`);
   const filter = $(inner_filter_el).data("filter");
@@ -1855,7 +1933,7 @@ let get_selected_filter_mode = function(el) {
 }
 
 const init = function(root_id, filter_data, filter_state, subject_dataset_name, filter_json_input_id, filter_log_input_id) {
-  logger("Filter root id: " + root_id);
+  __logger("Filter root id: " + root_id);
 
   let root_el = document.getElementById(root_id);
   root_el[FC.PROPERTY.DATA] = filter_data;
@@ -1895,7 +1973,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
     let filter_divs = root_el.querySelectorAll(`[${FC.ATTRIBUTE.FILTER_MODE}]`);    
     let new_selection = select.value;
 
-    logger(`Changing to: ${new_selection}`);
+    __logger(`Changing to: ${new_selection}`);
 
     for(let i = 0; i < filter_divs.length; ++i) {
 
@@ -1929,16 +2007,16 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   change_filter_mode();
 
   let dev_current_filter_div;
-  if(DEV_MODE) {
+  if(__DEV_MODE) {
     dev_current_filter_div = document.createElement("div");
     root_el.appendChild(dev_current_filter_div);
   }
 
   root_el.addEventListener(FC.EVENT.UPDATED_FILTER, function(event){
-    logger("Sending to Shiny " + filter_json_input_id);
+    __logger("Sending to Shiny " + filter_json_input_id);
     set_filter_property(event.target, FC.PROPERTY.STATE, event.detail.filter);
     Shiny.setInputValue(filter_json_input_id, JSON.stringify(event.detail.filter), { priority: 'event' });
-    if(DEV_MODE) {
+    if(__DEV_MODE) {
       dev_current_filter_div.textContent = JSON.stringify(event.detail.filter, null, 2);
     }
   });
@@ -1971,6 +2049,7 @@ export {init}
 // TODO: Move export button outside from blockly
 // TODO: Add saving states with name support
 // TODO: Replaces all the attribute dance with custom html tags
+// TODO: Add transition to filter add and removal
 
 /*FIXME: loiuhb
 
