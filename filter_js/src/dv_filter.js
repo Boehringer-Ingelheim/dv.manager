@@ -1455,6 +1455,8 @@ let create_variable_filter_controls = function(variable_filter_control_container
       categorical_select.setAttribute('data-width', '100%');
       categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
+      __assert(()=>current_variable.values_count.every((v, i, a) => i === 0 || a[i-1].count >= v.count))
+
       for(let i = 0; i < current_variable.values_count.length; ++i) {
         let option = document.createElement('option');
         option.value = current_variable.values_count[i].value;
@@ -2072,11 +2074,8 @@ export {init}
   - Inform of remaining values for category in each of the categorical selectors  
   */ 
 // TODO: Add tags with the number of filters in each dataset so information is available when collapsed
-// TODO: Order categorical variables from most common to less common
-// TODO: Add histograms and graphical helps
 // TODO: Move export button outside from blockly
 // TODO: Add saving states with name support
-// TODO: Replaces all the attribute dance with custom html tags
 // TODO: Add transition to filter add and removal
 
 /*FIXME: loiuhb

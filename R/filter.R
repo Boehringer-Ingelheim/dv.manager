@@ -126,7 +126,7 @@ get_single_filter_data <- function(dataset) {
       l[["kind"]] <- yyjsonr::as_scalar("categorical")
       l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
-      count <- table(na_clean_var)
+      count <- sort(table(na_clean_var), decreasing = TRUE)
       values <- names(count)
       count <- unname(count)
       l[["values_count"]] <- vector(mode = "list", length = length(l[["values"]]))
