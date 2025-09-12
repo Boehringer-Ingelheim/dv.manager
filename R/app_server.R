@@ -140,7 +140,8 @@ app_server_ <- function(input, output, session, opts) {
     dataset_filter <- new_filter_server(ID$FILTER, shiny::reactive({
       input$selector
     }),
-    subject_filter_dataset_name = filter_data
+    subject_filter_dataset_name = filter_data,
+    filtered_dataset
     )
 
     filtered_dataset <- shinymeta::metaReactive({
@@ -203,28 +204,6 @@ app_server_ <- function(input, output, session, opts) {
       fd
     })
 
-    shiny::observeEvent(filtered_dataset(), {
-
-      # FIXME: This code does not belong here, this is not the reponsibility of the app server
-      # This must be moved inside filter, receives a reactive with the datasets after filtering
-      # filter manages the observe
-      fd <- filtered_dataset()      
-      row_count <- vector("list", length = length(fd))
-      
-      for(idx in seq_along(fd)) {
-        row_count[[idx]] <- yyjsonr::as_scalar(nrow(fd[[idx]]))
-      }
-      names(row_count) <- names(fd)
-
-      msg <- list(
-        row_count = row_count
-      )
-      
-      session[["sendCustomMessage"]](
-        "update_filter_result",
-        list(json = yyjsonr::write_json_str(msg))
-      )
-    })
   } else {
     global_filtered_values <- dv.filter::data_filter_server(
       "global_filter",

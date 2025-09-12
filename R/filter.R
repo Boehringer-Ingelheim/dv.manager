@@ -503,7 +503,7 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
   combined_ui
 }
 
-new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dataset_name, strict = FALSE) {
+new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dataset_name, after_filter_dataset_list, strict = FALSE) {
   mod <- function(input, output, session) {
     shiny::setBookmarkExclude("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES")
     ns <- session[["ns"]]
@@ -528,6 +528,28 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
           json_input_id = ns(ID$FILTER_JSON_INPUT),
           log_input_id = ns(ID$FILTER_LOG_INPUT)
         )
+      )
+    })
+
+    shiny::observeEvent(after_filter_dataset_list(), {
+      fd <- after_filter_dataset_list()
+      fd_names <- names(fd)
+      row_count <- vector("list", length = length(fd))
+      
+      for(idx in seq_along(fd)) {        
+        row_count[[idx]] <- list(
+          count = yyjsonr::as_scalar(nrow(fd[[idx]])),
+          name = yyjsonr::as_scalar(fd_names[[idx]])
+        )
+      }
+
+      msg <- list(
+        row_count = row_count
+      )
+      
+      session[["sendCustomMessage"]](
+        "update_filter_result",
+        list(json = yyjsonr::write_json_str(msg))
       )
     })
 

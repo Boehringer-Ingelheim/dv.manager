@@ -27,7 +27,7 @@ import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
 import './toolbox-search/index.js'
 
-const __DEV_MODE = true;
+const __DEV_MODE = false;
 const __LOGGER = false;
 const __TIMER = true;
 
@@ -1134,7 +1134,8 @@ const SC = {
     DATASET_FILTER : "dv-filter-dataset-filter",
     VARIABLE_FILTER_CONTAINER : "dv-filter-variable-filter-container",
     VARIABLE_FILTER: "dv-filter-variable-filter",
-    FILTER_COUNT_TAG: "dv-filter-count-tag"
+    FILTER_COUNT_TAG: "dv-filter-count-tag",
+    ROW_COUNT_TAG: "dv-filter-row-count-tag"
   },
   EVENTS: {
     CHANGED_FILTER: 'dv_filter:changed'
@@ -1273,6 +1274,10 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
 
   let filter_count_tag = document.createElement(SC.TAG.FILTER_COUNT_TAG);
   title_tag_container.appendChild(filter_count_tag);
+
+  let row_count_tag = document.createElement(SC.TAG.ROW_COUNT_TAG);
+  row_count_tag.className = "label label-default";
+  title_tag_container.appendChild(row_count_tag);
 
   panel_heading.appendChild(title_tag_container);
 
@@ -1911,8 +1916,22 @@ let init_filter_handler = function (msg, root_el, initial_send_code) {
   initial_send_code();
 }
 
-let update_filter_result_handler = function(msg){
-  console.log(JSON.parse(msg.json))
+let update_filter_result_handler = function(msg, root_el){
+  let parsed_msg = JSON.parse(msg.json)
+  console.log(parsed_msg);
+
+  let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
+  let current_dataset_list = get_filter_property(root_el, FC.PROPERTY.DATA).dataset_lists.find(obj=>obj.name === dataset_list_name);
+
+  
+  let row_count = parsed_msg.row_count; 
+  for(let idx = 0; idx < row_count.length; ++idx) {
+    let name = row_count[idx].name;
+    let current_nrow = row_count[idx].count;
+    let total_nrow = current_dataset_list.dataset_list.find(obj=>obj.name === name).nrow;
+
+    root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${name}] ${SC.TAG.ROW_COUNT_TAG}`).textContent = `${current_nrow} / ${total_nrow}`;
+  }
 }
 
 let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state) {
@@ -2082,20 +2101,19 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   let baked_init_filter_handler = function(msg) {
     init_filter_handler(msg, root_el, initial_send_code);
   };
+
+  let baked_update_filter_result_handler= function(msg) {
+    update_filter_result_handler(msg, root_el);
+  };
   
   Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
-  Shiny.addCustomMessageHandler("update_filter_result", update_filter_result_handler);
+  Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
 }
 
 //#endregion
 
 export {init}
 
-/* TODO: Return an structure after filtering with the relevant info after filtering to:
-  - Inform of remaining subjects
-  - Inform of remaining rows per dataset
-  - Inform of remaining values for category in each of the categorical selectors  
-  */ 
 // TODO: Move export button outside from blockly
 // TODO: Add saving states with name support
 // TODO: Add transition to filter add and removal
