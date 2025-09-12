@@ -142,7 +142,7 @@ get_single_filter_data <- function(dataset) {
       l[["min"]] <- yyjsonr::as_scalar(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
       l[["max"]] <- yyjsonr::as_scalar(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
 
-      hist_info <- hist(na_clean_var)
+      hist_info <- hist(na_clean_var, plot = FALSE)
       l[["density"]] <- hist_info[["density"]]
 
     } else if (inherits(var, "POSIXct") || inherits(var, "Date")) {
