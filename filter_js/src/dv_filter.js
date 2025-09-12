@@ -1133,7 +1133,8 @@ const SC = {
   TAG: {
     DATASET_FILTER : "dv-filter-dataset-filter",
     VARIABLE_FILTER_CONTAINER : "dv-filter-variable-filter-container",
-    VARIABLE_FILTER: "dv-filter-variable-filter"
+    VARIABLE_FILTER: "dv-filter-variable-filter",
+    FILTER_COUNT_TAG: "dv-filter-count-tag"
   },
   EVENTS: {
     CHANGED_FILTER: 'dv_filter:changed'
@@ -1253,20 +1254,27 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   dataset_filter_container.className = "panel panel-primary";
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.DATASET_NAME, dataset.name);
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
-  
-  let panel_heading = document.createElement("div");
-  panel_heading.className = "panel-heading";
 
-  let panel_title = document.createElement("h6");  
-  panel_title.className = "panel-title";
+  let panel_heading = document.createElement("div");
+  panel_heading.className = "panel-heading";  
+  
+  let title_tag_container = document.createElement("h6");  
+  title_tag_container.className = "panel-title";
+  title_tag_container.style.display = "flex";
+  title_tag_container.style.justifyContent = "flex-start";
+  title_tag_container.style.setProperty("column-gap", "5px");
 
   let panel_collapse_link = document.createElement("a");
   panel_collapse_link.textContent = dataset.name;
-  panel_collapse_link.setAttribute("data-toggle", "collapse-disabled"); //TODO: Activate collapse if required
+  panel_collapse_link.setAttribute("data-toggle", "collapse"); //TODO: Activate collapse if required
   panel_collapse_link.setAttribute("data-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .panel-body`);
 
-  panel_title.appendChild(panel_collapse_link);
-  panel_heading.appendChild(panel_title);
+  title_tag_container.appendChild(panel_collapse_link);  
+
+  let filter_count_tag = document.createElement(SC.TAG.FILTER_COUNT_TAG);
+  title_tag_container.appendChild(filter_count_tag);
+
+  panel_heading.appendChild(title_tag_container);
 
   if (is_subject_filter) {
     panel_heading.style.display = "flex";
@@ -1384,6 +1392,16 @@ let create_variable_filter_controls = function(variable_filter_control_container
   __assert(() => Array.isArray(dataset_filter_state));
   __assert(()=> variable_filter_control_container_el.tagName.toLowerCase() === SC.TAG.VARIABLE_FILTER_CONTAINER);
 
+  let count_tag = variable_filter_control_container_el.closest(SC.TAG.DATASET_FILTER).querySelector(SC.TAG.FILTER_COUNT_TAG);
+
+  if(selected_variables.length > 0) {
+    count_tag.textContent = selected_variables.length;
+    count_tag.className = "label label-default";
+  } else {
+    count_tag.textContent = "";
+    count_tag.className = "dv-hide";
+  }
+
   for(let i = 0; i < selected_variables.length; ++i) {      
     let current_variable = dataset.variables.find((obj)=> obj.name===selected_variables[i]);
     let current_state = dataset_filter_state.find((obj)=> obj.variable===current_variable.name);
@@ -1410,7 +1428,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
     na_group.appendChild(na_label);
 
     let na_checkbox_addon = document.createElement("span");
-    na_checkbox_addon.className = `na-checkbox ${current_variable.NA_count > 0 ? "" : "hide"}`;
+    na_checkbox_addon.className = `na-checkbox ${current_variable.NA_count > 0 ? "" : "dv-hide"}`;
     
     let na_checkbox = document.createElement("input");
     na_checkbox.type = "checkbox";
@@ -2073,7 +2091,6 @@ export {init}
   - Inform of remaining rows per dataset
   - Inform of remaining values for category in each of the categorical selectors  
   */ 
-// TODO: Add tags with the number of filters in each dataset so information is available when collapsed
 // TODO: Move export button outside from blockly
 // TODO: Add saving states with name support
 // TODO: Add transition to filter add and removal

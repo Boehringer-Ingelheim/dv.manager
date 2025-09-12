@@ -269,6 +269,10 @@ dv-filter-wrapper {
   dv-filter-root {
     display: block;
 
+    .dv-hide{
+      display: none;
+    }
+
     dv-filter-dataset-filter {
       display: block;
 
@@ -295,10 +299,6 @@ dv-filter-wrapper {
             margin-bottom: 2px;    
             flex-wrap: wrap;      
             row-gap: 2px;  
-          }
-
-          .hide{
-            display: none;
           }
 
           .na_warning {
