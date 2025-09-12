@@ -2114,6 +2114,10 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 
 export {init}
 
+// TODO: Move add filter button to top right heading to save vertical space
+// TODO: Add colapse all, open all, collapse empty
+// TODO: Add clear all filters per dataset and global
+// TODO: Check dataset_list switching
 // TODO: Move export button outside from blockly
 // TODO: Add saving states with name support
 // TODO: Add transition to filter add and removal
