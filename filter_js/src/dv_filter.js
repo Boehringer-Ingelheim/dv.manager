@@ -1911,6 +1911,10 @@ let init_filter_handler = function (msg, root_el, initial_send_code) {
   initial_send_code();
 }
 
+let update_filter_result_handler = function(msg){
+  console.log(JSON.parse(msg.json))
+}
+
 let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state) {
   __assert(()=>is_html_element(blockly_root_el))
 
@@ -2080,6 +2084,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   };
   
   Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
+  Shiny.addCustomMessageHandler("update_filter_result", update_filter_result_handler);
 }
 
 //#endregion
