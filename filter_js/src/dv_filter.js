@@ -1401,7 +1401,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
   if(selected_variables.length > 0) {
     count_tag.textContent = selected_variables.length;
-    count_tag.className = "label label-default";
+    count_tag.className = "badge";
   } else {
     count_tag.textContent = "";
     count_tag.className = "dv-hide";
