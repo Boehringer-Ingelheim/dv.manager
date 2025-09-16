@@ -106,7 +106,7 @@ app_ui <- function(request_id) {
     )
 
   sidebar <- shiny::div(
-    class = "sidebar-container",
+    class = "dv-sidebar-container",
     shiny::tags$input(
       type = "checkbox",
       class = "checkbox",
@@ -129,6 +129,7 @@ app_ui <- function(request_id) {
   )
 
   shiny::fluidPage(
+    class = "dv_main",
     insert_header_add_resources(app_title = get_config("title")),
     theme = get_app_theme(),
     class = "display-grid",

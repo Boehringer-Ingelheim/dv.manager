@@ -88,7 +88,7 @@ ns_css <- function(module = NULL,
 }
 
 # Helper function for theme management
-get_app_theme <- function(custom = FALSE, version = 3) {
+get_app_theme <- function(custom = FALSE, version = 5) {
   if (!isTRUE(getOption("dv_manager_ignore_css"))) {
     if (isFALSE(custom)) {
       theme <- bslib::bs_theme(version = version) %>%
