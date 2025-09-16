@@ -1797,7 +1797,14 @@ let dispatch_simple_filter_changed = function(event) {
 // Initialize all listeners, no listener should happen outside here
 let simple_static_init = function(simple_root_el) {
   __time_function_start();
-  __assert(()=>is_html_element(simple_root_el))    
+  __assert(()=>is_html_element(simple_root_el))
+
+  let panel_collapse_link = document.createElement("a");
+  panel_collapse_link.textContent = "Show/Hide all";
+  panel_collapse_link.setAttribute("data-toggle", "collapse");
+  panel_collapse_link.setAttribute("data-target", `.panel-body`);
+
+  simple_root_el.appendChild(panel_collapse_link);
   
   let send_code = function() {
     __logger("Simple sending code");
@@ -2114,6 +2121,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 
 export {init}
 
+// TODO: Hide filters when datasets are not relevant for the selected tab
 // TODO: Move add filter button to top right heading to save vertical space
 // TODO: Add colapse all, open all, collapse empty
 // TODO: Add clear all filters per dataset and global
