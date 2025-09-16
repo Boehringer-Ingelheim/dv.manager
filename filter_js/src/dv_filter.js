@@ -1498,7 +1498,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       container.appendChild(categorical_select);
       variable_filter_control_container_el.appendChild(container);
       $(categorical_select).selectpicker();
-            
+                  
     } else if (current_variable.kind === SC.VARIABLE.DATE) {
 
       let from;
@@ -1912,10 +1912,9 @@ let init_filter_handler = function (msg, root_el, initial_send_code) {
     subject_filter_dataset_name,
     filter_state
   );
-
-  let blockly_el = get_blockly_root_el(root_el);  
+  
   blockly_dynamic_init(
-    blockly_el,    
+    get_blockly_root_el(root_el),   
     dataset_list_name,    
     filter_data, filter_state
   );
@@ -2075,6 +2074,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 
   select.value = FC.MODE.SIMPLE;
 
+  // TODO: Consider calling removing repeated code at the end of the function. Triggering this event is avoids repeating code.
   select.addEventListener('change', change_filter_mode);
   change_filter_mode();
 
@@ -2129,6 +2129,16 @@ export {init}
 // TODO: Move export button outside from blockly
 // TODO: Add saving states with name support
 // TODO: Add transition to filter add and removal
+
+/* TODO: Consider pairing creation and destruction
+
+let destroy_picker = function() {
+        categorical_select.destroy()
+      }
+
+      deferred_destroyers.push(destroy_picker);
+
+*/
 
 /*FIXME: loiuhb
 
