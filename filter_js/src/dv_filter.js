@@ -140,6 +140,10 @@ let min_str_date = function(date1, date2) {
   return(res);
 }
 
+let is_numeric_finite = function (value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
 
 //#region BLOCKLY FILTER
 
@@ -1547,8 +1551,11 @@ let create_variable_filter_controls = function(variable_filter_control_container
         endDate: current_variable.max
       });      
     } else if (current_variable.kind === SC.VARIABLE.NUMERICAL) {
+
+      let numeric_finite_max_and_min = is_numeric_finite(current_variable.min) && is_numeric_finite(current_variable.max);
       
-      const MAGIC_NEGATIVE_MARGIN = -25;  // This is the distance between of the ion.range.slider top and the slider line
+      if(numeric_finite_max_and_min) {
+        const MAGIC_NEGATIVE_MARGIN = -25;  // This is the distance between of the ion.range.slider top and the slider line
       const histogram_container = document.createElement("div");
       histogram_container.className = "histogram";
       histogram_container.style = `display:flex; align-items:flex-end; margin-bottom: ${MAGIC_NEGATIVE_MARGIN}px;`
@@ -1592,9 +1599,24 @@ let create_variable_filter_controls = function(variable_filter_control_container
           grid: "true",
           onFinish: function () {$(numerical_input).trigger("finished.ion.range.slider");}
       });
+      } else {
+        let numerical_input = document.createElement("input");
+        numerical_input.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');      
+        container.appendChild(numerical_input);  
+        variable_filter_control_container_el.appendChild(container);
+  
+        $(numerical_input).ionRangeSlider({
+            min: 0,
+            max: 0,
+            type: "double",
+            from: 0,
+            to: 0,
+            skin: "shiny",
+            grid: "true",            
+            disable: true
+        });
 
-      
-
+      }
     } else {
       let fallback_content = document.createElement("p");
       fallback_content.textContent = `${current_variable.name} - ${current_variable.kind}`;
