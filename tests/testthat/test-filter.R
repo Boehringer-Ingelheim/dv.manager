@@ -1042,13 +1042,14 @@ local({
     expect_identical(
       r[[1]],
       list(
-        name = jsonlite::unbox("var"),
-        label = jsonlite::unbox("var_label"),
-        kind = jsonlite::unbox("categorical"),
-        NA_count = jsonlite::unbox(1L),
+        name = yyjsonr::as_scalar("var"),
+        label = yyjsonr::as_scalar("var_label"),
+        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
+        kind = yyjsonr::as_scalar("categorical"),
+        NA_count = yyjsonr::as_scalar(1L),
         values_count = list(
-          list(value = jsonlite::unbox("A"), count = jsonlite::unbox(2L)),
-          list(value = jsonlite::unbox("B"), count = jsonlite::unbox(1L))
+          list(value = yyjsonr::as_scalar("A"), count = yyjsonr::as_scalar(2L)),
+          list(value = yyjsonr::as_scalar("B"), count = yyjsonr::as_scalar(1L))
         )
       )
     )
@@ -1064,13 +1065,14 @@ local({
     expect_identical(
       r[[1]],
       list(
-        name = jsonlite::unbox("var"),
-        label = jsonlite::unbox("var_label"),
-        kind = jsonlite::unbox("categorical"),
-        NA_count = jsonlite::unbox(1L),
+        name = yyjsonr::as_scalar("var"),
+        label = yyjsonr::as_scalar("var_label"),
+        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
+        kind = yyjsonr::as_scalar("categorical"),
+        NA_count = yyjsonr::as_scalar(1L),
         values_count = list(
-          list(value = jsonlite::unbox("A"), count = jsonlite::unbox(2L)),
-          list(value = jsonlite::unbox("B"), count = jsonlite::unbox(1L))
+          list(value = yyjsonr::as_scalar("A"), count = yyjsonr::as_scalar(2L)),
+          list(value = yyjsonr::as_scalar("B"), count = yyjsonr::as_scalar(1L))
         )
       )
     )
@@ -1086,12 +1088,36 @@ local({
     expect_identical(
       r[[1]],
       list(
-        name = jsonlite::unbox("var"),
-        label = jsonlite::unbox("var_label"),
-        kind = jsonlite::unbox("numerical"),
-        NA_count = jsonlite::unbox(1L),
-        min = jsonlite::unbox(1),
-        max = jsonlite::unbox(2)
+        name = yyjsonr::as_scalar("var"),
+        label = yyjsonr::as_scalar("var_label"),
+        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
+        kind = yyjsonr::as_scalar("numerical"),
+        NA_count = yyjsonr::as_scalar(1L),
+        min = yyjsonr::as_scalar(1),
+        max = yyjsonr::as_scalar(2),
+        density = hist(d[["var"]], plot= FALSE)[["density"]]
+      )
+    )
+  })
+
+  test_that("get_single_filter_data supports all NA columns", {
+    d <- data.frame(
+      var = c(NA_real_, NA_real_)
+    )
+    attr(d[["var"]], "label") <- "var_label"
+    r <- get_single_filter_data(d)
+    expect_length(r, 1)
+    expect_identical(
+      r[[1]],
+      list(
+        name = yyjsonr::as_scalar("var"),
+        label = yyjsonr::as_scalar("var_label"),
+        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
+        kind = yyjsonr::as_scalar("numerical"),
+        NA_count = yyjsonr::as_scalar(2L),
+        min = yyjsonr::as_scalar("Inf"),
+        max = yyjsonr::as_scalar("-Inf"),
+        density = numeric(0)
       )
     )
   })
@@ -1106,12 +1132,13 @@ local({
     expect_identical(
       r[[1]],
       list(
-        name = jsonlite::unbox("var"),
-        label = jsonlite::unbox("var_label"),
-        kind = jsonlite::unbox("date"),
-        NA_count = jsonlite::unbox(1L),
-        min = jsonlite::unbox(as.Date(c("2024-01-01"))),
-        max = jsonlite::unbox(as.Date(c("2024-01-02")))
+        name = yyjsonr::as_scalar("var"),
+        label = yyjsonr::as_scalar("var_label"),
+        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
+        kind = yyjsonr::as_scalar("date"),
+        NA_count = yyjsonr::as_scalar(1L),
+        min = yyjsonr::as_scalar(as.Date(c("2024-01-01"))),
+        max = yyjsonr::as_scalar(as.Date(c("2024-01-02")))
       )
     )
   })
@@ -1126,12 +1153,13 @@ local({
     expect_identical(
       r[[1]],
       list(
-        name = jsonlite::unbox("var"),
-        label = jsonlite::unbox("var_label"),
-        kind = jsonlite::unbox("date"),
-        NA_count = jsonlite::unbox(1L),
-        min = jsonlite::unbox(as.Date(c("2024-01-01"))),
-        max = jsonlite::unbox(as.Date(c("2024-01-02")))
+        name = yyjsonr::as_scalar("var"),
+        label = yyjsonr::as_scalar("var_label"),
+        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
+        kind = yyjsonr::as_scalar("date"),
+        NA_count = yyjsonr::as_scalar(1L),
+        min = yyjsonr::as_scalar(as.Date(c("2024-01-01"))),
+        max = yyjsonr::as_scalar(as.Date(c("2024-01-02")))
       )
     )
   })
@@ -1174,9 +1202,9 @@ local({
     expect_length(r[["dataset_lists"]], 2)
     expect_length(r[["dataset_lists"]][[1]][["dataset_list"]], 2)
 
-    expect_identical(r[["dataset_lists"]][[1]][["name"]], jsonlite::unbox("dl1"))
-    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["name"]], jsonlite::unbox("ds1"))
-    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["variables"]][[1]][["name"]], jsonlite::unbox("var1"))
+    expect_identical(r[["dataset_lists"]][[1]][["name"]], yyjsonr::as_scalar("dl1"))
+    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["name"]], yyjsonr::as_scalar("ds1"))
+    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["variables"]][[1]][["name"]], yyjsonr::as_scalar("var1"))
   })
 })
 
