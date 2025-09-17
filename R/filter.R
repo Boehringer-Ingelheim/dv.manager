@@ -513,7 +513,7 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     shiny::setBookmarkExclude("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES")
     ns <- session[["ns"]]
 
-    message(paste("Listening to:", ns(ID$FILTER_JSON_INPUT)))
+    log_inform(paste("Listening to:", ns(ID$FILTER_JSON_INPUT)))
 
     shiny::observeEvent(selected_dataset_list_name(), {
       session[["sendCustomMessage"]](
@@ -559,7 +559,7 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     })
 
     shiny::observeEvent(input[[ID$FILTER_JSON_INPUT]], {
-      message("RECEIVED FILTER")
+      log_inform("RECEIVED FILTER")
     })
 
     shiny::observeEvent(input[[ID$FILTER_LOG_INPUT]], {
@@ -569,20 +569,20 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     })
 
     res <- shiny::reactive({
-      message("PROCESSING FILTER")
+      log_inform("PROCESSING FILTER")
       json_r <- input[[ID$FILTER_JSON_INPUT]]
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
         val_res <- from_filter_validate(json_r)
         if (strict) assert(val_res, "failed to validate message from filter")
         parsed_json <- yyjsonr::read_json_str(json_r, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
-        message("PROCESSING FILTER PARSED")
+        log_inform("PROCESSING FILTER PARSED")
         list(
           parsed = parsed_json %||% NA_character_,
           raw = json_r
         )
       } else {
-        message("PROCESSING FILTER NA")
+        log_inform("PROCESSING FILTER NA")
         list(
           parsed = NA_character_,
           raw = NA_character_
