@@ -32,14 +32,9 @@ include_js <- function(pattern = "*") {
   return(htmltools::singleton(lapply(js_files, shiny::includeScript)))
 }
 
-create_options_modal <- function(session, input, ns) {
+create_info_modal <- function(session, input, ns) {
   shiny::modalDialog(
-    title = "Display options",
-    shiny::checkboxInput(
-      inputId = ns("change_theme"),
-      label = "Show high-contrast theme",
-      value = input$change_theme
-    ),
+    title = "dv.manager info",    
     shiny::tags$a(shiny::icon("question-circle", class = "fa-lg"),
       "Package documentation",
       href = "", # nolint

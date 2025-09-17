@@ -1256,49 +1256,49 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   __logger("Creating UI for " + dataset.name);  
   
   let dataset_filter_container = document.createElement(SC.TAG.DATASET_FILTER);
-  dataset_filter_container.className = "panel panel-primary";
+  dataset_filter_container.className = "card border-primary mb-2";
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.DATASET_NAME, dataset.name);
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
 
-  let panel_heading = document.createElement("div");
-  panel_heading.className = "panel-heading";  
+  let card_heading = document.createElement("div");
+  card_heading.className = "card-header bg-primary text-white";  
   
   let title_tag_container = document.createElement("h6");  
-  title_tag_container.className = "panel-title";
+  title_tag_container.className = "card-title mb-0";
   title_tag_container.style.display = "flex";
   title_tag_container.style.justifyContent = "flex-start";
   title_tag_container.style.setProperty("column-gap", "5px");
 
-  let panel_collapse_link = document.createElement("a");
-  panel_collapse_link.textContent = dataset.name;
-  panel_collapse_link.setAttribute("data-toggle", "collapse"); //TODO: Activate collapse if required
-  panel_collapse_link.setAttribute("data-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .panel-body`);
+  let card_collapse_link = document.createElement("a");
+  card_collapse_link.textContent = dataset.name;
+  card_collapse_link.setAttribute("data-toggle", "collapse"); //TODO: Activate collapse if required
+  card_collapse_link.setAttribute("data-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .card-body`);
 
-  title_tag_container.appendChild(panel_collapse_link);  
+  title_tag_container.appendChild(card_collapse_link);  
 
   let filter_count_tag = document.createElement(SC.TAG.FILTER_COUNT_TAG);
   title_tag_container.appendChild(filter_count_tag);
 
   let row_count_tag = document.createElement(SC.TAG.ROW_COUNT_TAG);
-  row_count_tag.className = "label label-default";
+  row_count_tag.className = "badge bg-secondary text-light";
   title_tag_container.appendChild(row_count_tag);
 
-  panel_heading.appendChild(title_tag_container);
+  card_heading.appendChild(title_tag_container);
 
   if (is_subject_filter) {
-    panel_heading.style.display = "flex";
-    panel_heading.style.justifyContent = "space-between";
-    panel_heading.style.alignItems = "center";
+    card_heading.style.display = "flex";
+    card_heading.style.justifyContent = "space-between";
+    card_heading.style.alignItems = "center";
     let icon = document.createElement("span");
     icon.className = "glyphicon glyphicon-user";  
-    panel_heading.appendChild(document.createTextNode(" "));
-    panel_heading.appendChild(icon);
+    card_heading.appendChild(document.createTextNode(" "));
+    card_heading.appendChild(icon);
   }
   
-  dataset_filter_container.appendChild(panel_heading);
+  dataset_filter_container.appendChild(card_heading);
 
-  let panel_body = document.createElement("div");
-  panel_body.className = 'panel-body collapse in';
+  let card_body = document.createElement("div");
+  card_body.className = 'card-body collapse in';
 
   let select = document.createElement('select');
   select.className = 'selectpicker';
@@ -1308,6 +1308,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   select.setAttribute('data-width', '100%');
   select.setAttribute('data-style', 'btn');
   select.setAttribute('data-selected-text-format', 'static');
+  select.setAttribute('data-container', 'body');
   select.setAttribute(SC.ATTRIBUTE.VARIABLE_SELECTOR, '');
 
   for(let i = 0; i < dataset.variables.length; ++i) {
@@ -1328,12 +1329,12 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
     select.appendChild(option);
   }
  
-  panel_body.appendChild(select);
+  card_body.appendChild(select);
 
   let variable_filter_control_container = document.createElement(SC.TAG.VARIABLE_FILTER_CONTAINER);
-  panel_body.appendChild(variable_filter_control_container);
+  card_body.appendChild(variable_filter_control_container);
 
-  dataset_filter_container.appendChild(panel_body);
+  dataset_filter_container.appendChild(card_body);
   simple_root_el.appendChild(dataset_filter_container);
 
   $(select).selectpicker();
@@ -1405,7 +1406,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
   if(selected_variables.length > 0) {
     count_tag.textContent = selected_variables.length;
-    count_tag.className = "badge";
+    count_tag.className = "badge bg-light text-dark";
   } else {
     count_tag.textContent = "";
     count_tag.className = "dv-hide";
@@ -1424,7 +1425,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
     header.className = "variable-header";
     
     let name_label = document.createElement("span");
-    name_label.className = "label label-info"; // styled like a pill
+    name_label.className = "badge text-bg-primary"; // styled like a pill
     name_label.textContent = current_variable.label !== "" ? current_variable.label : current_variable.name;
     
     let na_group = document.createElement("div");
@@ -1479,6 +1480,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       categorical_select.setAttribute('multiple', '');        
       categorical_select.setAttribute('data-live-search', 'true');
       categorical_select.setAttribute('data-actions-box', 'true');
+      categorical_select.setAttribute('data-container', 'body');
       categorical_select.setAttribute('data-width', '100%');
       categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
@@ -1821,12 +1823,12 @@ let simple_static_init = function(simple_root_el) {
   __time_function_start();
   __assert(()=>is_html_element(simple_root_el))
 
-  let panel_collapse_link = document.createElement("a");
-  panel_collapse_link.textContent = "Show/Hide all";
-  panel_collapse_link.setAttribute("data-toggle", "collapse");
-  panel_collapse_link.setAttribute("data-target", `.panel-body`);
+  let card_collapse_link = document.createElement("a");
+  card_collapse_link.textContent = "Show/Hide all";
+  card_collapse_link.setAttribute("data-toggle", "collapse");
+  card_collapse_link.setAttribute("data-target", `.panel-body`);
 
-  simple_root_el.appendChild(panel_collapse_link);
+  simple_root_el.appendChild(card_collapse_link);
   
   let send_code = function() {
     __logger("Simple sending code");

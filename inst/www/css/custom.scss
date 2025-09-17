@@ -1,14 +1,26 @@
-// variable definitions
-$primary: $brand-primary;
-$secondary: #7292fc;
-;
+// // variable definitions
+// $primary: #002f62;
+// $secondary: #270815;
+// ;
+// $theme-colors: (
+//   "primary":    $primary,
+//   "secondary":  $secondary,
+//   "success":    $success,
+//   "info":       $info,
+//   "warning":    $warning,
+//   "danger":     $danger,
+//   "light":      $light,
+//   "dark":       $dark
+// );
+
+
 $color-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 $color-text: #ffffff;
-// $border-radius: $border-radius-base;
+// // $border-radius: $border-radius-base;
 $sidebar-width-open: 300px;
 $sidebar-width-collapsed: 60px;
 $color-scrollbar: #9b9b9b7f;
-// end variable definitions
+// // end variable definitions
 
 
 .fas.fa-filter {
@@ -236,8 +248,8 @@ input[type="checkbox"]#click {
     left: 0;
 
     .line-1 {
-      transform: rotate(-45deg) translate(-4px, 5px);
-      width: 2.5rem;
+      transform: rotate(-45deg) translate(-5px, 9px);
+      width: 1.8rem;
     }
 
     .line-2 {
@@ -245,8 +257,8 @@ input[type="checkbox"]#click {
     }
 
     .line-3 {
-      transform: rotate(45deg) translate(-4px, -5px);
-      width: 2.5rem;
+      transform: rotate(45deg) translate(-5px, -9px);
+      width: 1.8rem;
     }
   }
 }
@@ -356,24 +368,27 @@ dv-filter-wrapper {
       }
     }
 
-    .dropdown-menu.open {
-      min-width: min-content;
-      position: fixed;
-      left: $sidebar-width-open;
-      top: 25vh;
-      max-height: 70vh !important;
-      min-height: 0px !important;
-      height: 70vh !important;
-      overflow-y: hidden;
+  //   .dropdown-menu{
+  //     &.open,
+  //     &.show {
+  //     min-width: min-content;
+  //     position: fixed;
+  //     left: $sidebar-width-open;
+  //     top: 25vh;
+  //     max-height: 70vh !important;
+  //     min-height: 0px !important;
+  //     height: 70vh !important;
+  //     overflow-y: hidden;
 
-      .inner.open {
-        max-height: 70vh !important;
-        min-height: 0px !important;
-        height: calc(100% - 75px); // Hardcoded heigth of top search buttons
-        overflow-y: auto;
-      }
-    }
-  }
+  //     .inner.open {
+  //       max-height: 70vh !important;
+  //       min-height: 0px !important;
+  //       height: calc(100% - 75px); // Hardcoded heigth of top search buttons
+  //       overflow-y: auto;
+  //     }
+  //   }
+  // }
+}
 }
 
 #shiny_filter_panel {
@@ -388,23 +403,26 @@ dv-filter-wrapper {
   }
 
   //TODO: START: TO BE REMOVED ONCE THE ORIGINAL SIMPLE DV.FILTER IS REMOVED
-  .dropdown-menu.open {
-    min-width: min-content;
-    position: fixed;
-    left: $sidebar-width-open;
-    top: 25vh;
-    max-height: 70vh !important;
-    min-height: 0px !important;
-    height: 70vh !important;
-    overflow-y: hidden;
+//   .dropdown-menu{
+//   &.open,
+//   &.show {
+//     min-width: min-content;
+//     position: fixed;
+//     left: $sidebar-width-open;
+//     top: 25vh;
+//     max-height: 70vh !important;
+//     min-height: 0px !important;
+//     height: 70vh !important;
+//     overflow-y: hidden;
 
-    .inner.open {
-      max-height: 70vh !important;
-      min-height: 0px !important;
-      height: calc(100% - 75px); // Hardcoded heigth of top search buttons
-      overflow-y: auto;
-    }
-  }
+//     .inner.open {
+//       max-height: 70vh !important;
+//       min-height: 0px !important;
+//       height: calc(100% - 75px); // Hardcoded heigth of top search buttons
+//       overflow-y: auto;
+//     }
+//   }
+// }
   //END: TO BE REMOVED ONCE THE ORIGINAL SIMPLE DV.FILTER IS REMOVED
 
   [data-filter-mode="blockly"] {
@@ -504,14 +522,14 @@ dv-filter-wrapper {
   .logo-text {
     transition: opacity 0.2s ease-out 0.1s;
     position: absolute;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     color: $color-text;
-    margin-top: 1.2rem;
+    margin-top: 1rem;
     letter-spacing: 0.5rem;
   }
 
   .menu-icon {
-    margin: 1.3rem;
+    margin: 1rem;
     cursor: pointer;
     position: absolute;
     right: 0;
