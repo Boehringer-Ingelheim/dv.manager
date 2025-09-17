@@ -1271,8 +1271,10 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
 
   let card_collapse_link = document.createElement("a");
   card_collapse_link.textContent = dataset.name;
-  card_collapse_link.setAttribute("data-toggle", "collapse"); //TODO: Activate collapse if required
-  card_collapse_link.setAttribute("data-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .card-body`);
+  card_collapse_link.className = "text-white text-decoration-none";
+  card_collapse_link.setAttribute("data-bs-toggle", "collapse");  
+  card_collapse_link.setAttribute("data-bs-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .card-body`);
+  card_collapse_link.href = "#"; // Recommended to make it keyboard-accessible
 
   title_tag_container.appendChild(card_collapse_link);  
 
@@ -1298,7 +1300,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   dataset_filter_container.appendChild(card_heading);
 
   let card_body = document.createElement("div");
-  card_body.className = 'card-body collapse in';
+  card_body.className = 'card-body collapse show';
 
   let select = document.createElement('select');
   select.className = 'selectpicker';
@@ -1818,15 +1820,14 @@ let dispatch_simple_filter_changed = function(event) {
   get_simple_root_el(event.target).dispatchEvent(new CustomEvent(SC.EVENTS.CHANGED_FILTER));
 };
 
-// Initialize all listeners, no listener should happen outside here
+// Initialize all listeners, no listener should happen outside here, or in shiny handlers
 let simple_static_init = function(simple_root_el) {
   __time_function_start();
   __assert(()=>is_html_element(simple_root_el))
 
   let card_collapse_link = document.createElement("a");
-  card_collapse_link.textContent = "Show/Hide all";
-  card_collapse_link.setAttribute("data-toggle", "collapse");
-  card_collapse_link.setAttribute("data-target", `.panel-body`);
+  card_collapse_link.textContent = "Show/Hide all";  
+  card_collapse_link.href = "#"; // Recommended to make it keyboard-accessible
 
   simple_root_el.appendChild(card_collapse_link);
   
@@ -1841,7 +1842,24 @@ let simple_static_init = function(simple_root_el) {
     });
     simple_root_el.dispatchEvent(new_event);
   }
-  
+
+  card_collapse_link.addEventListener("click", function() {
+    let dataset_filter_cards_body = simple_root_el.querySelectorAll(".card-body.collapse");
+    let opened_dataset_filter_bodies = simple_root_el.querySelectorAll(".card-body.collapse.show");
+
+    let show_or_hide_method;
+    if((opened_dataset_filter_bodies.length>0 && opened_dataset_filter_bodies.length < dataset_filter_cards_body.length) || opened_dataset_filter_bodies.length == 0) {
+      show_or_hide_method = "show";
+    } else {
+      show_or_hide_method = "hide";
+    }
+
+    for(let i = 0; i < dataset_filter_cards_body.length; ++i){    
+      bootstrap.Collapse.getOrCreateInstance(dataset_filter_cards_body[i])[show_or_hide_method]();
+    }
+  }
+);
+
   $(simple_root_el).on('changed.bs.select', `${SC.TAG.DATASET_FILTER} select[${SC.ATTRIBUTE.VARIABLE_SELECTOR}]`, function(event) {
     let dataset_div = event.target.closest(`${SC.TAG.DATASET_FILTER}`);
     let dataset_name = dataset_div.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
@@ -1858,7 +1876,6 @@ let simple_static_init = function(simple_root_el) {
     update_filter_controls(dataset_control_div, dataset, selected_variables, dataset_filter_state);
     dispatch_simple_filter_changed(event);
   });
-
   $(simple_root_el).on("changed.bs.select", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] select`, dispatch_simple_filter_changed);
   $(simple_root_el).on("finished.ion.range.slider", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`, dispatch_simple_filter_changed);
   $(simple_root_el).on("changeDate", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`, dispatch_simple_filter_changed);
