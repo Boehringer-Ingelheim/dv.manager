@@ -467,15 +467,15 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
     )
   )
 
-  tag_dv_filter_wrapper <- function(...){
+  tag_dv_filter_wrapper <- function(...) {
     shiny::tag("dv-filter-wrapper", list(...))
   }
 
-  tag_dv_filter_dependencies <- function(...){
+  tag_dv_filter_dependencies <- function(...) {
     shiny::tag("dv-filter-dependencies", list(...))
   }
 
-  tag_dv_filter_root <- function(...){
+  tag_dv_filter_root <- function(...) {
     shiny::tag("dv-filter-root", list(...))
   }
 
