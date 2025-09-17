@@ -116,7 +116,7 @@ get_single_filter_data <- function(dataset) {
       label = yyjsonr::as_scalar(label),
       class = yyjsonr::as_scalar(class(var)[1])
     )
-    
+
 
     # Logical is treated as a factor in the client
     if (is.logical(var)) var <- factor(var)
@@ -491,11 +491,11 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
         shinyWidgets::pickerInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES"), choices = c("A", "B"), multiple = TRUE)
       )
     )
-  ) 
+  )
 
 
   combined_ui <- local({
-    tag_dv_filter_wrapper( 
+    tag_dv_filter_wrapper(
       dependencies,
       tag_dv_filter_root(
         id = ns(ID$FILTER_CONTAINER),
@@ -540,8 +540,8 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
       fd <- after_filter_dataset_list()
       fd_names <- names(fd)
       row_count <- vector("list", length = length(fd))
-      
-      for(idx in seq_along(fd)) {        
+
+      for (idx in seq_along(fd)) {
         row_count[[idx]] <- list(
           count = yyjsonr::as_scalar(nrow(fd[[idx]])),
           name = yyjsonr::as_scalar(fd_names[[idx]])
@@ -551,7 +551,7 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
       msg <- list(
         row_count = row_count
       )
-      
+
       session[["sendCustomMessage"]](
         "update_filter_result",
         list(json = yyjsonr::write_json_str(msg))

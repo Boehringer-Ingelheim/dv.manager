@@ -135,4 +135,4 @@ app_ui <- function(request_id) {
     sidebar,
     module_info[["ui_fn"]](ns, dataset_name, top_buttons),
   )
-} 
+}
