@@ -94,12 +94,12 @@ run_app <- function(data = NULL,
   if (config[["filter_info"]][["filter_type"]] == FILTER$TYPE$BLOCKLY) {
     msg <- paste(
       "",
-      "#############################################################",
-      "# You are using using an experimental filter not ready for  #",
-      "# production.                                               #",
-      "# If this is not intended, please use 'simple' or 'datasets #",
-      "# in `filter_type` argument.                                #",
-      "#############################################################",
+      "##############################################################",
+      "# You are using using an experimental filter not ready for   #",
+      "# production.                                                #",
+      "# If this is not intended, please use 'simple' or 'datasets' #",
+      "# in `filter_type` argument.                                 #",
+      "##############################################################",
       sep = "\n"
     )
     log_warn(msg)
