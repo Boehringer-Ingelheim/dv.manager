@@ -144,7 +144,7 @@ get_single_filter_data <- function(dataset) {
       l[["min"]] <- yyjsonr::as_scalar(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
       l[["max"]] <- yyjsonr::as_scalar(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
 
-      if (length(var) > 0) {
+      if (length(na_clean_var) > 0) {
         hist_info <- hist(na_clean_var, plot = FALSE)
       } else {
         hist_info <- list(density = numeric(0))
