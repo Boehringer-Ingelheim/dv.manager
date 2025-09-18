@@ -18,7 +18,7 @@ test_that(
       )
     })
 
-    expect_identical(app$get_js("$('#mod1-button').css('color')"), "rgb(51, 51, 51)")
+    expect_identical(app$get_js("$('#mod1-button').css('color')"), "rgb(64, 64, 64)")
     expect_identical(app$get_js("$('#mod2-button').css('color')"), "rgb(255, 0, 0)")
   }
 )
