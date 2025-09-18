@@ -172,7 +172,21 @@ check_meta_mtime_attribute <- function(datasets) {
   check_passed
 }
 
-check_azure_options <- function(azure_options) {
+check_azure_install_and_options <- function(azure_options) {
+
+  azureauth_required_version <- "1.3.3"
+    azureuth_current_version <- as.character(utils::packageVersion("AzureAuth"))
+
+    if (azureuth_current_version < azureauth_required_version) {
+      stop(
+        paste(
+        "",
+        sprintf("AzureAuth %s or higher required", azureuth_current_version),
+        sep = "\n"
+        )
+      )
+    }
+
   nm_az_opt <- names(azure_options)
 
   azure_options_required_entries <- c("redirect", "resource", "tenant", "app", "password", "version")

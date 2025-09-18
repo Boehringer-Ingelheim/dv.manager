@@ -76,24 +76,29 @@ local({
 
   module_list <- list(
     "Filtered Tab" = dv.manager:::mod_simple(
-      dv.manager::mm_dispatch("filtered_dataset", "mpg"),
+      dataset = "mpg",
+      from = "filtered_dataset",      
       "mod1"
     ),
     "Returned Filtered" = dv.manager:::mod_identity(
-      dv.manager::mm_dispatch("filtered_dataset", "mpg"),
+      value = "mpg",
+      from = "filtered_dataset",
       "mod2"
     ),
     "Read Output" = dv.manager:::mod_simple(
-      dv.manager::mm_dispatch("module_output", "mod2"),
+      dataset = "mod2",
+      from = "module_output",  
       "mod3"
     ),
     "Unfiltered Tab" = dv.manager:::mod_simple(
-      dv.manager::mm_dispatch("unfiltered_dataset", "mpg"),
+      dataset = "mpg",
+      from = "unfiltered_dataset",  
       "mod4"
     ),
     "Name And Dataset" = dv.manager:::mod_dataset_name_date("mod_dataset_name_date"),
     "Filtered Carb" = dv.manager:::mod_simple(
-      dv.manager::mm_dispatch("filtered_dataset", "carb"),
+      dataset = "carb",
+      from = "filtered_dataset",  
       "mod5"
     )
   )
@@ -367,7 +372,6 @@ local({
         }
 
         val <- app$get_values(output = "mod3-text")[["output"]][["mod3-text"]]
-
         expect_identical(val, "1")
       }
     )

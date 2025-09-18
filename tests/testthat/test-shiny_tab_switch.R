@@ -10,13 +10,11 @@ test_that("modules can switch between tabs using switch2 and switch2mod" |>
         "Mod 1" = dv.manager:::mod_switch(
           "Mod 1",
           "mod2",
-          dv.manager::mm_dispatch("utils", "switch2mod"),
           "mod1"
         ),
         "Mod 2" = dv.manager:::mod_switch(
           "Mod 2",
           "mod1",
-          dv.manager::mm_dispatch("utils", "switch2mod"),
           "mod2"
         )
       ),

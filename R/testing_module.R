@@ -40,17 +40,17 @@ identity_server <- function(id, value) {
   )
 }
 
-mod_identity <- function(value, mod_id) {
+mod_identity <- function(value, from = NULL, mod_id) {
   list(
     ui = identity_UI,
-    server = function(afmm) {
+    server = function(afmm) {      
       identity_server(
         id = mod_id,
-        mm_resolve_dispatcher(
-          value,
-          afmm,
-          flatten = inherits(value, "mm_dispatcher") && length(value[["selection"]]) == 1
-        )
+          if (!is.null(from)) {
+            shiny::reactive(afmm[[from]]()[[value]])
+          } else {
+            value
+          }
       )
     },
     module_id = mod_id
@@ -83,23 +83,16 @@ simple_server <- function(id, dataset) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
-      output$text <- shinymeta::metaRender(
-        shiny::renderText,
+      output$text <- shiny::renderText(
         {
-          log_inform(paste(nrow(dataset())))
-          nrow(shinymeta::..(dataset()))
+          r <- dataset()
+          while(shiny::is.reactive(r)) {
+            r <- r()
+          }
+          log_inform(paste(nrow(r)))
+          nrow(r)
         }
       )
-
-      # nolint start
-      # output$code <- shiny::renderPrint({
-      #   shinymeta::expandChain(output$text())
-      # })
-      # nolint end
-
-      return(structure(list(),
-        code = output$text
-      ))
     }
   )
 }
@@ -111,15 +104,11 @@ simple_server <- function(id, dataset) {
 #' @param module_id shiny module ID
 #'
 #' @export
-mod_simple <- function(dataset, module_id) {
+mod_simple <- function(dataset, from, module_id) {
   mod <- list(
     ui = simple_UI,
     server = function(afmm) {
-      if (is.character(dataset)) {
-        simple_server(module_id, shiny::reactive(afmm[["filtered_dataset"]]()[[dataset]]))
-      } else {
-        simple_server(module_id, mm_resolve_dispatcher(dataset, afmm, flatten = TRUE))
-      }
+      simple_server(module_id, shiny::reactive(afmm[[from]]()[[dataset]]))
     },
     module_id = module_id
   )
@@ -130,8 +119,8 @@ run_mock_app <- function() {
   run_app(
     data = list("D1" = list(adsl = get_pharmaverse_data("adsl"), adae = get_pharmaverse_data("adae"))),
     module_list = list(
-      "Simple" = mod_simple(mm_dispatch("filtered_dataset", "adsl"), "mod1"),
-      "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2")
+      "Simple" = mod_simple("adsl", "filtered_dataset", "mod1"),
+      "Simple2" = mod_simple("adsl", "unfiltered_dataset", "mod2")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
@@ -152,116 +141,14 @@ run_mock_app_two_datasets <- function() {
       )
     ),
     module_list = list(
-      "Simple" = mod_simple(mm_dispatch("filtered_dataset", "adsl"), "mod1"),
-      "Simple2" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "mod2"),
-      "Simple3" = mod_simple(mm_dispatch("filtered_dataset", "adae"), "mod3")
+      "Simple" = mod_simple("adsl", "filtered_dataset", "mod1"),
+      "Simple2" = mod_simple("adsl", "unfiltered_dataset", "mod2"),
+      "Simple3" = mod_simple("adae", "filtered_dataset", "mod3")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
   )
 }
-
-########## URL READING
-
-url_reader_UI <- function(id) { # nolint
-  ns <- shiny::NS(id)
-  shiny::tagList(
-    shiny::actionButton(ns("browser"), "papo browser"),
-    shiny::textOutput(ns("text")),
-    shiny::div("AGE: ", shiny::textOutput(ns("age"), inline = TRUE)),
-    shiny::div("SEX: ", shiny::textOutput(ns("sex"), inline = TRUE)),
-    shiny::div("RACE: ", shiny::textOutput(ns("race"), inline = TRUE)),
-    shiny::div("COUNTRY: ", shiny::textOutput(ns("country"), inline = TRUE))
-  )
-}
-
-url_reader_server <- function(id, text = NULL, init_text = NULL, dataset) {
-  shiny::moduleServer(
-    id,
-    function(input, output, session) {
-      if (!is.anyreactive(text)) {
-        r_text <- shiny::reactive(text)
-      } else {
-        r_text <- text
-      }
-      if (!is.anyreactive(init_text)) {
-        r_init_text <- shiny::reactive(init_text)
-      } else {
-        r_init_text <- init_text
-      }
-
-      shiny::observeEvent(input$browser, {
-        browser()
-      })
-
-      out_text <- shiny::reactiveVal()
-
-      shiny::observeEvent(r_init_text(), {
-        out_text(r_init_text())
-      })
-
-      shiny::observeEvent(r_text(), {
-        out_text(r_text())
-      })
-
-      subject_data <- shiny::reactive({
-        shiny::req(!is.null(out_text()))
-        dataset() %>% dplyr::filter(.data[["USUBJID"]] == out_text())
-      })
-
-      output$text <- shiny::renderText({
-        out_text()
-      })
-      output$age <- shiny::renderText({
-        subject_data()[["AGE"]]
-      })
-      output$sex <- shiny::renderText({
-        subject_data()[["SEX"]]
-      })
-      output$race <- shiny::renderText({
-        subject_data()[["RACE"]]
-      })
-      output$country <- shiny::renderText({
-        subject_data()[["COUNTRY"]]
-      })
-    }
-  )
-}
-
-mod_url_reader <- function(text = NULL, init_text, mod_id, dataset) {
-  mod <- list(
-    ui = url_reader_UI,
-    server = function(afmm) {
-      url_reader_server(
-        id = mod_id,
-        text = mm_resolve_dispatcher(text, afmm, flatten = TRUE),
-        init_text = mm_resolve_dispatcher(init_text, afmm, flatten = TRUE),
-        dataset = mm_resolve_dispatcher(dataset, afmm, flatten = TRUE)
-      )
-    },
-    module_id = mod_id
-  )
-  mod
-}
-
-run_mock_url_app <- function() {
-  run_app(
-    data = list(
-      "D1" = list(adsl = get_pharmaverse_data("adsl")),
-      "D2" = list(adsl = get_pharmaverse_data("adsl"))
-    ),
-    module_list = list(
-      "Show URL" = mod_url_reader(
-        init_text = mm_dispatch("url_parameters", "subjid"),
-        dataset = mm_dispatch("filtered_dataset", "adsl"),
-        mod_id = "mod_1"
-      )
-    ),
-    filter_data = "adsl",
-    filter_key = "USUBJID"
-  )
-}
-
 
 ###### Module communication testing
 com_test_UI <- function(id, choices = c(1, 2, 3), message) { # nolint
@@ -290,13 +177,13 @@ com_test_server <- function(id, value) {
   )
 }
 
-mod_com_test <- function(choices, message, value, mod_id) {
+mod_com_test <- function(choices, message, module_from_id, mod_id) {
   mod <- list(
     ui = function(id) {
       com_test_UI(id, choices, message)
     },
     server = function(afmm) {
-      com_test_server(id = mod_id, value = mm_resolve_dispatcher(value, afmm, flatten = TRUE))
+      com_test_server(id = mod_id, value = afmm[["module_output"]]()[[module_from_id]])
     },
     module_id = mod_id
   )
@@ -310,16 +197,16 @@ run_mock_com_app <- function() {
       "Send and Receive 1" = mod_com_test(
         choices = 1:3,
         message = "The other module has selected",
-        value = mm_dispatch("module_output", "mod_2"),
+        module_from_id = "mod_2",
         mod_id = "mod_1"
       ),
       "Send and Receive 2" = mod_com_test(
         choices = c("a", "b", "c"),
         message = "The other module has selected",
-        value = mm_dispatch("module_output", "mod_1"),
+        module_from_id = "mod_1",
         mod_id = "mod_2"
       ),
-      "Simple" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "modSimp")
+      "Simple" = mod_simple("adsl", "unfiltered_dataset", "modSimp")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
@@ -354,13 +241,13 @@ table_server <- function(id, dataset) {
   )
 }
 
-mod_table <- function(dataset, mod_id) {
+mod_table <- function(dataset, from, mod_id) {
   mod <- list(
     ui = function(id) {
       table_UI(id)
     },
     server = function(afmm) {
-      table_server(id = mod_id, dataset = mm_resolve_dispatcher(dataset, afmm, flatten = TRUE))
+      table_server(id = mod_id, dataset = shiny::reactive(afmm[[from]]()[[dataset]]))
     },
     module_id = mod_id
   )
@@ -382,179 +269,9 @@ run_mock_combined_app <- function() {
     module_list = list(
       "AE Table" = mod_table(
         mod_id = "mod_1",
-        dataset = mm_dispatch("filtered_dataset", "adae")
-      ),
-      "PAPO" = mod_url_reader(
-        text = mm_dispatch("module_output", "mod_1"),
-        init_text = mm_dispatch("url_parameters", "subjid"),
-        dataset = mm_dispatch("filtered_dataset", "adsl"),
-        mod_id = "mod_2"
+        from = "filtered_dataset",
+        dataset = "adae"
       )
-    ),
-    filter_data = "adsl",
-    filter_key = "USUBJID"
-  )
-}
-
-####### Exporting
-
-add_123_UI <- function(id) { # nolint
-  ns <- shiny::NS(id)
-  shiny::tagList(
-    shiny::verbatimTextOutput(ns("value")),
-    shiny::selectInput(ns("add"), "Add:", 1:3),
-    shiny::verbatimTextOutput(ns("result"))
-  )
-}
-
-add_123_server <- function(id, value) {
-  module <- function(input, output, session) {
-    output$value <- shiny::renderText({
-      value()
-    })
-    result <- shinymeta::metaReactive({
-      as.numeric(shinymeta::..(value())) + as.numeric(shinymeta::..(input$add))
-    })
-    output$result <- shinymeta::metaRender(shiny::renderText, {
-      shinymeta::..(result())
-    })
-
-    return(
-      structure(result,
-        code = output$result
-      )
-    )
-  }
-  shiny::moduleServer(id, module)
-}
-
-mod_add_123 <- function(value, module_id) {
-  mod <- list(
-    ui = add_123_UI,
-    server = function(afmm) {
-      add_123_server(module_id, mm_resolve_dispatcher(value, afmm, flatten = TRUE))
-    },
-    module_id = module_id
-  )
-  return(mod)
-}
-
-export_UI <- function(id) { # nolint
-  ns <- shiny::NS(id)
-  shiny::tagList(
-    shiny::selectInput(ns("var"), "Select a variable", NULL),
-    shiny::verbatimTextOutput(ns("Summary")),
-    shiny::verbatimTextOutput(ns("code"))
-  )
-}
-
-export_server <- function(id, dataset) {
-  shiny::moduleServer(
-    id,
-    function(input, output, session) {
-      shiny::observeEvent(dataset(), {
-        shiny::updateSelectInput(inputId = "var", choices = names(dataset()))
-      })
-
-      output$Summary <- shinymeta::metaRender(shiny::renderPrint, { # nolint
-        unique(shinymeta::..(dataset())[[shinymeta::..(input$var)]])
-      })
-      output$code <- shiny::renderPrint({
-        shinymeta::expandChain(output$Summary())
-      })
-
-      return(
-        structure(
-          list(),
-          code = output$Summary
-        )
-      )
-    }
-  )
-}
-
-export_server_2 <- function(id, dataset) {
-  shiny::moduleServer(
-    id,
-    function(input, output, session) {
-      shiny::observeEvent(dataset(), {
-        shiny::updateSelectInput(inputId = "var", choices = names(dataset()))
-      })
-
-      output$Summary <- shiny::renderPrint({ # nolint
-        unique(dataset()[[input$var]])
-      })
-
-      input_dataset <- shinymeta::metaReactive({
-        shinymeta::..(dataset())
-      })
-
-      code <- shinymeta::metaReactive2({
-        shinymeta::metaExpr({
-          unique(shinymeta::..(input_dataset())[[shinymeta::..(input$var)]])
-        })
-      })
-
-      output$code <- shiny::renderPrint({
-        shinymeta::expandChain(code())
-      })
-
-      return(
-        structure(
-          list(),
-          code = code
-        )
-      )
-    }
-  )
-}
-
-
-mod_export <- function(dataset, module_id) {
-  mod <- list(
-    ui = export_UI,
-    server = function(afmm) {
-      export_server(module_id, mm_resolve_dispatcher(dataset, afmm, flatten = TRUE))
-    },
-    module_id = module_id
-  )
-  mod
-}
-
-mod_export_2 <- function(dataset, module_id) {
-  mod <- list(
-    ui = export_UI,
-    server = function(afmm) {
-      export_server_2(module_id, mm_resolve_dispatcher(dataset, afmm, flatten = TRUE))
-    },
-    module_id = module_id
-  )
-  mod
-}
-
-run_mock_export_app <- function() { # nolint
-  get_d1 <- function() {
-    list(
-      adsl = get_pharmaverse_data("adsl"),
-      adae = get_pharmaverse_data("adae")
-    )
-  }
-
-  d1 <- structure(
-    get_d1(),
-    code = rlang::expr(!!get_d1)
-  )
-
-  run_app(
-    data = list("d1" = d1),
-    module_list = list(
-      "Simple" = mod_export(mm_dispatch("filtered_dataset", "adsl"), "mod1"),
-      "Simple_2" = mod_export_2(mm_dispatch("unfiltered_dataset", "adae"), "mod2"),
-      "Simple_3" = mod_export_2(mm_dispatch("filtered_dataset", "adae"), "mod3"),
-      "Identity_mod" = mod_identity(shiny::reactive(10), "mod_iden"),
-      "Adder Identity" = mod_add_123(mm_dispatch("module_output", "mod_iden"), "mod_add_identity"),
-      "Adder" = mod_add_123(shiny::reactive(1), "mod_add"),
-      "URL Adder" = mod_add_123(mm_dispatch("url_parameters", "add_val"), "mod_add_url")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
@@ -656,13 +373,13 @@ switch_server <- function(id, selected, switch_func) {
 #' @param module_id shiny module ID
 #'
 
-mod_switch <- function(name, selected, switch_func, module_id) {
+mod_switch <- function(name, selected, module_id) {
   mod <- list(
     ui = function(module_id) {
       switch_UI(module_id, name)
     },
     server = function(afmm) {
-      switch_server(module_id, selected, mm_resolve_dispatcher(switch_func, afmm, flatten = TRUE))
+      switch_server(module_id, selected, afmm[["utils"]][["switch2mod"]])
     },
     module_id = module_id
   )
@@ -673,8 +390,8 @@ run_mock_switch_app <- function() {
   run_app(
     data = list("D1" = list(adsl = get_pharmaverse_data("adsl"))),
     module_list = list(
-      "Mod 1" = mod_switch("Mod 1", "mod2", mm_dispatch("utils", "switch2mod"), "mod1"),
-      "Mod 2" = mod_switch("Mod 2", "mod1", mm_dispatch("utils", "switch2mod"), "mod2")
+      "Mod 1" = mod_switch("Mod 1", "mod2", "mod1"),
+      "Mod 2" = mod_switch("Mod 2", "mod1", "mod2")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
@@ -726,7 +443,7 @@ run_mock_print_afmm <- function() {
         value = "mod_1",
         mod_id = "mod_2"
       ),
-      "Simple" = mod_simple(mm_dispatch("unfiltered_dataset", "adsl"), "modSimp"),
+      "Simple" = mod_simple("adsl", "unfiltered_dataset", "modSimp"),
       "afmm" = mod_print_afmm("mod_afmm")
     ),
     filter_data = "adsl",

@@ -24,16 +24,7 @@
 #' @export
 
 mm_dispatch <- function(from, selection = character(0)) {
-  ac <- checkmate::makeAssertCollection()
-  checkmate::assert_string(from, min.chars = 1, na.ok = FALSE, add = ac)
-  checkmate::assert_character(selection, min.chars = 1, any.missing = FALSE, add = ac)
-  checkmate::reportAssertions(ac)
-  return(
-    structure(
-      list(from = from, selection = selection),
-      class = "mm_dispatcher"
-    )
-  )
+  .Defunct(NULL, msg = "please check the module help replacing the dispatchers")  
 }
 
 #' Dispatcher resolver
@@ -53,60 +44,7 @@ mm_dispatch <- function(from, selection = character(0)) {
 mm_resolve_dispatcher <- function(dispatcher, # nolintr excessive cyclomatic complexity
                                   afmm,
                                   flatten = FALSE) {
-  ac <- checkmate::makeAssertCollection()
-  checkmate::assert_logical(flatten, len = 1, any.missing = FALSE, add = ac)
-  checkmate::assert_list(afmm, add = ac)
-  checkmate::reportAssertions(ac)
-
-  # If it is not a dispatcher we return as is
-  if (!inherits(dispatcher, "mm_dispatcher")) {
-    return(dispatcher)
-  }
-
-  sel_length <- length(dispatcher[["selection"]])
-
-  checkmate::assert_false(sel_length > 1 && flatten)
-
-  if (dispatcher[["from"]] == "module_output") { # module_output is a special case
-    val <- mm_resolve_module_output(dispatcher[["selection"]], afmm, flatten)
-  } else {
-    from <- afmm[[dispatcher[["from"]]]]
-
-    if (sel_length == 0) {
-      val <- from
-    } else {
-      if (shiny::is.reactive(from)) {
-        if (sel_length == 1 && flatten) {
-          val <- shiny::reactive({
-            from()[[dispatcher[["selection"]]]]
-          })
-        } else {
-          val <- shiny::reactive({
-            from()[dispatcher[["selection"]]]
-          })
-        }
-      } else {
-        if (is.metareactive(from)) {
-          if (sel_length == 1 && flatten) {
-            val <- shinymeta::metaReactive({
-              shinymeta::..(from())[[shinymeta::..(dispatcher[["selection"]])]]
-            })
-          } else {
-            val <- shinymeta::metaReactive({
-              shinymeta::..(from())[shinymeta::..(dispatcher[["selection"]])]
-            })
-          }
-        } else {
-          if (sel_length == 1 && flatten) {
-            val <- from[[dispatcher[["selection"]]]]
-          } else {
-            val <- from[dispatcher[["selection"]]]
-          }
-        }
-      }
-    }
-  }
-  return(val)
+  .Defunct(NULL, msg = "please check the module help replacing the dispatchers")
 }
 
 #' A helper function to resolve the output dispatchers
@@ -117,39 +55,5 @@ mm_resolve_dispatcher <- function(dispatcher, # nolintr excessive cyclomatic com
 #' @noRd
 #'
 mm_resolve_module_output <- function(selection, afmm, flatten) {
-  ac <- checkmate::makeAssertCollection()
-  checkmate::assert_logical(flatten, len = 1, any.missing = FALSE, add = ac)
-  checkmate::assert_character(selection, min.chars = 1, any.missing = FALSE, add = ac)
-  checkmate::assert_list(afmm, add = ac)
-  checkmate::reportAssertions(ac)
-
-  if (length(selection) > 0) {
-    # If we selected only one we do our best to pass non-nested meta/reactive values
-    if (length(selection) == 1 && flatten) {
-      val <- shinymeta::metaReactive2({
-        # If it is any kind of reactive we resolve it and store in meta, regardless of what was before
-        if (is.anyreactive(afmm[["module_output"]]()[[selection]])) {
-          shinymeta::metaExpr({
-            shinymeta::..(afmm[["module_output"]]()[[selection]]())
-          })
-          # Otherwise we do not resolve and store it as a meta
-        } else {
-          shinymeta::metaExpr({
-            shinymeta::..(afmm[["module_output"]]()[[shinymeta::..(selection)]])
-          })
-        }
-      })
-    } else { # if we selected several values we pass as it is inside a meta
-      val <- shinymeta::metaReactive2({
-        shinymeta::metaExpr({
-          shinymeta::..(afmm[["module_output"]]()[selection])
-        })
-      })
-    }
-  } else {
-    val <- shinymeta::metaReactive({
-      afmm[["module_output"]]()
-    })
-  }
-  return(val)
+  .Defunct(NULL, msg = "please check the module help replacing the dispatchers")  
 }

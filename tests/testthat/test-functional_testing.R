@@ -44,12 +44,37 @@ local({
     }
   )
 
+  mod_identity <- function(dataset_list_name, mod_id) {
+
+    identity_server <- function(id, value) {
+      shiny::moduleServer(
+        id,
+        function(input, output, session) {
+          return(value)
+        }
+      )
+    }
+
+      list(
+        ui = function(id) {shiny::h1("")},
+        server = function(afmm) {
+          identity_server(
+            id = mod_id,
+            shiny::reactive({              
+                afmm[[dataset_list_name]]()              
+            })
+          )
+        },
+        module_id = mod_id
+      )
+    }
+
   testing_options <- list(
     data = datasets,
     filter_data = "mpg",
     module_info = resolve_module_list(list(
       "identity" = mod_identity(
-        mm_dispatch("unfiltered_dataset"),
+        "unfiltered_dataset",
         "id_1"
       )
     )),
@@ -170,12 +195,37 @@ local({
         )
       )
 
+      mod_identity <- function(dataset_list_name, mod_id) {
+
+    identity_server <- function(id, value) {
+      shiny::moduleServer(
+        id,
+        function(input, output, session) {
+          return(value)
+        }
+      )
+    }
+
+      list(
+        ui = function(id) {shiny::h1("")},
+        server = function(afmm) {
+          identity_server(
+            id = mod_id,
+            shiny::reactive({              
+                afmm[[dataset_list_name]]()              
+            })
+          )
+        },
+        module_id = mod_id
+      )
+    }
+
       testing_options <- list(
         data = datasets,
         filter_data = "mpg",
         module_list = list(
           "identity" = mod_identity(
-            dv.manager::mm_dispatch("unfiltered_dataset"),
+            "unfiltered_dataset",
             "id_1"
           )
         ),

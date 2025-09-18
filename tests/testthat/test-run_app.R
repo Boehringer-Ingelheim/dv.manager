@@ -8,7 +8,7 @@ test_that(
         "D1" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, B = 2)),
         "D2" = list(DC1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
       ),
-      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "mod1")),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset", "mod1")),
       filter_data = "DD1",
       filter_key = "C",
       .launch = FALSE
@@ -26,7 +26,7 @@ test_that(
         "D1" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, B = 2)),
         "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, B = 2))
       ),
-      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "mod1")),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl","filtered_dataset", "mod1")),
       filter_data = "DD1",
       filter_key = "A",
       .launch = FALSE
@@ -48,7 +48,7 @@ test_that(
         "D1" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, B = 2)),
         "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
       ),
-      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "mod1")),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl","filtered_dataset", "mod1")),
       filter_key = "C",
       .launch = FALSE
     ) %>%
@@ -64,7 +64,7 @@ test_that(
         "D1" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, B = 2)),
         "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
       ),
-      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "mod1")),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl","filtered_dataset", "mod1")),
       filter_data = "DD1",
       filter_key = "C",
       .launch = FALSE
@@ -81,7 +81,7 @@ test_that(
         "D1" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, B = 2)),
         "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
       ),
-      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "mod1")),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset", "mod1")),
       filter_data = "DD1",
       filter_key = "A",
       .launch = FALSE
@@ -103,7 +103,7 @@ test_that(
         "D1" = list(DD1 = tibble::tibble(USUBJID = 1, B = 2), DD2 = tibble::tibble(A = 1, USUBJID = 2)),
         "D2" = list(DD1 = tibble::tibble(USUBJID = 1, B = 2), DD2 = tibble::tibble(A = 1, USUBJID = 2))
       ),
-      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "mod1")),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset", "mod1")),
       filter_data = "DD1",
       .launch = FALSE
     )[["config"]][["filter_key"]] %>%
@@ -145,7 +145,7 @@ test_that(
 
     expect_s3_class(run_app(
       data = datasets,
-      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "mod1")),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset", "mod1")),
       filter_data = "a",
       filter_key = "mpg"
     ), "shiny.appobj")
@@ -180,7 +180,7 @@ test_that(
     )
     run_app(
       data = datasets,
-      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "mod1")),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset", "mod1")),
       filter_data = "a",
       filter_key = "mpg",
       .launch = FALSE
@@ -219,7 +219,7 @@ test_that(
     attr(datasets[["DS1"]][["a"]], "meta") <- list()
     run_app(
       data = datasets,
-      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "mod1")),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset", "mod1")),
       filter_data = "a",
       filter_key = "mpg",
       .launch = FALSE

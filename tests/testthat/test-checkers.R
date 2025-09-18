@@ -264,10 +264,10 @@ test_that(
   }
 )
 
-# Testing check_azure_options
+# Testing check_azure_install_and_options
 
 test_that(
-  vdoc[["add_spec"]]("check_azure_options: should pass when a list with all entries is provided. Should return the checked element", c(specs$azure_options_check)),
+  vdoc[["add_spec"]]("check_azure_install_and_options: should pass when a list with all entries is provided. Should return the checked element", c(specs$azure_options_check)),
   {
     azure_options <- setNames(
       list("redirect", "resource", "tenant", "app", "version", "password"),
@@ -275,7 +275,7 @@ test_that(
     )
 
     expect_error(
-      check_azure_options(
+      check_azure_install_and_options(
         azure_options
       ),
       regexp = NA
@@ -285,7 +285,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("check_azure_options: should error when the list does not have all entries", c(specs$azure_options_check)),
+  vdoc[["add_spec"]]("check_azure_install_and_options: should error when the list does not have all entries", c(specs$azure_options_check)),
   {
     azure_options <- setNames(
       list("resource", "tenant", "app", "version"),
@@ -293,7 +293,7 @@ test_that(
     )
 
     expect_error(
-      check_azure_options(
+      check_azure_install_and_options(
         azure_options
       ),
       regexp = "azure_options does not contain all required entries or contains unneeded entries"
