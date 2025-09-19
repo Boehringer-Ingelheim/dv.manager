@@ -289,9 +289,29 @@ dv-filter-wrapper {
     dv-filter-dataset-filter {
       display: block;
 
+      .dv-title-tag {
+        display: flex;
+        justify-content: flex-start;
+        column-gap: 5px;
+      }
+
+      .dv-data-filter-header {
+        display: flex;
+        justify-content: flex-start;
+        justify-content:space-between; 
+        align-items: center;
+        column-gap: 5px;
+      }
+
+      div.dropdown.bootstrap-select.show-tick.dv-hide{
+        visibility: hidden;
+        display: block;
+        height: 0;
+      }
+
       dv-filter-variable-filter-container {
         display: block;
-        margin-top: 10px;
+        margin-bottom: 10px;
 
         dv-filter-variable-filter {
           display: block;
@@ -308,7 +328,7 @@ dv-filter-wrapper {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 4px 8px;
+            padding: 2px 2px;
             margin-bottom: 2px;    
             flex-wrap: wrap;      
             row-gap: 2px;  
@@ -368,8 +388,7 @@ dv-filter-wrapper {
       }
     }
 
-  //   .dropdown-menu{
-  //     &.open,
+  //   .dropdown-menu{      
   //     &.show {
   //     min-width: min-content;
   //     position: fixed;

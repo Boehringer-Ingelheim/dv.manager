@@ -1257,13 +1257,10 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
 
   let card_heading = document.createElement("div");
-  card_heading.className = "card-header bg-primary text-white";  
+  card_heading.className = "card-header bg-primary text-white dv-data-filter-header";  
   
   let title_tag_container = document.createElement("h6");  
-  title_tag_container.className = "card-title mb-0";
-  title_tag_container.style.display = "flex";
-  title_tag_container.style.justifyContent = "flex-start";
-  title_tag_container.style.setProperty("column-gap", "5px");
+  title_tag_container.className = "card-title mb-0 dv-title-tag ";  
 
   let card_collapse_link = document.createElement("a");
   card_collapse_link.textContent = dataset.name;
@@ -1284,29 +1281,36 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   card_heading.appendChild(title_tag_container);
 
   if (is_subject_filter) {
-    card_heading.style.display = "flex";
-    card_heading.style.justifyContent = "space-between";
-    card_heading.style.alignItems = "center";
     let icon = document.createElement("span");
     icon.className = "glyphicon glyphicon-user";  
     card_heading.appendChild(document.createTextNode(" "));
     card_heading.appendChild(icon);
   }
+
+  let add_button = document.createElement("button");
+  add_button.className = "btn btn-outline-light btn-sm";
+
+  let add_icon = document.createElement("i");
+  add_icon.className = "glyphicon glyphicon-plus";
+  add_button.appendChild(add_icon);
+
+  card_heading.appendChild(add_button);
+
   
   dataset_filter_container.appendChild(card_heading);
 
   let card_body = document.createElement("div");
-  card_body.className = 'card-body collapse show';
+  card_body.className = 'card-body collapse show p-1';
 
   let select = document.createElement('select');
-  select.className = 'selectpicker';
+  select.className = 'selectpicker dv-hide';
   select.setAttribute('multiple', '');
   select.setAttribute('title', 'Add / Remove Filters');
   select.setAttribute('data-live-search', 'true');
   select.setAttribute('data-width', '100%');
   select.setAttribute('data-style', 'btn');
   select.setAttribute('data-selected-text-format', 'static');
-  select.setAttribute('data-container', 'body');
+  select.setAttribute('data-container', 'body .dv_main_panel');
   select.setAttribute(SC.ATTRIBUTE.VARIABLE_SELECTOR, '');
 
   for(let i = 0; i < dataset.variables.length; ++i) {
@@ -1480,7 +1484,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       categorical_select.setAttribute('multiple', '');        
       categorical_select.setAttribute('data-live-search', 'true');
       categorical_select.setAttribute('data-actions-box', 'true');
-      categorical_select.setAttribute('data-container', 'body');
+      categorical_select.setAttribute('data-container', 'body .dv_main_panel');
       categorical_select.setAttribute('data-width', '100%');
       categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
@@ -1861,6 +1865,11 @@ let simple_static_init = function(simple_root_el) {
   }
 );
 
+  $(simple_root_el).on('click', `${SC.TAG.DATASET_FILTER} .dv-data-filter-header button`, function(event) {    
+    let select = event.target.closest(SC.TAG.DATASET_FILTER).querySelector("select");
+    $(select).selectpicker('refresh').selectpicker('toggle');
+  });
+
   $(simple_root_el).on('changed.bs.select', `${SC.TAG.DATASET_FILTER} select[${SC.ATTRIBUTE.VARIABLE_SELECTOR}]`, function(event) {
     let dataset_div = event.target.closest(`${SC.TAG.DATASET_FILTER}`);
     let dataset_name = dataset_div.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
@@ -2093,7 +2102,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   top_container.appendChild(export_button);
 
   let bottom_container = document.createElement("div");
-  bottom_container.className = "mb-3 p-3 border bg-light";
+  bottom_container.className = "mb-3 p-1 border bg-light";
 
   // Simple
 
@@ -2208,12 +2217,15 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 
 export {init}
 
+// A wall will be hit regarding who is responsible of the state managing things are getting complicated, maybe full state
+// should be passed back and forth, otherwise state gets divided.
+
 // TODO: Move add filter button to top right heading to save vertical space
 // TODO: Add clear all filters per dataset and global
 // TODO: Check dataset_list switching
-// TODO: Move export button outside from blockly
 // TODO: Add saving states with name support
 // TODO: Add transition to filter add and removal
+// TODO: Add support to filter state update from the server
 
 /* TODO: Consider pairing creation and destruction
 
