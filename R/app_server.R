@@ -204,6 +204,33 @@ app_server_ <- function(input, output, session, opts) {
       fd
     })
 
+    shiny::observeEvent(
+        {
+          input[[ID$NAV_HEADER]]
+        },
+        {
+          all_nm <- names(datasets_filters_info)
+          current_tab <- input[[ID$NAV_HEADER]]
+
+          if (!is.null(current_tab)) {
+            used_ds <- used_datasets[[current_tab]]
+          } else {
+            used_ds <- NULL
+          }
+
+          if (!is.null(used_ds)) {
+            used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
+            unused_nm <- setdiff(all_nm, used_nm)
+          } else {
+            used_nm <- all_nm
+            unused_nm <- character(0)
+          }
+
+          session$sendCustomMessage("show_hide_dataset_filters", list(hidden = unused_nm))
+        },
+        ignoreNULL = FALSE
+      )
+
   } else {
     global_filtered_values <- dv.filter::data_filter_server(
       "global_filter",

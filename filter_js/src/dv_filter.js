@@ -1981,6 +1981,19 @@ let update_filter_result_handler = function(msg, root_el){
   }
 }
 
+let show_hide_dataset_filters_handler =  function(msg, root_el){
+  let dataset_filters = root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}`);
+
+  for(let i = 0; i < dataset_filters.length; ++i) {
+    let current_dataset_name = dataset_filters[i].getAttribute(SC.ATTRIBUTE.DATASET_NAME);
+    if (msg.hidden.includes(current_dataset_name)) {
+      dataset_filters[i].classList.add("dv-hide");
+    } else {
+      dataset_filters[i].classList.remove("dv-hide");
+    }
+  }
+}
+
 let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state) {
   __assert(()=>is_html_element(blockly_root_el))
 
@@ -2153,9 +2166,14 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   let baked_update_filter_result_handler= function(msg) {
     update_filter_result_handler(msg, root_el);
   };
+
+  let baked_show_hide_dataset_filters_handlers = function(msg) {
+    show_hide_dataset_filters_handler(msg, root_el);
+  };
   
   Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
   Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
+  Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
 }
 
 //#endregion
