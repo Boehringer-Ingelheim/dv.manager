@@ -173,13 +173,12 @@ const dv_tab = (function () {
   return (res)
 })()
 
-$(document).ready(function () {
-  //toggle sidebar resize
-  $("input[type=checkbox][id=click]").change(function () {
-    if ($(this).is(":checked")) {
-      $(".sidebar-container").removeClass("grid-resize");
+$(document).ready(function () {  
+  $("div.dv-sidebar-container input[type=checkbox][id=click]").change(function (event) {
+    if ($(event.target).is(":checked")) {
+      $(".dv-sidebar-container").removeClass("grid-resize");
     } else {
-      $(".sidebar-container").addClass("grid-resize");
+      $(".dv-sidebar-container").addClass("grid-resize");
     }
   });
 });

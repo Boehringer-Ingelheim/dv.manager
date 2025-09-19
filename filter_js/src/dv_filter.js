@@ -28,7 +28,7 @@ import { multiPickerField } from './multi_picker.js';
 import './toolbox-search/index.js'
 
 const __DEV_MODE = true;
-const __LOGGER = true;
+const __LOGGER = false;
 const __TIMER = true;
 
 let __logger = function(x){};
