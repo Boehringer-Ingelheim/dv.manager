@@ -1063,14 +1063,8 @@ let blockly_static_init = function(blockly_root_el) {
   gen_code_button.className = "btn btn-primary btn-lg";
   gen_code_button.textContent = "Apply Filter";
 
-  let export_code_button = document.createElement("button");
-  export_code_button.type = "button";
-  export_code_button.className = "btn btn-primary btn-lg";
-  export_code_button.textContent = "Export Filter";
-
   outer_filter_el.appendChild(inner_filter_el);
   outer_filter_el.appendChild(gen_code_button);
-  outer_filter_el.appendChild(export_code_button);
 
   let hide_label = document.createElement('label');
   hide_label.textContent = "close filter";
@@ -2057,13 +2051,25 @@ let get_selected_filter_mode = function(el) {
   return(get_root_el(el).querySelector("select").value);
 }
 
-const init = function(root_id, filter_data, filter_state, subject_dataset_name, filter_json_input_id, filter_log_input_id) {
+const init = function(root_id, filter_data, filter_state, subject_dataset_name, filter_json_input_id, export_button_id, filter_log_input_id) {
   __logger("Filter root id: " + root_id);
 
   let root_el = document.getElementById(root_id);
   root_el[FC.PROPERTY.DATA] = filter_data;
   root_el[FC.PROPERTY.STATE] = filter_state;
   root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
+
+  let export_button = document.createElement("a");
+  export_button.id = export_button_id;
+  export_button.className = "btn btn-default shiny-download-link disabled";
+  export_button.setAttribute("href", "");
+  export_button.setAttribute("target", "_blank");
+  export_button.setAttribute("download", "");
+  export_button.setAttribute("tabindex", "-1");
+  export_button.textContent = "Export filter";
+
+  root_el.appendChild(export_button);
+
   let select = document.createElement('select');
 
   root_el.appendChild(select);
@@ -2180,9 +2186,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 
 export {init}
 
-// TODO: Hide filters when datasets are not relevant for the selected tab
 // TODO: Move add filter button to top right heading to save vertical space
-// TODO: Add colapse all, open all, collapse empty
 // TODO: Add clear all filters per dataset and global
 // TODO: Check dataset_list switching
 // TODO: Move export button outside from blockly

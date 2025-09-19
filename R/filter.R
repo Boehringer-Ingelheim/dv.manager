@@ -462,6 +462,7 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
         filter_bookmark,
         subject_dataset_name,
         ns(ID$FILTER_JSON_INPUT),
+        ns(ID$EXPORT_CODE_INPUT),
         ns(ID$FILTER_LOG_INPUT)
       )
     )
@@ -590,7 +591,7 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
       }
     })
 
-    output[[ID$BLOCKLY$EXPORT_CODE]] <- shiny::downloadHandler(
+    output[[ID$EXPORT_CODE_INPUT]] <- shiny::downloadHandler(
       filename = "filter.txt",
       content = function(file) {
         if (!checkmate::test_string(input[[ID$FILTER_JSON_INPUT]])) {
@@ -606,7 +607,7 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
       },
       contentType = "application/json"
     )
-    shiny::outputOptions(output, ID$BLOCKLY$EXPORT_CODE, suspendWhenHidden = FALSE)
+    shiny::outputOptions(output, ID$EXPORT_CODE_INPUT, suspendWhenHidden = FALSE)
 
     return(
       structure(res, raw = shiny::reactive(input[[ID$FILTER_JSON_INPUT]]))
