@@ -27,8 +27,8 @@ import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
 import './toolbox-search/index.js'
 
-const __DEV_MODE = false;
-const __LOGGER = false;
+const __DEV_MODE = true;
+const __LOGGER = true;
 const __TIMER = true;
 
 let __logger = function(x){};
@@ -1168,6 +1168,7 @@ const SC = {
 }
 
 let get_simple_root_el = function(el){
+  __assert(()=>is_html_element(el))
   return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.SIMPLE}"]`));
 }
 
@@ -1239,6 +1240,7 @@ let simplify_filter_state = function(state, subject_dataset_name) {
 
 let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
   __time_function_start() 
+  __assert(()=>is_html_element(simple_root_el));
   __assert(() => Array.isArray(dataset_filter_state));
   __assert(()=> !simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`));
   
@@ -1342,6 +1344,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
 
 let destroy_dataset_filter = function(dataset_el) {
   __time_function_start() 
+  __assert(()=>is_html_element(dataset_el))
   __assert(()=> dataset_el.hasAttribute(SC.ATTRIBUTE.DATASET_NAME));
 
   let variable_filter_control_container = dataset_el.querySelector(SC.TAG.VARIABLE_FILTER_CONTAINER);
@@ -1396,6 +1399,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
   __time_function_start();
   __assert(() => Array.isArray(dataset_filter_state));
+  __assert(()=>is_html_element(variable_filter_control_container_el));
   __assert(()=> variable_filter_control_container_el.tagName.toLowerCase() === SC.TAG.VARIABLE_FILTER_CONTAINER);
 
   let count_tag = variable_filter_control_container_el.closest(SC.TAG.DATASET_FILTER).querySelector(SC.TAG.FILTER_COUNT_TAG);
@@ -1630,6 +1634,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
 // Only called on from the simple dynamic init
 let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
   __time_function_start();
+  __assert(()=>is_html_element(simple_root_el))
   __assert(() => Array.isArray(dataset_filter_state));
 
   let prev_dataset_filter_el = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`);
@@ -1758,6 +1763,7 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
 */
 // Gets the state of the whole simple filter
 let get_filter_state = function (simple_root_el, dataset_list_name) {
+  __assert(()=>is_html_element(simple_root_el))
   __time_function_start() 
   let subject_div = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=true]`);
   let other_div = simple_root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=false]`);
@@ -1800,6 +1806,7 @@ let handle_action = function() {
     
   let handlers = {
     remove: function(el) {
+      __assert(()=>is_html_element(el))
       const variable_to_be_removed = el.closest(SC.TAG.VARIABLE_FILTER).getAttribute(SC.ATTRIBUTE.VARIABLE); 
       const select = el.closest(SC.TAG.DATASET_FILTER).querySelector("select");
       let current_selection = $(select).val();
@@ -1888,6 +1895,7 @@ let simple_static_init = function(simple_root_el) {
 
 // Handles the changes of datasets
 let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_name, filter_state) {
+  __assert(()=>is_html_element(simple_root_el))
   __time_function_start();
   // Subject filter
 
@@ -1927,10 +1935,12 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
 //#region General init
 
 let get_blockly_root_el = function(el){  
+  __assert(()=>is_html_element(el))
   return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
 }
 
 let init_filter_handler = function (msg, root_el, initial_send_code) {
+  __assert(()=>is_html_element(root_el))
 
   let dataset_list_name = msg.dataset_list_name;
   set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, dataset_list_name);  
@@ -2026,6 +2036,7 @@ let FC = {
 }
 
 let get_root_el = function(el) {
+  __assert(()=>is_html_element(el))
   let root_el;
   if(el && el.tagName && el.tagName.toLowerCase() === FC.TAG.ROOT) {
     root_el = el;
@@ -2040,10 +2051,12 @@ let get_root_el = function(el) {
 }
 
 let get_filter_property = function(el, property) {  
-  return(structuredClone(get_root_el(el)[property]));
+  __assert(()=>is_html_element(el))
+  return(structuredClone(get_root_el(el)[property]));  
 }
 
 let set_filter_property = function(el, property, val) {
+  __assert(()=>is_html_element(el))
   return(get_root_el(el)[property] = val);
 }
 
@@ -2059,20 +2072,28 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   root_el[FC.PROPERTY.STATE] = filter_state;
   root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
 
+  let top_container = document.createElement("div");
+  top_container.className = "p-3 m-3 bg-light border rounded d-flex align-items-center";
+
+  root_el.appendChild(top_container);
+
   let export_button = document.createElement("a");
   export_button.id = export_button_id;
-  export_button.className = "btn btn-default shiny-download-link disabled";
+  export_button.className = "btn btn-primary btn-sm shiny-download-link disabled";
   export_button.setAttribute("href", "");
   export_button.setAttribute("target", "_blank");
   export_button.setAttribute("download", "");
   export_button.setAttribute("tabindex", "-1");
   export_button.textContent = "Export filter";
 
-  root_el.appendChild(export_button);
-
   let select = document.createElement('select');
+  select.className = "form-select form-select-sm w-auto d-inline-block me-2";
 
-  root_el.appendChild(select);
+  top_container.appendChild(select);
+  top_container.appendChild(export_button);
+
+  let bottom_container = document.createElement("div");
+  bottom_container.className = "mb-3 p-3 border bg-light";
 
   // Simple
 
@@ -2083,7 +2104,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   
   let simple_div = document.createElement(FC.TAG.FILTER);
   simple_div.setAttribute(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.SIMPLE);
-  root_el.appendChild(simple_div);
+  bottom_container.appendChild(simple_div);
 
   let simple_init_ret = simple_static_init(simple_div);
 
@@ -2096,7 +2117,8 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   
   let blockly_div = document.createElement(FC.TAG.FILTER);
   blockly_div.setAttribute(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.BLOCKLY);
-  root_el.appendChild(blockly_div);
+  bottom_container.appendChild(blockly_div);
+  root_el.appendChild(bottom_container);
 
   let blockly_init_ret = blockly_static_init(blockly_div);
   

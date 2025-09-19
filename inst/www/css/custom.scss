@@ -395,6 +395,7 @@ dv-filter-wrapper {
   height: 94vh;
   overflow-y: auto;
   overflow-x: hidden;
+  background-color: $body-bg;
 
   .filter_header {
     display: flex;
@@ -487,12 +488,12 @@ dv-filter-wrapper {
 
   }
 
-  .c-well {
-    min-height: 20px;
-    padding: 15px;
-    margin-bottom: 15px;
-    background-color: $body-bg;
-  }
+  // .c-well {
+  //   min-height: 20px;
+  //   padding: 15px;
+  //   margin-bottom: 15px;
+  //   background-color: $body-bg;
+  // }
 
   #dataset_selector {
     flex: 0 0 auto;
