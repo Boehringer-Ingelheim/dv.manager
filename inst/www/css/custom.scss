@@ -286,6 +286,11 @@ dv-filter-wrapper {
       display: none;
     }
 
+    dv-show-button-container {
+      display: flex;
+      justify-content: space-around;
+    }
+
     dv-filter-top-control-container {
       display: flex;
       flex-wrap: wrap;

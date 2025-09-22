@@ -1028,18 +1028,23 @@ let blockly_disposal = function(){};
 
 let blockly_static_init = function(blockly_root_el) {
 
+  let show_button_id = "blockly-filter-checkbox";
+
+  let show_button_container = document.createElement("dv-show-button-container");  
+
   let show_label = document.createElement('label');
   show_label.textContent = "Show filter";
-  show_label.setAttribute("for", "blockly-filter-checkbox");
+  show_label.setAttribute("for", show_button_id);
   show_label.className = "btn btn-primary";
 
   let show_checkbox = document.createElement("input");
   show_checkbox.type = "checkbox";
-  show_checkbox.id = "blockly-filter-checkbox";
+  show_checkbox.id = show_button_id;
   show_checkbox.style.display = "none";
 
-  blockly_root_el.appendChild(show_label);
-  blockly_root_el.appendChild(show_checkbox);
+  show_button_container.appendChild(show_label);
+  show_button_container.appendChild(show_checkbox);
+  blockly_root_el.appendChild(show_button_container);
 
   let modal_overlay = document.createElement('div');
   modal_overlay.className = "blockly_overlay";
@@ -1068,7 +1073,7 @@ let blockly_static_init = function(blockly_root_el) {
 
   let hide_label = document.createElement('label');
   hide_label.textContent = "close filter";
-  hide_label.setAttribute("for", "blockly-filter-checkbox");
+  hide_label.setAttribute("for", show_button_id);
   hide_label.className = "btn btn-primary";
 
   modal.appendChild(title);
