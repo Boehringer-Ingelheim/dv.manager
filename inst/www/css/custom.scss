@@ -92,7 +92,7 @@ body {
   border-right-width: 0px;
   border-left-width: 0px;
   border-top-width: 0px;
-  border-bottom: $secondary;
+  border-bottom: $color-text;
   border-bottom-width: 3px;
   border-bottom-style: solid;
   border-radius: 0;
@@ -284,6 +284,16 @@ dv-filter-wrapper {
 
     .dv-hide{
       display: none;
+    }
+
+    dv-filter-top-control-container {
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: .25rem;
+      > * {
+        flex-grow: 1;
+      }    
     }
 
     dv-filter-dataset-filter {

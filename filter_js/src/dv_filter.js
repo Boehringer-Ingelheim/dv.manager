@@ -2081,10 +2081,10 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   root_el[FC.PROPERTY.STATE] = filter_state;
   root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
 
-  let top_container = document.createElement("div");
-  top_container.className = "p-3 m-3 bg-light border rounded d-flex align-items-center";
+  let top_control_container = document.createElement("dv-filter-top-control-container");
+  top_control_container.className = "p-3 m-3 bg-light border rounded";
 
-  root_el.appendChild(top_container);
+  root_el.appendChild(top_control_container);
 
   let export_button = document.createElement("a");
   export_button.id = export_button_id;
@@ -2093,13 +2093,28 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   export_button.setAttribute("target", "_blank");
   export_button.setAttribute("download", "");
   export_button.setAttribute("tabindex", "-1");
-  export_button.textContent = "Export filter";
+  export_button.setAttribute("title", "Export filter");
+
+  let export_icon = document.createElement("span");
+  export_icon.className = "glyphicon glyphicon-export";
+
+  export_button.appendChild(export_icon)
+
+  let clear_all_button = document.createElement("clear-all-button");
+  clear_all_button.className = "btn btn-primary btn-sm";  
+  clear_all_button.setAttribute("title", "Clear all filters");
+
+  let clear_all_icon = document.createElement("span");
+  clear_all_icon.className = "glyphicon glyphicon-trash";
+
+  clear_all_button.appendChild(clear_all_icon);
 
   let select = document.createElement('select');
-  select.className = "form-select form-select-sm w-auto d-inline-block me-2";
+  select.className = "form-select form-select-sm w-auto d-inline-block";
 
-  top_container.appendChild(select);
-  top_container.appendChild(export_button);
+  top_control_container.appendChild(select);
+  top_control_container.appendChild(export_button);
+  top_control_container.appendChild(clear_all_button);
 
   let bottom_container = document.createElement("div");
   bottom_container.className = "mb-3 p-1 border bg-light";
@@ -2220,7 +2235,6 @@ export {init}
 // A wall will be hit regarding who is responsible of the state managing things are getting complicated, maybe full state
 // should be passed back and forth, otherwise state gets divided.
 
-// TODO: Move add filter button to top right heading to save vertical space
 // TODO: Add clear all filters per dataset and global
 // TODO: Check dataset_list switching
 // TODO: Add saving states with name support

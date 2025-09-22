@@ -79,10 +79,7 @@ app_ui <- function(request_id) {
         id = ns("shiny_filter_panel"),
         shinyjs::hidden(shiny::div(
           id = ns("dataset_selector"),
-          class = "c-well",
-          shiny::tags$label("Dataset Selection",
-            class = "text-primary"
-          ),
+          class = "ps-3 pe-3 pt-3 m-3 bg-light border rounded",
           shiny::selectInput(ns("selector"), label = NULL, choices = names(data))
         )),
         filter_ui
