@@ -2041,6 +2041,18 @@ let FC = {
     STATE: "filter_state",
     DATASET_LIST_NAME: "dataset_list_name",
     SUBJECT_DATASET_NAME: "subject_dataset_name"
+  },
+  VAL: {
+    EMPTY_FILTER_FN: function(dataset_list_name) {      
+      let empty_filter = {
+        filters: {
+          datasets_filter: {children : [] },
+          subject_filter: {children : [] },
+          dataset_list_name: dataset_list_name
+        }
+      }
+      return(empty_filter);
+    }
   }
 }
 
@@ -2173,59 +2185,49 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
       throw new Error("Unknown mode: " + new_selection);
     }
 
-    if(event) { //FIXME: Terrible we should not be distinguising by event
-      init_filter_handler({dataset_list_name: get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME)}, root_el, initial_send_code);
-    }    
+    init_filter_handler({dataset_list_name: get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME)}, root_el, initial_send_code);
   };
 
   select.value = FC.MODE.SIMPLE;
+  let initial_send_code = simple_init_ret.send_code;
 
-  // TODO: Consider calling removing repeated code at the end of the function. Triggering this event is avoids repeating code.
+  let baked_init_filter_handler = function(msg) {
+    init_filter_handler(msg, root_el, initial_send_code);
+  };
+  Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
+
+  let baked_update_filter_result_handler= function(msg) {
+    update_filter_result_handler(msg, root_el);
+  };
+  Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
+
+  let baked_show_hide_dataset_filters_handlers = function(msg) {
+    show_hide_dataset_filters_handler(msg, root_el);
+  };
+  Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
+
   select.addEventListener('change', change_filter_mode);
-  change_filter_mode();
-
-  let dev_current_filter_div;
-  if(__DEV_MODE) {
-    dev_current_filter_div = document.createElement("div");
-    root_el.appendChild(dev_current_filter_div);
-  }
 
   root_el.addEventListener(FC.EVENT.UPDATED_FILTER, function(event){
     __logger("Sending to Shiny " + filter_json_input_id);
-    set_filter_property(event.target, FC.PROPERTY.STATE, event.detail.filter);
+    set_filter_property(root_el, FC.PROPERTY.STATE, event.detail.filter);
     Shiny.setInputValue(filter_json_input_id, JSON.stringify(event.detail.filter), { priority: 'event' });
     if(__DEV_MODE) {
       dev_current_filter_div.textContent = JSON.stringify(event.detail.filter, null, 2);
     }
   });
 
-  // TODO: WHAT DO WE DO IN THE INITIAL PASS? THERE SHOULD BE AT LEAST ONE FILTER READY
+  clear_all_button.addEventListener("click", function(){
+    let current_dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
+    set_filter_property(root_el, FC.PROPERTY.STATE, FC.VAL.EMPTY_FILTER_FN(current_dataset_list_name));
+    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+  })
 
-  let initial_send_code;
-
-  if(select.value === FC.MODE.SIMPLE) {
-    initial_send_code = simple_init_ret.send_code;
-  } else if (select.value === FC.MODE.BLOCKLY) {
-    initial_send_code = blockly_init_ret.send_code;
-  } else {
-    throw new Error("Unknown mode: " + select.value);
+  let dev_current_filter_div;
+  if(__DEV_MODE) {
+    dev_current_filter_div = document.createElement("div");
+    root_el.appendChild(dev_current_filter_div);
   }
-
-  let baked_init_filter_handler = function(msg) {
-    init_filter_handler(msg, root_el, initial_send_code);
-  };
-
-  let baked_update_filter_result_handler= function(msg) {
-    update_filter_result_handler(msg, root_el);
-  };
-
-  let baked_show_hide_dataset_filters_handlers = function(msg) {
-    show_hide_dataset_filters_handler(msg, root_el);
-  };
-  
-  Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
-  Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
-  Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
 }
 
 //#endregion
