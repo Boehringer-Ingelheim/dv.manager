@@ -32,6 +32,10 @@ const __LOGGER = false;
 const __TIMER = true;
 
 let __logger = function(x){};
+let ___logger = function(x){
+  console.warn("single logger called")
+  console.log(x)
+};
 let __assert = function(condition, message){};
 let __time_function_start = function(caller_name) {};
 let __time_function_end = function(caller_name) {};
@@ -1080,7 +1084,7 @@ let blockly_static_init = function(blockly_root_el) {
   modal_overlay.append(modal);
   blockly_root_el.appendChild(modal_overlay);
   
-  $(show_checkbox).change(function () {
+  $(show_checkbox).change(function () {    
     window.dispatchEvent(new Event('resize')); //Otherwise blockly is wrongly sized
     chaff();
   });
@@ -1967,7 +1971,7 @@ let init_filter_handler = function (dataset_list_name, root_el, static_init_ret,
   let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
 
   let dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
-
+  
   if(selected_mode === FC.MODE.SIMPLE) {
     get_simple_root_el(root_el).style.display = 'block';
     get_blockly_root_el(root_el).style.display = 'none';    
@@ -2039,7 +2043,11 @@ let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_d
 let FC = {
   TAG:{
     ROOT: "dv-filter-root",
-    FILTER: "dv-filter-filter"
+    FILTER: "dv-filter-filter",
+    CLEAR_ALL_BUTTON: "dv-filter-clear-all-button",
+    SAVE_BUTTON: "dv-filter-save-button",
+    SAVED_STATES_CONTAINER: "dv-filter-saved-states-container",
+    SAVED_STATE_BUTTON: "dv-filter-saved-state-button"
   },
   MODE: {
     SIMPLE: "simple",
@@ -2051,11 +2059,13 @@ let FC = {
   },
   ATTRIBUTE: {
     ROOT: "data-root",
-    FILTER_MODE: "data-filter-mode"
+    FILTER_MODE: "data-filter-mode",
+    STATE_NAME: "state_name"
   },
   PROPERTY: {
     DATA: "filter_data",
     STATE: "filter_state",
+    SAVED_STATES: "saved_states",
     DATASET_LIST_NAME: "dataset_list_name",
     SUBJECT_DATASET_NAME: "subject_dataset_name"
   },
@@ -2098,16 +2108,13 @@ let set_filter_property = function(el, property, val) {
   return(get_root_el(el)[property] = val);
 }
 
-let get_selected_filter_mode = function(el) {
-  return(get_root_el(el).querySelector("select").value);
-}
-
-const init = function(root_id, filter_data, filter_state, subject_dataset_name, filter_json_input_id, export_button_id, filter_log_input_id) {
+const init = function(root_id, filter_data, filter_state, subject_dataset_name, filter_state_json_input_id, saved_filter_states_json_input_id, export_button_id, filter_log_input_id) {
   __logger("Filter root id: " + root_id);
 
   let root_el = document.getElementById(root_id);
   root_el[FC.PROPERTY.DATA] = filter_data;
   root_el[FC.PROPERTY.STATE] = filter_state;
+  root_el[FC.PROPERTY.SAVED_STATES]
   root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
 
   let top_control_container = document.createElement("dv-filter-top-control-container");
@@ -2129,7 +2136,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
 
   export_button.appendChild(export_icon)
 
-  let clear_all_button = document.createElement("clear-all-button");
+  let clear_all_button = document.createElement(FC.TAG.CLEAR_ALL_BUTTON);
   clear_all_button.className = "btn btn-primary btn-sm";  
   clear_all_button.setAttribute("title", "Clear all filters");
 
@@ -2141,9 +2148,31 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   let select = document.createElement('select');
   select.className = "form-select form-select-sm w-auto d-inline-block";
 
+  let save_container = document.createElement("div");
+  save_container.className = "input-group";
+  let save_input = document.createElement("input");
+  save_input.setAttribute("type", "text");
+  save_input.setAttribute("class", "form-control");
+  save_input.setAttribute(FC.ATTRIBUTE.STATE_NAME, "");
+  save_input.setAttribute("placeholder", "Enter filter name");
+
+  save_container.appendChild(save_input);
+
+  let save_button = document.createElement(FC.TAG.SAVE_BUTTON);
+  save_button.className = "btn btn-primary btn-sm";  
+  save_button.setAttribute("title", "Save current filter");
+  let save_icon = document.createElement("span");
+  save_icon.className = "glyphicon glyphicon-floppy-disk";
+  save_button.appendChild(save_icon);
+  save_container.appendChild(save_button);
+
+  let saved_states_container = document.createElement(FC.TAG.SAVED_STATES_CONTAINER);
+
   top_control_container.appendChild(select);
   top_control_container.appendChild(export_button);
   top_control_container.appendChild(clear_all_button);
+  top_control_container.appendChild(save_container);
+  top_control_container.appendChild(saved_states_container);
 
   let bottom_container = document.createElement("div");
   bottom_container.className = "mb-3 p-1 border bg-light";
@@ -2179,7 +2208,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   select.value = FC.MODE.SIMPLE;
 
   let change_filter_mode = function() {           
-    __logger(`Changing to: ${select.value}`);
+    ___logger(`Changing to: ${select.value}`);
     init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
   };
 
@@ -2201,9 +2230,9 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   select.addEventListener('change', change_filter_mode);
 
   root_el.addEventListener(FC.EVENT.UPDATED_FILTER, function(event){
-    __logger("Sending to Shiny " + filter_json_input_id);
+    __logger("Sending to Shiny " + filter_state_json_input_id);
     set_filter_property(root_el, FC.PROPERTY.STATE, event.detail.filter);
-    Shiny.setInputValue(filter_json_input_id, JSON.stringify(event.detail.filter), { priority: 'event' });
+    Shiny.setInputValue(filter_state_json_input_id, JSON.stringify(event.detail.filter), { priority: 'event' });
     if(__DEV_MODE) {
       dev_current_filter_div.textContent = JSON.stringify(event.detail.filter, null, 2);
     }
@@ -2214,6 +2243,43 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
     set_filter_property(root_el, FC.PROPERTY.STATE, FC.VAL.EMPTY_FILTER_FN(current_dataset_list_name));
     select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
   })
+
+  save_button.addEventListener("click",  function(){    
+    let state_name = save_input.value;
+    if(!state_name || state_name === "") {
+      return;
+    }
+
+    let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);
+    if(!saved_states) {
+      saved_states = {};
+    } 
+
+    saved_states[state_name] = get_filter_property(root_el, FC.PROPERTY.STATE);
+    
+    set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, saved_states);
+
+    saved_states_container.innerHTML = "";
+
+    let saved_states_keys = Object.keys(saved_states);
+    for (let i = 0; i < saved_states_keys.length; ++i) {
+      let button = document.createElement(FC.TAG.SAVED_STATE_BUTTON);
+      button.className = "btn btn-primary btn-sm";
+      button.textContent = saved_states_keys[i];
+      saved_states_container.appendChild(button);
+    }
+
+    save_input.value = "";
+  })
+
+  saved_states_container.addEventListener("click", function(event) {
+    if(event.target.tagName.toLowerCase() === FC.TAG.SAVED_STATE_BUTTON) {
+      let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);
+      let new_state = saved_states[event.target.textContent];
+      set_filter_property(root_el, FC.PROPERTY.STATE, new_state);
+      select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+    }
+  });
 
   let dev_current_filter_div;
   if(__DEV_MODE) {
@@ -2229,9 +2295,14 @@ export {init}
 // A wall will be hit regarding who is responsible of the state managing things are getting complicated, maybe full state
 // should be passed back and forth, otherwise state gets divided.
 
+// TODO: Check requested filter states, they may contain variables that are not present and this brings errors
+// Maybe sanitize before loading?
 // TODO: Add saving states with name support
 // TODO: Add transition to filter add and removal
+// TODO: Disable simple filter when a non-compatible filter is loaded
 // TODO: Add support to filter state update from the server (Send filter from server);
+// TODO: Filter creator helpers
+// TODO: Pretty print filters
 
 /* TODO: Consider pairing creation and destruction
 
@@ -2275,4 +2346,5 @@ Who is responsible for this is unclear:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
