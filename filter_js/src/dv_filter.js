@@ -1024,13 +1024,11 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
   return (res)
 }
 
-let blockly_disposal = function(){};
+let blockly_disposal = function(){}; // FIXME: GLobal to all instances, if several dv.filter instances appear it won't work
 
 let blockly_static_init = function(blockly_root_el) {
 
   let show_button_id = "blockly-filter-checkbox";
-
-  let show_button_container = document.createElement("dv-show-button-container");  
 
   let show_label = document.createElement('label');
   show_label.textContent = "Show filter";
@@ -1042,9 +1040,8 @@ let blockly_static_init = function(blockly_root_el) {
   show_checkbox.id = show_button_id;
   show_checkbox.style.display = "none";
 
-  show_button_container.appendChild(show_label);
-  show_button_container.appendChild(show_checkbox);
-  blockly_root_el.appendChild(show_button_container);
+  blockly_root_el.appendChild(show_label);
+  blockly_root_el.appendChild(show_checkbox);  
 
   let modal_overlay = document.createElement('div');
   modal_overlay.className = "blockly_overlay";
@@ -1971,7 +1968,6 @@ let init_filter_handler = function (dataset_list_name, root_el, static_init_ret,
 
   let dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
 
-  
   if(selected_mode === FC.MODE.SIMPLE) {
     get_simple_root_el(root_el).style.display = 'block';
     get_blockly_root_el(root_el).style.display = 'none';    
@@ -1984,7 +1980,8 @@ let init_filter_handler = function (dataset_list_name, root_el, static_init_ret,
     static_init_ret[FC.MODE.SIMPLE].send_code();
   } else if (selected_mode === FC.MODE.BLOCKLY) {
     get_simple_root_el(root_el).style.display = 'none';
-    get_blockly_root_el(root_el).style.display = 'block';
+    get_blockly_root_el(root_el).style.display = 'flex';
+    get_blockly_root_el(root_el).style.justifyContent = 'space-around';
     blockly_dynamic_init(
       get_blockly_root_el(root_el),   
       dataset_list_name,    

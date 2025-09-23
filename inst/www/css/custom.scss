@@ -516,7 +516,7 @@ dv-filter-wrapper {
     }
 
     /* Show the modal when the checkbox is checked */
-    [type="checkbox"]:checked+.blockly_overlay {
+    input[type="checkbox"]:checked+.blockly_overlay {
       display: flex;
     }
 
