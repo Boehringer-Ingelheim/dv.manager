@@ -449,7 +449,7 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
   filter_bookmark <- shiny::restoreInput(ns(ID$FILTER_JSON_INPUT), state)
   d <- get_filter_data(dataset_lists)
 
-  filter_data <- yyjsonr::write_json_str(d) # FIXME: This is SLOOOOOOOOOOOO...OW it is the main bottleneck when starting the app (filter-wise)
+  filter_data <- yyjsonr::write_json_str(d)
 
   assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
