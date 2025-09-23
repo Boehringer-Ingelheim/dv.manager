@@ -1262,7 +1262,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
 
   let card_heading = document.createElement("div");
-  card_heading.className = "card-header bg-primary text-white dv-data-filter-header";  
+  card_heading.className = "card-header bg-primary text-white dv-data-filter-header"; 
   
   let title_tag_container = document.createElement("h6");  
   title_tag_container.className = "card-title mb-0 dv-title-tag ";  
@@ -1871,8 +1871,14 @@ let simple_static_init = function(simple_root_el) {
   }
 );
 
-  $(simple_root_el).on('click', `${SC.TAG.DATASET_FILTER} .dv-data-filter-header button`, function(event) {    
+  $(simple_root_el).on('click', `${SC.TAG.DATASET_FILTER} .dv-data-filter-header button`, function(event) { 
     let select = event.target.closest(SC.TAG.DATASET_FILTER).querySelector("select");
+    let filter_body_el = event.target.closest(`${SC.TAG.DATASET_FILTER}`).querySelector(".card-body");
+    let filter_body_collapse_instance = bootstrap.Collapse.getInstance(filter_body_el);
+    if (!filter_body_collapse_instance) {
+      filter_body_collapse_instance = new bootstrap.Collapse(filter_body_el, { toggle: false });
+    }
+    filter_body_collapse_instance.show();
     $(select).selectpicker('refresh').selectpicker('toggle');
   });
 
@@ -2226,11 +2232,9 @@ export {init}
 // A wall will be hit regarding who is responsible of the state managing things are getting complicated, maybe full state
 // should be passed back and forth, otherwise state gets divided.
 
-// TODO: Add clear all filters per dataset and global
-// TODO: Check dataset_list switching
 // TODO: Add saving states with name support
 // TODO: Add transition to filter add and removal
-// TODO: Add support to filter state update from the server
+// TODO: Add support to filter state update from the server (Send filter from server);
 
 /* TODO: Consider pairing creation and destruction
 
