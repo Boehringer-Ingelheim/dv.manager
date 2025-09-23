@@ -1280,7 +1280,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   title_tag_container.appendChild(filter_count_tag);
 
   let row_count_tag = document.createElement(SC.TAG.ROW_COUNT_TAG);
-  row_count_tag.className = "badge bg-secondary text-light";
+  row_count_tag.className = "badge bg-light";
   title_tag_container.appendChild(row_count_tag);
 
   card_heading.appendChild(title_tag_container);
@@ -1293,6 +1293,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   }
 
   let add_button = document.createElement("button");
+  add_button.className = "btn btn-outline-light btn-sm";
   add_button.className = "btn btn-outline-light btn-sm";
 
   let add_icon = document.createElement("i");
@@ -1415,7 +1416,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
   if(selected_variables.length > 0) {
     count_tag.textContent = selected_variables.length;
-    count_tag.className = "badge bg-light text-dark";
+    count_tag.className = "badge bg-light";
   } else {
     count_tag.textContent = "";
     count_tag.className = "dv-hide";
@@ -1649,7 +1650,7 @@ let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   let prev_dataset_filter_el = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`);
 
   if(prev_dataset_filter_el) {
-    destroy_dataset_filter(prev_dataset_filter_el);
+    destroy_dataset_filter(prev_dataset_filter_el);    
   }
   create_dataset_filter(simple_root_el, dataset, dataset_filter_state, is_subject_filter);
   __time_function_end();
