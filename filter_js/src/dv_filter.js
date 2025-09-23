@@ -1953,10 +1953,9 @@ let get_blockly_root_el = function(el){
   return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
 }
 
-let init_filter_handler = function (msg, root_el, initial_send_code) {
-  __assert(()=>is_html_element(root_el))
-
-  let dataset_list_name = msg.dataset_list_name;
+let init_filter_handler = function (dataset_list_name, root_el, static_init_ret, selected_mode) {
+  __assert(()=>is_html_element(root_el));
+  
   set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, dataset_list_name);  
 
   let filter_data = get_filter_property(root_el, FC.PROPERTY.DATA);
@@ -1965,20 +1964,29 @@ let init_filter_handler = function (msg, root_el, initial_send_code) {
 
   let dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
 
-  simple_dynamic_init(
-    get_simple_root_el(root_el),
-    dataset_list,
-    subject_filter_dataset_name,
-    filter_state
-  );
   
-  blockly_dynamic_init(
-    get_blockly_root_el(root_el),   
-    dataset_list_name,    
-    filter_data, filter_state
-  );
-  
-  initial_send_code();
+  if(selected_mode === FC.MODE.SIMPLE) {
+    get_simple_root_el(root_el).style.display = 'block';
+    get_blockly_root_el(root_el).style.display = 'none';    
+    simple_dynamic_init(
+      get_simple_root_el(root_el),
+      dataset_list,
+      subject_filter_dataset_name,
+      filter_state
+    );
+    static_init_ret[FC.MODE.SIMPLE].send_code();
+  } else if (selected_mode === FC.MODE.BLOCKLY) {
+    get_simple_root_el(root_el).style.display = 'none';
+    get_blockly_root_el(root_el).style.display = 'block';
+    blockly_dynamic_init(
+      get_blockly_root_el(root_el),   
+      dataset_list_name,    
+      filter_data, filter_state
+    );
+    static_init_ret[FC.MODE.BLOCKLY].send_code();
+  } else {
+    throw new Error("Unknown mode: " + selected_mode);
+  }
 }
 
 let update_filter_result_handler = function(msg, root_el){
@@ -2136,8 +2144,9 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   let bottom_container = document.createElement("div");
   bottom_container.className = "mb-3 p-1 border bg-light";
 
-  // Simple
+  let static_init_ret = {};
 
+  // Simple
   let simple_option = document.createElement('option');
   simple_option.value = FC.MODE.SIMPLE;
   simple_option.textContent = FC.MODE.SIMPLE;
@@ -2147,7 +2156,7 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   simple_div.setAttribute(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.SIMPLE);
   bottom_container.appendChild(simple_div);
 
-  let simple_init_ret = simple_static_init(simple_div);
+  static_init_ret[FC.MODE.SIMPLE] = simple_static_init(simple_div);
 
   // Blockly
 
@@ -2161,43 +2170,17 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   bottom_container.appendChild(blockly_div);
   root_el.appendChild(bottom_container);
 
-  let blockly_init_ret = blockly_static_init(blockly_div);
+  static_init_ret[FC.MODE.BLOCKLY] = blockly_static_init(blockly_div);
   
-  let change_filter_mode = function(event) {    
-    let filter_divs = root_el.querySelectorAll(`[${FC.ATTRIBUTE.FILTER_MODE}]`);    
-    let new_selection = select.value;
+  select.value = FC.MODE.SIMPLE;
 
-    __logger(`Changing to: ${new_selection}`);
-
-    for(let i = 0; i < filter_divs.length; ++i) {
-
-      let current_div_filter = filter_divs[i];
-      let current_mode = current_div_filter.getAttribute(FC.ATTRIBUTE.FILTER_MODE);
-
-      if (new_selection === current_mode) {
-        current_div_filter.style.display = 'block';
-      } else {
-        current_div_filter.style.display = 'none';
-      }            
-    }
-
-    let initial_send_code;
-    if(new_selection === FC.MODE.SIMPLE) {
-      initial_send_code = simple_init_ret.send_code;
-    } else if (new_selection === FC.MODE.BLOCKLY) {
-      initial_send_code = blockly_init_ret.send_code;
-    } else {
-      throw new Error("Unknown mode: " + new_selection);
-    }
-
-    init_filter_handler({dataset_list_name: get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME)}, root_el, initial_send_code);
+  let change_filter_mode = function() {           
+    __logger(`Changing to: ${select.value}`);
+    init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
   };
 
-  select.value = FC.MODE.SIMPLE;
-  let initial_send_code = simple_init_ret.send_code;
-
   let baked_init_filter_handler = function(msg) {
-    init_filter_handler(msg, root_el, initial_send_code);
+    init_filter_handler(msg.dataset_list_name, root_el, static_init_ret, select.value);
   };
   Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
 
