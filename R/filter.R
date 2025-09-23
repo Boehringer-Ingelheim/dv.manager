@@ -520,19 +520,7 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
       session[["sendCustomMessage"]](
         "init_filter",
         list(
-          dataset_list_name = selected_dataset_list_name(),
-          simple = list(
-            subject_filter_dataset_name = subject_filter_dataset_name
-          ),
-          datasets = list(
-          ),
-          blockly = list(
-            container_id = ns(ID$BLOCKLY$INNER_CONTAINER),
-            gen_code_button_id = ns(ID$BLOCKLY$GEN_CODE)
-          ),
-          filter_container_id = ns(ID$FILTER_CONTAINER),
-          json_input_id = ns(ID$FILTER_JSON_INPUT),
-          log_input_id = ns(ID$FILTER_LOG_INPUT)
+          dataset_list_name = selected_dataset_list_name()
         )
       )
     })
