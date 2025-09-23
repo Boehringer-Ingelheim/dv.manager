@@ -77,6 +77,20 @@ get_single_filter_data <- function(dataset) {
   n_var <- length(nm_var)
   res <- vector(mode = "list", length = n_var)
 
+  inf_to_str <- function(x) {
+    if (is.infinite(x)) {
+      num_x <- as.numeric(x)
+      if (sign(num_x) < 0) {
+        res <- "-Inf"
+      } else {
+        res <- "Inf"
+      }
+    } else {
+      res <- x
+    }
+    return(res)
+  }
+
   # In R all elements are vectors by default this makes complicated to transform into json as c("a") can be enconded
   # as "a" or ["a"]. To disambiguate this jsonlite offers `unbox`.
 
@@ -95,47 +109,59 @@ get_single_filter_data <- function(dataset) {
   for (idx in seq_len(n_var)) {
     name <- nm_var[[idx]]
     var <- dataset[[name]]
+    label <- attr(var, "label") %||% name #FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
 
     l <- list(
-      name = jsonlite::unbox(name),
-      label = jsonlite::unbox(attr(var, "label"))
+      name = yyjsonr::as_scalar(name),
+      label = yyjsonr::as_scalar(label),
+      class = yyjsonr::as_scalar(class(var)[1])
     )
+
 
     # Logical is treated as a factor in the client
     if (is.logical(var)) var <- factor(var)
 
     if (is.character(var) || is.factor(var)) {
-      l[["kind"]] <- jsonlite::unbox("categorical")
-      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(var)))
+      # FIXME: factor levels are ignored and only the values really present in the dataset are used
+      l[["kind"]] <- yyjsonr::as_scalar("categorical")
+      l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
-
-      count <- table(na_clean_var)
+      count <- sort(table(na_clean_var), decreasing = TRUE)
       values <- names(count)
       count <- unname(count)
       l[["values_count"]] <- vector(mode = "list", length = length(l[["values"]]))
       for (v_idx in seq_along(values)) {
         l[["values_count"]][[v_idx]] <- list(
-          value = jsonlite::unbox(values[[v_idx]]),
-          count = jsonlite::unbox(count[[v_idx]])
+          value = yyjsonr::as_scalar(values[[v_idx]]),
+          count = yyjsonr::as_scalar(count[[v_idx]])
         )
       }
     } else if (is.numeric(var)) {
-      l[["kind"]] <- jsonlite::unbox("numerical")
-      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(var)))
+      l[["kind"]] <- yyjsonr::as_scalar("numerical")
+      l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- jsonlite::unbox(min(Inf, na_clean_var, na.rm = TRUE))
-      l[["max"]] <- jsonlite::unbox(max(-Inf, na_clean_var, na.rm = TRUE))
+      l[["min"]] <- yyjsonr::as_scalar(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
+      l[["max"]] <- yyjsonr::as_scalar(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
+
+      if (length(na_clean_var) > 0) {
+        hist_info <- hist(na_clean_var, plot = FALSE)
+      } else {
+        hist_info <- list(density = numeric(0))
+      }
+
+      l[["density"]] <- hist_info[["density"]]
+
     } else if (inherits(var, "POSIXct") || inherits(var, "Date")) {
       if (inherits(var, "POSIXct")) {
         var <- as.Date(var)
       }
-      l[["kind"]] <- jsonlite::unbox("date")
-      l[["NA_count"]] <- jsonlite::unbox(sum(is.na(var)))
+      l[["kind"]] <- yyjsonr::as_scalar("date")
+      l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- jsonlite::unbox(min(as.Date(Inf), na_clean_var, na.rm = TRUE))
-      l[["max"]] <- jsonlite::unbox(max(as.Date(-Inf), na_clean_var, na.rm = TRUE))
+      l[["min"]] <- yyjsonr::as_scalar(inf_to_str(min(as.Date(Inf), na_clean_var, na.rm = TRUE)))
+      l[["max"]] <- yyjsonr::as_scalar(inf_to_str(max(as.Date(-Inf), na_clean_var, na.rm = TRUE)))
     } else {
       stop(paste("variable type unsupported:", typeof(var)))
     }
@@ -159,12 +185,13 @@ get_filter_data <- function(dataset_lists) {
       current_dataset <- current_dataset_list[[jdx]]
       current_dataset_name <- nm_datasets[[jdx]]
       current_dataset_res[[jdx]] <- list(
-        name = jsonlite::unbox(current_dataset_name),
+        name = yyjsonr::as_scalar(current_dataset_name),
+        nrow = yyjsonr::as_scalar(nrow(current_dataset)),
         variables = get_single_filter_data(current_dataset)
       )
     }
     res[[idx]] <- list(
-      name = jsonlite::unbox(current_dataset_list_name),
+      name = yyjsonr::as_scalar(current_dataset_list_name),
       dataset_list = current_dataset_res
     )
   }
@@ -221,7 +248,7 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
     operation <- filter_element[["operation"]]
     include_NA <- filter_element[["include_NA"]]
     filter_dataset <- filter_element[["dataset"]] # TODO: Change for name table
-    assert(variable %in% names(dataset_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, variable))
+    assert(variable %in% names(dataset_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, if(is.null(variable)) "NULL" else variable))
     variable_values <- dataset_list[[filter_dataset]][[variable]]
 
     if (operation == "select_subset") {
@@ -291,7 +318,10 @@ apply_dataset_filter_masks <- function(dataset_list, mask_list) {
   filtered_data_list <- dataset_list
   for (current_mask_name in names(mask_list)) {
     current_mask <- mask_list[[current_mask_name]]
-    filtered_data_list[[current_mask_name]] <- filtered_data_list[[current_mask_name]][current_mask, , drop = FALSE]
+    current_dataset <- filtered_data_list[[current_mask_name]]
+    lbls <- get_lbls(current_dataset)
+    filtered_dataset <- current_dataset[current_mask, , drop = FALSE]
+    filtered_data_list[[current_mask_name]] <- set_lbls(filtered_dataset, lbls)
   }
   return(filtered_data_list)
 }
@@ -300,7 +330,10 @@ apply_subject_set <- function(dataset_list, subject_set, subj_var) {
   filtered_data_list <- dataset_list
   for (current_ds_name in names(dataset_list)) {
     current_mask <- dataset_list[[current_ds_name]][[subj_var]] %in% subject_set
-    filtered_data_list[[current_ds_name]] <- filtered_data_list[[current_ds_name]][current_mask, , drop = FALSE]
+    current_dataset <- filtered_data_list[[current_ds_name]]
+    lbls <- get_lbls(current_dataset)
+    filtered_dataset <- current_dataset[current_mask, , drop = FALSE]
+    filtered_data_list[[current_ds_name]] <- set_lbls(filtered_dataset, lbls)
   }
   return(filtered_data_list)
 }
@@ -397,12 +430,12 @@ add_blockly_dependency <- function() {
     name = "filter_blockly",
     version = utils::packageVersion("dv.manager"),
     src = app_sys("filter/"),
-    script = c("blockly_filter_minified.js"),
-    style = c("blockly_filter.css"),
+    script = c("dv_filter_minified.js"),
+    style = c("dv_filter.css"),
   )
 }
 
-new_filter_ui <- function(id, dataset_lists, state = NULL) {
+new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL) {
   ns <- shiny::NS(id)
 
   if (!is.null(state)) {
@@ -413,109 +446,143 @@ new_filter_ui <- function(id, dataset_lists, state = NULL) {
     state <- "null" # Acts as a no filter JSON
   }
 
-  bookmark <- shiny::restoreInput(ns("json"), "null")
-  current_filter_data <- jsonlite::toJSON(get_filter_data(dataset_lists))
-  assert(to_filter_validate(current_filter_data), "failed to validate message to filter")
-  payload <- sprintf("{\"state\": %s, \"data\": %s, \"bookmark\": %s}", state, current_filter_data, bookmark)
+  filter_bookmark <- shiny::restoreInput(ns(ID$FILTER_JSON_INPUT), state)
+  d <- get_filter_data(dataset_lists)
 
-  apply_button_ui <- shiny::tags[["button"]](id = ns("gen_code"), "Apply filter", class = "btn btn-primary btn-lg")
-  export_button_ui <- shiny::downloadButton(
-    outputId = ns("export_code"),
-    "Export filter",
-    class = "btn btn-primary btn-lg"
-  )
-  filter_ui <- list(
-    add_blockly_dependency(),
-    shiny:::ionRangeSliderDependency(),
-    shiny:::datePickerDependency(),
-    # When attaching the dependencies on my own an error occurs when using multiple
-    # When including an input perse the error disappears, this should be explored
-    shiny::div(
-      style = "display:none;",
-      shinyWidgets::pickerInput(ns("IGNORE_INPUT"), choices = c("A", "B"), multiple = TRUE),
-    ),
-    shiny::div(
-      id = ns("filter_container"),
-      style = "height: 100%;",
-      shiny::tags[["script"]](
-        type = "application/json",
-        shiny::HTML(payload), # Avoids scaping of > and other HTML special characters
-        bookmark = if (bookmark != "null") NA else NULL
+  filter_data <- yyjsonr::write_json_str(d) # FIXME: This is SLOOOOOOOOOOOO...OW it is the main bottleneck when starting the app (filter-wise)
+
+  assert(to_filter_validate(filter_data), "failed to validate message to filter")
+
+  init_tag <- shiny::tags[["script"]](
+    shiny::HTML(
+      sprintf(
+        "dv_filter.init('%s', %s, %s, '%s', '%s', '%s')",
+        ns(ID$FILTER_CONTAINER),
+        filter_data,
+        filter_bookmark,
+        subject_dataset_name,
+        ns(ID$FILTER_JSON_INPUT),
+        ns(ID$FILTER_LOG_INPUT)
       )
     )
   )
 
-  combined_ui <- shiny::div(
-    style = "display: grid;
-            grid-template-rows: 1fr auto; /* First row takes remaining space, second row based on content */
-            height: 100%;
-            ",
-    shiny::div(
-      style = "
-            text-align: center;
-            padding: 10px;
-        ",
-      filter_ui
-    ),
-    shiny::div(
-      style = "
-            padding: 10px;
-            text-align: center;
-      ",
-      apply_button_ui,
-      export_button_ui
+  tag_dv_filter_wrapper <- function(...) {
+    shiny::tag("dv-filter-wrapper", list(...))
+  }
+
+  tag_dv_filter_dependencies <- function(...) {
+    shiny::tag("dv-filter-dependencies", list(...))
+  }
+
+  tag_dv_filter_root <- function(...) {
+    shiny::tag("dv-filter-root", list(...))
+  }
+
+  dependencies <- shiny::singleton(
+    tag_dv_filter_dependencies(
+      shiny::span(
+        style = "display:none;",
+        add_blockly_dependency(),
+        shiny:::ionRangeSliderDependency(),
+        shiny:::datePickerDependency(),
+        # When attaching the dependencies on my own an error occurs when using multiple
+        # When including an input perse the error disappears, this should be explored
+        shinyWidgets::pickerInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES"), choices = c("A", "B"), multiple = TRUE)
+      )
     )
   )
 
-  list(
-    combined_ui = combined_ui,
-    split_ui = list(
-      filter_ui = filter_ui,
-      apply_button_ui = apply_button_ui,
-      export_button_ui = export_button_ui
+
+  combined_ui <- local({
+    tag_dv_filter_wrapper(
+      dependencies,
+      tag_dv_filter_root(
+        id = ns(ID$FILTER_CONTAINER),
+        class = "c-well",
+        init_tag
+      )
     )
-  )
+  })
+
+  combined_ui
 }
 
-new_filter_server <- function(id, selected_dataset_name, strict = FALSE) {
+new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dataset_name, after_filter_dataset_list, strict = FALSE) {
   mod <- function(input, output, session) {
-    shiny::setBookmarkExclude("IGNORE_INPUT")
+    shiny::setBookmarkExclude("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES")
     ns <- session[["ns"]]
 
-    message(paste("Listening to:", ns("json")))
+    log_inform(paste("Listening to:", ns(ID$FILTER_JSON_INPUT)))
 
-    shiny::observeEvent(selected_dataset_name(), {
+    shiny::observeEvent(selected_dataset_list_name(), {
       session[["sendCustomMessage"]](
-        "init_blockly_filter",
+        "init_filter",
         list(
-          container_id = ns("filter_container"),
-          dataset = selected_dataset_name(),
-          gen_code_button_id = ns("gen_code"),
-          json_input_id = ns("json"),
-          log_input_id = ns("log")
+          dataset_list_name = selected_dataset_list_name(),
+          simple = list(
+            subject_filter_dataset_name = subject_filter_dataset_name
+          ),
+          datasets = list(
+          ),
+          blockly = list(
+            container_id = ns(ID$BLOCKLY$INNER_CONTAINER),
+            gen_code_button_id = ns(ID$BLOCKLY$GEN_CODE)
+          ),
+          filter_container_id = ns(ID$FILTER_CONTAINER),
+          json_input_id = ns(ID$FILTER_JSON_INPUT),
+          log_input_id = ns(ID$FILTER_LOG_INPUT)
         )
       )
     })
 
-    shiny::observeEvent(input[["log"]], {
-      for (msg in input[["log"]]) {
+    shiny::observeEvent(after_filter_dataset_list(), {
+      fd <- after_filter_dataset_list()
+      fd_names <- names(fd)
+      row_count <- vector("list", length = length(fd))
+
+      for (idx in seq_along(fd)) {
+        row_count[[idx]] <- list(
+          count = yyjsonr::as_scalar(nrow(fd[[idx]])),
+          name = yyjsonr::as_scalar(fd_names[[idx]])
+        )
+      }
+
+      msg <- list(
+        row_count = row_count
+      )
+
+      session[["sendCustomMessage"]](
+        "update_filter_result",
+        list(json = yyjsonr::write_json_str(msg))
+      )
+    })
+
+    shiny::observeEvent(input[[ID$FILTER_JSON_INPUT]], {
+      log_inform("RECEIVED FILTER")
+    })
+
+    shiny::observeEvent(input[[ID$FILTER_LOG_INPUT]], {
+      for (msg in input[[ID$FILTER_LOG_INPUT]]) {
         shiny::showNotification(msg, type = "warn", duration = NULL)
       }
     })
 
-
     res <- shiny::reactive({
-      json_r <- input[["json"]]
+      log_inform("PROCESSING FILTER")
+      json_r <- input[[ID$FILTER_JSON_INPUT]]
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
         val_res <- from_filter_validate(json_r)
         if (strict) assert(val_res, "failed to validate message from filter")
-        parsed_json <- jsonlite::fromJSON(json_r, simplifyVector = FALSE)
+        parsed_json <- yyjsonr::read_json_str(json_r, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
+        log_inform("PROCESSING FILTER PARSED")
         list(
           parsed = parsed_json %||% NA_character_,
           raw = json_r
         )
       } else {
+        log_inform("PROCESSING FILTER NA")
         list(
           parsed = NA_character_,
           raw = NA_character_
@@ -523,14 +590,14 @@ new_filter_server <- function(id, selected_dataset_name, strict = FALSE) {
       }
     })
 
-    output[["export_code"]] <- shiny::downloadHandler(
+    output[[ID$BLOCKLY$EXPORT_CODE]] <- shiny::downloadHandler(
       filename = "filter.txt",
       content = function(file) {
-        if (!checkmate::test_string(input[["json"]])) {
+        if (!checkmate::test_string(input[[ID$FILTER_JSON_INPUT]])) {
           data <- "null"
           shiny::showNotification("Empty filter exported. Please apply filter before exporting.", type = "warn")
         } else {
-          data <- jsonlite::prettify(input[["json"]])
+          data <- jsonlite::prettify(input[[ID$FILTER_JSON_INPUT]])
         }
         writeLines(
           data,
@@ -539,10 +606,10 @@ new_filter_server <- function(id, selected_dataset_name, strict = FALSE) {
       },
       contentType = "application/json"
     )
-    shiny::outputOptions(output, "export_code", suspendWhenHidden = FALSE)
+    shiny::outputOptions(output, ID$BLOCKLY$EXPORT_CODE, suspendWhenHidden = FALSE)
 
     return(
-      structure(res, raw = shiny::reactive(input[["json"]]))
+      structure(res, raw = shiny::reactive(input[[ID$FILTER_JSON_INPUT]]))
     )
   }
   shiny::moduleServer(id, mod)
@@ -563,7 +630,7 @@ mock_new_filter <- function(data = list(
     shiny::fluidPage(
       shiny::bookmarkButton(),
       shiny::div(
-        new_filter_ui("filter", data, state = filter_state)[["combined_ui"]],
+        new_filter_ui(ID$FILTER, data, state = filter_state)[["combined_ui"]],
         style = "height: 400px"
       ),
       shiny::verbatimTextOutput("raw_json"),
@@ -575,7 +642,7 @@ mock_new_filter <- function(data = list(
 
   server <- function(input, output, session) {
     selected_data <- "D1"
-    x <- new_filter_server("filter", selected_dataset = shiny::reactive(selected_data), strict = TRUE)
+    x <- new_filter_server(ID$FILTER_JSON_INPUT, selected_dataset = shiny::reactive(selected_data), strict = TRUE)
 
     output[["raw_json"]] <- shiny::renderPrint({
       json <- x()[["raw"]]
@@ -592,7 +659,7 @@ mock_new_filter <- function(data = list(
 
     output[["output_json"]] <- shiny::renderPrint({
       shiny::req(!is.na(x()[["parsed"]]))
-      jsonlite::fromJSON(x()[["parsed"]], simplifyVector = FALSE)
+      yyjsonr::read_json_str(x()[["parsed"]])
     })
 
     filtered_datasets <- shiny::reactive({
@@ -630,94 +697,5 @@ mock_new_filter <- function(data = list(
     ui = ui,
     server = server,
     enableBookmarking = "url"
-  )
-}
-
-unnamespaced_filter_modal <- function(filter_ui) {
-  # WARNING: This, as it name implies, is not a module and is not namespaced.
-  # This should be adressed before releasing
-
-  warning("Using unnamespaced modal, DO NOT USE IN PRODUCTION")
-  shiny::div(
-    shiny::tags[["label"]]("Show filter", "for" = "filter-checkbox", class = "btn btn-primary"),
-    shiny::tags[["input"]](type = "checkbox", id = "filter-checkbox", style = "display:none;"),
-    shiny::div(
-      id = "filter_overlay",
-      shiny::tags[["style"]](
-        '
-            /* Overlay style */
-        #filter_overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none; /* Hidden by default */
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-        }
-
-        /* Modal content style */
-        #filter_modal {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 80vw;
-            height: 80vh;
-            text-align: center;
-        }
-
-        /* Close button style */
-        #filter_close-btn {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 5px 10px;
-            background-color: #ccc;
-            text-decoration: none;
-            border-radius: 3px;
-        }
-
-        #filter_close-btn:hover {
-            background-color: #aaa;
-        }
-
-        /* Show the modal when the checkbox is checked */
-        input[type="checkbox"]:checked + #filter_overlay {
-            display: flex;
-        }
-
-            '
-      ),
-      shiny::div(
-        id = "filter_modal",
-        style = "display: grid;
-            grid-template-rows: auto 1fr auto; /* First row takes remaining space, second row based on content */
-            ",
-        shiny::h4("Filter"),
-        filter_ui,
-        shiny::tags[["label"]]("Close filter", "for" = "filter-checkbox", id = "filter_close-btn")
-      ),
-      shiny::tags[["script"]]("
-    $(document).ready(function () {
-    const overlay = document.getElementById('filter_overlay');
-            overlay.addEventListener('click', function(event){
-            let $target = $(event.target);
-                    if(!$target.closest('#filter_modal').length) {
-                      console.log('Inner Hit')
-                      document.getElementById('filter-checkbox').checked = false;
-            $('#filter-checkbox').trigger('change');
-
-                    }
-        });
-    $('#filter-checkbox').change(function () {
-      window.dispatchEvent(new Event('resize'));
-      blockly_filter.chaff();
-    });
-});
-    ")
-    )
   )
 }

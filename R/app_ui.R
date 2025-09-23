@@ -43,24 +43,11 @@ app_ui <- function(request_id) {
   )
 
   if (use_blockly_filter) {
-    filter_ui <- shiny::div(
-      class = "c-well shiny_filter",
-      shiny::tags$label(
-        "Filter",
-        shiny::icon("circle-info", title = TT[["SUBJECT_LEVEL_FILTER"]]),
-        class = "text-primary"
-      ),
-      shiny::div(
-        class = "filter-control  filter-filters",
-        unnamespaced_filter_modal(list(
-          new_filter_ui(ns("filter"), data, state = filter_default_state)[["combined_ui"]]
-        )),
-      )
-    )
+    filter_ui <- new_filter_ui(ns(ID$FILTER), data, filter_data, state = filter_default_state)
   } else {
     filter_ui <- list(
       shiny::div(
-        class = "c-well shiny_filter",
+        class = "c-well",
         shiny::tags$label(
           "Subject Level Filter",
           shiny::icon("circle-info", title = TT[["SUBJECT_LEVEL_FILTER"]]),

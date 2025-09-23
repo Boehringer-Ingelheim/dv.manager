@@ -1,11 +1,11 @@
 const path = require('path');
 
 module.exports = {
-  entry: ['./src/blockly_filter.js'],
+  entry: ['./src/dv_filter.js'],
   output: {
-    filename: 'blockly_filter_minified.js',
+    filename: 'dv_filter_minified.js',
     path: path.resolve(__dirname, '../inst/filter/'),
-    library: 'blockly_filter',
+    library: 'dv_filter',
     libraryTarget: 'umd', // Makes it work with different module systems
     iife: true,
   },

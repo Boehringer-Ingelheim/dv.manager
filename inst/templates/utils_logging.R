@@ -1,7 +1,7 @@
 log_inform <- function(...) {
-  rlang::inform(..., package = utils::packageName())
+  if (isTRUE(getOption("dv.logging.active"))) rlang::inform(..., package = utils::packageName())
 }
 
 log_warn <- function(...) {
-  rlang::warn(..., package = utils::packageName())
+  if (isTRUE(getOption("dv.logging.active"))) rlang::warn(..., package = utils::packageName())
 }

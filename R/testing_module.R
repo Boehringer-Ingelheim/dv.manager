@@ -1040,3 +1040,58 @@ run_mock_app_labels <- function(data) {
     filter_type = "datasets"
   )
 }
+
+########### Multi Simple module
+
+#' @describeIn mod_multi_simple
+#' Module UI
+#'
+#' @param id shiny id
+#'
+#' @export
+multi_simple_UI <- function(id) { # nolint
+  ns <- shiny::NS(id)
+  shiny::uiOutput(ns("out"))
+}
+
+#' @describeIn mod_multi_simple
+#' Module server
+#'
+#' @param dataset input dataset
+#'
+#' @export
+multi_simple_server <- function(id, dataset) {
+  shiny::moduleServer(
+    id,
+    function(input, output, session) {
+      output[["out"]] <- shiny::renderUI({
+        ui <- list()
+        r_dataset <- dataset()
+        for (idx in seq_along(r_dataset)) {
+          nm <- names(r_dataset)[[idx]]
+          nr <- nrow(r_dataset[[idx]])
+          ui[[idx]] <- shiny::p(paste0(nm, ": ", nr))
+        }
+        ui
+      })
+    }
+  )
+}
+
+#' A simple module that counts the number of rows for all datasets loaded in the application
+#'
+#' This simple module is used for demonstration purposes in documentation, testing and developing
+#'
+#' @param module_id shiny module ID
+#'
+#' @export
+mod_multi_simple <- function(module_id) {
+  mod <- list(
+    ui = multi_simple_UI,
+    server = function(afmm) {
+        multi_simple_server(module_id, afmm[["filtered_dataset"]])
+    },
+    module_id = module_id
+  )
+  mod
+}
