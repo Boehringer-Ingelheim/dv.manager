@@ -425,6 +425,11 @@ from_filter_validate <- function(x) {
   )
 }
 
+yyjsonr_read_json_str_with_options <- function(x) {
+  yyjsonr::read_json_str(x, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
+}
+
+
 add_blockly_dependency <- function() {
   htmltools::htmlDependency(
     name = "filter_blockly",
@@ -435,7 +440,7 @@ add_blockly_dependency <- function() {
   )
 }
 
-new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL) {
+new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL, saved_states = NULL) {
   ns <- shiny::NS(id)
 
   if (!is.null(state)) {
@@ -446,7 +451,14 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
     state <- "null" # Acts as a no filter JSON
   }
 
-  filter_bookmark <- shiny::restoreInput(ns(ID$FILTER_JSON_INPUT), state)
+  filter_bookmark <- shiny::restoreInput(ns(ID$FILTER_STATE_JSON_INPUT), state)
+  filter_bookmark <- filter_bookmark %||% "null"
+  saved_states_bookmark <- shiny::restoreInput(ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT), saved_states)
+  saved_states_bookmark <- saved_states_bookmark %||% "null"
+
+  log_inform(paste("Loading state", filter_bookmark))
+  log_inform(paste("Loading saved states", saved_states_bookmark))
+
   d <- get_filter_data(dataset_lists)
 
   filter_data <- yyjsonr::write_json_str(d)
@@ -456,12 +468,14 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL)
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
-        "dv_filter.init('%s', %s, %s, '%s', '%s', '%s', '%s')",
+        "dv_filter.init('%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s')",
         ns(ID$FILTER_CONTAINER),
         filter_data,
         filter_bookmark,
+        saved_states_bookmark,
         subject_dataset_name,
-        ns(ID$FILTER_JSON_INPUT),
+        ns(ID$FILTER_STATE_JSON_INPUT),
+        ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT),
         ns(ID$EXPORT_CODE_INPUT),
         ns(ID$FILTER_LOG_INPUT)
       )
@@ -514,7 +528,10 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     shiny::setBookmarkExclude("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES")
     ns <- session[["ns"]]
 
-    log_inform(paste("Listening to:", ns(ID$FILTER_JSON_INPUT)))
+    log_inform(paste("Listening to:", ns(ID$FILTER_STATE_JSON_INPUT)))
+    log_inform(paste("Listening to:", ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)))
+
+    saved_filter_states <- shiny::reactiveVal(list())
 
     shiny::observeEvent(selected_dataset_list_name(), {
       session[["sendCustomMessage"]](
@@ -522,6 +539,12 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
         list(
           dataset_list_name = selected_dataset_list_name()
         )
+      )
+    })
+
+    shiny::observeEvent(input[[ID$SAVED_FILTER_STATE_JSON_MSG_INPUT]], {
+      log_inform(
+        paste("Received saved states:", input[[ID$SAVED_FILTER_STATE_JSON_MSG_INPUT]])
       )
     })
 
@@ -547,7 +570,7 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
       )
     })
 
-    shiny::observeEvent(input[[ID$FILTER_JSON_INPUT]], {
+    shiny::observeEvent(input[[ID$FILTER_STATE_JSON_INPUT]], {
       log_inform("RECEIVED FILTER")
     })
 
@@ -559,12 +582,12 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
 
     res <- shiny::reactive({
       log_inform("PROCESSING FILTER")
-      json_r <- input[[ID$FILTER_JSON_INPUT]]
+      json_r <- input[[ID$FILTER_STATE_JSON_INPUT]]
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
         val_res <- from_filter_validate(json_r)
         if (strict) assert(val_res, "failed to validate message from filter")
-        parsed_json <- yyjsonr::read_json_str(json_r, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
+        parsed_json <- yyjsonr_read_json_str_with_options(json_r)
         log_inform("PROCESSING FILTER PARSED")
         list(
           parsed = parsed_json %||% NA_character_,
@@ -582,11 +605,11 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     output[[ID$EXPORT_CODE_INPUT]] <- shiny::downloadHandler(
       filename = "filter.txt",
       content = function(file) {
-        if (!checkmate::test_string(input[[ID$FILTER_JSON_INPUT]])) {
+        if (!checkmate::test_string(input[[ID$FILTER_STATE_JSON_INPUT]])) {
           data <- "null"
           shiny::showNotification("Empty filter exported. Please apply filter before exporting.", type = "warn")
         } else {
-          data <- jsonlite::prettify(input[[ID$FILTER_JSON_INPUT]])
+          data <- jsonlite::prettify(input[[ID$FILTER_STATE_JSON_INPUT]])
         }
         writeLines(
           data,
@@ -598,7 +621,7 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     shiny::outputOptions(output, ID$EXPORT_CODE_INPUT, suspendWhenHidden = FALSE)
 
     return(
-      structure(res, raw = shiny::reactive(input[[ID$FILTER_JSON_INPUT]]))
+      structure(res, raw = shiny::reactive(input[[ID$FILTER_STATE_JSON_INPUT]]))
     )
   }
   shiny::moduleServer(id, mod)
@@ -631,7 +654,7 @@ mock_new_filter <- function(data = list(
 
   server <- function(input, output, session) {
     selected_data <- "D1"
-    x <- new_filter_server(ID$FILTER_JSON_INPUT, selected_dataset = shiny::reactive(selected_data), strict = TRUE)
+    x <- new_filter_server(ID$FILTER_STATE_JSON_INPUT, selected_dataset = shiny::reactive(selected_data), strict = TRUE)
 
     output[["raw_json"]] <- shiny::renderPrint({
       json <- x()[["raw"]]
@@ -648,7 +671,7 @@ mock_new_filter <- function(data = list(
 
     output[["output_json"]] <- shiny::renderPrint({
       shiny::req(!is.na(x()[["parsed"]]))
-      yyjsonr::read_json_str(x()[["parsed"]])
+      yyjsonr_read_json_str_with_options(x[["parsed"]])
     })
 
     filtered_datasets <- shiny::reactive({

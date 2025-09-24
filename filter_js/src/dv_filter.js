@@ -2108,14 +2108,17 @@ let set_filter_property = function(el, property, val) {
   return(get_root_el(el)[property] = val);
 }
 
-const init = function(root_id, filter_data, filter_state, subject_dataset_name, filter_state_json_input_id, saved_filter_states_json_input_id, export_button_id, filter_log_input_id) {
+const init = function(root_id, filter_data, filter_state, saved_filter_states, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {
   __logger("Filter root id: " + root_id);
 
   let root_el = document.getElementById(root_id);
   root_el[FC.PROPERTY.DATA] = filter_data;
   root_el[FC.PROPERTY.STATE] = filter_state;
-  root_el[FC.PROPERTY.SAVED_STATES]
+  root_el[FC.PROPERTY.SAVED_STATES] = !saved_filter_states ? [] : saved_filter_states;
   root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
+
+  ___logger(`Initial saved states:`);
+  ___logger(saved_filter_states)
 
   let top_control_container = document.createElement("dv-filter-top-control-container");
   top_control_container.className = "p-3 m-3 bg-light border rounded";
@@ -2207,8 +2210,14 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   
   select.value = FC.MODE.SIMPLE;
 
+  let dev_current_filter_div;
+  if(__DEV_MODE) {
+    dev_current_filter_div = document.createElement("div");
+    root_el.appendChild(dev_current_filter_div);
+  }
+
   let change_filter_mode = function() {           
-    ___logger(`Changing to: ${select.value}`);
+    __logger(`Changing to: ${select.value}`);
     init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
   };
 
@@ -2242,50 +2251,57 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
     let current_dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
     set_filter_property(root_el, FC.PROPERTY.STATE, FC.VAL.EMPTY_FILTER_FN(current_dataset_list_name));
     select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
-  })
+  });
+
+  let render_saved_states = function(saved_states) {
+    saved_states_container.innerHTML = "";
+    for (let i = 0; i < saved_states.length; ++i) {
+      let button = document.createElement(FC.TAG.SAVED_STATE_BUTTON);
+      button.className = "btn btn-primary btn-sm";
+      button.textContent = saved_states[i].name;
+      saved_states_container.appendChild(button);
+    }
+  };
+
+  let send_saved_states = function(saved_states) {    
+    __logger(`Sending saved states: ${JSON.stringify(saved_states)} to ${saved_filter_state_json_msg_input_id}`);
+    Shiny.setInputValue(saved_filter_state_json_msg_input_id, JSON.stringify(saved_states), { priority: 'event' });
+  };
 
   save_button.addEventListener("click",  function(){    
     let state_name = save_input.value;
     if(!state_name || state_name === "") {
       return;
     }
-
+    save_input.value = "";
     let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);
-    if(!saved_states) {
-      saved_states = {};
-    } 
-
-    saved_states[state_name] = get_filter_property(root_el, FC.PROPERTY.STATE);
-    
+    let to_be_saved_state = {
+      name: state_name,
+      state: get_filter_property(root_el, FC.PROPERTY.STATE)
+    };
+    saved_states.push(to_be_saved_state);
     set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, saved_states);
 
-    saved_states_container.innerHTML = "";
-
-    let saved_states_keys = Object.keys(saved_states);
-    for (let i = 0; i < saved_states_keys.length; ++i) {
-      let button = document.createElement(FC.TAG.SAVED_STATE_BUTTON);
-      button.className = "btn btn-primary btn-sm";
-      button.textContent = saved_states_keys[i];
-      saved_states_container.appendChild(button);
-    }
-
-    save_input.value = "";
-  })
+    render_saved_states(saved_states);
+    send_saved_states(saved_states);
+  });
 
   saved_states_container.addEventListener("click", function(event) {
     if(event.target.tagName.toLowerCase() === FC.TAG.SAVED_STATE_BUTTON) {
       let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);
-      let new_state = saved_states[event.target.textContent];
-      set_filter_property(root_el, FC.PROPERTY.STATE, new_state);
+      let new_state = saved_states.find((obj)=> obj.name===event.target.textContent);
+      set_filter_property(root_el, FC.PROPERTY.STATE, new_state.state);
       select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
     }
   });
 
-  let dev_current_filter_div;
-  if(__DEV_MODE) {
-    dev_current_filter_div = document.createElement("div");
-    root_el.appendChild(dev_current_filter_div);
-  }
+  // First call with no event on init.
+  render_saved_states(get_filter_property(root_el, FC.PROPERTY.SAVED_STATES));
+
+  Shiny.initializedPromise.then(() => { // Otherwise Shiny is not ready to send input values
+    send_saved_states(get_filter_property(root_el, FC.PROPERTY.SAVED_STATES));
+  });
+  
 }
 
 //#endregion
