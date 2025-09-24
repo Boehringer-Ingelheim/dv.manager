@@ -2308,8 +2308,11 @@ export {init}
 // should be passed back and forth, otherwise state gets divided.
 
 // TODO: Check requested filter states, they may contain variables that are not present and this brings errors
+// Define behavior:
+// Bookmarked and loaded filters must remain unaltered, so in the future when data matches they will work
+// Datasets must show error/warnings for the non applicable filter/variable
+// This can be done in the client and in the server
 // Maybe sanitize before loading?
-// TODO: Add saving states with name support
 // TODO: Add transition to filter add and removal
 // TODO: Disable simple filter when a non-compatible filter is loaded
 // TODO: Add support to filter state update from the server (Send filter from server);
