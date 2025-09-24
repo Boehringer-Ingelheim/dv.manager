@@ -311,6 +311,12 @@ dv-filter-wrapper {
       .close-btn:hover {
         color: #c9302c;
       }
+
+      dv-filter-saved-states-container{
+        display:flex;
+        flex-wrap: wrap;
+        gap: .25rem;
+      }
     }
 
     dv-filter-dataset-filter {
