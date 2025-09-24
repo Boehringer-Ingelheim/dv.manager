@@ -2233,6 +2233,12 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
   };
   Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
 
+  let request_dataset_filter_state = function(msg) {
+    set_filter_property(root_el, FC.PROPERTY.STATE, msg.state);
+    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+  };
+  Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
+
   select.addEventListener('change', change_filter_mode);
 
   root_el.addEventListener(FC.EVENT.UPDATED_FILTER, function(event){
