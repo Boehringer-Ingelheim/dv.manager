@@ -2070,16 +2070,13 @@ let FC = {
     SUBJECT_DATASET_NAME: "subject_dataset_name"
   },
   VAL: {
-    EMPTY_FILTER_FN: function(dataset_list_name) {      
-      let empty_filter = {
+    EMPTY_FILTER: {
         filters: {
           datasets_filter: {children : [] },
           subject_filter: {children : [] },
-          dataset_list_name: dataset_list_name
+          dataset_list_name: ""
         }
       }
-      return(empty_filter);
-    }
   }
 }
 
@@ -2248,8 +2245,7 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
   });
 
   clear_all_button.addEventListener("click", function(){
-    let current_dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
-    set_filter_property(root_el, FC.PROPERTY.STATE, FC.VAL.EMPTY_FILTER_FN(current_dataset_list_name));
+    set_filter_property(root_el, FC.PROPERTY.STATE, FC.VAL.EMPTY_FILTER);
     select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
   });
 
