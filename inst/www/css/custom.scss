@@ -298,7 +298,19 @@ dv-filter-wrapper {
       gap: .25rem;
       > * {
         flex-grow: 1;
-      }    
+      }
+
+      .close-btn {
+        border: none;
+        background: none;
+        color: #d9534f;
+        font-size: 14px;
+        margin-left: 6px;
+      }
+
+      .close-btn:hover {
+        color: #c9302c;
+      }
     }
 
     dv-filter-dataset-filter {

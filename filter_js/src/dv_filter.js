@@ -2266,8 +2266,8 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
       button.setAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME, saved_states[i].name);
 
       let remove_span = document.createElement(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
-      remove_span.textContent = "✕"; // small cross
-      remove_span.className = "badge";
+      remove_span.innerHTML = "&times;";
+      remove_span.className = "close-btn ms-2";
 
       button.appendChild(remove_span);
       saved_states_container.appendChild(button);
