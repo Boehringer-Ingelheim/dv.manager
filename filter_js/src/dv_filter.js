@@ -2047,7 +2047,8 @@ let FC = {
     CLEAR_ALL_BUTTON: "dv-filter-clear-all-button",
     SAVE_BUTTON: "dv-filter-save-button",
     SAVED_STATES_CONTAINER: "dv-filter-saved-states-container",
-    SAVED_STATE_BUTTON: "dv-filter-saved-state-button"
+    SAVED_STATE_BUTTON: "dv-filter-saved-state-button",
+    REMOVED_SAVED_STATE_BUTTON: "dv-filter-removed-saved-state-button",
   },
   MODE: {
     SIMPLE: "simple",
@@ -2060,7 +2061,8 @@ let FC = {
   ATTRIBUTE: {
     ROOT: "data-root",
     FILTER_MODE: "data-filter-mode",
-    STATE_NAME: "state_name"
+    STATE_NAME: "state_name",
+    SAVED_FILTER_STATE_NAME: "data-saver-filter-name"
   },
   PROPERTY: {
     DATA: "filter_data",
@@ -2261,6 +2263,13 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
       let button = document.createElement(FC.TAG.SAVED_STATE_BUTTON);
       button.className = "btn btn-primary btn-sm";
       button.textContent = saved_states[i].name;
+      button.setAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME, saved_states[i].name);
+
+      let remove_span = document.createElement(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
+      remove_span.textContent = "✕"; // small cross
+      remove_span.className = "badge";
+
+      button.appendChild(remove_span);
       saved_states_container.appendChild(button);
     }
   };
@@ -2290,11 +2299,26 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
 
   saved_states_container.addEventListener("click", function(event) {
     if(event.target.tagName.toLowerCase() === FC.TAG.SAVED_STATE_BUTTON) {
+      ___logger("Loading filter");
       let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);
-      let new_state = saved_states.find((obj)=> obj.name===event.target.textContent);
+      let state_name = event.target.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
+      let new_state = saved_states.find((obj)=> obj.name===state_name);
+      if(!new_state) {
+        throw new Error(`Could not find saved state ${state_name}`);
+      }
       set_filter_property(root_el, FC.PROPERTY.STATE, new_state.state);
       select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
-    }
+    };
+
+    if(event.target.tagName.toLowerCase() === FC.TAG.REMOVED_SAVED_STATE_BUTTON) {
+      ___logger("Removing filter");
+      let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);      
+      let to_be_removed_state_name = event.target.parentElement.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
+      saved_states = saved_states.filter(obj => obj.name !== to_be_removed_state_name);
+      set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, saved_states);
+      render_saved_states(saved_states);
+      send_saved_states(saved_states);
+    };
   });
 
   // First call with no event on init.
@@ -2367,5 +2391,6 @@ Who is responsible for this is unclear:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
