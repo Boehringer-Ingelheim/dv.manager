@@ -1139,7 +1139,8 @@ const SC = {
     VARIABLE_FILTER_CONTAINER : "dv-filter-variable-filter-container",
     VARIABLE_FILTER: "dv-filter-variable-filter",
     FILTER_COUNT_TAG: "dv-filter-count-tag",
-    ROW_COUNT_TAG: "dv-filter-row-count-tag"
+    ROW_COUNT_TAG: "dv-filter-row-count-tag",
+    INCOMPATIBLE_WARNING_ELEMENT: "dv-incompatible-warning"
   },
   EVENTS: {
     CHANGED_FILTER: 'dv_filter:changed'
@@ -1200,7 +1201,7 @@ let simplify_filter_state = function(state, subject_dataset_name) {
       if (state.children[0].kind === "row_operation" && state.children[0].operation === "and") {
         let ok_all_child = state.children[0].children.reduce(function (acc, obj) { return (acc && obj.kind === "filter" && obj.dataset === dataset_name) }, true);
         if (!ok_all_child) {
-          console.error("At least one child is not of kind filter or does not belong to the correct dataset")
+          __logger("At least one child is not of kind filter or does not belong to the correct dataset")
         }
         compatible = compatible && ok_all_child;
         simple_state = state.children[0].children;
@@ -1208,7 +1209,7 @@ let simplify_filter_state = function(state, subject_dataset_name) {
         let filter_and_correct_dataset = state.children[0].kind === "filter" && state.children[0].dataset === dataset_name;
         compatible = compatible && filter_and_correct_dataset;
         if (!filter_and_correct_dataset) {
-          console.error("First child is not an `and` operation or a single filter with correct dataset")
+          __logger("First child is not an `and` operation or a single filter with correct dataset")
         }
         simple_state = [state.children[0]];
       }
@@ -1934,14 +1935,20 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
   let other_datasets = filter_data.dataset_list.filter(obj=>obj.name !== subject_dataset_name);  
 
   if(!simple_filter_state.compatible) {
-    console.error("State not compatible");
+    __logger("State not compatible");
     simple_root_el.classList.add("dv-disabled-controls");
     simple_root_el[SC.PROPERTY.STATE_OVERRIDE] = filter_state;
     simple_filter_state.state = {};
+
+    let warning_element = document.createElement(SC.TAG.INCOMPATIBLE_WARNING_ELEMENT);
+    warning_element.innerHTML = "&#9888; Filter state cannot be represented";
+    warning_element.classList = "alert alert-warning mb-3 border-1 rounded";
+    simple_root_el.prepend(warning_element);
   } else {
     __logger("State compatible");    
     simple_root_el.classList.remove("dv-disabled-controls");    
     simple_root_el[SC.PROPERTY.STATE_OVERRIDE] = undefined;   
+    simple_root_el.querySelector(SC.TAG.INCOMPATIBLE_WARNING_ELEMENT)?.remove();
   }
 
   update_dataset_filter(
