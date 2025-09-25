@@ -27,14 +27,37 @@ test_that(
     withr::local_dir(local_dataset_dir)
     datasets <- list(mpg_carb = dv.loader::load_data(sub_dir = ".", use_wd = TRUE, file_names = c("mpg", "carb")))
 
+    mod_identity <- function(dataset_list_name, mod_id) {
+
+    identity_server <- function(id, value) {
+      shiny::moduleServer(
+        id,
+        function(input, output, session) {
+          return(value)
+        }
+      )
+    }
+
+      list(
+        ui = function(id) {shiny::h1("")},
+        server = function(afmm) {
+          identity_server(
+            id = mod_id,
+            shiny::reactive({              
+                afmm[[dataset_list_name]]()              
+            })
+          )
+        },
+        module_id = mod_id
+      )
+    }
+
     testing_options <- list(
       data = datasets,
       filter_data = "mpg",
       module_list = list(
-        "identity" = mod_identity(
-          mm_dispatch(
-            "unfiltered_dataset"
-          ),
+        "identity" = mod_identity(          
+          "unfiltered_dataset",
           "id_1"
         )
       ),

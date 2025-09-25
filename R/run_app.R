@@ -157,11 +157,12 @@ run_app <- function(data = NULL,
 #'
 
 build_secure_arguments <- function(azure_options, app_ui, app_server) {
-  check_azure_options(azure_options)
+  check_azure_install_and_options(azure_options)
 
   port <- as.numeric(httr::parse_url(azure_options[["redirect"]])[["port"]])
 
   sec_ui <- function(request) {
+    
     opts <- shiny::parseQueryString(request[["QUERY_STRING"]])
 
     # ====================================================

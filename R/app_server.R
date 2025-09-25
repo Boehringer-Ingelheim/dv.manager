@@ -126,7 +126,7 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  unfiltered_dataset <- shinymeta::metaReactive({
+  unfiltered_dataset <- shiny::reactive({
     shiny::req(input$selector)
     if (is.function(data[[input$selector]])) {
       add_date_range(data[[input$selector]]())
@@ -144,7 +144,7 @@ app_server_ <- function(input, output, session, opts) {
     filtered_dataset
     )
 
-    filtered_dataset <- shinymeta::metaReactive({
+    filtered_dataset <- shiny::reactive({
       ufd <- shiny::isolate(unfiltered_dataset())
 
       shiny::req(!is.na(dataset_filter()))
@@ -232,7 +232,7 @@ app_server_ <- function(input, output, session, opts) {
         l
       })
 
-      filtered_dataset <- shinymeta::metaReactive({
+      filtered_dataset <- shiny::reactive({
         # dv.filter returns a logical vector. This contemplates the case of empty lists
         shiny::req(is.logical(global_filtered_values()))
 
@@ -312,7 +312,7 @@ app_server_ <- function(input, output, session, opts) {
     } else {
       log_inform("Single filter server")
 
-      filtered_dataset <- shinymeta::metaReactive({
+      filtered_dataset <- shiny::reactive({
         # dv.filter returns a logical vector. This contemplates the case of empty lists
         shiny::req(is.logical(global_filtered_values()))
         log_inform("New filter applied")
