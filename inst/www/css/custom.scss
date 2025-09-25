@@ -300,22 +300,19 @@ dv-filter-wrapper {
         flex-grow: 1;
       }
 
-      .close-btn {
-        border: none;
-        background: none;
-        color: #d9534f;
-        font-size: 14px;
-        margin-left: 6px;
-      }
-
-      .close-btn:hover {
-        color: #c9302c;
-      }
-
       dv-filter-saved-states-container{
         display:flex;
         flex-wrap: wrap;
         gap: .25rem;
+      }
+
+      .close-btn {        
+        color: #d9534f;
+        font-size: 14px;
+      }
+
+      .close-btn:hover {
+        color: #c9302c;
       }
     }
 

@@ -2257,20 +2257,35 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
     select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
   });
 
-  let render_saved_states = function(saved_states) {
+  let render_saved_states = function (saved_states) {
     saved_states_container.innerHTML = "";
     for (let i = 0; i < saved_states.length; ++i) {
+      let group = document.createElement("div");
+      group.className = "input-group input-group-sm w-auto";
+
+      // the "main action" button
       let button = document.createElement(FC.TAG.SAVED_STATE_BUTTON);
-      button.className = "btn btn-primary btn-sm";
+      button.className = "btn btn-primary";
       button.textContent = saved_states[i].name;
-      button.setAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME, saved_states[i].name);
+      button.setAttribute(
+        FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME,
+        saved_states[i].name
+      );
 
-      let remove_span = document.createElement(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
-      remove_span.innerHTML = "&times;";
-      remove_span.className = "close-btn ms-2";
+      // the remove button as an input-group-append
+      let remove_button = document.createElement(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
+      remove_button.type = "button";
+      remove_button.className = "btn btn-primary close-btn";
+      remove_button.innerHTML = "&times;";
+      remove_button.setAttribute(
+        FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME,
+        saved_states[i].name
+      );
 
-      button.appendChild(remove_span);
-      saved_states_container.appendChild(button);
+      // assemble
+      group.appendChild(button);
+      group.appendChild(remove_button);
+      saved_states_container.appendChild(group);
     }
   };
 
