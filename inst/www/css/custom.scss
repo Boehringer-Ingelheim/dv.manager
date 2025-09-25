@@ -286,6 +286,12 @@ dv-filter-wrapper {
       display: none;
     }
 
+    .dv-disabled-controls {
+      pointer-events: none;
+      opacity: 0.6;
+      filter: grayscale(100%);
+    }
+
     dv-show-button-container {
       display: flex;
       justify-content: space-around;

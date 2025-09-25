@@ -1170,6 +1170,9 @@ const SC = {
     "character": "font",
     "logical": "ok-circle",
     "unknown": "question-sign"    
+  },
+  PROPERTY: {
+    STATE_OVERRIDE: "state_override"
   }
 }
 
@@ -1775,7 +1778,12 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
 // Gets the state of the whole simple filter
 let get_filter_state = function (simple_root_el, dataset_list_name) {
   __assert(()=>is_html_element(simple_root_el))
-  __time_function_start() 
+  __time_function_start()
+
+  if(simple_root_el[SC.PROPERTY.STATE_OVERRIDE]!== undefined) {
+    return(simple_root_el[SC.PROPERTY.STATE_OVERRIDE]);
+  }
+
   let subject_div = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=true]`);
   let other_div = simple_root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=false]`);
 
@@ -1922,24 +1930,28 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
   // Subject filter
 
   let simple_filter_state = simplify_filter_state(filter_state, subject_dataset_name);
+  let subject_dataset = filter_data.dataset_list.find(obj=>obj.name === subject_dataset_name);
+  let other_datasets = filter_data.dataset_list.filter(obj=>obj.name !== subject_dataset_name);  
 
   if(!simple_filter_state.compatible) {
-    console.error("State not compatible")    
+    console.error("State not compatible");
+    simple_root_el.classList.add("dv-disabled-controls");
+    simple_root_el[SC.PROPERTY.STATE_OVERRIDE] = filter_state;
+    simple_filter_state.state = {};
   } else {
-    __logger("State compatible")
+    __logger("State compatible");    
+    simple_root_el.classList.remove("dv-disabled-controls");    
+    simple_root_el[SC.PROPERTY.STATE_OVERRIDE] = undefined;   
   }
 
-  let subject_dataset = filter_data.dataset_list.find(obj=>obj.name === subject_dataset_name);
-  let other_datasets = filter_data.dataset_list.filter(obj=>obj.name !== subject_dataset_name);
-  
   update_dataset_filter(
-    simple_root_el,
-    subject_dataset,
-    simple_filter_state.state[subject_dataset_name] ?? [], //FIXME: loiuhb who is reponsible for this is not well defined
-    true
-  );
+      simple_root_el,
+      subject_dataset,
+      simple_filter_state.state[subject_dataset_name] ?? [], //FIXME: loiuhb who is reponsible for this is not well defined
+      true
+    );
 
-  for(let i = 0; i < other_datasets.length; ++i) {    
+  for (let i = 0; i < other_datasets.length; ++i) {
     update_dataset_filter(
       simple_root_el,
       other_datasets[i],
@@ -1947,6 +1959,7 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
       false
     )
   }
+  
   __time_function_end();
 }
 
@@ -2359,7 +2372,6 @@ export {init}
 // This can be done in the client and in the server
 // Maybe sanitize before loading?
 // TODO: Add transition to filter add and removal
-// TODO: Disable simple filter when a non-compatible filter is loaded
 // TODO: Add support to filter state update from the server (Send filter from server);
 // TODO: Filter creator helpers
 // TODO: Pretty print filters
