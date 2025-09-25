@@ -93,7 +93,7 @@ app_ui <- function(request_id) {
     shiny::bookmarkButton("", class = "navbar-btn"),
     # Remove export functionality until new order
     # shiny::actionButton(ns("open_report_modal"), shiny::span(shiny::icon("download")), class = "navbar-btn"), # nolint
-    shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("cogs")), class = "navbar-btn"),
+    shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("question")), class = "navbar-btn"),
     class = "dv_top_button_group"
   )
 
@@ -106,7 +106,7 @@ app_ui <- function(request_id) {
     )
 
   sidebar <- shiny::div(
-    class = "sidebar-container",
+    class = "dv-sidebar-container",
     shiny::tags$input(
       type = "checkbox",
       class = "checkbox",
@@ -129,6 +129,7 @@ app_ui <- function(request_id) {
   )
 
   shiny::fluidPage(
+    class = "dv_main",
     insert_header_add_resources(app_title = get_config("title")),
     theme = get_app_theme(),
     class = "display-grid",

@@ -466,13 +466,13 @@ app_server_ <- function(input, output, session, opts) {
   #### Options modal
 
   shiny::observeEvent(input$open_options_modal, {
-    shiny::showModal(create_options_modal(session = session, input = input, ns = ns))
+    shiny::showModal(create_info_modal(session = session, input = input, ns = ns))
   })
 
-  shiny::observeEvent(
-    input$change_theme,
-    session$setCurrentTheme(get_app_theme(input$change_theme))
-  )
+  # shiny::observeEvent(
+  #   input$change_theme,
+  #   session$setCurrentTheme(get_app_theme(input$change_theme))
+  # )
 }
 
 # nolint end cyclocomp_linter
