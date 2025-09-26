@@ -1889,7 +1889,7 @@ let simple_static_init = function(simple_root_el) {
       filter_body_collapse_instance = new bootstrap.Collapse(filter_body_el, { toggle: false });
     }
     filter_body_collapse_instance.show();
-    $(select).selectpicker('refresh').selectpicker('toggle');
+    $(select).selectpicker('toggle');
   });
 
   $(simple_root_el).on('changed.bs.select', `${SC.TAG.DATASET_FILTER} select[${SC.ATTRIBUTE.VARIABLE_SELECTOR}]`, function(event) {
