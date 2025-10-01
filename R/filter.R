@@ -638,24 +638,34 @@ mock_new_filter <- function(data = list(
                                 adae = get_pharmaverse_data("adae")
                               )
                             ),
-                            filter_state = NULL) {
+                            filter_state = NULL,
+                            saved_states = NULL
+                            ) {
   ui <- function(request) {
     shiny::fluidPage(
       shiny::bookmarkButton(),
       shiny::div(
-        new_filter_ui(ID$FILTER, data, state = filter_state)[["combined_ui"]],
-        style = "height: 400px"
+        new_filter_ui(ID$FILTER, data, state = filter_state, subject_dataset_name = "adsl", saved_states = saved_states),
+        style = "height: auto"
       ),
+      shiny::h4("JSON"),
       shiny::verbatimTextOutput("raw_json"),
+      shiny::h4("VALIDATED JSON"),
       DT::dataTableOutput("validate_json"),
       shiny::verbatimTextOutput("output_filtered_ds"),
-      shiny::verbatimTextOutput("output_filtered_sbj")
+      shiny::verbatimTextOutput("output_filtered_sbj"),
+      theme = get_app_theme()
     )
   }
 
   server <- function(input, output, session) {
     selected_data <- "D1"
-    x <- new_filter_server(ID$FILTER_STATE_JSON_INPUT, selected_dataset = shiny::reactive(selected_data), strict = TRUE)
+    x <- new_filter_server(
+      ID$FILTER_STATE_JSON_INPUT,
+      selected_dataset = shiny::reactive(selected_data),
+      after_filter_dataset_list = shiny::reactive(NULL),
+      strict = TRUE
+    )
 
     output[["raw_json"]] <- shiny::renderPrint({
       json <- x()[["raw"]]

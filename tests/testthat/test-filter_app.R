@@ -459,27 +459,31 @@ local({
 
       stopifnot(identical(get_filter_state(app), empty_filter))
 
-      test_that(sprintf("a `%s` filter can be added and modified", vn), {
+      test_that(sprintf("a `%s` filter can be added and modified", vn)|>
+    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ADD_REMOVE, specs$FILTERING$FILTER_SUPPORTED_TYPES, specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA)), {
         toggle_filter(app, dataset_name, vn)
         app$run_js(gjsc(dataset_name, vn, fv))
         expect_identical(gmdfv(dataset_name, fv, TRUE), get_filter_state(app))
         expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 3L)
       })
 
-      test_that(sprintf("a `%s` NAs can be removed", vn), {
+      test_that(sprintf("a `%s` NAs can be removed", vn)|>
+    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ADD_REMOVE, specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA)), {
         app$run_js(set_NA_include_js_code(dataset_name, vn, FALSE))
         app$wait_for_idle()        
         expect_identical(gmdfv(dataset_name, fv, FALSE), get_filter_state(app))
         expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 2L)
       })
 
-      test_that(sprintf("a `%s` filter can be removed via menu", vn), {
+      test_that(sprintf("a `%s` filter can be removed via menu", vn)|>
+    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ADD_REMOVE)), {
         toggle_filter(app, dataset_name, vn)
         app$wait_for_idle()        
         expect_identical(get_filter_state(app), empty_filter)
       })
 
-      test_that(sprintf("a `%s` filter can be added via menu and removed via x button", vn), {
+      test_that(sprintf("a `%s` filter can be added via menu and removed via x button", vn)|>
+    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ADD_REMOVE)), {
         toggle_filter(app, dataset_name, vn)
         click_remove_filter_x_button(app, dataset_name, vn)
         app$wait_for_idle()
@@ -501,7 +505,8 @@ local({
     app$wait_for_idle()
   })
 
-  test_that("filters can be saved/restored/removed", {
+  test_that("filters can be saved/restored/removed"|>
+    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_SAVE_RESTORE)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
     filter_name <- "A"
 
@@ -531,7 +536,8 @@ local({
     app$wait_for_idle()
   })
 
-  test_that("filters can be bookmarked and restored", {
+  test_that("filters can be bookmarked and restored"|>
+    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_BOOKMARKABLE)), {
     app <- shinytest2::AppDriver$new(root_app$get_url())
     toggle_filter(app, "dataset_1", "range_var")
     app$wait_for_idle()
@@ -583,7 +589,8 @@ local({
     expect_true(app$get_js(r"--(document.querySelector('dv-filter-filter[data-filter-mode="simple"].dv-disabled-controls').classList.contains('dv-disabled-controls'))--"))
   })
 
-  test_that("an can start with an specified filter", {
+  test_that("an can start with an specified filter"|>
+    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_INITIAL_STATE)), {
     fd <- r"--(
       {
       "filters": {

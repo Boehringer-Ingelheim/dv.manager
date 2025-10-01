@@ -1,7 +1,7 @@
 # nolint start
 
 test_that(
-  vdoc[["add_spec"]]("app should show an startup message", c(specs$startup_message, specs$custom_startup_message)),
+  vdoc[["add_spec"]]("app should show an startup message", c(specs$INTERFACE$INTERFACE_STARTUP_MESSAGE)),
   {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
@@ -133,7 +133,7 @@ local({
 
     test_that(
       "sidebar is present in the application" |>
-        vdoc[["add_spec"]](c(specs$sidebar_menu_display)),
+        vdoc[["add_spec"]](c(specs$INTERFACE$INTERFACE_SIDEBAR)),
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
@@ -145,7 +145,7 @@ local({
 
     test_that(
       "modules appear in navbar in correct order" |>
-        vdoc[["add_spec"]](c(specs$top_navigation_bar_module_list, specs$tab_selector)),
+        vdoc[["add_spec"]](c(specs$MODULES$MODULE_TABS_TOPNAV, specs$MODULES$UI_TAB_SELECTOR)),
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
@@ -168,7 +168,7 @@ local({
 
     test_that(
       "content of modules is displayed" |>
-        vdoc[["add_spec"]](c(specs$module_content_display)),
+        vdoc[["add_spec"]](c(specs$MODULES$MODULE_CONTENT_DISPLAY)),
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
@@ -181,7 +181,7 @@ local({
 
     test_that(
       "custom title is displayed" |>
-        vdoc[["add_spec"]](c(specs$custom_title_display, specs$app_title)),
+        vdoc[["add_spec"]](c(specs$INTERFACE$INTERFACE_TITLE)),
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
@@ -192,7 +192,7 @@ local({
 
     test_that(
       "filtering menu is displayed" |>
-        vdoc[["add_spec"]](c(specs$filtering_menu_display)),
+        vdoc[["add_spec"]](c(specs$FILTERING$FILTER_MENU_SIDEBAR)),
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
@@ -205,7 +205,7 @@ local({
 
   test_that(
     "can select between different datasets" |>
-      vdoc[["add_spec"]](c(specs$dataset_selection_sidebar_menu)),
+      vdoc[["add_spec"]](c(specs$DATASETS$DATASET_LIST_SWITCHING_ALLOWED)),
     {
       skip_if_not_running_shiny_tests()
       skip_if_suspect_check()
@@ -226,7 +226,7 @@ local({
 
   test_that(
     "active dataset can be filtered using the global filter" |>
-      vdoc[["add_spec"]](c(specs$active_dataset_filtering, specs$filter_key, specs$global_filtering)),
+      vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ACTIVE_DATASET_LIST, specs$FILTERING$FILTER_GLOBAL_KEY, specs$FILTERING$FILTER_GLOBAL_TABLE)),
     {
       skip_if_not_running_shiny_tests()
       skip_if_suspect_check()
@@ -245,7 +245,7 @@ local({
 
   test_that(
     "single data table from active dataset can be filtered using the single data table filter menu" |>
-      vdoc[["add_spec"]](c(specs$active_dataset_filtering, specs$single_filtering)),
+      vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ACTIVE_DATASET_LIST, specs$FILTERING$FILTER_INDEPENDENT_TABLES)),
     {
       skip_if_not_running_shiny_tests()
       skip_if_suspect_check()
@@ -267,7 +267,7 @@ local({
 
   test_that(
     "dv.manager can bookmark identity of loaded dataset" |>
-      vdoc[["add_spec"]](c(specs$bookmarking_features, specs$bookmark_button, specs$bookmarking_button_display)),
+      vdoc[["add_spec"]](c(specs$BOOKMARKING$BOOKMARK_DATASET_LIST, specs$DATASETS$DATASET_LIST_SELECTION_BOOKMARKABLE, specs$BOOKMARKING$BOOKMARK_BUTTON, specs$BOOKMARKING$BOOKMARK_FILTERS, specs$BOOKMARKING$BOOKMARK_ACTIVE_MODULE, specs$BOOKMARKING$BOOKMARK_MODULE_STATES, specs$MODULES$MODULE_BOOKMARKABLE)),
     {
       skip_if_not_running_shiny_tests()
       skip_if_suspect_check()
@@ -322,7 +322,7 @@ local({
 
     test_that(
       "modules can access the unfiltered dataset" |>
-        vdoc[["add_spec"]](c(specs$unfiltered_dataset_access)),
+        vdoc[["add_spec"]](c(specs$MODULES$MODULE_ACCESS_UNFILTERED_DATASET_LIST)),
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
@@ -340,7 +340,7 @@ local({
 
     test_that(
       "modules can access the filtered dataset" |>
-        vdoc[["add_spec"]](c(specs$filtered_dataset_access)),
+        vdoc[["add_spec"]](c(specs$MODULES$MODULE_ACCESS_FILTERED_DATASET_LIST)),
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
@@ -358,7 +358,7 @@ local({
 
     test_that(
       "other_module_output_access" |>
-        vdoc[["add_spec"]](c(specs$other_module_output_access)),
+        vdoc[["add_spec"]](c(specs$MODULES$MODULE_ACCESS_OTHER_OUTPUTS)),
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
@@ -381,7 +381,7 @@ local({
        modules can access its name and other module names
        modules can access its dataset modification dates
       " |>
-        vdoc[["add_spec"]](c(specs$selected_dataset_name_access, specs$modification_dates_access, specs$module_name_access)),
+        vdoc[["add_spec"]](c(specs$MODULES$MODULE_ACCESS_DATASET_LIST_NAME, specs$MODULES$MODULE_ACCESS_MOD_DATES, specs$MODULES$MODULE_ACCESS_SELF_NAME, specs$MODULES$MODULE_ACCESS_OTHER_NAMES)),
       {
         skip_if_not_running_shiny_tests()
         skip_if_suspect_check()
@@ -414,7 +414,7 @@ local({
   })
 
 
-  test_that(vdoc[["add_spec"]]("dataset name and date are present in the UI", c(specs$modification_date_display, specs$selected_dataset_name)), {
+  test_that(vdoc[["add_spec"]]("dataset name and date are present in the UI", c(specs$INTERFACE$INTERFACE_DATASET_LIST_NAME, specs$INTERFACE$INTERFACE_MOD_DATE_LIST)), {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
 
@@ -466,7 +466,7 @@ local({
     expect_equal(mpg_no_date[["current"]], mpg_no_date[["expected"]])
   })
 
-  test_that(vdoc[["add_spec"]]("filtering and dataset switching", c(specs$filtering_menus, specs$dataset_selector)), {
+  test_that(vdoc[["add_spec"]]("filtering and dataset switching", c(specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,  specs$DATASETS$DATASET_LIST_SWITCHING_ALLOWED)), {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
 
