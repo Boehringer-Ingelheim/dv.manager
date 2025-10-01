@@ -359,6 +359,7 @@ app_server_ <- function(input, output, session, opts) {
     as_dv_manager_module_output_safe_list(module_output)
   }
 
+  # TODO: `unfiltered_dataset` should be `unfiltered_dataset_list` both var and entry name. Deprecate in future versions
   afmm <- list(
     data = data,
     unfiltered_dataset = unfiltered_dataset,
@@ -411,6 +412,12 @@ app_server_ <- function(input, output, session, opts) {
         }
         session$sendCustomMessage("set_active_tab", list(id = session[["ns"]](ID$NAV_HEADER), tab_id = selected))
       }
+    ),
+    filter_metadata = list(
+      output = shiny::reactive({
+        log_warn("You are using afmm[['filter_metadata']][['output']]. This is not a public element and it may disappear or be modified without notice")
+        dataset_filter()
+      })
     )
   )
 
