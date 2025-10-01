@@ -531,8 +531,6 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     log_inform(paste("Listening to:", ns(ID$FILTER_STATE_JSON_INPUT)))
     log_inform(paste("Listening to:", ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)))
 
-    saved_filter_states <- shiny::reactiveVal(list())
-
     shiny::observeEvent(selected_dataset_list_name(), {
       session[["sendCustomMessage"]](
         "init_filter",
@@ -549,6 +547,9 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     })
 
     shiny::observeEvent(after_filter_dataset_list(), {
+
+      shiny::req(!is.null(after_filter_dataset_list()))
+
       fd <- after_filter_dataset_list()
       fd_names <- names(fd)
       row_count <- vector("list", length = length(fd))
