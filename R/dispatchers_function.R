@@ -24,7 +24,7 @@
 #' @export
 
 mm_dispatch <- function(from, selection = character(0)) {
-  .Defunct(NULL, msg = "please check the module help replacing the dispatchers")  
+  .Defunct(NULL, msg = "please check the module help replacing the dispatchers")
 }
 
 #' Dispatcher resolver
@@ -55,5 +55,5 @@ mm_resolve_dispatcher <- function(dispatcher, # nolintr excessive cyclomatic com
 #' @noRd
 #'
 mm_resolve_module_output <- function(selection, afmm, flatten) {
-  .Defunct(NULL, msg = "please check the module help replacing the dispatchers")  
+  .Defunct(NULL, msg = "please check the module help replacing the dispatchers")
 }

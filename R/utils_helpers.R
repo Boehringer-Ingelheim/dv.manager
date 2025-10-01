@@ -34,7 +34,7 @@ include_js <- function(pattern = "*") {
 
 create_info_modal <- function(session, input, ns) {
   shiny::modalDialog(
-    title = "dv.manager info",    
+    title = "dv.manager info",
     shiny::tags$a(shiny::icon("question-circle", class = "fa-lg"),
       "Package documentation",
       href = "", # nolint

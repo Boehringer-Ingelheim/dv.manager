@@ -43,7 +43,7 @@ identity_server <- function(id, value) {
 mod_identity <- function(value, from = NULL, mod_id) {
   list(
     ui = identity_UI,
-    server = function(afmm) {      
+    server = function(afmm) {
       identity_server(
         id = mod_id,
           if (!is.null(from)) {
@@ -86,7 +86,7 @@ simple_server <- function(id, dataset) {
       output$text <- shiny::renderText(
         {
           r <- dataset()
-          while(shiny::is.reactive(r)) {
+          while (shiny::is.reactive(r)) {
             r <- r()
           }
           log_inform(paste(nrow(r)))
