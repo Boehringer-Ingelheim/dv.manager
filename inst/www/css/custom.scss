@@ -92,7 +92,7 @@ body {
   border-right-width: 0px;
   border-left-width: 0px;
   border-top-width: 0px;
-  border-bottom: $secondary;
+  border-bottom: $color-text;
   border-bottom-width: 3px;
   border-bottom-style: solid;
   border-radius: 0;
@@ -286,12 +286,65 @@ dv-filter-wrapper {
       display: none;
     }
 
+    dv-show-button-container {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    dv-filter-top-control-container {
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: .25rem;
+      > * {
+        flex-grow: 1;
+      }
+
+      .close-btn {
+        border: none;
+        background: none;
+        color: #d9534f;
+        font-size: 14px;
+        margin-left: 6px;
+      }
+
+      .close-btn:hover {
+        color: #c9302c;
+      }
+
+      dv-filter-saved-states-container{
+        display:flex;
+        flex-wrap: wrap;
+        gap: .25rem;
+      }
+    }
+
     dv-filter-dataset-filter {
       display: block;
 
+      .dv-title-tag {
+        display: flex;
+        justify-content: flex-start;
+        column-gap: 5px;
+      }
+
+      .dv-data-filter-header {
+        display: flex;
+        justify-content: flex-start;
+        justify-content:space-between; 
+        align-items: center;
+        column-gap: 5px;
+      }
+
+      div.dropdown.bootstrap-select.show-tick.dv-hide{
+        visibility: hidden;
+        display: block;
+        height: 0;
+      }
+
       dv-filter-variable-filter-container {
         display: block;
-        margin-top: 10px;
+        margin-bottom: 10px;
 
         dv-filter-variable-filter {
           display: block;
@@ -308,7 +361,7 @@ dv-filter-wrapper {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 4px 8px;
+            padding: 2px 2px;
             margin-bottom: 2px;    
             flex-wrap: wrap;      
             row-gap: 2px;  
@@ -368,8 +421,7 @@ dv-filter-wrapper {
       }
     }
 
-  //   .dropdown-menu{
-  //     &.open,
+  //   .dropdown-menu{      
   //     &.show {
   //     min-width: min-content;
   //     position: fixed;
@@ -395,6 +447,7 @@ dv-filter-wrapper {
   height: 94vh;
   overflow-y: auto;
   overflow-x: hidden;
+  background-color: $body-bg;
 
   .filter_header {
     display: flex;
@@ -481,18 +534,18 @@ dv-filter-wrapper {
     }
 
     /* Show the modal when the checkbox is checked */
-    [type="checkbox"]:checked+.blockly_overlay {
+    input[type="checkbox"]:checked+.blockly_overlay {
       display: flex;
     }
 
   }
 
-  .c-well {
-    min-height: 20px;
-    padding: 15px;
-    margin-bottom: 15px;
-    background-color: $body-bg;
-  }
+  // .c-well {
+  //   min-height: 20px;
+  //   padding: 15px;
+  //   margin-bottom: 15px;
+  //   background-color: $body-bg;
+  // }
 
   #dataset_selector {
     flex: 0 0 auto;

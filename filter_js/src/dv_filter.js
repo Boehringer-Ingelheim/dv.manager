@@ -27,11 +27,15 @@ import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
 import './toolbox-search/index.js'
 
-const __DEV_MODE = false;
+const __DEV_MODE = true;
 const __LOGGER = false;
 const __TIMER = true;
 
 let __logger = function(x){};
+let ___logger = function(x){
+  console.warn("single logger called")
+  console.log(x)
+};
 let __assert = function(condition, message){};
 let __time_function_start = function(caller_name) {};
 let __time_function_end = function(caller_name) {};
@@ -1024,22 +1028,24 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
   return (res)
 }
 
-let blockly_disposal = function(){};
+let blockly_disposal = function(){}; // FIXME: GLobal to all instances, if several dv.filter instances appear it won't work
 
 let blockly_static_init = function(blockly_root_el) {
 
+  let show_button_id = "blockly-filter-checkbox";
+
   let show_label = document.createElement('label');
   show_label.textContent = "Show filter";
-  show_label.setAttribute("for", "blockly-filter-checkbox");
+  show_label.setAttribute("for", show_button_id);
   show_label.className = "btn btn-primary";
 
   let show_checkbox = document.createElement("input");
   show_checkbox.type = "checkbox";
-  show_checkbox.id = "blockly-filter-checkbox";
+  show_checkbox.id = show_button_id;
   show_checkbox.style.display = "none";
 
   blockly_root_el.appendChild(show_label);
-  blockly_root_el.appendChild(show_checkbox);
+  blockly_root_el.appendChild(show_checkbox);  
 
   let modal_overlay = document.createElement('div');
   modal_overlay.className = "blockly_overlay";
@@ -1063,18 +1069,12 @@ let blockly_static_init = function(blockly_root_el) {
   gen_code_button.className = "btn btn-primary btn-lg";
   gen_code_button.textContent = "Apply Filter";
 
-  let export_code_button = document.createElement("button");
-  export_code_button.type = "button";
-  export_code_button.className = "btn btn-primary btn-lg";
-  export_code_button.textContent = "Export Filter";
-
   outer_filter_el.appendChild(inner_filter_el);
   outer_filter_el.appendChild(gen_code_button);
-  outer_filter_el.appendChild(export_code_button);
 
   let hide_label = document.createElement('label');
   hide_label.textContent = "close filter";
-  hide_label.setAttribute("for", "blockly-filter-checkbox");
+  hide_label.setAttribute("for", show_button_id);
   hide_label.className = "btn btn-primary";
 
   modal.appendChild(title);
@@ -1084,7 +1084,7 @@ let blockly_static_init = function(blockly_root_el) {
   modal_overlay.append(modal);
   blockly_root_el.appendChild(modal_overlay);
   
-  $(show_checkbox).change(function () {
+  $(show_checkbox).change(function () {    
     window.dispatchEvent(new Event('resize')); //Otherwise blockly is wrongly sized
     chaff();
   });
@@ -1174,6 +1174,7 @@ const SC = {
 }
 
 let get_simple_root_el = function(el){
+  __assert(()=>is_html_element(el))
   return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.SIMPLE}"]`));
 }
 
@@ -1245,6 +1246,7 @@ let simplify_filter_state = function(state, subject_dataset_name) {
 
 let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
   __time_function_start() 
+  __assert(()=>is_html_element(simple_root_el));
   __assert(() => Array.isArray(dataset_filter_state));
   __assert(()=> !simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`));
   
@@ -1261,13 +1263,10 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
 
   let card_heading = document.createElement("div");
-  card_heading.className = "card-header bg-primary text-white";  
+  card_heading.className = "card-header bg-primary text-white dv-data-filter-header"; 
   
   let title_tag_container = document.createElement("h6");  
-  title_tag_container.className = "card-title mb-0";
-  title_tag_container.style.display = "flex";
-  title_tag_container.style.justifyContent = "flex-start";
-  title_tag_container.style.setProperty("column-gap", "5px");
+  title_tag_container.className = "card-title mb-0 dv-title-tag ";  
 
   let card_collapse_link = document.createElement("a");
   card_collapse_link.textContent = dataset.name;
@@ -1282,35 +1281,43 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   title_tag_container.appendChild(filter_count_tag);
 
   let row_count_tag = document.createElement(SC.TAG.ROW_COUNT_TAG);
-  row_count_tag.className = "badge bg-secondary text-light";
+  row_count_tag.className = "badge bg-light";
   title_tag_container.appendChild(row_count_tag);
 
   card_heading.appendChild(title_tag_container);
 
   if (is_subject_filter) {
-    card_heading.style.display = "flex";
-    card_heading.style.justifyContent = "space-between";
-    card_heading.style.alignItems = "center";
     let icon = document.createElement("span");
     icon.className = "glyphicon glyphicon-user";  
     card_heading.appendChild(document.createTextNode(" "));
     card_heading.appendChild(icon);
   }
+
+  let add_button = document.createElement("button");
+  add_button.className = "btn btn-outline-light btn-sm";
+  add_button.className = "btn btn-outline-light btn-sm";
+
+  let add_icon = document.createElement("i");
+  add_icon.className = "glyphicon glyphicon-plus";
+  add_button.appendChild(add_icon);
+
+  card_heading.appendChild(add_button);
+
   
   dataset_filter_container.appendChild(card_heading);
 
   let card_body = document.createElement("div");
-  card_body.className = 'card-body collapse show';
+  card_body.className = 'card-body collapse show p-1';
 
   let select = document.createElement('select');
-  select.className = 'selectpicker';
+  select.className = 'selectpicker dv-hide';
   select.setAttribute('multiple', '');
   select.setAttribute('title', 'Add / Remove Filters');
   select.setAttribute('data-live-search', 'true');
   select.setAttribute('data-width', '100%');
   select.setAttribute('data-style', 'btn');
   select.setAttribute('data-selected-text-format', 'static');
-  select.setAttribute('data-container', 'body');
+  select.setAttribute('data-container', 'body .dv_main_panel');
   select.setAttribute(SC.ATTRIBUTE.VARIABLE_SELECTOR, '');
 
   for(let i = 0; i < dataset.variables.length; ++i) {
@@ -1348,6 +1355,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
 
 let destroy_dataset_filter = function(dataset_el) {
   __time_function_start() 
+  __assert(()=>is_html_element(dataset_el))
   __assert(()=> dataset_el.hasAttribute(SC.ATTRIBUTE.DATASET_NAME));
 
   let variable_filter_control_container = dataset_el.querySelector(SC.TAG.VARIABLE_FILTER_CONTAINER);
@@ -1402,13 +1410,14 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
   __time_function_start();
   __assert(() => Array.isArray(dataset_filter_state));
+  __assert(()=>is_html_element(variable_filter_control_container_el));
   __assert(()=> variable_filter_control_container_el.tagName.toLowerCase() === SC.TAG.VARIABLE_FILTER_CONTAINER);
 
   let count_tag = variable_filter_control_container_el.closest(SC.TAG.DATASET_FILTER).querySelector(SC.TAG.FILTER_COUNT_TAG);
 
   if(selected_variables.length > 0) {
     count_tag.textContent = selected_variables.length;
-    count_tag.className = "badge bg-light text-dark";
+    count_tag.className = "badge bg-light";
   } else {
     count_tag.textContent = "";
     count_tag.className = "dv-hide";
@@ -1482,7 +1491,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       categorical_select.setAttribute('multiple', '');        
       categorical_select.setAttribute('data-live-search', 'true');
       categorical_select.setAttribute('data-actions-box', 'true');
-      categorical_select.setAttribute('data-container', 'body');
+      categorical_select.setAttribute('data-container', 'body .dv_main_panel');
       categorical_select.setAttribute('data-width', '100%');
       categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
@@ -1636,12 +1645,13 @@ let create_variable_filter_controls = function(variable_filter_control_container
 // Only called on from the simple dynamic init
 let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
   __time_function_start();
+  __assert(()=>is_html_element(simple_root_el))
   __assert(() => Array.isArray(dataset_filter_state));
 
   let prev_dataset_filter_el = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`);
 
   if(prev_dataset_filter_el) {
-    destroy_dataset_filter(prev_dataset_filter_el);
+    destroy_dataset_filter(prev_dataset_filter_el);    
   }
   create_dataset_filter(simple_root_el, dataset, dataset_filter_state, is_subject_filter);
   __time_function_end();
@@ -1764,6 +1774,7 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
 */
 // Gets the state of the whole simple filter
 let get_filter_state = function (simple_root_el, dataset_list_name) {
+  __assert(()=>is_html_element(simple_root_el))
   __time_function_start() 
   let subject_div = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=true]`);
   let other_div = simple_root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=false]`);
@@ -1806,6 +1817,7 @@ let handle_action = function() {
     
   let handlers = {
     remove: function(el) {
+      __assert(()=>is_html_element(el))
       const variable_to_be_removed = el.closest(SC.TAG.VARIABLE_FILTER).getAttribute(SC.ATTRIBUTE.VARIABLE); 
       const select = el.closest(SC.TAG.DATASET_FILTER).querySelector("select");
       let current_selection = $(select).val();
@@ -1860,6 +1872,17 @@ let simple_static_init = function(simple_root_el) {
   }
 );
 
+  $(simple_root_el).on('click', `${SC.TAG.DATASET_FILTER} .dv-data-filter-header button`, function(event) { 
+    let select = event.target.closest(SC.TAG.DATASET_FILTER).querySelector("select");
+    let filter_body_el = event.target.closest(`${SC.TAG.DATASET_FILTER}`).querySelector(".card-body");
+    let filter_body_collapse_instance = bootstrap.Collapse.getInstance(filter_body_el);
+    if (!filter_body_collapse_instance) {
+      filter_body_collapse_instance = new bootstrap.Collapse(filter_body_el, { toggle: false });
+    }
+    filter_body_collapse_instance.show();
+    $(select).selectpicker('refresh').selectpicker('toggle');
+  });
+
   $(simple_root_el).on('changed.bs.select', `${SC.TAG.DATASET_FILTER} select[${SC.ATTRIBUTE.VARIABLE_SELECTOR}]`, function(event) {
     let dataset_div = event.target.closest(`${SC.TAG.DATASET_FILTER}`);
     let dataset_name = dataset_div.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
@@ -1894,6 +1917,7 @@ let simple_static_init = function(simple_root_el) {
 
 // Handles the changes of datasets
 let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_name, filter_state) {
+  __assert(()=>is_html_element(simple_root_el))
   __time_function_start();
   // Subject filter
 
@@ -1933,12 +1957,13 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
 //#region General init
 
 let get_blockly_root_el = function(el){  
+  __assert(()=>is_html_element(el))
   return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
 }
 
-let init_filter_handler = function (msg, root_el, initial_send_code) {
-
-  let dataset_list_name = msg.dataset_list_name;
+let init_filter_handler = function (dataset_list_name, root_el, static_init_ret, selected_mode) {
+  __assert(()=>is_html_element(root_el));
+  
   set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, dataset_list_name);  
 
   let filter_data = get_filter_property(root_el, FC.PROPERTY.DATA);
@@ -1946,21 +1971,30 @@ let init_filter_handler = function (msg, root_el, initial_send_code) {
   let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
 
   let dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
-
-  simple_dynamic_init(
-    get_simple_root_el(root_el),
-    dataset_list,
-    subject_filter_dataset_name,
-    filter_state
-  );
   
-  blockly_dynamic_init(
-    get_blockly_root_el(root_el),   
-    dataset_list_name,    
-    filter_data, filter_state
-  );
-  
-  initial_send_code();
+  if(selected_mode === FC.MODE.SIMPLE) {
+    get_simple_root_el(root_el).style.display = 'block';
+    get_blockly_root_el(root_el).style.display = 'none';    
+    simple_dynamic_init(
+      get_simple_root_el(root_el),
+      dataset_list,
+      subject_filter_dataset_name,
+      filter_state
+    );
+    static_init_ret[FC.MODE.SIMPLE].send_code();
+  } else if (selected_mode === FC.MODE.BLOCKLY) {
+    get_simple_root_el(root_el).style.display = 'none';
+    get_blockly_root_el(root_el).style.display = 'flex';
+    get_blockly_root_el(root_el).style.justifyContent = 'space-around';
+    blockly_dynamic_init(
+      get_blockly_root_el(root_el),   
+      dataset_list_name,    
+      filter_data, filter_state
+    );
+    static_init_ret[FC.MODE.BLOCKLY].send_code();
+  } else {
+    throw new Error("Unknown mode: " + selected_mode);
+  }
 }
 
 let update_filter_result_handler = function(msg, root_el){
@@ -1981,6 +2015,19 @@ let update_filter_result_handler = function(msg, root_el){
   }
 }
 
+let show_hide_dataset_filters_handler =  function(msg, root_el){
+  let dataset_filters = root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}`);
+
+  for(let i = 0; i < dataset_filters.length; ++i) {
+    let current_dataset_name = dataset_filters[i].getAttribute(SC.ATTRIBUTE.DATASET_NAME);
+    if (msg.hidden.includes(current_dataset_name)) {
+      dataset_filters[i].classList.add("dv-hide");
+    } else {
+      dataset_filters[i].classList.remove("dv-hide");
+    }
+  }
+}
+
 let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state) {
   __assert(()=>is_html_element(blockly_root_el))
 
@@ -1996,7 +2043,12 @@ let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_d
 let FC = {
   TAG:{
     ROOT: "dv-filter-root",
-    FILTER: "dv-filter-filter"
+    FILTER: "dv-filter-filter",
+    CLEAR_ALL_BUTTON: "dv-filter-clear-all-button",
+    SAVE_BUTTON: "dv-filter-save-button",
+    SAVED_STATES_CONTAINER: "dv-filter-saved-states-container",
+    SAVED_STATE_BUTTON: "dv-filter-saved-state-button",
+    REMOVED_SAVED_STATE_BUTTON: "dv-filter-removed-saved-state-button",
   },
   MODE: {
     SIMPLE: "simple",
@@ -2008,17 +2060,30 @@ let FC = {
   },
   ATTRIBUTE: {
     ROOT: "data-root",
-    FILTER_MODE: "data-filter-mode"
+    FILTER_MODE: "data-filter-mode",
+    STATE_NAME: "state_name",
+    SAVED_FILTER_STATE_NAME: "data-saver-filter-name"
   },
   PROPERTY: {
     DATA: "filter_data",
     STATE: "filter_state",
+    SAVED_STATES: "saved_states",
     DATASET_LIST_NAME: "dataset_list_name",
     SUBJECT_DATASET_NAME: "subject_dataset_name"
+  },
+  VAL: {
+    EMPTY_FILTER: {
+        filters: {
+          datasets_filter: {children : [] },
+          subject_filter: {children : [] },
+          dataset_list_name: ""
+        }
+      }
   }
 }
 
 let get_root_el = function(el) {
+  __assert(()=>is_html_element(el))
   let root_el;
   if(el && el.tagName && el.tagName.toLowerCase() === FC.TAG.ROOT) {
     root_el = el;
@@ -2033,30 +2098,90 @@ let get_root_el = function(el) {
 }
 
 let get_filter_property = function(el, property) {  
-  return(structuredClone(get_root_el(el)[property]));
+  __assert(()=>is_html_element(el))
+  return(structuredClone(get_root_el(el)[property]));  
 }
 
 let set_filter_property = function(el, property, val) {
+  __assert(()=>is_html_element(el))
   return(get_root_el(el)[property] = val);
 }
 
-let get_selected_filter_mode = function(el) {
-  return(get_root_el(el).querySelector("select").value);
-}
-
-const init = function(root_id, filter_data, filter_state, subject_dataset_name, filter_json_input_id, filter_log_input_id) {
+const init = function(root_id, filter_data, filter_state, saved_filter_states, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {
   __logger("Filter root id: " + root_id);
 
   let root_el = document.getElementById(root_id);
   root_el[FC.PROPERTY.DATA] = filter_data;
   root_el[FC.PROPERTY.STATE] = filter_state;
+  root_el[FC.PROPERTY.SAVED_STATES] = !saved_filter_states ? [] : saved_filter_states;
   root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
-  let select = document.createElement('select');
 
-  root_el.appendChild(select);
+  ___logger(`Initial saved states:`);
+  ___logger(saved_filter_states)
+
+  let top_control_container = document.createElement("dv-filter-top-control-container");
+  top_control_container.className = "p-3 m-3 bg-light border rounded";
+
+  root_el.appendChild(top_control_container);
+
+  let export_button = document.createElement("a");
+  export_button.id = export_button_id;
+  export_button.className = "btn btn-primary btn-sm shiny-download-link disabled";
+  export_button.setAttribute("href", "");
+  export_button.setAttribute("target", "_blank");
+  export_button.setAttribute("download", "");
+  export_button.setAttribute("tabindex", "-1");
+  export_button.setAttribute("title", "Export filter");
+
+  let export_icon = document.createElement("span");
+  export_icon.className = "glyphicon glyphicon-export";
+
+  export_button.appendChild(export_icon)
+
+  let clear_all_button = document.createElement(FC.TAG.CLEAR_ALL_BUTTON);
+  clear_all_button.className = "btn btn-primary btn-sm";  
+  clear_all_button.setAttribute("title", "Clear all filters");
+
+  let clear_all_icon = document.createElement("span");
+  clear_all_icon.className = "glyphicon glyphicon-trash";
+
+  clear_all_button.appendChild(clear_all_icon);
+
+  let select = document.createElement('select');
+  select.className = "form-select form-select-sm w-auto d-inline-block";
+
+  let save_container = document.createElement("div");
+  save_container.className = "input-group";
+  let save_input = document.createElement("input");
+  save_input.setAttribute("type", "text");
+  save_input.setAttribute("class", "form-control");
+  save_input.setAttribute(FC.ATTRIBUTE.STATE_NAME, "");
+  save_input.setAttribute("placeholder", "Enter filter name");
+
+  save_container.appendChild(save_input);
+
+  let save_button = document.createElement(FC.TAG.SAVE_BUTTON);
+  save_button.className = "btn btn-primary btn-sm";  
+  save_button.setAttribute("title", "Save current filter");
+  let save_icon = document.createElement("span");
+  save_icon.className = "glyphicon glyphicon-floppy-disk";
+  save_button.appendChild(save_icon);
+  save_container.appendChild(save_button);
+
+  let saved_states_container = document.createElement(FC.TAG.SAVED_STATES_CONTAINER);
+
+  top_control_container.appendChild(select);
+  top_control_container.appendChild(export_button);
+  top_control_container.appendChild(clear_all_button);
+  top_control_container.appendChild(save_container);
+  top_control_container.appendChild(saved_states_container);
+
+  let bottom_container = document.createElement("div");
+  bottom_container.className = "mb-3 p-1 border bg-light";
+
+  let static_init_ret = {};
 
   // Simple
-
   let simple_option = document.createElement('option');
   simple_option.value = FC.MODE.SIMPLE;
   simple_option.textContent = FC.MODE.SIMPLE;
@@ -2064,9 +2189,9 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   
   let simple_div = document.createElement(FC.TAG.FILTER);
   simple_div.setAttribute(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.SIMPLE);
-  root_el.appendChild(simple_div);
+  bottom_container.appendChild(simple_div);
 
-  let simple_init_ret = simple_static_init(simple_div);
+  static_init_ret[FC.MODE.SIMPLE] = simple_static_init(simple_div);
 
   // Blockly
 
@@ -2077,47 +2202,12 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
   
   let blockly_div = document.createElement(FC.TAG.FILTER);
   blockly_div.setAttribute(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.BLOCKLY);
-  root_el.appendChild(blockly_div);
+  bottom_container.appendChild(blockly_div);
+  root_el.appendChild(bottom_container);
 
-  let blockly_init_ret = blockly_static_init(blockly_div);
+  static_init_ret[FC.MODE.BLOCKLY] = blockly_static_init(blockly_div);
   
-  let change_filter_mode = function(event) {    
-    let filter_divs = root_el.querySelectorAll(`[${FC.ATTRIBUTE.FILTER_MODE}]`);    
-    let new_selection = select.value;
-
-    __logger(`Changing to: ${new_selection}`);
-
-    for(let i = 0; i < filter_divs.length; ++i) {
-
-      let current_div_filter = filter_divs[i];
-      let current_mode = current_div_filter.getAttribute(FC.ATTRIBUTE.FILTER_MODE);
-
-      if (new_selection === current_mode) {
-        current_div_filter.style.display = 'block';
-      } else {
-        current_div_filter.style.display = 'none';
-      }            
-    }
-
-    let initial_send_code;
-    if(new_selection === FC.MODE.SIMPLE) {
-      initial_send_code = simple_init_ret.send_code;
-    } else if (new_selection === FC.MODE.BLOCKLY) {
-      initial_send_code = blockly_init_ret.send_code;
-    } else {
-      throw new Error("Unknown mode: " + new_selection);
-    }
-
-    if(event) { //FIXME: Terrible we should not be distinguising by event
-      init_filter_handler({dataset_list_name: get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME)}, root_el, initial_send_code);
-    }    
-  };
-
   select.value = FC.MODE.SIMPLE;
-
-  // TODO: Consider calling removing repeated code at the end of the function. Triggering this event is avoids repeating code.
-  select.addEventListener('change', change_filter_mode);
-  change_filter_mode();
 
   let dev_current_filter_div;
   if(__DEV_MODE) {
@@ -2125,51 +2215,139 @@ const init = function(root_id, filter_data, filter_state, subject_dataset_name, 
     root_el.appendChild(dev_current_filter_div);
   }
 
+  let change_filter_mode = function() {           
+    __logger(`Changing to: ${select.value}`);
+    init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
+  };
+
+  let baked_init_filter_handler = function(msg) {
+    init_filter_handler(msg.dataset_list_name, root_el, static_init_ret, select.value);
+  };
+  Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
+
+  let baked_update_filter_result_handler= function(msg) {
+    update_filter_result_handler(msg, root_el);
+  };
+  Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
+
+  let baked_show_hide_dataset_filters_handlers = function(msg) {
+    show_hide_dataset_filters_handler(msg, root_el);
+  };
+  Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
+
+  let request_dataset_filter_state = function(msg) {
+    set_filter_property(root_el, FC.PROPERTY.STATE, msg.state);
+    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+  };
+  Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
+
+  select.addEventListener('change', change_filter_mode);
+
   root_el.addEventListener(FC.EVENT.UPDATED_FILTER, function(event){
-    __logger("Sending to Shiny " + filter_json_input_id);
-    set_filter_property(event.target, FC.PROPERTY.STATE, event.detail.filter);
-    Shiny.setInputValue(filter_json_input_id, JSON.stringify(event.detail.filter), { priority: 'event' });
+    __logger("Sending to Shiny " + filter_state_json_input_id);
+    set_filter_property(root_el, FC.PROPERTY.STATE, event.detail.filter);
+    Shiny.setInputValue(filter_state_json_input_id, JSON.stringify(event.detail.filter), { priority: 'event' });
     if(__DEV_MODE) {
       dev_current_filter_div.textContent = JSON.stringify(event.detail.filter, null, 2);
     }
   });
 
-  // TODO: WHAT DO WE DO IN THE INITIAL PASS? THERE SHOULD BE AT LEAST ONE FILTER READY
+  clear_all_button.addEventListener("click", function(){
+    set_filter_property(root_el, FC.PROPERTY.STATE, FC.VAL.EMPTY_FILTER);
+    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+  });
 
-  let initial_send_code;
+  let render_saved_states = function(saved_states) {
+    saved_states_container.innerHTML = "";
+    for (let i = 0; i < saved_states.length; ++i) {
+      let button = document.createElement(FC.TAG.SAVED_STATE_BUTTON);
+      button.className = "btn btn-primary btn-sm";
+      button.textContent = saved_states[i].name;
+      button.setAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME, saved_states[i].name);
 
-  if(select.value === FC.MODE.SIMPLE) {
-    initial_send_code = simple_init_ret.send_code;
-  } else if (select.value === FC.MODE.BLOCKLY) {
-    initial_send_code = blockly_init_ret.send_code;
-  } else {
-    throw new Error("Unknown mode: " + select.value);
-  }
+      let remove_span = document.createElement(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
+      remove_span.innerHTML = "&times;";
+      remove_span.className = "close-btn ms-2";
 
-  let baked_init_filter_handler = function(msg) {
-    init_filter_handler(msg, root_el, initial_send_code);
+      button.appendChild(remove_span);
+      saved_states_container.appendChild(button);
+    }
   };
 
-  let baked_update_filter_result_handler= function(msg) {
-    update_filter_result_handler(msg, root_el);
+  let send_saved_states = function(saved_states) {    
+    __logger(`Sending saved states: ${JSON.stringify(saved_states)} to ${saved_filter_state_json_msg_input_id}`);
+    Shiny.setInputValue(saved_filter_state_json_msg_input_id, JSON.stringify(saved_states), { priority: 'event' });
   };
+
+  save_button.addEventListener("click",  function(){    
+    let state_name = save_input.value;
+    if(!state_name || state_name === "") {
+      return;
+    }
+    save_input.value = "";
+    let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);
+    let to_be_saved_state = {
+      name: state_name,
+      state: get_filter_property(root_el, FC.PROPERTY.STATE)
+    };
+    saved_states.push(to_be_saved_state);
+    set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, saved_states);
+
+    render_saved_states(saved_states);
+    send_saved_states(saved_states);
+  });
+
+  saved_states_container.addEventListener("click", function(event) {
+    if(event.target.tagName.toLowerCase() === FC.TAG.SAVED_STATE_BUTTON) {
+      ___logger("Loading filter");
+      let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);
+      let state_name = event.target.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
+      let new_state = saved_states.find((obj)=> obj.name===state_name);
+      if(!new_state) {
+        throw new Error(`Could not find saved state ${state_name}`);
+      }
+      set_filter_property(root_el, FC.PROPERTY.STATE, new_state.state);
+      select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+    };
+
+    if(event.target.tagName.toLowerCase() === FC.TAG.REMOVED_SAVED_STATE_BUTTON) {
+      ___logger("Removing filter");
+      let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);      
+      let to_be_removed_state_name = event.target.parentElement.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
+      saved_states = saved_states.filter(obj => obj.name !== to_be_removed_state_name);
+      set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, saved_states);
+      render_saved_states(saved_states);
+      send_saved_states(saved_states);
+    };
+  });
+
+  // First call with no event on init.
+  render_saved_states(get_filter_property(root_el, FC.PROPERTY.SAVED_STATES));
+
+  Shiny.initializedPromise.then(() => { // Otherwise Shiny is not ready to send input values
+    send_saved_states(get_filter_property(root_el, FC.PROPERTY.SAVED_STATES));
+  });
   
-  Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
-  Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
 }
 
 //#endregion
 
 export {init}
 
-// TODO: Hide filters when datasets are not relevant for the selected tab
-// TODO: Move add filter button to top right heading to save vertical space
-// TODO: Add colapse all, open all, collapse empty
-// TODO: Add clear all filters per dataset and global
-// TODO: Check dataset_list switching
-// TODO: Move export button outside from blockly
-// TODO: Add saving states with name support
+// A wall will be hit regarding who is responsible of the state managing things are getting complicated, maybe full state
+// should be passed back and forth, otherwise state gets divided.
+
+// TODO: Check requested filter states, they may contain variables that are not present and this brings errors
+// Define behavior:
+// Bookmarked and loaded filters must remain unaltered, so in the future when data matches they will work
+// Datasets must show error/warnings for the non applicable filter/variable
+// This can be done in the client and in the server
+// Maybe sanitize before loading?
 // TODO: Add transition to filter add and removal
+// TODO: Disable simple filter when a non-compatible filter is loaded
+// TODO: Add support to filter state update from the server (Send filter from server);
+// TODO: Filter creator helpers
+// TODO: Pretty print filters
 
 /* TODO: Consider pairing creation and destruction
 
@@ -2213,4 +2391,6 @@ Who is responsible for this is unclear:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
