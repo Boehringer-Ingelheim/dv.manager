@@ -1064,22 +1064,28 @@ let blockly_static_init = function(blockly_root_el) {
   inner_filter_el.className = "blockly_filter inner";
   inner_filter_el.setAttribute(BC.ATTRIBUTE.INNER_FILTER, '');
   
+  let button_container = document.createElement("div");
+  button_container.classList= "d-inline-flex justify-content-center"  ;
+
   let gen_code_button = document.createElement("button");
   gen_code_button.type = "button";
-  gen_code_button.className = "btn btn-primary btn-lg";
+  gen_code_button.className = "btn btn-primary btn-lg m-2";
   gen_code_button.textContent = "Apply Filter";
 
-  outer_filter_el.appendChild(inner_filter_el);
-  outer_filter_el.appendChild(gen_code_button);
-
   let hide_label = document.createElement('label');
-  hide_label.textContent = "close filter";
+  hide_label.textContent = "Close Filter";
   hide_label.setAttribute("for", show_button_id);
-  hide_label.className = "btn btn-primary";
+  hide_label.className = "btn btn-primary btn-lg m-2";
+
+  button_container.appendChild(gen_code_button);
+  button_container.appendChild(hide_label);
+
+  outer_filter_el.appendChild(inner_filter_el);
+  outer_filter_el.appendChild(button_container);
+
 
   modal.appendChild(title);
   modal.appendChild(outer_filter_el);
-  modal.appendChild(hide_label);
 
   modal_overlay.append(modal);
   blockly_root_el.appendChild(modal_overlay);
