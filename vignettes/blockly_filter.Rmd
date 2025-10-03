@@ -86,7 +86,7 @@ The exported file can then be reused in the application as a preset filter.
 
 ``` {r, eval = FALSE}
 
-dv.manager:::run_app(
+dv.manager::run_app(
   ...,
   filter_type = "development",
   filter_default_state = "path/to/filter/file.json"
@@ -210,7 +210,7 @@ Below is an example application that allows testing the Blockly filter:
 # Note ::: is used as several of the functions are not exported yet
 # until a final version of the filter is provided
 
-dv.manager:::run_app(
+dv.manager::run_app(
   data = list(
     "D0" = list(
       adsl = dv.manager:::get_pharmaverse_data("adsl"),
