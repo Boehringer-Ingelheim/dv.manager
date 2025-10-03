@@ -27,9 +27,9 @@ import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
 import './toolbox-search/index.js'
 
-const __DEV_MODE = true;
+const __DEV_MODE = false;
 const __LOGGER = false;
-const __TIMER = true;
+const __TIMER = false;
 
 let __logger = function(x){};
 let ___logger = function(x){
