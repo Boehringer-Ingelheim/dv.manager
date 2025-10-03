@@ -131,7 +131,7 @@ local({
         filter_data = "dataset_1",
         filter_key = "sbj_var",
         enableBookmarking = "url",
-        filter_type = "blockly",
+        filter_type = "development",
         filter_default = !!fd
       )
 
