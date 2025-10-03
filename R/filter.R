@@ -499,15 +499,14 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
       shiny::span(
         style = "display:none;",
         add_blockly_dependency(),
-        shiny:::ionRangeSliderDependency(),
-        shiny:::datePickerDependency(),
         # When attaching the dependencies on my own an error occurs when using multiple
         # When including an input perse the error disappears, this should be explored
-        shinyWidgets::pickerInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES"), choices = c("A", "B"), multiple = TRUE)
+        shiny::sliderInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES1"), label = NULL, min = 0, max = 0, value = 0),
+        shiny::dateRangeInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES2"), label = NULL, start = "2001-01-01", end = "2001-01-01"),
+        shinyWidgets::pickerInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES3"), choices = c("A", "B"), multiple = TRUE)
       )
     )
   )
-
 
   combined_ui <- local({
     tag_dv_filter_wrapper(
@@ -626,99 +625,4 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     )
   }
   shiny::moduleServer(id, mod)
-}
-
-mock_new_filter <- function(data = list(
-                              "D1" = list(
-                                adsl = get_pharmaverse_data("adsl"),
-                                adae = get_pharmaverse_data("adae")
-                              ),
-                              "D2" = list(
-                                adsl = get_pharmaverse_data("adsl"),
-                                adae = get_pharmaverse_data("adae")
-                              )
-                            ),
-                            filter_state = NULL,
-                            saved_states = NULL
-                            ) {
-  ui <- function(request) {
-    shiny::fluidPage(
-      shiny::bookmarkButton(),
-      shiny::div(
-        new_filter_ui(ID$FILTER, data, state = filter_state, subject_dataset_name = "adsl", saved_states = saved_states),
-        style = "height: auto"
-      ),
-      shiny::h4("JSON"),
-      shiny::verbatimTextOutput("raw_json"),
-      shiny::h4("VALIDATED JSON"),
-      DT::dataTableOutput("validate_json"),
-      shiny::verbatimTextOutput("output_filtered_ds"),
-      shiny::verbatimTextOutput("output_filtered_sbj"),
-      theme = get_app_theme()
-    )
-  }
-
-  server <- function(input, output, session) {
-    selected_data <- "D1"
-    x <- new_filter_server(
-      ID$FILTER_STATE_JSON_INPUT,
-      selected_dataset = shiny::reactive(selected_data),
-      after_filter_dataset_list = shiny::reactive(NULL),
-      strict = TRUE
-    )
-
-    output[["raw_json"]] <- shiny::renderPrint({
-      json <- x()[["raw"]]
-      shiny::req(json)
-      jsonlite::prettify(json)
-    })
-
-    output[["validate_json"]] <- DT::renderDataTable({
-      json <- x()[["raw"]]
-      shiny::req(json)
-      e <- attr(from_filter_validate(json), "error") |> tibble::as_tibble()
-      e
-    })
-
-    output[["output_json"]] <- shiny::renderPrint({
-      shiny::req(!is.na(x()[["parsed"]]))
-      yyjsonr_read_json_str_with_options(x[["parsed"]])
-    })
-
-    filtered_datasets <- shiny::reactive({
-      shiny::req(!is.na(x()[["parsed"]]))
-      ds <- data[[selected_data]]
-      mask <- create_dataset_filter_masks(ds, x()[["parsed"]][["filters"]][["datasets_filter"]])
-      apply_dataset_filter_masks(ds, mask)
-    })
-
-    filtered_subjects <- shiny::reactive({
-      shiny::req(!is.na(x()[["parsed"]]))
-      ds <- data[[selected_data]]
-      subject_set <- create_subject_set(ds, x()[["parsed"]][["filters"]][["subject_filter"]], "USUBJID")
-      if (identical(subject_set, NA_character_)) {
-        ds
-      } else {
-        apply_subject_set(ds, subject_set, "USUBJID")
-      }
-    })
-
-    output[["output_filtered_ds"]] <- shiny::renderPrint({
-      filtered_datasets()
-    })
-
-    output[["output_filtered_sbj"]] <- shiny::renderPrint({
-      filtered_subjects()
-    })
-
-    output[["output_ds"]] <- shiny::renderPrint({
-      x()
-    })
-  }
-
-  shiny::shinyApp(
-    ui = ui,
-    server = server,
-    enableBookmarking = "url"
-  )
 }
