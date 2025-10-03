@@ -54,7 +54,7 @@ mm_resolve_dispatcher <- function(dispatcher, # nolintr excessive cyclomatic com
 #' @param afmm a list of arguments from module manager
 #'
 #' @noRd
-#' 
+#'
 #' @keywords internal
 mm_resolve_module_output <- function(selection, afmm, flatten) {
   .Defunct(NULL, msg = "please check the module help replacing the dispatchers")
