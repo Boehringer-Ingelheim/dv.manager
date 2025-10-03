@@ -22,3 +22,4 @@ Dispatcher resolver
 \seealso{
 mm_dispatch
 }
+\keyword{internal}

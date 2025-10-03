@@ -766,6 +766,7 @@ run_mock_app_labels <- function(data) {
 #' @param id shiny id
 #'
 #' @export
+#' @keywords internal
 multi_simple_UI <- function(id) { # nolint
   ns <- shiny::NS(id)
   shiny::uiOutput(ns("out"))

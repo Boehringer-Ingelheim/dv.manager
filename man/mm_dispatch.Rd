@@ -33,3 +33,4 @@ mm_dispatch("utils", "switch2")
 \seealso{
 mm_resolve_dispatcher
 }
+\keyword{internal}

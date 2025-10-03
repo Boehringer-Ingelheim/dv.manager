@@ -10,7 +10,7 @@ simple_UI(id)
 
 simple_server(id, dataset)
 
-mod_simple(dataset, module_id)
+mod_simple(dataset, from, module_id)
 }
 \arguments{
 \item{id}{shiny id}

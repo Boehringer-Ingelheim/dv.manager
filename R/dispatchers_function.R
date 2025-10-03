@@ -22,6 +22,7 @@
 #' mm_dispatch("unfiltered_dataset", "adsl")
 #' mm_dispatch("utils", "switch2")
 #' @export
+#' @keywords internal
 
 mm_dispatch <- function(from, selection = character(0)) {
   .Defunct(NULL, msg = "please check the module help replacing the dispatchers")
@@ -40,7 +41,7 @@ mm_dispatch <- function(from, selection = character(0)) {
 #'
 #' @export
 #'
-#'
+#' @keywords internal
 mm_resolve_dispatcher <- function(dispatcher, # nolintr excessive cyclomatic complexity
                                   afmm,
                                   flatten = FALSE) {
@@ -53,7 +54,8 @@ mm_resolve_dispatcher <- function(dispatcher, # nolintr excessive cyclomatic com
 #' @param afmm a list of arguments from module manager
 #'
 #' @noRd
-#'
+#' 
+#' @keywords internal
 mm_resolve_module_output <- function(selection, afmm, flatten) {
   .Defunct(NULL, msg = "please check the module help replacing the dispatchers")
 }
