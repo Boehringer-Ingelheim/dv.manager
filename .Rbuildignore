@@ -10,3 +10,6 @@
 ^_pkgdown.yml$
 ^LICENSE$
 ^\.github
+filter_js/
+.lintr.R
+.gitempty
