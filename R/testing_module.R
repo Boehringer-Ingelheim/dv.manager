@@ -102,6 +102,8 @@ simple_server <- function(id, dataset) {
 #' This simple module is used for demonstration purposes in documentation
 #'
 #' @param module_id shiny module ID
+#' @param from name of the dataset_list
+#' @param dataset name of the dataset
 #'
 #' @export
 mod_simple <- function(dataset, from, module_id) {

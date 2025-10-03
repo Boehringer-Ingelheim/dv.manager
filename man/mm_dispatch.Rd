@@ -25,12 +25,4 @@ The parameter \code{from} can take the following values:
 \item utils
 }
 }
-\examples{
-
-mm_dispatch("unfiltered_dataset", "adsl")
-mm_dispatch("utils", "switch2")
-}
-\seealso{
-mm_resolve_dispatcher
-}
 \keyword{internal}
