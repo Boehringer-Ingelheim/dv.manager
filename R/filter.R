@@ -465,19 +465,23 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
 
   assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
+  escape_single_quote <- function(x){
+    gsub("'", "\\\\'", x)    
+  }
+
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
         "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
-        ns(ID$FILTER_CONTAINER),
-        filter_data,
-        filter_bookmark,
-        saved_states_bookmark,
-        subject_dataset_name,
-        ns(ID$FILTER_STATE_JSON_INPUT),
-        ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT),
-        ns(ID$EXPORT_CODE_INPUT),
-        ns(ID$FILTER_LOG_INPUT)
+        escape_single_quote(ns(ID$FILTER_CONTAINER)),
+        escape_single_quote(filter_data),
+        escape_single_quote(filter_bookmark),
+        escape_single_quote(saved_states_bookmark),
+        escape_single_quote(subject_dataset_name),
+        escape_single_quote(ns(ID$FILTER_STATE_JSON_INPUT)),
+        escape_single_quote(ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)),
+        escape_single_quote(ns(ID$EXPORT_CODE_INPUT)),
+        escape_single_quote(ns(ID$FILTER_LOG_INPUT))
       )
     )
   )
