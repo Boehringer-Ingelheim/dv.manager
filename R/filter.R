@@ -528,7 +528,13 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
 
 new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dataset_name, after_filter_dataset_list, strict = FALSE) {
   mod <- function(input, output, session) {
-    shiny::setBookmarkExclude("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES")
+    shiny::setBookmarkExclude(
+      c(
+        "IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES1",
+        "IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES2",
+        "IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES3"
+        )
+      )
     ns <- session[["ns"]]
 
     log_inform(paste("Listening to:", ns(ID$FILTER_STATE_JSON_INPUT)))
