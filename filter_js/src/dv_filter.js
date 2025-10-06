@@ -2136,12 +2136,16 @@ let set_filter_property = function(el, property, val) {
   return(get_root_el(el)[property] = val);
 }
 
-const init = function(root_id, filter_data, filter_state, saved_filter_states, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {
+const init = function(root_id, filter_data_json, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {
   __logger("Filter root id: " + root_id);
   ___logger(`Initial filter state:`);
   ___logger(filter_state);
   ___logger(`Initial saved states:`);
-  ___logger(saved_filter_states)
+  ___logger(saved_filter_states);
+
+  let filter_data = JSON.parse(filter_data_json);
+  let filter_state = JSON.parse(filter_state_json);
+  let saved_filter_states = JSON.parse(saved_filter_states_json);
 
   let root_el = document.getElementById(root_id);
   root_el[FC.PROPERTY.DATA] = filter_data;

@@ -468,7 +468,7 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
-        "dv_filter.init('%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s')",
+        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
         ns(ID$FILTER_CONTAINER),
         filter_data,
         filter_bookmark,
