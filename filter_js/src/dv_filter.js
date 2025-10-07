@@ -2316,7 +2316,7 @@ const init = function(root_id, filter_data_json, filter_state_json, saved_filter
       // the remove button as an input-group-append
       let remove_button = document.createElement(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
       remove_button.type = "button";
-      remove_button.className = "btn btn-primary close-btn";
+      remove_button.className = "btn btn-primary";
       remove_button.innerHTML = "&times;";
       remove_button.setAttribute(
         FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME,

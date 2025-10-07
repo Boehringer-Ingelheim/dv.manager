@@ -309,17 +309,9 @@ dv-filter-wrapper {
       dv-filter-saved-states-list{
         display:flex;
         flex-wrap: wrap;
-        gap: .25rem;
+        gap: .25rem;        
       }
-
-      .close-btn {        
-        color: #d9534f;
-        font-size: 14px;
-      }
-
-      .close-btn:hover {
-        color: #c9302c;
-      }
+      
     }
 
     dv-incompatible-warning {
