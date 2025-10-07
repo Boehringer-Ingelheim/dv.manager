@@ -22,7 +22,4 @@ on:
 jobs:
   run-shared-ci:
     name: Shared
-    uses: boehringer-ingelheim/dv.templates/.github/workflows/shared_ci.yml@test_ci
-  run-test-ci:
-    name: Shared
-    uses: boehringer-ingelheim/dv.templates/.github/workflows/shared_ci.yml@313911-avoid-system-lib-installations
+    uses: boehringer-ingelheim/dv.templates/.github/workflows/shared_ci.yml@test_ci  
