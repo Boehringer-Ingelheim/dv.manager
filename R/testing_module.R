@@ -43,7 +43,7 @@ identity_server <- function(id, value) {
 mod_identity <- function(value, from = NULL, mod_id) {
   list(
     ui = identity_UI,
-    server = function(afmm) {      
+    server = function(afmm) {
       identity_server(
         id = mod_id,
           if (!is.null(from)) {
@@ -86,7 +86,7 @@ simple_server <- function(id, dataset) {
       output$text <- shiny::renderText(
         {
           r <- dataset()
-          while(shiny::is.reactive(r)) {
+          while (shiny::is.reactive(r)) {
             r <- r()
           }
           log_inform(paste(nrow(r)))
@@ -102,6 +102,8 @@ simple_server <- function(id, dataset) {
 #' This simple module is used for demonstration purposes in documentation
 #'
 #' @param module_id shiny module ID
+#' @param from name of the dataset_list
+#' @param dataset name of the dataset
 #'
 #' @export
 mod_simple <- function(dataset, from, module_id) {
@@ -766,6 +768,7 @@ run_mock_app_labels <- function(data) {
 #' @param id shiny id
 #'
 #' @export
+#' @keywords internal
 multi_simple_UI <- function(id) { # nolint
   ns <- shiny::NS(id)
   shiny::uiOutput(ns("out"))

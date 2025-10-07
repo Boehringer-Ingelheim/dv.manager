@@ -2,7 +2,7 @@
 
 
 test_that(
-  vdoc[["add_spec"]]("dv.manager should provide SSO login", c(specs$azure_options, specs$SSO_login_option, specs$AzureAuth_integration, specs$SSO_authentication_option)),
+  vdoc[["add_spec"]]("dv.manager should provide SSO login", c(specs$AUTHENTICATION$SSO_ENABLED, specs$AUTHENTICATION$SSO_DISABLED, specs$AUTHENTICATION$AZURE_OPTIONS_REQUIRED, specs$AUTHENTICATION$AZURE_OPTIONS_NULL, specs$AUTHENTICATION$SSO_ENABLED)),
   {
     skip("Untestable from development/Manual testing")
   }

@@ -27,9 +27,9 @@ import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
 import './toolbox-search/index.js'
 
-const __DEV_MODE = true;
+const __DEV_MODE = false;
 const __LOGGER = false;
-const __TIMER = true;
+const __TIMER = false;
 
 let __logger = function(x){};
 let ___logger = function(x){
@@ -1064,22 +1064,28 @@ let blockly_static_init = function(blockly_root_el) {
   inner_filter_el.className = "blockly_filter inner";
   inner_filter_el.setAttribute(BC.ATTRIBUTE.INNER_FILTER, '');
   
+  let button_container = document.createElement("div");
+  button_container.classList= "d-inline-flex justify-content-center"  ;
+
   let gen_code_button = document.createElement("button");
   gen_code_button.type = "button";
-  gen_code_button.className = "btn btn-primary btn-lg";
+  gen_code_button.className = "btn btn-primary btn-lg m-2";
   gen_code_button.textContent = "Apply Filter";
 
-  outer_filter_el.appendChild(inner_filter_el);
-  outer_filter_el.appendChild(gen_code_button);
-
   let hide_label = document.createElement('label');
-  hide_label.textContent = "close filter";
+  hide_label.textContent = "Close Filter";
   hide_label.setAttribute("for", show_button_id);
-  hide_label.className = "btn btn-primary";
+  hide_label.className = "btn btn-primary btn-lg m-2";
+
+  button_container.appendChild(gen_code_button);
+  button_container.appendChild(hide_label);
+
+  outer_filter_el.appendChild(inner_filter_el);
+  outer_filter_el.appendChild(button_container);
+
 
   modal.appendChild(title);
   modal.appendChild(outer_filter_el);
-  modal.appendChild(hide_label);
 
   modal_overlay.append(modal);
   blockly_root_el.appendChild(modal_overlay);
@@ -1139,7 +1145,8 @@ const SC = {
     VARIABLE_FILTER_CONTAINER : "dv-filter-variable-filter-container",
     VARIABLE_FILTER: "dv-filter-variable-filter",
     FILTER_COUNT_TAG: "dv-filter-count-tag",
-    ROW_COUNT_TAG: "dv-filter-row-count-tag"
+    ROW_COUNT_TAG: "dv-filter-row-count-tag",
+    INCOMPATIBLE_WARNING_ELEMENT: "dv-incompatible-warning"
   },
   EVENTS: {
     CHANGED_FILTER: 'dv_filter:changed'
@@ -1170,6 +1177,9 @@ const SC = {
     "character": "font",
     "logical": "ok-circle",
     "unknown": "question-sign"    
+  },
+  PROPERTY: {
+    STATE_OVERRIDE: "state_override"
   }
 }
 
@@ -1197,7 +1207,7 @@ let simplify_filter_state = function(state, subject_dataset_name) {
       if (state.children[0].kind === "row_operation" && state.children[0].operation === "and") {
         let ok_all_child = state.children[0].children.reduce(function (acc, obj) { return (acc && obj.kind === "filter" && obj.dataset === dataset_name) }, true);
         if (!ok_all_child) {
-          console.error("At least one child is not of kind filter or does not belong to the correct dataset")
+          __logger("At least one child is not of kind filter or does not belong to the correct dataset")
         }
         compatible = compatible && ok_all_child;
         simple_state = state.children[0].children;
@@ -1205,7 +1215,7 @@ let simplify_filter_state = function(state, subject_dataset_name) {
         let filter_and_correct_dataset = state.children[0].kind === "filter" && state.children[0].dataset === dataset_name;
         compatible = compatible && filter_and_correct_dataset;
         if (!filter_and_correct_dataset) {
-          console.error("First child is not an `and` operation or a single filter with correct dataset")
+          __logger("First child is not an `and` operation or a single filter with correct dataset")
         }
         simple_state = [state.children[0]];
       }
@@ -1338,14 +1348,15 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
     select.appendChild(option);
   }
  
+  
   card_body.appendChild(select);
-
+  
   let variable_filter_control_container = document.createElement(SC.TAG.VARIABLE_FILTER_CONTAINER);
   card_body.appendChild(variable_filter_control_container);
-
+  
   dataset_filter_container.appendChild(card_body);
   simple_root_el.appendChild(dataset_filter_container);
-
+  
   $(select).selectpicker();
 
 
@@ -1775,7 +1786,12 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
 // Gets the state of the whole simple filter
 let get_filter_state = function (simple_root_el, dataset_list_name) {
   __assert(()=>is_html_element(simple_root_el))
-  __time_function_start() 
+  __time_function_start()
+
+  if(simple_root_el[SC.PROPERTY.STATE_OVERRIDE]!== undefined) {
+    return(simple_root_el[SC.PROPERTY.STATE_OVERRIDE]);
+  }
+
   let subject_div = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=true]`);
   let other_div = simple_root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=false]`);
 
@@ -1872,7 +1888,7 @@ let simple_static_init = function(simple_root_el) {
   }
 );
 
-  $(simple_root_el).on('click', `${SC.TAG.DATASET_FILTER} .dv-data-filter-header button`, function(event) { 
+  $(simple_root_el).on('click', `${SC.TAG.DATASET_FILTER} .dv-data-filter-header button`, function(event) {
     let select = event.target.closest(SC.TAG.DATASET_FILTER).querySelector("select");
     let filter_body_el = event.target.closest(`${SC.TAG.DATASET_FILTER}`).querySelector(".card-body");
     let filter_body_collapse_instance = bootstrap.Collapse.getInstance(filter_body_el);
@@ -1880,7 +1896,7 @@ let simple_static_init = function(simple_root_el) {
       filter_body_collapse_instance = new bootstrap.Collapse(filter_body_el, { toggle: false });
     }
     filter_body_collapse_instance.show();
-    $(select).selectpicker('refresh').selectpicker('toggle');
+    $(select).selectpicker('toggle');
   });
 
   $(simple_root_el).on('changed.bs.select', `${SC.TAG.DATASET_FILTER} select[${SC.ATTRIBUTE.VARIABLE_SELECTOR}]`, function(event) {
@@ -1899,6 +1915,7 @@ let simple_static_init = function(simple_root_el) {
     update_filter_controls(dataset_control_div, dataset, selected_variables, dataset_filter_state);
     dispatch_simple_filter_changed(event);
   });
+
   $(simple_root_el).on("changed.bs.select", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] select`, dispatch_simple_filter_changed);
   $(simple_root_el).on("finished.ion.range.slider", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input`, dispatch_simple_filter_changed);
   $(simple_root_el).on("changeDate", `${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] input`, dispatch_simple_filter_changed);
@@ -1922,24 +1939,34 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
   // Subject filter
 
   let simple_filter_state = simplify_filter_state(filter_state, subject_dataset_name);
+  let subject_dataset = filter_data.dataset_list.find(obj=>obj.name === subject_dataset_name);
+  let other_datasets = filter_data.dataset_list.filter(obj=>obj.name !== subject_dataset_name);  
 
   if(!simple_filter_state.compatible) {
-    console.error("State not compatible")    
+    __logger("State not compatible");
+    simple_root_el.classList.add("dv-disabled-controls");
+    simple_root_el[SC.PROPERTY.STATE_OVERRIDE] = filter_state;
+    simple_filter_state.state = {};
+
+    let warning_element = document.createElement(SC.TAG.INCOMPATIBLE_WARNING_ELEMENT);
+    warning_element.innerHTML = "&#9888; Filter state cannot be represented";
+    warning_element.classList = "alert alert-warning mb-3 border-1 rounded";
+    simple_root_el.prepend(warning_element);
   } else {
-    __logger("State compatible")
+    __logger("State compatible");    
+    simple_root_el.classList.remove("dv-disabled-controls");    
+    simple_root_el[SC.PROPERTY.STATE_OVERRIDE] = undefined;   
+    simple_root_el.querySelector(SC.TAG.INCOMPATIBLE_WARNING_ELEMENT)?.remove();
   }
 
-  let subject_dataset = filter_data.dataset_list.find(obj=>obj.name === subject_dataset_name);
-  let other_datasets = filter_data.dataset_list.filter(obj=>obj.name !== subject_dataset_name);
-  
   update_dataset_filter(
-    simple_root_el,
-    subject_dataset,
-    simple_filter_state.state[subject_dataset_name] ?? [], //FIXME: loiuhb who is reponsible for this is not well defined
-    true
-  );
+      simple_root_el,
+      subject_dataset,
+      simple_filter_state.state[subject_dataset_name] ?? [], //FIXME: loiuhb who is reponsible for this is not well defined
+      true
+    );
 
-  for(let i = 0; i < other_datasets.length; ++i) {    
+  for (let i = 0; i < other_datasets.length; ++i) {
     update_dataset_filter(
       simple_root_el,
       other_datasets[i],
@@ -1947,6 +1974,7 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
       false
     )
   }
+  
   __time_function_end();
 }
 
@@ -2046,6 +2074,7 @@ let FC = {
     FILTER: "dv-filter-filter",
     CLEAR_ALL_BUTTON: "dv-filter-clear-all-button",
     SAVE_BUTTON: "dv-filter-save-button",
+    SAVED_STATES_LIST: "dv-filter-saved-states-list",
     SAVED_STATES_CONTAINER: "dv-filter-saved-states-container",
     SAVED_STATE_BUTTON: "dv-filter-saved-state-button",
     REMOVED_SAVED_STATE_BUTTON: "dv-filter-removed-saved-state-button",
@@ -2062,7 +2091,7 @@ let FC = {
     ROOT: "data-root",
     FILTER_MODE: "data-filter-mode",
     STATE_NAME: "state_name",
-    SAVED_FILTER_STATE_NAME: "data-saver-filter-name"
+    SAVED_FILTER_STATE_NAME: "data-saved-filter-name"
   },
   PROPERTY: {
     DATA: "filter_data",
@@ -2107,8 +2136,16 @@ let set_filter_property = function(el, property, val) {
   return(get_root_el(el)[property] = val);
 }
 
-const init = function(root_id, filter_data, filter_state, saved_filter_states, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {
+const init = function(root_id, filter_data_json, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {  
+  let filter_data = JSON.parse(filter_data_json);
+  let filter_state = JSON.parse(filter_state_json);
+  let saved_filter_states = JSON.parse(saved_filter_states_json);
+
   __logger("Filter root id: " + root_id);
+  __logger(`Initial filter state:`);
+  __logger(filter_state_json);
+  __logger(`Initial saved states:`);
+  __logger(saved_filter_states);
 
   let root_el = document.getElementById(root_id);
   root_el[FC.PROPERTY.DATA] = filter_data;
@@ -2116,8 +2153,6 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
   root_el[FC.PROPERTY.SAVED_STATES] = !saved_filter_states ? [] : saved_filter_states;
   root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
 
-  ___logger(`Initial saved states:`);
-  ___logger(saved_filter_states)
 
   let top_control_container = document.createElement("dv-filter-top-control-container");
   top_control_container.className = "p-3 m-3 bg-light border rounded";
@@ -2135,8 +2170,8 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
 
   let export_icon = document.createElement("span");
   export_icon.className = "glyphicon glyphicon-export";
+  export_button.appendChild(export_icon);
 
-  export_button.appendChild(export_icon)
 
   let clear_all_button = document.createElement(FC.TAG.CLEAR_ALL_BUTTON);
   clear_all_button.className = "btn btn-primary btn-sm";  
@@ -2144,36 +2179,42 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
 
   let clear_all_icon = document.createElement("span");
   clear_all_icon.className = "glyphicon glyphicon-trash";
-
   clear_all_button.appendChild(clear_all_icon);
+
 
   let select = document.createElement('select');
   select.className = "form-select form-select-sm w-auto d-inline-block";
 
-  let save_container = document.createElement("div");
-  save_container.className = "input-group";
+  
+  let saved_states_container = document.createElement(FC.TAG.SAVED_STATES_CONTAINER);
+
+  let save_controls = document.createElement("div");
+  save_controls.className = "input-group";
+
   let save_input = document.createElement("input");
   save_input.setAttribute("type", "text");
   save_input.setAttribute("class", "form-control");
   save_input.setAttribute(FC.ATTRIBUTE.STATE_NAME, "");
   save_input.setAttribute("placeholder", "Enter filter name");
-
-  save_container.appendChild(save_input);
+  save_controls.appendChild(save_input);
 
   let save_button = document.createElement(FC.TAG.SAVE_BUTTON);
   save_button.className = "btn btn-primary btn-sm";  
   save_button.setAttribute("title", "Save current filter");
+
   let save_icon = document.createElement("span");
   save_icon.className = "glyphicon glyphicon-floppy-disk";
   save_button.appendChild(save_icon);
-  save_container.appendChild(save_button);
+  save_controls.appendChild(save_button);
 
-  let saved_states_container = document.createElement(FC.TAG.SAVED_STATES_CONTAINER);
+  let saved_states_list = document.createElement(FC.TAG.SAVED_STATES_LIST);
+  saved_states_container.appendChild(saved_states_list);
+
 
   top_control_container.appendChild(select);
   top_control_container.appendChild(export_button);
   top_control_container.appendChild(clear_all_button);
-  top_control_container.appendChild(save_container);
+  top_control_container.appendChild(save_controls);
   top_control_container.appendChild(saved_states_container);
 
   let bottom_container = document.createElement("div");
@@ -2257,20 +2298,35 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
     select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
   });
 
-  let render_saved_states = function(saved_states) {
-    saved_states_container.innerHTML = "";
+  let render_saved_states = function (saved_states) {
+    saved_states_list.innerHTML = "";
     for (let i = 0; i < saved_states.length; ++i) {
+      let group = document.createElement("div");
+      group.className = "input-group input-group-sm w-auto";
+
+      // the "main action" button
       let button = document.createElement(FC.TAG.SAVED_STATE_BUTTON);
-      button.className = "btn btn-primary btn-sm";
+      button.className = "btn btn-primary";
       button.textContent = saved_states[i].name;
-      button.setAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME, saved_states[i].name);
+      button.setAttribute(
+        FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME,
+        saved_states[i].name
+      );
 
-      let remove_span = document.createElement(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
-      remove_span.innerHTML = "&times;";
-      remove_span.className = "close-btn ms-2";
+      // the remove button as an input-group-append
+      let remove_button = document.createElement(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
+      remove_button.type = "button";
+      remove_button.className = "btn btn-primary";
+      remove_button.innerHTML = "&times;";
+      remove_button.setAttribute(
+        FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME,
+        saved_states[i].name
+      );
 
-      button.appendChild(remove_span);
-      saved_states_container.appendChild(button);
+      // assemble
+      group.appendChild(button);
+      group.appendChild(remove_button);
+      saved_states_list.appendChild(group);
     }
   };
 
@@ -2297,9 +2353,9 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
     send_saved_states(saved_states);
   });
 
-  saved_states_container.addEventListener("click", function(event) {
+  saved_states_list.addEventListener("click", function(event) {
     if(event.target.tagName.toLowerCase() === FC.TAG.SAVED_STATE_BUTTON) {
-      ___logger("Loading filter");
+      __logger("Loading filter");
       let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);
       let state_name = event.target.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
       let new_state = saved_states.find((obj)=> obj.name===state_name);
@@ -2310,10 +2366,11 @@ const init = function(root_id, filter_data, filter_state, saved_filter_states, s
       select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
     };
 
+    
     if(event.target.tagName.toLowerCase() === FC.TAG.REMOVED_SAVED_STATE_BUTTON) {
-      ___logger("Removing filter");
+      __logger("Removing filter");
       let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);      
-      let to_be_removed_state_name = event.target.parentElement.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
+      let to_be_removed_state_name = event.target.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
       saved_states = saved_states.filter(obj => obj.name !== to_be_removed_state_name);
       set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, saved_states);
       render_saved_states(saved_states);
@@ -2344,7 +2401,6 @@ export {init}
 // This can be done in the client and in the server
 // Maybe sanitize before loading?
 // TODO: Add transition to filter add and removal
-// TODO: Disable simple filter when a non-compatible filter is loaded
 // TODO: Add support to filter state update from the server (Send filter from server);
 // TODO: Filter creator helpers
 // TODO: Pretty print filters

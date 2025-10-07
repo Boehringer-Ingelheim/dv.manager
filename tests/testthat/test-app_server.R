@@ -6,7 +6,7 @@ domain_list <- list(
   c = mtcars
 )
 test_that(
-  vdoc[["add_spec"]]("app_server_ should set as output the selected dataset name", c(specs$selected_dataset_name)),
+  vdoc[["add_spec"]]("app_server_ should set as output the selected dataset name", c(specs$MODULES$MODULE_ACCESS_DATASET_LIST_NAME)),
   {
     datasets <- list(
       DS1 = domain_list,
@@ -32,7 +32,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("app_server_ should work with a functions that return datasets", c(specs$data_list_structure)),
+  vdoc[["add_spec"]]("app_server_ should work with a functions that return datasets", c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)),
   {
     datasets <- list(
       DS1 = function() {
@@ -61,7 +61,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("app_server_ should accept a list of modules and display them in the application", c(specs$display_modules, specs$module_list_structure)),
+  vdoc[["add_spec"]]("app_server_ should accept a list of modules and display them in the application", c(specs$MODULES$MODULE_CONTENT_DISPLAY, specs$MODULES$MODULE_DEFINITION_STRUCTURE, specs$MODULES$MODULE_DEFINITION_UI_NAME)),
   {
     testing_options <- list(
       data = list(),
@@ -77,7 +77,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("app_server_ should accept an empty list of modules", c(specs$module_list_check)),
+  vdoc[["add_spec"]]("app_server_ should accept an empty list of modules", c(specs$MODULES$MODULE_LIST_EMPTY_ALLOWED)),
   {
     datasets <- list(
       DS1 = domain_list,
@@ -102,7 +102,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("app_server_ should accept an empty list of datasets", c(specs$data_structure_check)),
+  vdoc[["add_spec"]]("app_server_ should accept an empty list of datasets", c(specs$DATASETS$DATASET_ENTRY_STRUCTURE, specs$DATASETS$DATASET_LIST_EMPTY_ALLOWED)),
   {
     testing_options <- list(
       data = list(),
@@ -119,7 +119,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("app_server_ should accept an empty list of datasets and an empty list of modules", c(specs$data_structure_check, specs$module_list_check)),
+  vdoc[["add_spec"]]("app_server_ should accept an empty list of datasets and an empty list of modules", c(specs$DATASETS$DATASET_ENTRY_STRUCTURE, specs$MODULES$MODULE_LIST_EMPTY_ALLOWED, specs$DATASETS$DATASET_LIST_EMPTY_ALLOWED)),
   {
     testing_options <- list(
       data = list(),
@@ -138,7 +138,7 @@ test_that(
 component <- "date output"
 
 test_that(
-  vdoc[["add_spec"]]("date output should output the earliest and latest date of the selected dataset if not all are equal", c(specs$modification_date_display)),
+  vdoc[["add_spec"]]("date output should output the earliest and latest date of the selected dataset if not all are equal", c(specs$DATASETS$DATASET_LIST_MOD_DATE_RANGE)),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -177,7 +177,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("date output should output only one date of the selected dataset if all are equal", c(specs$modification_date_display)),
+  vdoc[["add_spec"]]("date output should output only one date of the selected dataset if all are equal", c(specs$DATASETS$DATASET_LIST_MOD_DATE_SINGLE)),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -216,7 +216,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("date output should output 'date unavailable' when at least one date is not available", c(specs$modification_date_display)),
+  vdoc[["add_spec"]]("date output should output 'date unavailable' when at least one date is not available", c(specs$DATASETS$DATASET_LIST_MOD_DATE_UNAVAILABLE_UI)),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -263,7 +263,7 @@ test_that(
 # Testing reload_period ----
 
 test_that(
-  vdoc[["add_spec"]]("date output restart.txt time is altered when being touched", c(specs$data_reloading, specs$data_reload)),
+  vdoc[["add_spec"]]("date output restart.txt time is altered when being touched", c(specs$DATASETS$DATASET_LISTS_RELOAD_DURATION)),
   {
     datasets <- list(
       DS1 = function() {

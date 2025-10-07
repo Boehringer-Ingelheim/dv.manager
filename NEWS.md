@@ -1,3 +1,12 @@
+# dv.manager 2.2.0-9000
+- Development filter:
+    - Revamps the UI for the filter in development
+    - Includes filter clearing, saving and exporting
+    - Includes an alternative filter that mimicks the previous filter with extra features
+    - Updates documentation
+- Defuncts dispatchers
+- Upgrades the bootstrap version to 5.0.0
+
 # dv.manager 2.2.0
 
 - Blockly filter:

@@ -36,7 +36,7 @@ test_that("values are returned when datafilter returns are false", {
 
 test_that(
   vdoc[["add_spec"]](
-    "dv.manager support datasets with 0 rows", c(specs$empty_datasets)
+    "dv.manager support datasets with 0 rows", c(specs$DATASETS$DATASET_LIST_EMPTY_SUPPORTED)
   ),
   {
     skip_if_not_running_shiny_tests()

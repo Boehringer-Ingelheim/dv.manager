@@ -1280,7 +1280,7 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        filter_type = "blockly",
+        filter_type = "development",
         filter_default_state = !!absolute_state_file
       )
     }))
@@ -1306,7 +1306,7 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        filter_type = "blockly",
+        filter_type = "development",
         filter_default_state = !!string_state
       )
     }))
@@ -1351,7 +1351,7 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        filter_type = "blockly",
+        filter_type = "development",
         filter_default_state = !!absolute_state_file
       )
     }))
@@ -1375,7 +1375,7 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        filter_type = "blockly",
+        filter_type = "development",
         filter_default_state = '{
     "filters": {
         "datasets_filter": {
@@ -1423,7 +1423,7 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        filter_type = "blockly",
+        filter_type = "development",
         filter_default_state = '  {
     "filters": {
         "subject_filter": {
@@ -1464,7 +1464,7 @@ local({
         filter_data = "ds1",
         filter_key = "sbj_var",
         enableBookmarking = "url",
-        filter_type = "blockly",
+        filter_type = "development",
         filter_default_state = !!absolute_state_file
       )
     }))

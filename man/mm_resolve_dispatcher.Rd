@@ -19,6 +19,4 @@ If selection is greater than 1 flatten must be FALSE, otherwise an error will be
 \description{
 Dispatcher resolver
 }
-\seealso{
-mm_dispatch
-}
+\keyword{internal}

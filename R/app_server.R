@@ -359,6 +359,7 @@ app_server_ <- function(input, output, session, opts) {
     as_dv_manager_module_output_safe_list(module_output)
   }
 
+  # TODO: `unfiltered_dataset` should be `unfiltered_dataset_list` both var and entry name. Deprecate in future versions
   afmm <- list(
     data = data,
     unfiltered_dataset = unfiltered_dataset,
@@ -411,6 +412,12 @@ app_server_ <- function(input, output, session, opts) {
         }
         session$sendCustomMessage("set_active_tab", list(id = session[["ns"]](ID$NAV_HEADER), tab_id = selected))
       }
+    ),
+    filter_metadata = list(
+      output = shiny::reactive({
+        log_warn("You are using afmm[['filter_metadata']][['output']]. This is not a public element and it may disappear or be modified without notice")
+        dataset_filter()
+      })
     )
   )
 
@@ -427,47 +434,8 @@ app_server_ <- function(input, output, session, opts) {
     module_output[[id]] <- fn(afmm)
     used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
   }
-
-
-
-
-  #### Report modal
-
-  # REPORT IS DEACTIVATED
-
-  # Whenever report is reprioritized map from char to factor should be taken into account
-
-  # nolint start
-
-  # shiny::observeEvent(input$open_report_modal, {
-  #   shiny::showModal(create_report_modal(ns = ns))
-  # })
-  #
-  # output$download_script <- shiny::downloadHandler(
-  #   filename = glue::glue("report_{format.Date(Sys.time(), \"%d%m%Y-%H%M%S\")}.zip"),
-  #   contentType = "application/zip",
-  #   content = function(zip_file) {
-  #     # We begin by closing the modal that created this event.
-  #     shiny::removeModal()
-  #
-  #     report_create_bundle(
-  #       title = input[["report_title"]],
-  #       summary = input[["report_summary"]],
-  #       module_code = purrr::imap(module_output, ~ attr(.x, "code")),
-  #       module_names = purrr::map(module_list, "module_id"),
-  #       unfiltered_dataset = unfiltered_dataset,
-  #       filtered_dataset = filtered_dataset,
-  #       load_function = attr(data[[input[["selector"]]]], "code"),
-  #       do_render = input[["report_do_render"]],
-  #       include_code = input[["report_include_code"]],
-  #       render_format = input[["report_render_format"]],
-  #       zip_file = zip_file
-  #     )
-  #   }
-  # )
-
-  # nolint end
-
+  
+  
   # Dataset name and date
 
   output$dataset_name <- shiny::renderText({
@@ -496,10 +464,6 @@ app_server_ <- function(input, output, session, opts) {
     shiny::showModal(create_info_modal(session = session, input = input, ns = ns))
   })
 
-  # shiny::observeEvent(
-  #   input$change_theme,
-  #   session$setCurrentTheme(get_app_theme(input$change_theme))
-  # )
 }
 
 # nolint end cyclocomp_linter

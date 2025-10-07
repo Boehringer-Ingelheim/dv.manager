@@ -1,7 +1,7 @@
 # nolint start
 
 test_that(
-  vdoc[["add_spec"]]("css from a module should not affect another module when css namespacing is activated", c(specs$css_namespacing)),
+  vdoc[["add_spec"]]("css from a module should not affect another module when css namespacing is activated", c(specs$INTERFACE$INTERFACE_CSS_NAMESPACE)),
   {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()
@@ -24,7 +24,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("css from a module should not affect another module when css namespacing is activated", c(specs$css_namespacing)),
+  vdoc[["add_spec"]]("css from a module should not affect another module when css namespacing is disabled", c(specs$INTERFACE$INTERFACE_CSS_NAMESPACE)),
   {
     skip_if_not_running_shiny_tests()
     skip_if_suspect_check()

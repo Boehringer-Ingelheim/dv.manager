@@ -86,7 +86,7 @@ local({
   # Tests ----
 
   test_that(
-    vdoc[["add_spec"]]("dv.manager should receive a list of datasets that is available for the modules of the application", c(specs$dataset_list_availability)),
+    vdoc[["add_spec"]]("dv.manager should receive a list of datasets that is available for the modules of the application", c(specs$MODULES$MODULE_ACCESS_UNFILTERED_DATASET_LIST, specs$DATASETS$DATASET_LIST_NOT_NULL)),
     {
       testServer(app_server_test(testing_options), {
         # Test we can select one
@@ -104,7 +104,7 @@ local({
   )
 
   test_that(
-    vdoc[["add_spec"]]("dv.manager should allow datasets to be labelled", c(specs$dataset_label_display)),
+    vdoc[["add_spec"]]("dv.manager should allow datasets to be labelled", c(specs$DATASETS$DATASET_LIST_NAMED, specs$DATASETS$DATASET_LIST_LABELS_DISPLAY)),
     {
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb") # Test we can select one using the label provided
@@ -116,7 +116,7 @@ local({
   )
 
   test_that(
-    vdoc[["add_spec"]]("dv.manager should display datasets labels in the application", c(specs$dataset_label_display)),
+    vdoc[["add_spec"]]("dv.manager should display datasets labels in the application", c(specs$DATASETS$DATASET_LIST_NAMED, specs$DATASETS$DATASET_LIST_LABELS_DISPLAY)),
     {
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb") # Test we can select one
@@ -126,7 +126,7 @@ local({
   )
 
   test_that(
-    vdoc[["add_spec"]]("dv.manager should allow datasets switching in the application", c(specs$dataset_switching)),
+    vdoc[["add_spec"]]("dv.manager should allow datasets switching in the application", c(specs$DATASETS$DATASET_LIST_SWITCHING_ALLOWED)),
     {
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb") # Test we can select one
@@ -142,7 +142,7 @@ local({
   )
 
   test_that(
-    vdoc[["add_spec"]]("dv.manager should only one dataset is displayed in the application at any given time", c(specs$single_dataset_display)),
+    vdoc[["add_spec"]]("dv.manager should only one dataset is displayed in the application at any given time", c(specs$DATASETS$DATASET_LIST_SINGLE_ACTIVE)),
     {
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb") # Test we can select one
@@ -158,7 +158,7 @@ local({
   )
 
   test_that(
-    vdoc[["add_spec"]]("dv.manager should show the earliest and latest modification date of all data tables from the selected dataset", c(specs$modification_dates_display)),
+    vdoc[["add_spec"]]("dv.manager should show the earliest and latest modification date of all data tables from the selected dataset", c(specs$DATASETS$DATASET_LIST_MOD_DATE_RANGE)),
     {
       withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
 
@@ -170,7 +170,7 @@ local({
   )
 
   test_that(
-    vdoc[["add_spec"]]("dv.manager should show the 'Date unavailable' if no date is available in any of the data table", c(specs$date_unavailability_message)),
+    vdoc[["add_spec"]]("dv.manager should show the 'Date unavailable' if no date is available in any of the data table", c(specs$DATASETS$DATASET_LIST_MOD_DATE_UNAVAILABLE_UI)),
     {
       datasets <- list(
         mpg_carb = list(

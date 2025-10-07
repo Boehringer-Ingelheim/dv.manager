@@ -14,17 +14,12 @@
 #'
 #' @param from a string indicating what structure do we want to access inside module manager
 #' @param selection an optional subsetting within the selected data structure
-#'
-#' @seealso mm_resolve_dispatcher
-#'
-#' @examples
-#'
-#' mm_dispatch("unfiltered_dataset", "adsl")
-#' mm_dispatch("utils", "switch2")
+
 #' @export
+#' @keywords internal
 
 mm_dispatch <- function(from, selection = character(0)) {
-  .Defunct(NULL, msg = "please check the module help replacing the dispatchers")  
+  .Defunct(NULL, msg = "please check the module help replacing the dispatchers")
 }
 
 #' Dispatcher resolver
@@ -36,11 +31,9 @@ mm_dispatch <- function(from, selection = character(0)) {
 #' return the first element instead of a one element list. By default, it will try to flatten them.
 #' If selection is greater than 1 flatten must be FALSE, otherwise an error will be thrown.
 #'
-#' @seealso mm_dispatch
-#'
 #' @export
 #'
-#'
+#' @keywords internal
 mm_resolve_dispatcher <- function(dispatcher, # nolintr excessive cyclomatic complexity
                                   afmm,
                                   flatten = FALSE) {
@@ -54,6 +47,7 @@ mm_resolve_dispatcher <- function(dispatcher, # nolintr excessive cyclomatic com
 #'
 #' @noRd
 #'
+#' @keywords internal
 mm_resolve_module_output <- function(selection, afmm, flatten) {
-  .Defunct(NULL, msg = "please check the module help replacing the dispatchers")  
+  .Defunct(NULL, msg = "please check the module help replacing the dispatchers")
 }

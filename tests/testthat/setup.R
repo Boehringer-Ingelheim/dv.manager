@@ -15,6 +15,13 @@ specs <- vdoc[["specs"]]
 
 # -----
 
+if(
+  !isTRUE(as.logical(Sys.getenv("CI"))) &&
+  !isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
+  ) {
+    warning("Attempting to run local tests without 'LOCAL_SHINY_TESTS' option")
+  }
+
 run_shiny_tests <- !isFALSE(as.logical(Sys.getenv("SKIP_SHINY_TESTS")))
 suspect_check <- any(names(Sys.getenv()) == "_R_CHECK_CRAN_INCOMING_")
 

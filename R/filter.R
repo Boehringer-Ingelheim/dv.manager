@@ -465,19 +465,23 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
 
   assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
+  escape_single_quote <- function(x){
+    gsub("'", "\\\\'", x)    
+  }
+
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
-        "dv_filter.init('%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s')",
-        ns(ID$FILTER_CONTAINER),
-        filter_data,
-        filter_bookmark,
-        saved_states_bookmark,
-        subject_dataset_name,
-        ns(ID$FILTER_STATE_JSON_INPUT),
-        ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT),
-        ns(ID$EXPORT_CODE_INPUT),
-        ns(ID$FILTER_LOG_INPUT)
+        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+        escape_single_quote(ns(ID$FILTER_CONTAINER)),
+        escape_single_quote(filter_data),
+        escape_single_quote(filter_bookmark),
+        escape_single_quote(saved_states_bookmark),
+        escape_single_quote(subject_dataset_name),
+        escape_single_quote(ns(ID$FILTER_STATE_JSON_INPUT)),
+        escape_single_quote(ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)),
+        escape_single_quote(ns(ID$EXPORT_CODE_INPUT)),
+        escape_single_quote(ns(ID$FILTER_LOG_INPUT))
       )
     )
   )
@@ -499,15 +503,14 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
       shiny::span(
         style = "display:none;",
         add_blockly_dependency(),
-        shiny:::ionRangeSliderDependency(),
-        shiny:::datePickerDependency(),
         # When attaching the dependencies on my own an error occurs when using multiple
         # When including an input perse the error disappears, this should be explored
-        shinyWidgets::pickerInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES"), choices = c("A", "B"), multiple = TRUE)
+        shiny::sliderInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES1"), label = NULL, min = 0, max = 0, value = 0),
+        shiny::dateRangeInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES2"), label = NULL, start = "2001-01-01", end = "2001-01-01"),
+        shinyWidgets::pickerInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES3"), choices = c("A", "B"), multiple = TRUE)
       )
     )
   )
-
 
   combined_ui <- local({
     tag_dv_filter_wrapper(
@@ -525,13 +528,17 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
 
 new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dataset_name, after_filter_dataset_list, strict = FALSE) {
   mod <- function(input, output, session) {
-    shiny::setBookmarkExclude("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES")
+    shiny::setBookmarkExclude(
+      c(
+        "IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES1",
+        "IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES2",
+        "IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES3"
+        )
+      )
     ns <- session[["ns"]]
 
     log_inform(paste("Listening to:", ns(ID$FILTER_STATE_JSON_INPUT)))
     log_inform(paste("Listening to:", ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)))
-
-    saved_filter_states <- shiny::reactiveVal(list())
 
     shiny::observeEvent(selected_dataset_list_name(), {
       session[["sendCustomMessage"]](
@@ -549,6 +556,9 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     })
 
     shiny::observeEvent(after_filter_dataset_list(), {
+
+      shiny::req(!is.null(after_filter_dataset_list()))
+
       fd <- after_filter_dataset_list()
       fd_names <- names(fd)
       row_count <- vector("list", length = length(fd))
@@ -625,89 +635,4 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     )
   }
   shiny::moduleServer(id, mod)
-}
-
-mock_new_filter <- function(data = list(
-                              "D1" = list(
-                                adsl = get_pharmaverse_data("adsl"),
-                                adae = get_pharmaverse_data("adae")
-                              ),
-                              "D2" = list(
-                                adsl = get_pharmaverse_data("adsl"),
-                                adae = get_pharmaverse_data("adae")
-                              )
-                            ),
-                            filter_state = NULL) {
-  ui <- function(request) {
-    shiny::fluidPage(
-      shiny::bookmarkButton(),
-      shiny::div(
-        new_filter_ui(ID$FILTER, data, state = filter_state)[["combined_ui"]],
-        style = "height: 400px"
-      ),
-      shiny::verbatimTextOutput("raw_json"),
-      DT::dataTableOutput("validate_json"),
-      shiny::verbatimTextOutput("output_filtered_ds"),
-      shiny::verbatimTextOutput("output_filtered_sbj")
-    )
-  }
-
-  server <- function(input, output, session) {
-    selected_data <- "D1"
-    x <- new_filter_server(ID$FILTER_STATE_JSON_INPUT, selected_dataset = shiny::reactive(selected_data), strict = TRUE)
-
-    output[["raw_json"]] <- shiny::renderPrint({
-      json <- x()[["raw"]]
-      shiny::req(json)
-      jsonlite::prettify(json)
-    })
-
-    output[["validate_json"]] <- DT::renderDataTable({
-      json <- x()[["raw"]]
-      shiny::req(json)
-      e <- attr(from_filter_validate(json), "error") |> tibble::as_tibble()
-      e
-    })
-
-    output[["output_json"]] <- shiny::renderPrint({
-      shiny::req(!is.na(x()[["parsed"]]))
-      yyjsonr_read_json_str_with_options(x[["parsed"]])
-    })
-
-    filtered_datasets <- shiny::reactive({
-      shiny::req(!is.na(x()[["parsed"]]))
-      ds <- data[[selected_data]]
-      mask <- create_dataset_filter_masks(ds, x()[["parsed"]][["filters"]][["datasets_filter"]])
-      apply_dataset_filter_masks(ds, mask)
-    })
-
-    filtered_subjects <- shiny::reactive({
-      shiny::req(!is.na(x()[["parsed"]]))
-      ds <- data[[selected_data]]
-      subject_set <- create_subject_set(ds, x()[["parsed"]][["filters"]][["subject_filter"]], "USUBJID")
-      if (identical(subject_set, NA_character_)) {
-        ds
-      } else {
-        apply_subject_set(ds, subject_set, "USUBJID")
-      }
-    })
-
-    output[["output_filtered_ds"]] <- shiny::renderPrint({
-      filtered_datasets()
-    })
-
-    output[["output_filtered_sbj"]] <- shiny::renderPrint({
-      filtered_subjects()
-    })
-
-    output[["output_ds"]] <- shiny::renderPrint({
-      x()
-    })
-  }
-
-  shiny::shinyApp(
-    ui = ui,
-    server = server,
-    enableBookmarking = "url"
-  )
 }

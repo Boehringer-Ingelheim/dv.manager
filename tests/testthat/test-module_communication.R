@@ -10,7 +10,7 @@ datasets <- list(
 )
 
 test_that(
-  vdoc[["add_spec"]]("module_communication should allow passing reactive values between modules", c(specs$module_output)),
+  vdoc[["add_spec"]]("module_communication should allow passing reactive values between modules", c(specs$MODULES$MODULE_OUTPUT_LIST)),
   {
     
     mod_return_reactive <- function(mod_id) {
@@ -64,7 +64,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("module_communication should allow passing non-reactive values between modules", c(specs$module_output)),
+  vdoc[["add_spec"]]("module_communication should allow passing non-reactive values between modules", c(specs$MODULES$MODULE_OUTPUT_LIST)),
   {
         mod_return_static <- function(mod_id) {
 
@@ -117,7 +117,7 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("module_communication should allow passing reactive and non-reactive values between modules{did:MM-SO-675;tid:NA;WB:WB;NOR:N;}", c(specs$module_output)),
+  vdoc[["add_spec"]]("module_communication should allow passing reactive and non-reactive values between modules", c(specs$MODULES$MODULE_OUTPUT_LIST)),
   {
 
         mod_return_reactive <- function(mod_id) {

@@ -61,11 +61,11 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
 any previous calls to  \code{\link[shiny:enableBookmarking]{enableBookmarking()}}. See \code{\link[shiny:enableBookmarking]{enableBookmarking()}}
 for more information on bookmarking your app.}
 
-\item{filter_type}{Indicates which filter type, \code{simple}, \code{datasets}, \code{blockly} (in development), will be used in the application.}
+\item{filter_type}{Indicates which filter type, \code{simple}, \code{datasets}, \code{development}, will be used in the application.}
 
 \item{enable_dataset_filter}{\strong{DEPRECATED} A boolean flag indicating if dataset filters are enabled. The default value is FALSE.}
 
-\item{filter_default_state}{A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for \code{blockly} filters).}
+\item{filter_default_state}{A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for \code{development} filters).}
 
 \item{.launch}{by default it should always be TRUE. It should only be false for debugging and testing.
 When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.}
