@@ -22,4 +22,4 @@ on:
 jobs:
   run-shared-ci:
     name: Shared
-    uses: boehringer-ingelheim/dv.templates/.github/workflows/shared_ci.yml@main
+    uses: boehringer-ingelheim/dv.templates/.github/workflows/shared_ci.yml@test_ci
