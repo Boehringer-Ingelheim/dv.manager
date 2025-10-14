@@ -1,0 +1,24 @@
+name: ❓ Question / Support
+description: Ask a question or request help using the project
+title: "[Question]: "
+labels: ["question", "discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **Reminder:** Everything you enter here will be publicly visible.
+        Do not include any kind of sensitive data!
+  - type: textarea
+    id: context
+    attributes:
+      label: Your Question
+      description: What would you like to know or clarify?
+      placeholder: e.g. How do I configure X? Why does Y behave like this?
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Additional Context
+      description: Provide logs, screenshots, or links if helpful
