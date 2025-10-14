@@ -431,7 +431,7 @@ add_blockly_dependency <- function() {
   )
 }
 
-new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL, saved_states = NULL) {
+new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL, saved_states = NULL, strict = FALSE) {
   ns <- shiny::NS(id)
 
   if (!is.null(state)) {
@@ -454,7 +454,7 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
 
   filter_data <- yyjsonr::write_json_str(d)
 
-  assert(to_filter_validate(filter_data), "failed to validate message to filter")
+  if (strict) assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
   escape_single_quote <- function(x) {
     gsub("'", "\\\\'", x)
