@@ -404,26 +404,17 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
   return(subjects)
 }
 
-to_filter_validate <- function(x) {
-  res <- jsonvalidate::json_validate(
-    x,
-    system.file("to_filter_schema.json", package = "dv.manager", mustWork = TRUE),
-    engine = "ajv",
-    strict = TRUE,
-    verbose = TRUE
-  )
-  res
-}
+to_filter_validate <- jsonvalidate::json_validator(
+  system.file("to_filter_schema.json", package = "dv.manager", mustWork = TRUE),
+  engine = "ajv",
+  strict = TRUE
+)
 
-from_filter_validate <- function(x) {
-  jsonvalidate::json_validate(
-    x,
-    system.file("from_filter_schema.json", package = "dv.manager", mustWork = TRUE),
-    engine = "ajv",
-    strict = TRUE,
-    verbose = TRUE
-  )
-}
+from_filter_validate <- jsonvalidate::json_validator(
+  system.file("from_filter_schema.json", package = "dv.manager", mustWork = TRUE),
+  engine = "ajv",
+  strict = TRUE
+)
 
 yyjsonr_read_json_str_with_options <- function(x) {
   yyjsonr::read_json_str(x, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
@@ -595,8 +586,7 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
       json_r <- input[[ID$FILTER_STATE_JSON_INPUT]]
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
-        val_res <- from_filter_validate(json_r)
-        if (strict) assert(val_res, "failed to validate message from filter")
+        if (strict) assert(from_filter_validate(json_r), "failed to validate message from filter")
         parsed_json <- yyjsonr_read_json_str_with_options(json_r)
         log_inform("PROCESSING FILTER PARSED")
         list(
