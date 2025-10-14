@@ -456,8 +456,8 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
 
   assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
-  escape_single_quote <- function(x){
-    gsub("'", "\\\\'", x)    
+  escape_single_quote <- function(x) {
+    gsub("'", "\\\\'", x)
   }
 
   init_tag <- shiny::tags[["script"]](
@@ -508,7 +508,6 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
       dependencies,
       tag_dv_filter_root(
         id = ns(ID$FILTER_CONTAINER),
-        class = "c-well",
         init_tag
       )
     )
