@@ -507,8 +507,7 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
     tag_dv_filter_wrapper(
       dependencies,
       tag_dv_filter_root(
-        id = ns(ID$FILTER_CONTAINER),
-        class = "c-well",
+        id = ns(ID$FILTER_CONTAINER),        
         init_tag
       )
     )
