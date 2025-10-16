@@ -439,29 +439,35 @@ create_subject_set <- function(dataset_list, subject_filter, sbj_var) {
 
 process_subject_filter_element <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
   filter_element <- as_safe_list(filter_element)
-
   kind <- filter_element[["kind"]]
+  operation <- filter_element[["operation"]]
 
-  if (kind == "set_operation") {
-    operation <- filter_element[["operation"]]
-    if (operation == "union") {
-      children <- filter_element[["children"]]
-      subjects <- character(0)
-      assert(length(children) > 0, "`union` operation requires at least one child")
-      for (child in children) {
-        current_subjects <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
-        subjects <- union(subjects, current_subjects)
-      }
-    } else if (operation == "intersect") {
-      children <- filter_element[["children"]]
+  actions <- list(set_operation = list(), filter = list(), row_operation = list())
+
+  actions[["set_operation"]][["union"]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+    children <- filter_element[["children"]]
+    subjects <- character(0)
+    assert(length(children) > 0, "`union` operation requires at least one child")
+    for (child in children) {
+      current_subjects <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
+      subjects <- union(subjects, current_subjects)
+    }
+    return(subjects)
+  }
+
+  actions[["set_operation"]][["intersect"]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+     children <- filter_element[["children"]]
       subjects <- complete_subject_list
       assert(length(children) > 0, "`intersect` operation requires at least one child")
       for (child in children) {
         current_subjects <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
         subjects <- intersect(subjects, current_subjects)
       }
-    } else if (operation == "complement") {
-      children <- filter_element[["children"]]
+      return(subjects)
+  }
+
+  actions[["set_operation"]][["complement"]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+     children <- filter_element[["children"]]
       assert(length(children) == 1, "`complement` operation requires exactly one child")
       subjects <- setdiff(
         complete_subject_list,
@@ -470,18 +476,29 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
           sbj_var, complete_subject_list
         )
       )
-    } else {
-      stop(paste("Unknown operation: ", operation))
-    }
-  } else if (kind == "filter" || kind == "row_operation") {
-    # redirect but do not process
+      return(subjects)
+  }
+
+  actions[["filter"]] <- function(dataset_list, filter_element, sbj_var) {
     processed_element <- process_dataset_filter_element(dataset_list, filter_element)
     mask <- processed_element[["mask"]]
     dataset <- processed_element[["dataset"]]
     subjects <- as.character(dataset_list[[dataset]][[sbj_var]][mask])
-  } else {
-    stop(paste("Unknown kind: ", kind))
+    return(subjects)
   }
+
+  actions[["row_operation"]] <- actions[["filter"]]
+
+  if (!kind %in% names(actions)) stop(paste0("Kind unknown: `", kind, "`"))
+  if (!operation %in% names(actions[[kind]]) && !kind %in% c("row_operation", "filter")) stop(paste0("Operation unknown: `", operation, "`"))
+
+  # TODO: This if statement breaks the intention of the upper code of removing ifs. Not relevant now.
+  if (!kind %in%  c("row_operation", "filter")) {
+    subjects <- actions[[kind]][[operation]](dataset_list, filter_element, sbj_var, complete_subject_list)
+  } else {
+    subjects <- actions[[kind]](dataset_list, filter_element, sbj_var)
+  }
+
   return(subjects)
 }
 

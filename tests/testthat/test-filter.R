@@ -591,11 +591,11 @@ local({
     })
 
     test_that("create_dataset_filter_masks creates a mask for dataset filters with children", {
-      expect_identical(r[["d1"]], c(TRUE, FALSE))
+      expect_identical(r[["d1"]][["mask"]], c(TRUE, FALSE))
     })
 
     test_that("create_dataset_filter_masks creates a TRUE mask for dataset filters with no children", {
-      expect_true(r[["d2"]])
+      expect_true(r[["d2"]][["mask"]])
     })
   })
 
@@ -720,7 +720,7 @@ local({
 
     expect_identical(
       create_dataset_filter_info(dataset_list, e),
-      list(d1 = c(TRUE, TRUE))
+      list(d1 = list(mask = c(TRUE, TRUE), lvls = list()))
     )
   })
 
@@ -734,11 +734,12 @@ local({
       variable = "range_var",
       dataset = "d"
     )
+
     subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
-  test_that("process_subject_filter_element - and filter operation returns subject set for 1 element", {
+  test_that("process_subject_filter_element - intersect set operation returns subject set for 1 element", {
     e <- list(
       kind = "set_operation",
       operation = "intersect",
@@ -759,7 +760,7 @@ local({
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
-  test_that("process_subject_filter_element - and filter operation returns subject set for n elements", {
+  test_that("process_subject_filter_element - intersect set operation returns subject set for n elements", {
     e <- list(
       kind = "set_operation",
       operation = "intersect",
@@ -788,7 +789,7 @@ local({
     expect_identical(subject_set, c("SBJ-2", "SBJ-3"))
   })
 
-  test_that("process_subject_filter_element - and filter operation fails when it does not have at least 1 children (subject filter)", {
+  test_that("process_subject_filter_element - intersect set operation fails when it does not have at least 1 children (subject filter)", {
     e <- list(
       kind = "set_operation",
       operation = "intersect",
@@ -801,7 +802,7 @@ local({
     )
   })
 
-  test_that("process_subject_filter_element - or filter operation returns subject set for 1 element", {
+  test_that("process_subject_filter_element - union set operation returns subject set for 1 element", {
     e <- list(
       kind = "set_operation",
       operation = "union",
@@ -822,7 +823,7 @@ local({
     expect_identical(subject_set, c("SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
-  test_that("process_subject_filter_element - or filter operation returns subject set for n elements", {
+  test_that("process_subject_filter_element - union set operation returns subject set for n elements", {
     e <- list(
       kind = "set_operation",
       operation = "union",
@@ -851,7 +852,7 @@ local({
     expect_identical(sort(subject_set), c("SBJ-1", "SBJ-2", "SBJ-3", "SBJ-4"))
   })
 
-  test_that("process_subject_filter_element - or filter operation fails when it does not have at least 1 children (subject filter)", {
+  test_that("process_subject_filter_element - union set operation fails when it does not have at least 1 children (subject filter)", {
     e <- list(
       kind = "set_operation",
       operation = "union",
@@ -864,7 +865,7 @@ local({
     )
   })
 
-  test_that("process_subject_filter_element - not filter operation returns subject set", {
+  test_that("process_subject_filter_element - complement set operation returns subject set", {
     e <- list(
       kind = "set_operation",
       operation = "complement",
@@ -885,7 +886,7 @@ local({
     expect_identical(subject_set, c("SBJ-1", "SBJ-5", "SBJ-6"))
   })
 
-  test_that("process_subject_filter_element - not filter operation fails when it does not have exactly 1 children (subject filter)", {
+  test_that("process_subject_filter_element - complement set operation fails when it does not have exactly 1 children (subject filter)", {
     e <- list(
       kind = "set_operation",
       operation = "complement",
