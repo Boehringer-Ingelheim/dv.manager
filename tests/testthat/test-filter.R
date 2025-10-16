@@ -1013,7 +1013,7 @@ local({
     )
 
     expect_identical(
-      create_subject_set(dataset_list = dataset_list, e, "sbj"),
+      create_subject_filter_info(dataset_list = dataset_list, e, "sbj"),
       "SBJ1"
     )
   })
@@ -1028,7 +1028,7 @@ local({
       children = list()
     )
 
-    expect_identical(create_subject_set(dataset_list = dataset_list, e, "sbj"), c("SBJ1", "SBJ2", "SBJ3"))
+    expect_identical(create_subject_filter_info(dataset_list = dataset_list, e, "sbj"), c("SBJ1", "SBJ2", "SBJ3"))
   })
 })
 

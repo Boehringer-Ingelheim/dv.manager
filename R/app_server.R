@@ -172,8 +172,8 @@ app_server_ <- function(input, output, session, opts) {
 
       fd <- tryCatch(
         {
-          ds_mask <- create_dataset_filter_info(ds, safe_filters[["datasets_filter"]])
-          apply_dataset_filter_info(ds, ds_mask)
+          dataset_filter_info <- create_dataset_filter_info(ds, safe_filters[["datasets_filter"]])
+          apply_dataset_filter_info(ds, dataset_filter_info)
         },
         error = function(e) {
           msg <- paste("Filter not applied. Error found:\n", e[["message"]])
@@ -183,11 +183,15 @@ app_server_ <- function(input, output, session, opts) {
         }
       )
 
-
       # Check NA optimization in the future
-      subject_set <- tryCatch(
+      fd <- tryCatch(
         {
-          create_subject_set(ds, safe_filters[["subject_filter"]], filter_key)
+          subject_filter_info <- create_subject_filter_info(ds, safe_filters[["subject_filter"]], filter_key)          
+          if (!identical(subject_filter_info, NA_character_)) {
+            apply_subject_filter_info(fd, subject_filter_info, filter_key)
+          } else {
+            fd
+          }
         },
         error = function(e) {
           msg <- paste("Filter not applied. Error found:\n", e[["message"]])
@@ -195,11 +199,7 @@ app_server_ <- function(input, output, session, opts) {
           shiny::showNotification(msg, type = "error")
           NA_character_
         }
-      )
-
-      if (!identical(subject_set, NA_character_)) {
-        fd <- apply_subject_set(fd, subject_set, filter_key)
-      }
+      )      
 
       fd
     })
