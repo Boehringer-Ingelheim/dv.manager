@@ -172,8 +172,8 @@ app_server_ <- function(input, output, session, opts) {
 
       fd <- tryCatch(
         {
-          ds_mask <- create_dataset_filter_masks(ds, safe_filters[["datasets_filter"]])
-          apply_dataset_filter_masks(ds, ds_mask)
+          ds_mask <- create_dataset_filter_info(ds, safe_filters[["datasets_filter"]])
+          apply_dataset_filter_info(ds, ds_mask)
         },
         error = function(e) {
           msg <- paste("Filter not applied. Error found:\n", e[["message"]])

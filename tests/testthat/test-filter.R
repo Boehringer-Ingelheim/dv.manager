@@ -583,7 +583,7 @@ local({
       )
     )
 
-    r <- create_dataset_filter_masks(dataset_list, e)
+    r <- create_dataset_filter_info(dataset_list, e)
 
     test_that("create_dataset_filter_masks creates a mask per dataset in the filter and none for those not in the filter", {
       expect_identical(names(r), c("d1", "d2"))
@@ -622,7 +622,7 @@ local({
     )
 
     expect_error(
-      create_dataset_filter_masks(dataset_list, e),
+      create_dataset_filter_info(dataset_list, e),
       regexp = "a dataset can only appear once inside dataset_filters",
       fixed = TRUE
     )
@@ -646,7 +646,7 @@ local({
     )
 
     expect_error(
-      create_dataset_filter_masks(dataset_list, e),
+      create_dataset_filter_info(dataset_list, e),
       regexp = "dataset is not inside dataset_list",
       fixed = TRUE
     )
@@ -670,7 +670,7 @@ local({
     )
 
     expect_error(
-      create_dataset_filter_masks(dataset_list, e),
+      create_dataset_filter_info(dataset_list, e),
       regexp = "dataset_filters children can only be of kind `dataset`",
       fixed = TRUE
     )
@@ -696,7 +696,7 @@ local({
     )
 
     expect_error(
-      create_dataset_filter_masks(dataset_list, e),
+      create_dataset_filter_info(dataset_list, e),
       regexp = "`datasets_filter` cannot contain more than children",
       fixed = TRUE
     )
@@ -719,7 +719,7 @@ local({
     )
 
     expect_identical(
-      create_dataset_filter_masks(dataset_list, e),
+      create_dataset_filter_info(dataset_list, e),
       list(d1 = c(TRUE, TRUE))
     )
   })

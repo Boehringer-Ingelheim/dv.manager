@@ -218,15 +218,22 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
       mask <- mask & processed_element[["mask"]]
       curr_lvls <- processed_element[["lvls"]]
 
-      if (length(curr_lvls) > 0) {
-
-      }
-
       if (is.na(filter_dataset)) {
         filter_dataset <- processed_element[["dataset"]]
       } else {
         assert(processed_element[["dataset"]] == filter_dataset, "Filtering on the wrong dataset")
       }
+
+      if (length(curr_lvls) > 0) {        
+        relevant_factors <- union(names(lvls), names(curr_lvls))
+        for(fct in relevant_factors) {
+          lvls[[fct]] <- intersect(
+            lvls[[fct]] %||% levels(dataset_list[[filter_dataset]][[fct]]),
+            curr_lvls[[fct]] %||% levels(dataset_list[[filter_dataset]][[fct]])
+          )
+        }
+      }
+
     }
     return(list(mask = mask, dataset = filter_dataset, lvls = lvls))
   }
@@ -236,16 +243,25 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
     assert(length(filter_element[["children"]]) >= 1, "`or` operation requires at least one child")
 
     mask <- FALSE # Neutral element for |
+    lvls <- list()
     for (child in filter_element[["children"]]) {
       processed_element <- process_dataset_filter_element(dataset_list, child)
       mask <- mask | processed_element[["mask"]]
+      curr_lvls <- processed_element[["lvls"]]      
       if (is.na(filter_dataset)) {
         filter_dataset <- processed_element[["dataset"]]
       } else {
         assert(processed_element[["dataset"]] == filter_dataset, "Filtering on the wrong dataset")
       }
+      if (length(curr_lvls) > 0) {
+        # This should be an intersection of levels if levels are present for the same factor variable
+        relevant_factors <- union(names(lvls), names(curr_lvls))
+        for(fct in relevant_factors) {          
+          lvls[[fct]] <- union(lvls[[fct]], curr_lvls[[fct]])
+        }
+      }
     }
-    lvls <- list()
+    
     return(list(mask = mask, dataset = filter_dataset, lvls = lvls))
   }
 
@@ -257,6 +273,14 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
     mask <- !processed_element[["mask"]]
     filter_dataset <- processed_element[["dataset"]]
     lvls <- list()
+    curr_lvls <- processed_element[["lvls"]]
+    relevant_factors <- union(names(lvls), names(curr_lvls))
+    for(fct in relevant_factors) {          
+      lvls[[fct]] <- setdiff(
+        levels(dataset_list[[filter_dataset]][[fct]]),
+        curr_lvls[[fct]] %||% levels(dataset_list[[filter_dataset]][[fct]])
+      )
+    }
     return(list(mask = mask, dataset = filter_dataset, lvls = lvls))
   }
 
@@ -337,38 +361,47 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
 }
 # nolint end cyclocomp_linter
 
-create_dataset_filter_masks <- function(dataset_list, filter_state) {
+create_dataset_filter_info <- function(dataset_list, filter_state) {
   datasets_filter <- as_safe_list(filter_state)
 
-  dataset_masks <- list()
+  dataset_filter_info <- list()
 
-  for (child in datasets_filter[["children"]]) {
-    kind <- child[["kind"]]
-    name <- child[["name"]]
-    assert(!(name %in% names(dataset_masks)), "a dataset can only appear once inside dataset_filters")
+  for (dataset_filter_child in datasets_filter[["children"]]) {
+    kind <- dataset_filter_child[["kind"]]
+    name <- dataset_filter_child[["name"]]
+    assert(!(name %in% names(dataset_filter_info)), "a dataset can only appear once inside dataset_filters")
     assert(name %in% names(dataset_list), "dataset is not inside dataset_list")
     assert(kind == "dataset", "dataset_filters children can only be of kind `dataset`")
-    if (length(child[["children"]]) == 1) {
-      processed_element <- process_dataset_filter_element(dataset_list, child[["children"]][[1]])
+    if (length(dataset_filter_child[["children"]]) == 1) {
+      processed_element <- process_dataset_filter_element(dataset_list, dataset_filter_child[["children"]][[1]])
       assert(processed_element[["dataset"]] == name, "Filter on the wrong dataset")
-      dataset_masks[[name]] <- processed_element[["mask"]]
-    } else if (length(child[["children"]]) == 0) {
-      dataset_masks[[name]] <- rep_len(TRUE, nrow(dataset_list[[name]]))
+      dataset_filter_info[[name]][["mask"]] <- processed_element[["mask"]]
+      dataset_filter_info[[name]][["lvls"]] <- processed_element[["lvls"]]
+    } else if (length(dataset_filter_child[["children"]]) == 0) {
+      dataset_filter_info[[name]][["mask"]] <- rep_len(TRUE, nrow(dataset_list[[name]]))
+      dataset_filter_info[[name]][["lvls"]] <- list()
     } else {
       assert(FALSE, "`datasets_filter` cannot contain more than children")
     }
   }
 
-  return(dataset_masks)
+  return(dataset_filter_info)
 }
 
-apply_dataset_filter_masks <- function(dataset_list, mask_list) {
+apply_dataset_filter_info <- function(dataset_list, mask_list) {
   filtered_data_list <- dataset_list
   for (current_mask_name in names(mask_list)) {
-    current_mask <- mask_list[[current_mask_name]]
+    current_mask <- mask_list[[current_mask_name]][["mask"]]
+    current_lvls <- mask_list[[current_mask_name]][["lvls"]]
     current_dataset <- filtered_data_list[[current_mask_name]]
     lbls <- get_lbls(current_dataset)
     filtered_dataset <- current_dataset[current_mask, , drop = FALSE]
+
+    #drop levels
+    for (var in names(current_lvls)) {
+      filtered_dataset[[var]] <- factor(filtered_dataset[[var]], intersect(levels(filtered_dataset[[var]]), current_lvls[[var]]))
+    }
+
     filtered_data_list[[current_mask_name]] <- set_lbls(filtered_dataset, lbls)
   }
   return(filtered_data_list)
