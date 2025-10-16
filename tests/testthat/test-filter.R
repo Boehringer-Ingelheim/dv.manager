@@ -953,7 +953,7 @@ local({
 
     expect_error(
       process_subject_filter_element(dataset_list = dataset_list, filter_element = e),
-      regexp = "Unknown kind:  set_operation",
+      regexp = "Kind unknown: `set_operation`",
       fixed = TRUE
     )
 
@@ -981,7 +981,7 @@ local({
 
     expect_error(
       process_subject_filter_element(dataset_list = dataset_list, filter_element = e),
-      regexp = "Unknown kind:  set_operation",
+      regexp = "Kind unknown: `set_operation`",
       fixed = TRUE
     )
   })
@@ -1057,7 +1057,7 @@ local({
 
   test_that("get_single_filter_data show correct counts and entries for factor columns", {
     d <- data.frame(
-      var = factor(c("A", "A", "B", NA_character_))
+      var = factor(c("A", "A", "B", NA_character_), levels = c("A", "B", "C"))
     )
     attr(d[["var"]], "label") <- "var_label"
     r <- get_single_filter_data(d)
@@ -1072,7 +1072,8 @@ local({
         NA_count = yyjsonr::as_scalar(1L),
         values_count = list(
           list(value = yyjsonr::as_scalar("A"), count = yyjsonr::as_scalar(2L)),
-          list(value = yyjsonr::as_scalar("B"), count = yyjsonr::as_scalar(1L))
+          list(value = yyjsonr::as_scalar("B"), count = yyjsonr::as_scalar(1L)),
+          list(value = yyjsonr::as_scalar("C"), count = yyjsonr::as_scalar(0L))
         )
       )
     )
