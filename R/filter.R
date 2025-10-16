@@ -137,6 +137,7 @@ get_single_filter_data <- function(dataset) {
         )
       }
     } else if (is.numeric(var)) {
+      var <- as.numeric(var)
       l[["kind"]] <- yyjsonr::as_scalar("numerical")
       l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
@@ -163,7 +164,7 @@ get_single_filter_data <- function(dataset) {
       l[["min"]] <- yyjsonr::as_scalar(inf_to_str(min(as.Date(Inf), na_clean_var, na.rm = TRUE)))
       l[["max"]] <- yyjsonr::as_scalar(inf_to_str(max(as.Date(-Inf), na_clean_var, na.rm = TRUE)))
     } else {
-      stop(paste("variable type unsupported:", typeof(var)))
+      stop(paste0("variable type unsupported:'", typeof(var), "' classes:", paste0("'", class(var), "'", collapse = ",")))
     }
 
     res[[idx]] <- l

@@ -1171,7 +1171,7 @@ local({
     attr(d[["var"]], "label") <- "var_label"
     expect_error(
       get_single_filter_data(d),
-      regexp = "variable type unsupported: complex",
+      regexp = "variable type unsupported: 'complex' classes:'complex'",
       fixed = TRUE
     )
   })
