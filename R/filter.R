@@ -455,7 +455,7 @@ create_subject_filter_info <- function(dataset_list, subject_filter, sbj_var) {
   } else  if (length(children) == 1) {
     subject_filter_info <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
   }
-  browser()
+  
   return(subject_filter_info)
 }
 
@@ -471,28 +471,24 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
     children <- filter_element[["children"]]
     subjects <- character(0)
     assert(length(children) > 0, "`union` operation requires at least one child")
+    dataset_list_lvls <- vector(mode = "list", length = length(dataset_list))
+    names(dataset_list_lvls) <- names(dataset_list)
+
     for (child in children) {
       processed_element <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
       subjects <- union(subjects, processed_element[["subjects"]])
 
-      dataset_list_lvls <- local({
-        dataset_list_lvls <- vector(mode = "list", length = nrow(dataset_list))
-        names(dataset_list_lvls) <- names(dataset_list)
-        curr_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
-
-        for (dataset_name in names(dataset_list)) {
-          dataset_lvls <- dataset_list_lvls[[dataset_name]]
-          curr_dataset_lvls <- curr_dataset_list_lvls[[dataset_name]]
-
-          if (length(curr_dataset_lvls) > 0) {
-            relevant_factors <- union(names(dataset_lvls), names(curr_dataset_lvls))
-            for (fct in relevant_factors) {
-              dataset_lvls[[fct]]  <- union(dataset_lvls[[fct]], curr_dataset_lvls[[fct]])
-            }
-          }
+      child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
+      for (dataset_name in names(child_dataset_list_lvls)) {
+        dataset_lvls <- dataset_list_lvls[[dataset_name]]
+        child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
+          relevant_factors <- union(names(dataset_lvls), names(child_dataset_lvls))
+          for (fct in relevant_factors) {
+            dataset_lvls[[fct]]  <- union(dataset_lvls[[fct]], child_dataset_lvls[[fct]])
         }
-        dataset_list_lvls
-      })
+        dataset_list_lvls[[dataset_name]] <- dataset_lvls
+
+      }
     }
     return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
   }
@@ -501,33 +497,29 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
     children <- filter_element[["children"]]
     subjects <- complete_subject_list
     assert(length(children) > 0, "`intersect` operation requires at least one child")
+    dataset_list_lvls <- vector(mode = "list", length = length(dataset_list))
+    names(dataset_list_lvls) <- names(dataset_list)
 
     for (child in children) {
       processed_element <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
       subjects <- intersect(subjects, processed_element[["subjects"]])
 
-      dataset_list_lvls <- local({
-        dataset_list_lvls <- vector(mode = "list", length = nrow(dataset_list))
-        names(dataset_list_lvls) <- names(dataset_list)
-        curr_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
-
-        for (dataset_name in names(dataset_list)) {
-          dataset_lvls <- dataset_list_lvls[[dataset_name]]
-          curr_dataset_lvls <- curr_dataset_list_lvls[[dataset_name]]
-
-          if (length(curr_dataset_lvls) > 0) {
-            relevant_factors <- union(names(dataset_lvls), names(curr_dataset_lvls))
-            for (fct in relevant_factors) {
-              dataset_lvls[[fct]] <- intersect(
-                dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]]),
-                curr_dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]])
-              )
-            }
-          }
+      child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
+      for (dataset_name in names(child_dataset_list_lvls)) {
+        dataset_lvls <- dataset_list_lvls[[dataset_name]]
+        child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
+          relevant_factors <- union(names(dataset_lvls), names(child_dataset_lvls))
+          for (fct in relevant_factors) {
+            dataset_lvls[[fct]] <- intersect(
+              dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]]),
+              child_dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]])
+            )
         }
-        dataset_list_lvls
-      })
+        dataset_list_lvls[[dataset_name]] <- dataset_lvls
+
+      }
     }
+    
     return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
   }
 
@@ -536,26 +528,22 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
     assert(length(children) == 1, "`complement` operation requires exactly one child")
     processed_element <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
     subjects <- setdiff(complete_subject_list, processed_element[["subjects"]])
+    dataset_list_lvls <- vector(mode = "list", length = length(dataset_list))
+    names(dataset_list_lvls) <- names(dataset_list)
 
-    dataset_list_lvls <- local({
-      dataset_list_lvls <- vector(mode = "list", length = nrow(dataset_list))
-      names(dataset_list_lvls) <- names(dataset_list)
-      curr_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
-
-      for (dataset_name in names(dataset_list)) {
-        dataset_lvls <- dataset_list_lvls[[dataset_name]]
-        curr_dataset_lvls <- curr_dataset_list_lvls[[dataset_name]]
-
-        relevant_factors <- union(names(dataset_lvls), names(curr_dataset_lvls))
+    child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
+    for (dataset_name in names(child_dataset_list_lvls)) {
+      dataset_lvls <- dataset_list_lvls[[dataset_name]]
+      child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
+        relevant_factors <- union(names(dataset_lvls), names(child_dataset_lvls))
         for (fct in relevant_factors) {
-          dataset_lvls[[fct]] <- setdiff(
-            levels(dataset_list[[dataset_name]][[fct]]),
-            curr_dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]])
-          )
-        }
+          dataset_lvls[[fct]]  <- setdiff(
+          levels(dataset_list[[dataset_name]][[fct]]),
+          child_dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]])
+        )
       }
-      dataset_list_lvls
-    })
+      dataset_list_lvls[[dataset_name]] <- dataset_lvls
+    }
 
     return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
   }
