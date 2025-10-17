@@ -627,23 +627,30 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
 
   if (strict) assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
-  escape_single_quote <- function(x) {
-    gsub("'", "\\\\'", x)
+  escape_special_chars <- function(x) {
+    y <- gsub("\\\\", "\\\\\\\\", x)
+    y <- gsub('"', '\\\\"', y)
+    y <- gsub("'", "\\\\'", y)
+    y <- gsub("\n", "\\\\n", y)
+    y <- gsub("\r", "\\\\r", y)
+    y
   }
+
+  yyjsonr_read_json_str_with_options(state) |> yyjsonr::write_json_str()
 
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
         "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
-        escape_single_quote(ns(ID$FILTER_CONTAINER)),
-        escape_single_quote(filter_data),
-        escape_single_quote(filter_bookmark),
-        escape_single_quote(saved_states_bookmark),
-        escape_single_quote(subject_dataset_name),
-        escape_single_quote(ns(ID$FILTER_STATE_JSON_INPUT)),
-        escape_single_quote(ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)),
-        escape_single_quote(ns(ID$EXPORT_CODE_INPUT)),
-        escape_single_quote(ns(ID$FILTER_LOG_INPUT))
+        escape_special_chars(ns(ID$FILTER_CONTAINER)),
+        escape_special_chars(filter_data),
+        escape_special_chars(filter_bookmark),
+        escape_special_chars(saved_states_bookmark),
+        escape_special_chars(subject_dataset_name),
+        escape_special_chars(ns(ID$FILTER_STATE_JSON_INPUT)),
+        escape_special_chars(ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)),
+        escape_special_chars(ns(ID$EXPORT_CODE_INPUT)),
+        escape_special_chars(ns(ID$FILTER_LOG_INPUT))
       )
     )
   )
