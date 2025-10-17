@@ -396,9 +396,16 @@ apply_dataset_filter_info <- function(dataset_list, dataset_filter_info) {
     lbls <- get_lbls(current_filtered_dataset)
     filtered_dataset <- current_filtered_dataset[current_mask, , drop = FALSE]
 
-    # drop levels
-    for (var in names(current_lvls)) {
-      filtered_dataset[[var]] <- factor(filtered_dataset[[var]], intersect(levels(filtered_dataset[[var]]), current_lvls[[var]]))
+    # drop filtered not present levels
+    for (var_name in names(current_lvls)) {
+      # Unite levels with levels present after filtering
+      # Add comment as it may not be clear
+      # stop("RECOVER FACTORS THAT ARE REINTRODUCED BY AND/OR/NOT OPERATIONS ON OTHER ROWS")
+      var <- filtered_dataset[[var_name]]
+      all_lvls <- levels(var)
+      present_lvls <- droplevels(var)
+      new_lvls <- intersect(all_lvls, union(present_lvls, current_lvls[[var_name]])) # Maintains order of levels
+      filtered_dataset[[var_name]] <- factor(filtered_dataset[[var_name]], new_lvls)
     }
 
     filtered_dataset_list[[current_dataset_name]] <- set_lbls(filtered_dataset, lbls)
@@ -409,6 +416,7 @@ apply_dataset_filter_info <- function(dataset_list, dataset_filter_info) {
 apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_var) {
   filtered_dataset_list <- dataset_list
   subject_set <- subject_filter_info[["subjects"]]
+
   for (current_dataset_name in names(dataset_list)) {
     current_mask <- dataset_list[[current_dataset_name]][[subj_var]] %in% subject_set
     current_filtered_dataset <- filtered_dataset_list[[current_dataset_name]]
@@ -416,9 +424,16 @@ apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_va
     lbls <- get_lbls(current_filtered_dataset)
     filtered_dataset <- current_filtered_dataset[current_mask, , drop = FALSE]
 
-    # drop levels
-    for (var in names(current_lvls)) {
-      filtered_dataset[[var]] <- factor(filtered_dataset[[var]], intersect(levels(filtered_dataset[[var]]), current_lvls[[var]]))
+    # drop filtered not present levels
+    for (var_name in names(current_lvls)) {
+      # Unite levels with levels present after filtering
+      # Add comment as it may not be clear
+      # stop("RECOVER FACTORS THAT ARE REINTRODUCED BY AND/OR/NOT OPERATIONS ON OTHER ROWS")
+      var <- filtered_dataset[[var_name]]
+      all_lvls <- levels(var)
+      present_lvls <- droplevels(var)
+      new_lvls <- intersect(all_lvls, union(present_lvls, current_lvls[[var_name]])) # Maintains order of levels
+      filtered_dataset[[var_name]] <- factor(filtered_dataset[[var_name]], new_lvls)
     }
 
     filtered_dataset_list[[current_dataset_name]] <- set_lbls(filtered_dataset, lbls)
