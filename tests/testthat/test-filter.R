@@ -1332,7 +1332,7 @@ local({
         ),
         filter_data = "ds1",
         filter_key = "sbj_var",
-        filter_type = "blockly"
+        filter_type = "development"
       )
     }))
 
@@ -1494,7 +1494,7 @@ local({
           filter_data = "ds1",
           filter_key = "sbj_var",
           enableBookmarking = "url",
-          filter = "blockly"
+          filter = "development"
         )
       }))
 

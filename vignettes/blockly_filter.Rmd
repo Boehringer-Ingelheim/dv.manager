@@ -226,7 +226,7 @@ dv.manager::run_app(
   ),
   filter_data = "adsl",
   filter_key = "USUBJID",
-  filter_type = "blockly"
+  filter_type = "development"
 )
 ```
 
