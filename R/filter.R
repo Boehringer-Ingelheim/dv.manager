@@ -225,7 +225,7 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
       }
 
       if (length(curr_lvls) > 0) {
-        relevant_factors <- union(names(lvls), names(curr_lvls))
+        relevant_factors <- names(curr_lvls)
         for (fct in relevant_factors) {
           lvls[[fct]] <- intersect(
             lvls[[fct]] %||% levels(dataset_list[[filter_dataset]][[fct]]),
@@ -254,7 +254,7 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
       }
       if (length(curr_lvls) > 0) {
         # This should be an intersection of levels if levels are present for the same factor variable
-        relevant_factors <- union(names(lvls), names(curr_lvls))
+        relevant_factors <- names(curr_lvls)
         for (fct in relevant_factors) {
           lvls[[fct]] <- union(lvls[[fct]], curr_lvls[[fct]])
         }
@@ -273,7 +273,7 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
     filter_dataset <- processed_element[["dataset"]]
     lvls <- list()
     curr_lvls <- processed_element[["lvls"]]
-    relevant_factors <- union(names(lvls), names(curr_lvls))
+    relevant_factors <- names(curr_lvls)
     for (fct in relevant_factors) {
       lvls[[fct]] <- setdiff(
         levels(dataset_list[[filter_dataset]][[fct]]),
@@ -482,7 +482,7 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
       for (dataset_name in names(child_dataset_list_lvls)) {
         dataset_lvls <- dataset_list_lvls[[dataset_name]]
         child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
-          relevant_factors <- union(names(dataset_lvls), names(child_dataset_lvls))
+          relevant_factors <-  names(child_dataset_lvls)
           for (fct in relevant_factors) {
             dataset_lvls[[fct]]  <- union(dataset_lvls[[fct]], child_dataset_lvls[[fct]])
         }
@@ -508,7 +508,7 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
       for (dataset_name in names(child_dataset_list_lvls)) {
         dataset_lvls <- dataset_list_lvls[[dataset_name]]
         child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
-          relevant_factors <- union(names(dataset_lvls), names(child_dataset_lvls))
+          relevant_factors <- names(child_dataset_lvls)
           for (fct in relevant_factors) {
             dataset_lvls[[fct]] <- intersect(
               dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]]),
@@ -535,7 +535,7 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
     for (dataset_name in names(child_dataset_list_lvls)) {
       dataset_lvls <- dataset_list_lvls[[dataset_name]]
       child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
-        relevant_factors <- union(names(dataset_lvls), names(child_dataset_lvls))
+        relevant_factors <- names(child_dataset_lvls)
         for (fct in relevant_factors) {
           dataset_lvls[[fct]]  <- setdiff(
           levels(dataset_list[[dataset_name]][[fct]]),
