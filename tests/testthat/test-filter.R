@@ -1516,6 +1516,22 @@ local({
   })
 })
 
+local({
+  test_that("match_set_order matches order of values to reference",{
+    expect_identical(
+      match_set_order(c("A", "B"), c("B", "A")),
+      c("A", "B")
+    )
+
+    expect_error(
+      match_set_order(c("A", "B"), c("B", "A", "C")),
+      "All values must be contained in reference",
+      fixed = TRUE      
+    )
+
+  })
+})
+
 
 # E2E testing
 

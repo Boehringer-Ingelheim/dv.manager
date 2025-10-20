@@ -393,6 +393,13 @@ create_dataset_filter_info <- function(dataset_list, filter_state) {
   return(dataset_filter_info)
 }
 
+
+match_set_order <- function(reference, values) {
+  assert(all(values %in% reference), "All values must be contained in reference")
+  aligned <- intersect(reference, values)
+  aligned
+}
+
 apply_dataset_filter_info <- function(dataset_list, dataset_filter_info) {
   filtered_dataset_list <- dataset_list
   for (current_dataset_name in names(dataset_filter_info)) {
@@ -415,8 +422,7 @@ apply_dataset_filter_info <- function(dataset_list, dataset_filter_info) {
       # Therefore we force all levels present in the variable to not be dropped
       new_lvls <- union(present_lvls, current_lvls[[var_name]])
 
-      # Side effect of intersect is that it maintains the order of the first set
-      new_lvls <- intersect(all_possible_lvls, new_lvls)
+      new_lvls <- match_set_order(all_possible_lvls, new_lvls)
       filtered_dataset[[var_name]] <- factor(filtered_dataset[[var_name]], new_lvls)
     }
 
@@ -448,9 +454,8 @@ apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_va
       # BUT another filter with an operation, or, may reintroduce a row with a lvl that is supposed to be dropped
       # Therefore we force all levels present in the variable to not be dropped
       new_lvls <- union(present_lvls, current_lvls[[var_name]])
-
-      # Side effect of intersect is that it maintains the order of the first set
-      new_lvls <- intersect(all_possible_lvls, new_lvls)
+      
+      new_lvls <- match_set_order(all_possible_lvls, new_lvls)
       filtered_dataset[[var_name]] <- factor(filtered_dataset[[var_name]], new_lvls)
     }
 
