@@ -71,6 +71,46 @@ local({
     expect_identical(processed_element[["lvls"]], list(subset_var = c("b", "c", "d")))
   })
 
+  test_that("process_dataset_filter_element - select_subset empty vector assigned to the lvls of a variable is unambiguous", {
+
+    # When all values are filtered there is an entry in lvls and the entry is an empty vector
+    e <- list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c(),
+      include_NA = FALSE,
+      variable = "subset_var",
+      dataset = "d1"
+    )
+    processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
+    expect_identical(processed_element[["lvls"]], list(subset_var = c()))
+
+    # When the variable is not filtered there is no entry
+    e <- list(
+      kind = "filter",
+      operation = "select_range",
+      max = 0,
+      min = 0,
+      include_NA = FALSE,
+      variable = "range_var",
+      dataset = "d1"
+    )
+    processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
+    expect_true(!"subset_var" %in% names(processed_element[["lvls"]]))
+
+    # When all values are selected the variable appears and contains all selected values
+    e <- list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("a", "b", "c", "d", "e", "LEVEL_WITH_NO_ROWS"),
+      include_NA = FALSE,
+      variable = "subset_var",
+      dataset = "d1"
+    )
+    processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
+    expect_identical(processed_element[["lvls"]], list(subset_var = c("a", "b", "c", "d", "e", "LEVEL_WITH_NO_ROWS")))
+  })
+
   test_that("process_dataset_filter_element - select_subset filter returns mask including NAs and selected levels list", {
     e <- list(
       kind = "filter",
