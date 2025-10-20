@@ -198,9 +198,118 @@ get_filter_data <- function(dataset_lists) {
   return(res)
 }
 
-dataset_filter_operations <- local({
+subject_filter_operations <- local({
+  # Operations partially matches each other and (y4BQ)
 
-   actions <- list(row_operation = list(), filter = list())
+  actions <- list(set_operation = list(), filter = list(), row_operation = list())
+
+  actions[["set_operation"]][["union"]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+    children <- filter_element[["children"]]
+    subjects <- character(0)
+    assert(length(children) > 0, "`union` operation requires at least one child")
+    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
+    names(dataset_list_lvls) <- names(dataset_list)
+
+    for (child in children) {
+      processed_element <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
+      subjects <- union(subjects, processed_element[["subjects"]])
+
+      child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
+      for (dataset_name in names(child_dataset_list_lvls)) {
+        dataset_lvls <- dataset_list_lvls[[dataset_name]]
+        child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
+          relevant_factors <-  names(child_dataset_lvls)
+          for (fct in relevant_factors) {
+            dataset_lvls[[fct]]  <- union(dataset_lvls[[fct]], child_dataset_lvls[[fct]])
+        }
+        dataset_list_lvls[[dataset_name]] <- dataset_lvls
+
+      }
+    }
+    return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
+  }
+
+  actions[["set_operation"]][["intersect"]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+    children <- filter_element[["children"]]
+    subjects <- complete_subject_list
+    assert(length(children) > 0, "`intersect` operation requires at least one child")
+    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
+    names(dataset_list_lvls) <- names(dataset_list)
+
+    for (child in children) {
+      processed_element <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
+      subjects <- intersect(subjects, processed_element[["subjects"]])
+
+      child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
+      for (dataset_name in names(child_dataset_list_lvls)) {
+        dataset_lvls <- dataset_list_lvls[[dataset_name]]
+        child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
+          relevant_factors <- names(child_dataset_lvls)
+          for (fct in relevant_factors) {
+            dataset_lvls[[fct]] <- intersect(
+              dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]]),
+              child_dataset_lvls[[fct]]
+            )
+        }
+        dataset_list_lvls[[dataset_name]] <- dataset_lvls
+
+      }
+    }
+
+    return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
+  }
+
+  actions[["set_operation"]][["complement"]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+    children <- filter_element[["children"]]
+    assert(length(children) == 1, "`complement` operation requires exactly one child")
+    processed_element <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
+    subjects <- setdiff(complete_subject_list, processed_element[["subjects"]])
+    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
+    names(dataset_list_lvls) <- names(dataset_list)
+
+    child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
+    for (dataset_name in names(child_dataset_list_lvls)) {
+      dataset_lvls <- dataset_list_lvls[[dataset_name]]
+      child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
+        relevant_factors <- names(child_dataset_lvls)
+        for (fct in relevant_factors) {
+          dataset_lvls[[fct]]  <- setdiff(
+          levels(dataset_list[[dataset_name]][[fct]]),
+          child_dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]])
+        )
+      }
+      dataset_list_lvls[[dataset_name]] <- dataset_lvls
+    }
+
+    return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
+  }
+
+  actions[["filter"]] <- function(dataset_list, filter_element, sbj_var) {
+    processed_element <- process_dataset_filter_element(dataset_list, filter_element)
+    mask <- processed_element[["mask"]]
+    dataset <- processed_element[["dataset"]]
+    subjects <- as.character(dataset_list[[dataset]][[sbj_var]][mask])
+
+    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
+    names(dataset_list_lvls) <- names(dataset_list)
+    dataset_lvls <- processed_element[["lvls"]]
+    dataset_name <- processed_element[["dataset"]]
+    dataset_list_lvls[[dataset_name]] <- dataset_lvls
+
+    return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
+  }
+
+  actions[["row_operation"]] <- actions[["filter"]]
+
+
+  actions
+
+})
+
+dataset_filter_operations <- local({
+  # Operations partially matches each other and (y4BQ)
+
+  actions <- list(row_operation = list(), filter = list())
 
   actions[["row_operation"]][["and"]] <- function(dataset_list, filter_element) {
     filter_dataset <- NA
@@ -350,7 +459,6 @@ dataset_filter_operations <- local({
 
 })
 
-# nolint start cyclocomp_linter
 process_dataset_filter_element <- function(dataset_list, filter_element) { # TODO: replace dataset for dataset_name
 
   filter_element <- as_safe_list(filter_element)
@@ -364,9 +472,28 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
   res <- dataset_filter_operations[[kind]][[operation]](dataset_list, filter_element)
   return(res)
 }
-# nolint end cyclocomp_linter
+
+process_subject_filter_element <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+
+  filter_element <- as_safe_list(filter_element)
+  kind <- filter_element[["kind"]]
+  operation <- filter_element[["operation"]]
+
+  if (!kind %in% names(subject_filter_operations)) stop(paste0("Kind unknown: `", kind, "`"))
+  if (!operation %in% names(subject_filter_operations[[kind]]) && !kind %in% c("row_operation", "filter")) stop(paste0("Operation unknown: `", operation, "`"))
+
+  # TODO: This if statement breaks the intention of the upper code of removing ifs. Not relevant now.
+  if (!kind %in% c("row_operation", "filter")) {
+    subject_filter_info <- subject_filter_operations[[kind]][[operation]](dataset_list, filter_element, sbj_var, complete_subject_list)
+  } else {
+    subject_filter_info <- subject_filter_operations[[kind]](dataset_list, filter_element, sbj_var)
+  }
+
+  return(subject_filter_info)
+}
 
 create_dataset_filter_info <- function(dataset_list, filter_state) {
+  # Code partially matches  (cdU0)
   datasets_filter <- as_safe_list(filter_state)
 
   dataset_filter_info <- list()
@@ -393,6 +520,24 @@ create_dataset_filter_info <- function(dataset_list, filter_state) {
   return(dataset_filter_info)
 }
 
+create_subject_filter_info <- function(dataset_list, subject_filter, sbj_var) {
+  # Code partially matches  (cdU0)
+  subject_filter <- as_safe_list(subject_filter)
+  complete_subject_list <- character(0)
+  for (current_data in dataset_list) {
+    complete_subject_list <- union(complete_subject_list, as.character(unique(current_data[[sbj_var]])))
+  }
+  children <- subject_filter[["children"]]
+  assert(length(children) < 2, "subject filter must have 0 or 1 child")
+
+  if (length(children) == 0) {
+    subject_filter_info <- list(subjects = complete_subject_list, dataset_list_lvls = list())
+  } else  if (length(children) == 1) {
+    subject_filter_info <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
+  }
+
+  return(subject_filter_info)
+}
 
 match_set_order <- function(reference, values) {
   assert(all(values %in% reference), "All values must be contained in reference")
@@ -401,6 +546,7 @@ match_set_order <- function(reference, values) {
 }
 
 apply_dataset_filter_info <- function(dataset_list, dataset_filter_info) {
+  # Code partially matches  (EO9M)
   filtered_dataset_list <- dataset_list
   for (current_dataset_name in names(dataset_filter_info)) {
     current_mask <- dataset_filter_info[[current_dataset_name]][["mask"]]
@@ -432,6 +578,7 @@ apply_dataset_filter_info <- function(dataset_list, dataset_filter_info) {
 }
 
 apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_var) {
+  # Code partially matches  (EO9M)
   filtered_dataset_list <- dataset_list
   subject_set <- subject_filter_info[["subjects"]]
 
@@ -464,150 +611,6 @@ apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_va
   return(filtered_dataset_list)
 }
 
-create_subject_filter_info <- function(dataset_list, subject_filter, sbj_var) {
-  subject_filter <- as_safe_list(subject_filter)
-  complete_subject_list <- character(0)
-  for (current_data in dataset_list) {
-    complete_subject_list <- union(complete_subject_list, as.character(unique(current_data[[sbj_var]])))
-  }
-  children <- subject_filter[["children"]]
-  assert(length(children) < 2, "subject filter must have 0 or 1 child")
-
-  if (length(children) == 0) {
-    subject_filter_info <- list(subjects = complete_subject_list, dataset_list_lvls = list())
-  } else  if (length(children) == 1) {
-    subject_filter_info <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
-  }
-
-  return(subject_filter_info)
-}
-
-subject_filter_operations <- local({
-
-  actions <- list(set_operation = list(), filter = list(), row_operation = list())
-
-  actions[["set_operation"]][["union"]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
-    children <- filter_element[["children"]]
-    subjects <- character(0)
-    assert(length(children) > 0, "`union` operation requires at least one child")
-    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
-    names(dataset_list_lvls) <- names(dataset_list)
-
-    for (child in children) {
-      processed_element <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
-      subjects <- union(subjects, processed_element[["subjects"]])
-
-      child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
-      for (dataset_name in names(child_dataset_list_lvls)) {
-        dataset_lvls <- dataset_list_lvls[[dataset_name]]
-        child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
-          relevant_factors <-  names(child_dataset_lvls)
-          for (fct in relevant_factors) {
-            dataset_lvls[[fct]]  <- union(dataset_lvls[[fct]], child_dataset_lvls[[fct]])
-        }
-        dataset_list_lvls[[dataset_name]] <- dataset_lvls
-
-      }
-    }
-    return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
-  }
-
-  actions[["set_operation"]][["intersect"]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
-    children <- filter_element[["children"]]
-    subjects <- complete_subject_list
-    assert(length(children) > 0, "`intersect` operation requires at least one child")
-    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
-    names(dataset_list_lvls) <- names(dataset_list)
-
-    for (child in children) {
-      processed_element <- process_subject_filter_element(dataset_list, child, sbj_var, complete_subject_list)
-      subjects <- intersect(subjects, processed_element[["subjects"]])
-
-      child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
-      for (dataset_name in names(child_dataset_list_lvls)) {
-        dataset_lvls <- dataset_list_lvls[[dataset_name]]
-        child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
-          relevant_factors <- names(child_dataset_lvls)
-          for (fct in relevant_factors) {
-            dataset_lvls[[fct]] <- intersect(
-              dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]]),
-              child_dataset_lvls[[fct]]
-            )
-        }
-        dataset_list_lvls[[dataset_name]] <- dataset_lvls
-
-      }
-    }
-
-    return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
-  }
-
-  actions[["set_operation"]][["complement"]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
-    children <- filter_element[["children"]]
-    assert(length(children) == 1, "`complement` operation requires exactly one child")
-    processed_element <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
-    subjects <- setdiff(complete_subject_list, processed_element[["subjects"]])
-    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
-    names(dataset_list_lvls) <- names(dataset_list)
-
-    child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
-    for (dataset_name in names(child_dataset_list_lvls)) {
-      dataset_lvls <- dataset_list_lvls[[dataset_name]]
-      child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
-        relevant_factors <- names(child_dataset_lvls)
-        for (fct in relevant_factors) {
-          dataset_lvls[[fct]]  <- setdiff(
-          levels(dataset_list[[dataset_name]][[fct]]),
-          child_dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]])
-        )
-      }
-      dataset_list_lvls[[dataset_name]] <- dataset_lvls
-    }
-
-    return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
-  }
-
-  actions[["filter"]] <- function(dataset_list, filter_element, sbj_var) {
-    processed_element <- process_dataset_filter_element(dataset_list, filter_element)
-    mask <- processed_element[["mask"]]
-    dataset <- processed_element[["dataset"]]
-    subjects <- as.character(dataset_list[[dataset]][[sbj_var]][mask])
-
-    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
-    names(dataset_list_lvls) <- names(dataset_list)
-    dataset_lvls <- processed_element[["lvls"]]
-    dataset_name <- processed_element[["dataset"]]
-    dataset_list_lvls[[dataset_name]] <- dataset_lvls
-
-    return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
-  }
-
-  actions[["row_operation"]] <- actions[["filter"]]
-
-
-  actions
-
-})
-
-process_subject_filter_element <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
-
-  filter_element <- as_safe_list(filter_element)
-  kind <- filter_element[["kind"]]
-  operation <- filter_element[["operation"]]
-
-  if (!kind %in% names(subject_filter_operations)) stop(paste0("Kind unknown: `", kind, "`"))
-  if (!operation %in% names(subject_filter_operations[[kind]]) && !kind %in% c("row_operation", "filter")) stop(paste0("Operation unknown: `", operation, "`"))
-
-  # TODO: This if statement breaks the intention of the upper code of removing ifs. Not relevant now.
-  if (!kind %in% c("row_operation", "filter")) {
-    subject_filter_info <- subject_filter_operations[[kind]][[operation]](dataset_list, filter_element, sbj_var, complete_subject_list)
-  } else {
-    subject_filter_info <- subject_filter_operations[[kind]](dataset_list, filter_element, sbj_var)
-  }
-
-  return(subject_filter_info)
-}
-
 to_filter_validate <- jsonvalidate::json_validator(
   system.file("to_filter_schema.json", package = "dv.manager", mustWork = TRUE),
   engine = "ajv",
@@ -623,7 +626,6 @@ from_filter_validate <- jsonvalidate::json_validator(
 yyjsonr_read_json_str_with_options <- function(x) {
   yyjsonr::read_json_str(x, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
 }
-
 
 add_blockly_dependency <- function() {
   htmltools::htmlDependency(
