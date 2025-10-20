@@ -198,15 +198,9 @@ get_filter_data <- function(dataset_lists) {
   return(res)
 }
 
-# nolint start cyclocomp_linter
-process_dataset_filter_element <- function(dataset_list, filter_element) { # TODO: replace dataset for dataset_name
+dataset_filter_operations <- local({
 
-  filter_element <- as_safe_list(filter_element)
-
-  kind <- filter_element[["kind"]]
-  operation <- filter_element[["operation"]]
-
-  actions <- list(row_operation = list(), filter = list())
+   actions <- list(row_operation = list(), filter = list())
 
   actions[["row_operation"]][["and"]] <- function(dataset_list, filter_element) {
     filter_dataset <- NA
@@ -352,10 +346,22 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
     return(list(mask = mask, dataset = filter_dataset, lvls = lvls))
   }
 
-  if (!kind %in% names(actions)) stop(paste0("Kind unknown: `", kind, "`"))
-  if (!operation %in% names(actions[[kind]])) stop(paste0("Operation unknown: `", operation, "`"))
+  actions
 
-  res <- actions[[kind]][[operation]](dataset_list, filter_element)
+})
+
+# nolint start cyclocomp_linter
+process_dataset_filter_element <- function(dataset_list, filter_element) { # TODO: replace dataset for dataset_name
+
+  filter_element <- as_safe_list(filter_element)
+
+  kind <- filter_element[["kind"]]
+  operation <- filter_element[["operation"]]
+
+  if (!kind %in% names(dataset_filter_operations)) stop(paste0("Kind unknown: `", kind, "`"))
+  if (!operation %in% names(dataset_filter_operations[[kind]])) stop(paste0("Operation unknown: `", operation, "`"))
+
+  res <- dataset_filter_operations[[kind]][[operation]](dataset_list, filter_element)
   return(res)
 }
 # nolint end cyclocomp_linter
@@ -471,11 +477,7 @@ create_subject_filter_info <- function(dataset_list, subject_filter, sbj_var) {
   return(subject_filter_info)
 }
 
-process_subject_filter_element <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
-
-  filter_element <- as_safe_list(filter_element)
-  kind <- filter_element[["kind"]]
-  operation <- filter_element[["operation"]]
+subject_filter_operations <- local({
 
   actions <- list(set_operation = list(), filter = list(), row_operation = list())
 
@@ -577,14 +579,25 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
 
   actions[["row_operation"]] <- actions[["filter"]]
 
-  if (!kind %in% names(actions)) stop(paste0("Kind unknown: `", kind, "`"))
-  if (!operation %in% names(actions[[kind]]) && !kind %in% c("row_operation", "filter")) stop(paste0("Operation unknown: `", operation, "`"))
+
+  actions
+
+})
+
+process_subject_filter_element <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+
+  filter_element <- as_safe_list(filter_element)
+  kind <- filter_element[["kind"]]
+  operation <- filter_element[["operation"]]
+
+  if (!kind %in% names(subject_filter_operations)) stop(paste0("Kind unknown: `", kind, "`"))
+  if (!operation %in% names(subject_filter_operations[[kind]]) && !kind %in% c("row_operation", "filter")) stop(paste0("Operation unknown: `", operation, "`"))
 
   # TODO: This if statement breaks the intention of the upper code of removing ifs. Not relevant now.
   if (!kind %in% c("row_operation", "filter")) {
-    subject_filter_info <- actions[[kind]][[operation]](dataset_list, filter_element, sbj_var, complete_subject_list)
+    subject_filter_info <- subject_filter_operations[[kind]][[operation]](dataset_list, filter_element, sbj_var, complete_subject_list)
   } else {
-    subject_filter_info <- actions[[kind]](dataset_list, filter_element, sbj_var)
+    subject_filter_info <- subject_filter_operations[[kind]](dataset_list, filter_element, sbj_var)
   }
 
   return(subject_filter_info)
