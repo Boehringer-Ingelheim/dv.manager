@@ -13,8 +13,8 @@ local({
       sbj_var = paste0("SBJ-", 1:6)
     ),
     d2 = data.frame(
-      row.names = 1:6,      
-      subset_var2 = factor(c(letters[6:10], NA)),      
+      row.names = 1:6,
+      subset_var2 = factor(c(letters[6:10], NA)),
       sbj_var = paste0("SBJ-", 1:6)
     )
   )
@@ -36,7 +36,7 @@ local({
     expect_identical(processed_element[["mask"]], expected)
     expect_identical(processed_element[["dataset"]], "d1")
     expect_identical(processed_element[["lvls"]], list())
-  })  
+  })
 
   test_that("process_dataset_filter_element - select_range filter returns mask including NAs and empty level list", {
     e <- list(
@@ -440,37 +440,37 @@ local({
       operation = "and",
       children = list(
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("b", "c"),
-      include_NA = FALSE,
-      variable = "subset_var",
-      dataset = "d1"
-    ),
+          kind = "filter",
+          operation = "select_subset",
+          values = c("b", "c"),
+          include_NA = FALSE,
+          variable = "subset_var",
+          dataset = "d1"
+        ),
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("c", "d"),
-      include_NA = FALSE,
-      variable = "subset_var",
-      dataset = "d1"
-    ),
-     list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("f", "h"),
-      include_NA = FALSE,
-      variable = "subset_var2",
-      dataset = "d1"
-    ),
+          kind = "filter",
+          operation = "select_subset",
+          values = c("c", "d"),
+          include_NA = FALSE,
+          variable = "subset_var",
+          dataset = "d1"
+        ),
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("h", "j"),
-      include_NA = FALSE,
-      variable = "subset_var2",
-      dataset = "d1"
-    )
+          kind = "filter",
+          operation = "select_subset",
+          values = c("f", "h"),
+          include_NA = FALSE,
+          variable = "subset_var2",
+          dataset = "d1"
+        ),
+        list(
+          kind = "filter",
+          operation = "select_subset",
+          values = c("h", "j"),
+          include_NA = FALSE,
+          variable = "subset_var2",
+          dataset = "d1"
+        )
       )
     )
 
@@ -506,37 +506,37 @@ local({
       operation = "or",
       children = list(
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("b", "c"),
-      include_NA = FALSE,
-      variable = "subset_var",
-      dataset = "d1"
-    ),
+          kind = "filter",
+          operation = "select_subset",
+          values = c("b", "c"),
+          include_NA = FALSE,
+          variable = "subset_var",
+          dataset = "d1"
+        ),
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("c", "d"),
-      include_NA = FALSE,
-      variable = "subset_var",
-      dataset = "d1"
-    ),
-     list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("f", "h"),
-      include_NA = FALSE,
-      variable = "subset_var2",
-      dataset = "d1"
-    ),
+          kind = "filter",
+          operation = "select_subset",
+          values = c("c", "d"),
+          include_NA = FALSE,
+          variable = "subset_var",
+          dataset = "d1"
+        ),
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("h", "j"),
-      include_NA = FALSE,
-      variable = "subset_var2",
-      dataset = "d1"
-    )
+          kind = "filter",
+          operation = "select_subset",
+          values = c("f", "h"),
+          include_NA = FALSE,
+          variable = "subset_var2",
+          dataset = "d1"
+        ),
+        list(
+          kind = "filter",
+          operation = "select_subset",
+          values = c("h", "j"),
+          include_NA = FALSE,
+          variable = "subset_var2",
+          dataset = "d1"
+        )
       )
     )
 
@@ -618,13 +618,13 @@ local({
       operation = "not",
       children = list(
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("b", "c", "d", "e"),
-      include_NA = TRUE,
-      variable = "subset_var",
-      dataset = "d1"
-    )
+          kind = "filter",
+          operation = "select_subset",
+          values = c("b", "c", "d", "e"),
+          include_NA = TRUE,
+          variable = "subset_var",
+          dataset = "d1"
+        )
       )
     )
 
@@ -922,43 +922,43 @@ local({
     expect_identical(processed_element, expected)
   })
 
-    test_that("process_dataset_filter_element - intersect set operation correctly combines lvls", {
+  test_that("process_dataset_filter_element - intersect set operation correctly combines lvls", {
     e <- list(
       kind = "set_operation",
       operation = "intersect",
       children = list(
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("b", "c"),
-      include_NA = FALSE,
-      variable = "subset_var",
-      dataset = "d1"
-    ),
+          kind = "filter",
+          operation = "select_subset",
+          values = c("b", "c"),
+          include_NA = FALSE,
+          variable = "subset_var",
+          dataset = "d1"
+        ),
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("c", "d"),
-      include_NA = FALSE,
-      variable = "subset_var",
-      dataset = "d1"
-    ),
-     list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("f", "h"),
-      include_NA = FALSE,
-      variable = "subset_var2",
-      dataset = "d2"
-    ),    
-     list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("f"),
-      include_NA = FALSE,
-      variable = "subset_var2",
-      dataset = "d2"
-    )
+          kind = "filter",
+          operation = "select_subset",
+          values = c("c", "d"),
+          include_NA = FALSE,
+          variable = "subset_var",
+          dataset = "d1"
+        ),
+        list(
+          kind = "filter",
+          operation = "select_subset",
+          values = c("f", "h"),
+          include_NA = FALSE,
+          variable = "subset_var2",
+          dataset = "d2"
+        ),
+        list(
+          kind = "filter",
+          operation = "select_subset",
+          values = c("f"),
+          include_NA = FALSE,
+          variable = "subset_var2",
+          dataset = "d2"
+        )
       )
     )
 
@@ -1032,43 +1032,43 @@ local({
     expect_identical(processed_element, expected)
   })
 
-      test_that("process_dataset_filter_element - union set operation correctly combines lvls", {
+  test_that("process_dataset_filter_element - union set operation correctly combines lvls", {
     e <- list(
       kind = "set_operation",
       operation = "union",
       children = list(
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("b", "c"),
-      include_NA = FALSE,
-      variable = "subset_var",
-      dataset = "d1"
-    ),
+          kind = "filter",
+          operation = "select_subset",
+          values = c("b", "c"),
+          include_NA = FALSE,
+          variable = "subset_var",
+          dataset = "d1"
+        ),
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("c", "d"),
-      include_NA = FALSE,
-      variable = "subset_var",
-      dataset = "d1"
-    ),
-     list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("f", "h"),
-      include_NA = FALSE,
-      variable = "subset_var2",
-      dataset = "d2"
-    ),    
-     list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("f"),
-      include_NA = FALSE,
-      variable = "subset_var2",
-      dataset = "d2"
-    )
+          kind = "filter",
+          operation = "select_subset",
+          values = c("c", "d"),
+          include_NA = FALSE,
+          variable = "subset_var",
+          dataset = "d1"
+        ),
+        list(
+          kind = "filter",
+          operation = "select_subset",
+          values = c("f", "h"),
+          include_NA = FALSE,
+          variable = "subset_var2",
+          dataset = "d2"
+        ),
+        list(
+          kind = "filter",
+          operation = "select_subset",
+          values = c("f"),
+          include_NA = FALSE,
+          variable = "subset_var2",
+          dataset = "d2"
+        )
       )
     )
 
@@ -1118,13 +1118,13 @@ local({
       operation = "complement",
       children = list(
         list(
-      kind = "filter",
-      operation = "select_subset",
-      values = c("b", "c", "d", "e"),
-      include_NA = TRUE,
-      variable = "subset_var",
-      dataset = "d1"
-    )
+          kind = "filter",
+          operation = "select_subset",
+          values = c("b", "c", "d", "e"),
+          include_NA = TRUE,
+          variable = "subset_var",
+          dataset = "d1"
+        )
       )
     )
 
@@ -1279,6 +1279,63 @@ local({
 
     expect_identical(create_subject_filter_info(dataset_list = dataset_list, e, "sbj")[["subjects"]], c("SBJ1", "SBJ2", "SBJ3"))
   })
+
+  test_that("apply_subject_filter_info applies lvl dropping, reintroduces lvl present still present in the variable, retains not present unfiltered lvls", {
+    d <- list(d = data.frame(
+      subset_var = factor(
+        c("a", "b", "c"),
+        levels = c("a", "b", "c", "NO_ROW_STAY", "NO_ROW_GONE")
+      )
+    ))
+
+    dataset_filter_info <- list(
+      d = list(
+        mask = c(TRUE, FALSE, TRUE),
+        lvls = list(subset_var = c("a", "NO_ROW_STAY"))
+      )
+    )
+
+    expected <- c(
+      "a", # Not filtered
+      "c", # In mask but not in lvls, reintroduced
+      "NO_ROW_STAY" # Not present but not filtered
+    )
+
+    expect_identical(
+      expected,
+      levels(apply_dataset_filter_info(d, dataset_filter_info)[["d"]][["subset_var"]])
+    )
+  })
+
+  test_that("apply_subject_filter_info applies lvl dropping, reintroduces lvl present still present in the variable, retains not present unfiltered lvls", {
+    d <- list(d = data.frame(
+      subset_var = factor(
+        c("a", "b", "c"),
+        levels = c("a", "b", "c", "NO_ROW_STAY", "NO_ROW_GONE")
+      ),
+      subject_var = factor(
+        c("S-1", "S-2", "S-3")
+      )
+    ))
+
+    subject_filter_info <- list(
+      d = list(
+        subjects = c("S-1", "S-3"),
+        lvls = list(subset_var = c("a", "NO_ROW_STAY"))
+      )
+    )
+
+    expected <- c(
+      "a", # Not filtered
+      "c", # In mask but not in lvls, reintroduced
+      "NO_ROW_STAY" # Not present but not filtered
+    )
+
+    expect_identical(
+      expected,
+      levels(apply_dataset_filter_info(d, dataset_filter_info)[["d"]][["subset_var"]])
+    )
+  })
 })
 
 local({
@@ -1346,7 +1403,7 @@ local({
         NA_count = yyjsonr::as_scalar(1L),
         min = yyjsonr::as_scalar(1),
         max = yyjsonr::as_scalar(2),
-        density = hist(d[["var"]], plot= FALSE)[["density"]]
+        density = hist(d[["var"]], plot = FALSE)[["density"]]
       )
     )
   })
@@ -1737,7 +1794,7 @@ local({
             Simple3 = dv.manager:::mod_simple(
               dataset = "ds1",
               module_id = "mod",
-            from = "filtered_dataset"
+              from = "filtered_dataset"
             )
           ),
           filter_data = "ds1",
