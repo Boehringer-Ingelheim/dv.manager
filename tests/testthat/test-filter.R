@@ -607,7 +607,7 @@ local({
     expect_identical(processed_element[["dataset"]], "d")
   })
 
-    test_that("process_dataset_filter_element - not filter operation correctly combines lvls", {
+  test_that("process_dataset_filter_element - not filter operation correctly combines lvls", {
     e <- list(
       kind = "row_operation",
       operation = "not",
@@ -846,6 +846,8 @@ local({
     )
   })
 
+  ######################
+
   test_that("process_subject_filter_element returns subjects set", {
     e <- list(
       kind = "filter",
@@ -857,8 +859,9 @@ local({
       dataset = "d"
     )
 
-    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
-    expect_identical(subject_set[["subjects"]], c("SBJ-2", "SBJ-3", "SBJ-4"))
+    expected <- list(subjects = c("SBJ-2", "SBJ-3", "SBJ-4"), dataset_list_lvls = list(d = list()))
+    processed_element <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    expect_identical(processed_element, expected)
   })
 
   test_that("process_subject_filter_element - intersect set operation returns subject set for 1 element", {
@@ -878,8 +881,9 @@ local({
       )
     )
 
-    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
-    expect_identical(subject_set[["subjects"]], c("SBJ-2", "SBJ-3", "SBJ-4"))
+    expected <- list(subjects = c("SBJ-2", "SBJ-3", "SBJ-4"), dataset_list_lvls = list(d = list()))
+    processed_element <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    expect_identical(processed_element, expected)
   })
 
   test_that("process_subject_filter_element - intersect set operation returns subject set for n elements", {
@@ -907,8 +911,10 @@ local({
         )
       )
     )
-    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
-    expect_identical(subject_set[["subjects"]], c("SBJ-2", "SBJ-3"))
+
+    expected <- list(subjects = c("SBJ-2", "SBJ-3"), dataset_list_lvls = list(d = list()))
+    processed_element <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    expect_identical(processed_element, expected)
   })
 
   test_that("process_subject_filter_element - intersect set operation fails when it does not have at least 1 children (subject filter)", {
@@ -941,8 +947,9 @@ local({
       )
     )
 
-    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
-    expect_identical(subject_set[["subjects"]], c("SBJ-2", "SBJ-3", "SBJ-4"))
+    expected <- list(subjects = c("SBJ-2", "SBJ-3", "SBJ-4"), dataset_list_lvls = list(d = list()))
+    processed_element <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    expect_identical(processed_element, expected)
   })
 
   test_that("process_subject_filter_element - union set operation returns subject set for n elements", {
@@ -970,8 +977,9 @@ local({
         )
       )
     )
-    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
-    expect_identical(sort(subject_set[["subjects"]]), c("SBJ-1", "SBJ-2", "SBJ-3", "SBJ-4"))
+    expected <- list(subjects = c("SBJ-2", "SBJ-3", "SBJ-4", "SBJ-1"), dataset_list_lvls = list(d = list()))
+    processed_element <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    expect_identical(processed_element, expected)
   })
 
   test_that("process_subject_filter_element - union set operation fails when it does not have at least 1 children (subject filter)", {
@@ -1004,8 +1012,9 @@ local({
       )
     )
 
-    subject_set <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
-    expect_identical(subject_set[["subjects"]], c("SBJ-1", "SBJ-5", "SBJ-6"))
+    expected <- list(subjects = c("SBJ-1", "SBJ-5", "SBJ-6"), dataset_list_lvls = list(d = list()))
+    processed_element <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d"]][["sbj_var"]])
+    expect_identical(processed_element, expected)
   })
 
   test_that("process_subject_filter_element - complement set operation fails when it does not have exactly 1 children (subject filter)", {
@@ -1050,6 +1059,8 @@ local({
       fixed = TRUE
     )
   })
+
+  ######################
 
   test_that("set operations cannot be child of a row operation or a dataset filter", {
     e <- list(
