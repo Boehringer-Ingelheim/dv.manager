@@ -223,7 +223,7 @@ dataset_filter_operations <- local({
         for (fct in relevant_factors) {
           lvls[[fct]] <- intersect(
             lvls[[fct]] %||% levels(dataset_list[[filter_dataset]][[fct]]),
-            curr_lvls[[fct]] %||% levels(dataset_list[[filter_dataset]][[fct]])
+            curr_lvls[[fct]]
           )
         }
       }
@@ -526,7 +526,7 @@ subject_filter_operations <- local({
           for (fct in relevant_factors) {
             dataset_lvls[[fct]] <- intersect(
               dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]]),
-              child_dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]])
+              child_dataset_lvls[[fct]]
             )
         }
         dataset_list_lvls[[dataset_name]] <- dataset_lvls
