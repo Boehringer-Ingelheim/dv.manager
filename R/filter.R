@@ -396,15 +396,21 @@ apply_dataset_filter_info <- function(dataset_list, dataset_filter_info) {
     lbls <- get_lbls(current_filtered_dataset)
     filtered_dataset <- current_filtered_dataset[current_mask, , drop = FALSE]
 
-    # drop filtered not present levels
     for (var_name in names(current_lvls)) {
-      # Unite levels with levels present after filtering
-      # Add comment as it may not be clear
-      # stop("RECOVER FACTORS THAT ARE REINTRODUCED BY AND/OR/NOT OPERATIONS ON OTHER ROWS")
-      var <- filtered_dataset[[var_name]]
-      all_lvls <- levels(var)
-      present_lvls <- droplevels(var)
-      new_lvls <- intersect(all_lvls, union(present_lvls, current_lvls[[var_name]])) # Maintains order of levels
+      unfiltered_var <- dataset_list[[current_dataset_name]][[var_name]]
+      all_possible_lvls <- levels(unfiltered_var)
+
+      filtered_var <- filtered_dataset[[var_name]]
+      present_lvls <- levels(droplevels(filtered_var))
+
+      # Applying lvls have the following side case
+      # - A factor level may be filtered out using a filter, therefore the lvl should be dropped
+      # BUT another filter with an operation, or, may reintroduce a row with a lvl that is supposed to be dropped
+      # Therefore we force all levels present in the variable to not be dropped
+      new_lvls <- union(present_lvls, current_lvls[[var_name]])
+
+      # Side effect of intersect is that it maintains the order of the first set
+      new_lvls <- intersect(all_possible_lvls, new_lvls)
       filtered_dataset[[var_name]] <- factor(filtered_dataset[[var_name]], new_lvls)
     }
 
@@ -424,15 +430,21 @@ apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_va
     lbls <- get_lbls(current_filtered_dataset)
     filtered_dataset <- current_filtered_dataset[current_mask, , drop = FALSE]
 
-    # drop filtered not present levels
     for (var_name in names(current_lvls)) {
-      # Unite levels with levels present after filtering
-      # Add comment as it may not be clear
-      # stop("RECOVER FACTORS THAT ARE REINTRODUCED BY AND/OR/NOT OPERATIONS ON OTHER ROWS")
-      var <- filtered_dataset[[var_name]]
-      all_lvls <- levels(var)
-      present_lvls <- droplevels(var)
-      new_lvls <- intersect(all_lvls, union(present_lvls, current_lvls[[var_name]])) # Maintains order of levels
+      unfiltered_var <- dataset_list[[current_dataset_name]][[var_name]]
+      all_possible_lvls <- levels(unfiltered_var)
+
+      filtered_var <- filtered_dataset[[var_name]]
+      present_lvls <- levels(droplevels(filtered_var))
+
+      # Applying lvls have the following side case
+      # - A factor level may be filtered out using a filter, therefore the lvl should be dropped
+      # BUT another filter with an operation, or, may reintroduce a row with a lvl that is supposed to be dropped
+      # Therefore we force all levels present in the variable to not be dropped
+      new_lvls <- union(present_lvls, current_lvls[[var_name]])
+
+      # Side effect of intersect is that it maintains the order of the first set
+      new_lvls <- intersect(all_possible_lvls, new_lvls)
       filtered_dataset[[var_name]] <- factor(filtered_dataset[[var_name]], new_lvls)
     }
 
