@@ -467,7 +467,7 @@ create_subject_filter_info <- function(dataset_list, subject_filter, sbj_var) {
   } else  if (length(children) == 1) {
     subject_filter_info <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
   }
-  
+
   return(subject_filter_info)
 }
 
@@ -531,7 +531,7 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
 
       }
     }
-    
+
     return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
   }
 
