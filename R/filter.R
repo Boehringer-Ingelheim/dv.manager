@@ -601,7 +601,7 @@ apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_va
       # BUT another filter with an operation, or, may reintroduce a row with a lvl that is supposed to be dropped
       # Therefore we force all levels present in the variable to not be dropped
       new_lvls <- union(present_lvls, current_lvls[[var_name]])
-      
+
       new_lvls <- match_set_order(all_possible_lvls, new_lvls)
       filtered_dataset[[var_name]] <- factor(filtered_dataset[[var_name]], new_lvls)
     }
