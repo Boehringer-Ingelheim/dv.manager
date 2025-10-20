@@ -7,7 +7,7 @@ local({
       range_var = c(1.0:5.0, NA),
       date_var = date_var,
       posix_var = as.POSIXct(date_var),
-      subset_var = factor(c(letters[1:5], NA)),
+      subset_var = factor(c(letters[1:5], NA), levels = c(letters[1:5], "LEVEL_WITH_NO_ROWS")),
       subset_var2 = factor(c(letters[6:10], NA)),
       logical_var = c(TRUE, TRUE, TRUE, FALSE, FALSE, NA),
       sbj_var = paste0("SBJ-", 1:6)
@@ -632,7 +632,8 @@ local({
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
     expect_identical(processed_element[["dataset"]], "d1")
-    expect_identical(processed_element[["lvls"]], list(subset_var = c("a")))
+    
+    expect_identical(processed_element[["lvls"]], list(subset_var = c("a", "LEVEL_WITH_NO_ROWS")))
   })
 
   test_that("process_dataset_filter_element - not filter operation fails when it does not have exactly 1 children", {
@@ -1128,7 +1129,7 @@ local({
       )
     )
 
-    expected <- list(d1 = list(subset_var = c("a")), d2 = list())
+    expected <- list(d1 = list(subset_var = c("a", "LEVEL_WITH_NO_ROWS")), d2 = list())
     processed_element <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d1"]][["sbj_var"]])
     expect_identical(processed_element[["dataset_list_lvls"]], expected)
   })
