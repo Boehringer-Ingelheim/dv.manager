@@ -922,7 +922,7 @@ local({
     expect_identical(processed_element, expected)
   })
 
-    test_that("process_dataset_filter_element - intersect filter operation correctly combines lvls", {
+    test_that("process_dataset_filter_element - intersect set operation correctly combines lvls", {
     e <- list(
       kind = "set_operation",
       operation = "intersect",
@@ -949,21 +949,22 @@ local({
       values = c("f", "h"),
       include_NA = FALSE,
       variable = "subset_var2",
-      dataset = "d1"
-    ),
-        list(
+      dataset = "d2"
+    ),    
+     list(
       kind = "filter",
       operation = "select_subset",
-      values = c("h", "j"),
+      values = c("f"),
       include_NA = FALSE,
       variable = "subset_var2",
-      dataset = "d1"
+      dataset = "d2"
     )
       )
     )
 
-    processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
-    expect_identical(processed_element[["lvls"]], list(subset_var = c("b", "c", "d"), subset_var2 = c("f", "h", "j")))
+    expected <- list(d1 = list(subset_var = "c"), d2 = list(subset_var2 = c("f")))
+    processed_element <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d1"]][["sbj_var"]])
+    expect_identical(processed_element[["dataset_list_lvls"]], expected)
   })
 
   test_that("process_subject_filter_element - intersect set operation fails when it does not have at least 1 children (subject filter)", {
@@ -1031,6 +1032,51 @@ local({
     expect_identical(processed_element, expected)
   })
 
+      test_that("process_dataset_filter_element - union set operation correctly combines lvls", {
+    e <- list(
+      kind = "set_operation",
+      operation = "union",
+      children = list(
+        list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("b", "c"),
+      include_NA = FALSE,
+      variable = "subset_var",
+      dataset = "d1"
+    ),
+        list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("c", "d"),
+      include_NA = FALSE,
+      variable = "subset_var",
+      dataset = "d1"
+    ),
+     list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("f", "h"),
+      include_NA = FALSE,
+      variable = "subset_var2",
+      dataset = "d2"
+    ),    
+     list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("f"),
+      include_NA = FALSE,
+      variable = "subset_var2",
+      dataset = "d2"
+    )
+      )
+    )
+
+    expected <- list(d1 = list(subset_var = c("b", "c", "d")), d2 = list(subset_var2 = c("f", "h")))
+    processed_element <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d1"]][["sbj_var"]])
+    expect_identical(processed_element[["dataset_list_lvls"]], expected)
+  })
+
   test_that("process_subject_filter_element - union set operation fails when it does not have at least 1 children (subject filter)", {
     e <- list(
       kind = "set_operation",
@@ -1064,6 +1110,27 @@ local({
     expected <- list(subjects = c("SBJ-1", "SBJ-5", "SBJ-6"), dataset_list_lvls = list(d1 = list(), d2 = list()))
     processed_element <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d1"]][["sbj_var"]])
     expect_identical(processed_element, expected)
+  })
+
+  test_that("process_dataset_filter_element - complement set operation correctly combines lvls", {
+    e <- list(
+      kind = "set_operation",
+      operation = "complement",
+      children = list(
+        list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("b", "c", "d", "e"),
+      include_NA = TRUE,
+      variable = "subset_var",
+      dataset = "d1"
+    )
+      )
+    )
+
+    expected <- list(d1 = list(subset_var = c("a")), d2 = list())
+    processed_element <- process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d1"]][["sbj_var"]])
+    expect_identical(processed_element[["dataset_list_lvls"]], expected)
   })
 
   test_that("process_subject_filter_element - complement set operation fails when it does not have exactly 1 children (subject filter)", {
