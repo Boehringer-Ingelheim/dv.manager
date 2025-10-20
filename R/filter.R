@@ -471,7 +471,7 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
     children <- filter_element[["children"]]
     subjects <- character(0)
     assert(length(children) > 0, "`union` operation requires at least one child")
-    dataset_list_lvls <- vector(mode = "list", length = length(dataset_list))
+    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
     names(dataset_list_lvls) <- names(dataset_list)
 
     for (child in children) {
@@ -497,7 +497,7 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
     children <- filter_element[["children"]]
     subjects <- complete_subject_list
     assert(length(children) > 0, "`intersect` operation requires at least one child")
-    dataset_list_lvls <- vector(mode = "list", length = length(dataset_list))
+    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
     names(dataset_list_lvls) <- names(dataset_list)
 
     for (child in children) {
@@ -528,7 +528,7 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
     assert(length(children) == 1, "`complement` operation requires exactly one child")
     processed_element <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
     subjects <- setdiff(complete_subject_list, processed_element[["subjects"]])
-    dataset_list_lvls <- vector(mode = "list", length = length(dataset_list))
+    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
     names(dataset_list_lvls) <- names(dataset_list)
 
     child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
