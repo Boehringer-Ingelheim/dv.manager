@@ -8,6 +8,7 @@ local({
       date_var = date_var,
       posix_var = as.POSIXct(date_var),
       subset_var = factor(c(letters[1:5], NA)),
+      subset_var2 = factor(c(letters[6:10], NA)),
       logical_var = c(TRUE, TRUE, TRUE, FALSE, FALSE, NA),
       sbj_var = paste0("SBJ-", 1:6)
     )
@@ -15,7 +16,7 @@ local({
 
   # Column filters
 
-  test_that("process_dataset_filter_element - select_range filter returns mask excluding NAs", {
+  test_that("process_dataset_filter_element - select_range filter returns mask excluding NAs and empty level list", {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -32,7 +33,7 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })  
 
-  test_that("process_dataset_filter_element - select_range filter returns mask including NAs", {
+  test_that("process_dataset_filter_element - select_range filter returns mask including NAs and empty level list", {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -49,7 +50,7 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_subset filter returns mask excluding NAs", {
+  test_that("process_dataset_filter_element - select_subset filter returns mask excluding NAs and selected levels list", {
     e <- list(
       kind = "filter",
       operation = "select_subset",
@@ -65,7 +66,7 @@ local({
     expect_identical(processed_element[["lvls"]], list(subset_var = c("b", "c", "d")))
   })
 
-  test_that("process_dataset_filter_element - select_subset filter returns mask including NAs", {
+  test_that("process_dataset_filter_element - select_subset filter returns mask including NAs and selected levels list", {
     e <- list(
       kind = "filter",
       operation = "select_subset",
@@ -81,7 +82,7 @@ local({
     expect_identical(processed_element[["lvls"]], list(subset_var = c("b", "c", "d")))
   })
 
-  test_that("process_dataset_filter_element - select_subset filter returns mask for logical excluding NAs", {
+  test_that("process_dataset_filter_element - select_subset filter returns mask for logical excluding NAs and empty level list", {
     e <- list(
       kind = "filter",
       operation = "select_subset",
@@ -98,7 +99,7 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_subset filter returns mask for logical including NAs", {
+  test_that("process_dataset_filter_element - select_subset filter returns mask for logical including NAs and empty level list", {
     e <- list(
       kind = "filter",
       operation = "select_subset",
@@ -115,7 +116,7 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for Date type", {
+  test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for Date type and empty level list", {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -133,7 +134,7 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_date filter returns mask including NAs for Date type", {
+  test_that("process_dataset_filter_element - select_date filter returns mask including NAs for Date type and empty level list", {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -151,7 +152,7 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for POSIX type", {
+  test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for POSIX type and empty level list", {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -169,7 +170,7 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_date filter returns mask including NAs for POSIX type", {
+  test_that("process_dataset_filter_element - select_date filter returns mask including NAs for POSIX type and empty level list", {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -360,7 +361,7 @@ local({
     )
   })
 
-  test_that("process_dataset_filter_element - and filter operation returns mask for 1 element", {
+  test_that("process_dataset_filter_element - and filter operation returns mask for 1", {
     e <- list(
       kind = "row_operation",
       operation = "and",
@@ -434,30 +435,42 @@ local({
       operation = "and",
       children = list(
         list(
-          kind = "filter",
-          operation = "select_range",
-          max = 4,
-          min = 2,
-          include_NA = FALSE,
-          variable = "range_var",
-          dataset = "d"
-        ),
+      kind = "filter",
+      operation = "select_subset",
+      values = c("b", "c"),
+      include_NA = FALSE,
+      variable = "subset_var",
+      dataset = "d"
+    ),
         list(
-          kind = "filter",
-          operation = "select_range",
-          max = 3,
-          min = 1,
-          include_NA = FALSE,
-          variable = "range_var",
-          dataset = "d"
-        )
+      kind = "filter",
+      operation = "select_subset",
+      values = c("c", "d"),
+      include_NA = FALSE,
+      variable = "subset_var",
+      dataset = "d"
+    ),
+     list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("f", "h"),
+      include_NA = FALSE,
+      variable = "subset_var2",
+      dataset = "d"
+    ),
+        list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("h", "j"),
+      include_NA = FALSE,
+      variable = "subset_var2",
+      dataset = "d"
+    )
       )
     )
 
-    expected <- c(FALSE, TRUE, TRUE, FALSE, FALSE, FALSE)
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
-    expect_identical(processed_element[["mask"]], expected)
-    expect_identical(processed_element[["dataset"]], "d")
+    expect_identical(processed_element[["lvls"]], list(subset_var = c("c"), subset_var2 = c("h")))
   })
 
   test_that("process_dataset_filter_element - or filter operation returns mask for 1 element", {
@@ -480,6 +493,50 @@ local({
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
     expect_identical(processed_element[["dataset"]], "d")
+  })
+
+  test_that("process_dataset_filter_element - or filter operation correctly combines lvls", {
+    e <- list(
+      kind = "row_operation",
+      operation = "or",
+      children = list(
+        list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("b", "c"),
+      include_NA = FALSE,
+      variable = "subset_var",
+      dataset = "d"
+    ),
+        list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("c", "d"),
+      include_NA = FALSE,
+      variable = "subset_var",
+      dataset = "d"
+    ),
+     list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("f", "h"),
+      include_NA = FALSE,
+      variable = "subset_var2",
+      dataset = "d"
+    ),
+        list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("h", "j"),
+      include_NA = FALSE,
+      variable = "subset_var2",
+      dataset = "d"
+    )
+      )
+    )
+
+    processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
+    expect_identical(processed_element[["lvls"]], list(subset_var = c("b", "c", "d"), subset_var2 = c("f", "h", "j")))
   })
 
   test_that("process_dataset_filter_element - or filter operation returns mask for n elements", {
@@ -548,6 +605,29 @@ local({
     processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
     expect_identical(processed_element[["mask"]], expected)
     expect_identical(processed_element[["dataset"]], "d")
+  })
+
+    test_that("process_dataset_filter_element - not filter operation correctly combines lvls", {
+    e <- list(
+      kind = "row_operation",
+      operation = "not",
+      children = list(
+        list(
+      kind = "filter",
+      operation = "select_subset",
+      values = c("b", "c", "d", "e"),
+      include_NA = TRUE,
+      variable = "subset_var",
+      dataset = "d"
+    )
+      )
+    )
+
+    expected <- c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE)
+    processed_element <- process_dataset_filter_element(dataset_list = dataset_list, filter_element = e)
+    expect_identical(processed_element[["mask"]], expected)
+    expect_identical(processed_element[["dataset"]], "d")
+    expect_identical(processed_element[["lvls"]], list(subset_var = c("a")))
   })
 
   test_that("process_dataset_filter_element - not filter operation fails when it does not have exactly 1 children", {
