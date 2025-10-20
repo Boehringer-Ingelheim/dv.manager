@@ -553,10 +553,13 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
     mask <- processed_element[["mask"]]
     dataset <- processed_element[["dataset"]]
     subjects <- as.character(dataset_list[[dataset]][[sbj_var]][mask])
+
+    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
+    names(dataset_list_lvls) <- names(dataset_list)
     dataset_lvls <- processed_element[["lvls"]]
     dataset_name <- processed_element[["dataset"]]
-    dataset_list_lvls <- list()
     dataset_list_lvls[[dataset_name]] <- dataset_lvls
+
     return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
   }
 
