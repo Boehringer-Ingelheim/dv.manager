@@ -648,10 +648,9 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
     y <- gsub("'", "\\\\'", y)
     y <- gsub("\n", "\\\\n", y)
     y <- gsub("\r", "\\\\r", y)
+    y <- gsub("\t", "\\\\t", y)
     y
   }
-
-  yyjsonr_read_json_str_with_options(state) |> yyjsonr::write_json_str()
 
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
