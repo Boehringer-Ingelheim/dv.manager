@@ -625,7 +625,7 @@ from_filter_validate <- jsonvalidate::json_validator(
   strict = TRUE
 )
 
-yyjsonr_read_json_str_with_options <- function(x) {
+yyjsonr_read_json_str_with_options <- function(x, invisible = FALSE) {
   yyjsonr::read_json_str(x, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
 }
 
