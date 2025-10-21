@@ -1,3 +1,7 @@
+# dv.manager 2.2.0-9003
+
+- Filter: Forcefully casts variables with type numeric to numeric
+
 # dv.manager 2.2.0-9001
 - Development filter:
     - Revamps the UI for the filter in development
