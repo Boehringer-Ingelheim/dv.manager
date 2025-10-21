@@ -23,7 +23,7 @@ Imports:
     checkmate (>= 2.1.0),
     cli (>= 3.3.0),
     jsonlite,
-    yyjsonr,
+    yyjsonr (>= 0.1.21),
     jsonvalidate,
     shinyWidgets,
     digest
@@ -47,5 +47,5 @@ Suggests:
 Config/testthat/edition: 3
 Config/testthat/parallel: false
 Depends: R (>= 4.0.0)
-Remotes: boehringer-ingelheim/dv.filter@test, boehringer-ingelheim/dv.loader@main
+Remotes: boehringer-ingelheim/dv.filter@test, boehringer-ingelheim/dv.loader@main, yyjsonr=url::https://cran.r-project.org/src/contrib/yyjsonr_0.1.21.tar.gz
 VignetteBuilder: knitr
