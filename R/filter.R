@@ -548,6 +548,7 @@ match_set_order <- function(reference, values) {
 apply_dataset_filter_info <- function(dataset_list, dataset_filter_info) {
   # Code partially matches  (EO9M)
   filtered_dataset_list <- dataset_list
+  dataset_filter_info <- as_safe_list(dataset_filter_info)
   for (current_dataset_name in names(dataset_filter_info)) {
     current_mask <- dataset_filter_info[[current_dataset_name]][["mask"]]
     current_lvls <- dataset_filter_info[[current_dataset_name]][["lvls"]]
@@ -581,6 +582,7 @@ apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_va
   # Code partially matches  (EO9M)
   filtered_dataset_list <- dataset_list
   subject_set <- subject_filter_info[["subjects"]]
+  subject_filter_info <- as_safe_list(subject_filter_info)
 
   for (current_dataset_name in names(dataset_list)) {
     current_mask <- dataset_list[[current_dataset_name]][[subj_var]] %in% subject_set
