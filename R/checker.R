@@ -247,7 +247,7 @@ check_set_filter_info <- function(filter_type, filter_default_state) {
 check_parsable_json_input <- function(x) {
   p <- try(yyjsonr_read_json_str_with_options(x), silent = TRUE)
   if (inherits(p, "try-error")) {
-    msg <- parse("Error parsing JSON:", substitute(x))
+    msg <- paste("Error parsing JSON:", substitute(x))
     stop(msg)
   }
   NULL
