@@ -70,7 +70,8 @@ specs <- list(
     "FILTER_INITIAL_STATE" = "Filters can be initialized with a default state.",
     "FILTER_SAVE_RESTORE" = "Filters can be saved and restored.",
     "FILTER_CONTEXTUAL" = "Filters display only information relevant to the currently active module.",
-    "FILTER_BOOKMARKABLE" = "Filter state is included in bookmarks."
+    "FILTER_BOOKMARKABLE" = "Filter state is included in bookmarks.",
+    "FILTER_LEVEL_DROP" = "Filtered out levels in factors will be dropped"
   ),
 
   # --- Bookmarking ---

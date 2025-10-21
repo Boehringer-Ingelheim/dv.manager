@@ -21,7 +21,13 @@ local({
 
   # Column filters
 
-  test_that("process_dataset_filter_element - select_range filter returns mask excluding NAs and empty level list", {
+  test_that("process_dataset_filter_element - select_range filter returns mask excluding NAs and empty level list" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -38,7 +44,13 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_range filter returns mask including NAs and empty level list", {
+  test_that("process_dataset_filter_element - select_range filter returns mask including NAs and empty level list" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -55,7 +67,13 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_subset filter returns mask excluding NAs and selected levels list", {
+  test_that("process_dataset_filter_element - select_subset filter returns mask excluding NAs and selected levels list" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_subset",
@@ -71,7 +89,13 @@ local({
     expect_identical(processed_element[["lvls"]], list(subset_var = c("b", "c", "d")))
   })
 
-  test_that("process_dataset_filter_element - select_subset empty vector assigned to the lvls of a variable is unambiguous", {
+  test_that("process_dataset_filter_element - select_subset empty vector assigned to the lvls of a variable is unambiguous" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
 
     # When all values are filtered there is an entry in lvls and the entry is an empty vector
     e <- list(
@@ -111,7 +135,13 @@ local({
     expect_identical(processed_element[["lvls"]], list(subset_var = c("a", "b", "c", "d", "e", "LEVEL_WITH_NO_ROWS")))
   })
 
-  test_that("process_dataset_filter_element - select_subset filter returns mask including NAs and selected levels list", {
+  test_that("process_dataset_filter_element - select_subset filter returns mask including NAs and selected levels list" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_subset",
@@ -127,7 +157,13 @@ local({
     expect_identical(processed_element[["lvls"]], list(subset_var = c("b", "c", "d")))
   })
 
-  test_that("process_dataset_filter_element - select_subset filter returns mask for logical excluding NAs and empty level list", {
+  test_that("process_dataset_filter_element - select_subset filter returns mask for logical excluding NAs and empty level list" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_subset",
@@ -144,7 +180,13 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_subset filter returns mask for logical including NAs and empty level list", {
+  test_that("process_dataset_filter_element - select_subset filter returns mask for logical including NAs and empty level list" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_subset",
@@ -161,7 +203,13 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for Date type and empty level list", {
+  test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for Date type and empty level list" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -179,7 +227,13 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_date filter returns mask including NAs for Date type and empty level list", {
+  test_that("process_dataset_filter_element - select_date filter returns mask including NAs for Date type and empty level list" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -197,7 +251,13 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for POSIX type and empty level list", {
+  test_that("process_dataset_filter_element - select_date filter returns mask excluding NAs for POSIX type and empty level list" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -215,7 +275,13 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - select_date filter returns mask including NAs for POSIX type and empty level list", {
+  test_that("process_dataset_filter_element - select_date filter returns mask including NAs for POSIX type and empty level list" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -233,7 +299,13 @@ local({
     expect_identical(processed_element[["lvls"]], list())
   })
 
-  test_that("process_dataset_filter_element - dataset filters fail when the current_table_is not the same as the table in the filter", {
+  test_that("process_dataset_filter_element - dataset filters fail when the current_table_is not the same as the table in the filter" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     dataset_list[["OTHER_TABLE"]] <- dataset_list[["d1"]]
     e <- list(
       kind = "row_operation",
@@ -298,7 +370,13 @@ local({
     )
   })
 
-  test_that("process_dataset_filter_element - dataset filters fail when the table does not contain the filtered field", {
+  test_that("process_dataset_filter_element - dataset filters fail when the table does not contain the filtered field" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -316,7 +394,13 @@ local({
     )
   })
 
-  test_that("process_dataset_filter_element - select_range filter fail when the field is not numeric", {
+  test_that("process_dataset_filter_element - select_range filter fail when the field is not numeric" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -334,7 +418,13 @@ local({
     )
   })
 
-  test_that("process_dataset_filter_element - select_date filter fail when the field is not date or posix", {
+  test_that("process_dataset_filter_element - select_date filter fail when the field is not date or posix" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -352,7 +442,13 @@ local({
     )
   })
 
-  test_that("process_dataset_filter_element - select_range min must be lower or equal than max", {
+  test_that("process_dataset_filter_element - select_range min must be lower or equal than max" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -370,7 +466,13 @@ local({
     )
   })
 
-  test_that("process_dataset_filter_element - select_date min must be lower or equal than max", {
+  test_that("process_dataset_filter_element - select_date min must be lower or equal than max" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_date",
@@ -388,7 +490,13 @@ local({
     )
   })
 
-  test_that("process_dataset_filter_element - fails for unknown operations", {
+  test_that("process_dataset_filter_element - fails for unknown operations" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "filter",
       operation = "UNKNOWN OPERATION",
@@ -406,7 +514,13 @@ local({
     )
   })
 
-  test_that("process_dataset_filter_element - and filter operation returns mask for 1", {
+  test_that("process_dataset_filter_element - and filter operation returns mask for 1" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "and",
@@ -429,7 +543,13 @@ local({
     expect_identical(processed_element[["dataset"]], "d1")
   })
 
-  test_that("process_dataset_filter_element - and filter operation returns mask for n elements", {
+  test_that("process_dataset_filter_element - and filter operation returns mask for n elements" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "and",
@@ -461,7 +581,13 @@ local({
     expect_identical(processed_element[["dataset"]], "d1")
   })
 
-  test_that("process_dataset_filter_element - and filter operation fails when it does not have at least 1 children", {
+  test_that("process_dataset_filter_element - and filter operation fails when it does not have at least 1 children" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "and",
@@ -474,7 +600,13 @@ local({
     )
   })
 
-  test_that("process_dataset_filter_element - and filter operation correctly combines lvls", {
+  test_that("process_dataset_filter_element - and filter operation correctly combines lvls" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "and",
@@ -518,7 +650,13 @@ local({
     expect_identical(processed_element[["lvls"]], list(subset_var = c("c"), subset_var2 = c("h")))
   })
 
-  test_that("process_dataset_filter_element - or filter operation returns mask for 1 element", {
+  test_that("process_dataset_filter_element - or filter operation returns mask for 1 element" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "or",
@@ -540,7 +678,13 @@ local({
     expect_identical(processed_element[["dataset"]], "d1")
   })
 
-  test_that("process_dataset_filter_element - or filter operation correctly combines lvls", {
+  test_that("process_dataset_filter_element - or filter operation correctly combines lvls" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "or",
@@ -584,7 +728,13 @@ local({
     expect_identical(processed_element[["lvls"]], list(subset_var = c("b", "c", "d"), subset_var2 = c("f", "h", "j")))
   })
 
-  test_that("process_dataset_filter_element - or filter operation returns mask for n elements", {
+  test_that("process_dataset_filter_element - or filter operation returns mask for n elements" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "or",
@@ -616,7 +766,13 @@ local({
     expect_identical(processed_element[["dataset"]], "d1")
   })
 
-  test_that("process_dataset_filter_element - or filter operation fails when it does not have at least 1 children", {
+  test_that("process_dataset_filter_element - or filter operation fails when it does not have at least 1 children" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "or",
@@ -629,7 +785,13 @@ local({
     )
   })
 
-  test_that("process_dataset_filter_element - not filter operation returns mask", {
+  test_that("process_dataset_filter_element - not filter operation returns mask" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "not",
@@ -652,7 +814,13 @@ local({
     expect_identical(processed_element[["dataset"]], "d1")
   })
 
-  test_that("process_dataset_filter_element - not filter operation correctly combines lvls", {
+  test_that("process_dataset_filter_element - not filter operation correctly combines lvls" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "not",
@@ -676,7 +844,13 @@ local({
     expect_identical(processed_element[["lvls"]], list(subset_var = c("a", "LEVEL_WITH_NO_ROWS")))
   })
 
-  test_that("process_dataset_filter_element - not filter operation fails when it does not have exactly 1 children", {
+  test_that("process_dataset_filter_element - not filter operation fails when it does not have exactly 1 children" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "not",
@@ -767,7 +941,11 @@ local({
     })
   })
 
-  test_that("create_datasets_filter_masks fails when a dataset appears more than once in the dataset filters", {
+  test_that("create_datasets_filter_masks fails when a dataset appears more than once in the dataset filters" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,    
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     dataset_list <- list(
       d1 = data.frame(var1 = "a"),
       d2 = data.frame(var2 = "b")
@@ -796,7 +974,11 @@ local({
     )
   })
 
-  test_that("create_datasets_filter_masks fails when the dataset is not in the data_list", {
+  test_that("create_datasets_filter_masks fails when the dataset is not in the data_list" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     dataset_list <- list(
       d1 = data.frame(var1 = "a"),
       d2 = data.frame(var2 = "b")
@@ -820,7 +1002,11 @@ local({
     )
   })
 
-  test_that("create_datasets_filter_masks fails when a children is not of kind dataset", {
+  test_that("create_datasets_filter_masks fails when a children is not of kind dataset" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     dataset_list <- list(
       d1 = data.frame(var1 = "a"),
       d2 = data.frame(var2 = "b")
@@ -844,7 +1030,11 @@ local({
     )
   })
 
-  test_that("create_datasets_filter_masks fails when it has more than one children", {
+  test_that("create_datasets_filter_masks fails when it has more than one children" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     dataset_list <- list(
       d1 = data.frame(var1 = "a"),
       d2 = data.frame(var2 = "b")
@@ -870,7 +1060,11 @@ local({
     )
   })
 
-  test_that("create_datasets_filter_masks returns an all TRUE mask when no dataset has no child filters", {
+  test_that("create_datasets_filter_masks returns an all TRUE mask when no dataset has no child filters" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     dataset_list <- list(
       d1 = data.frame(var1 = c("a", "b")),
       d2 = data.frame(var2 = "b")
@@ -894,7 +1088,11 @@ local({
 
   ######################
 
-  test_that("process_subject_filter_element returns subjects set", {
+  test_that("process_subject_filter_element returns subjects set" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     e <- list(
       kind = "filter",
       operation = "select_range",
@@ -910,7 +1108,11 @@ local({
     expect_identical(processed_element, expected)
   })
 
-  test_that("process_subject_filter_element - intersect set operation returns subject set for 1 element", {
+  test_that("process_subject_filter_element - intersect set operation returns subject set for 1 element" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     e <- list(
       kind = "set_operation",
       operation = "intersect",
@@ -932,7 +1134,11 @@ local({
     expect_identical(processed_element, expected)
   })
 
-  test_that("process_subject_filter_element - intersect set operation returns subject set for n elements", {
+  test_that("process_subject_filter_element - intersect set operation returns subject set for n elements" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     e <- list(
       kind = "set_operation",
       operation = "intersect",
@@ -963,7 +1169,12 @@ local({
     expect_identical(processed_element, expected)
   })
 
-  test_that("process_dataset_filter_element - intersect set operation correctly combines lvls", {
+  test_that("process_dataset_filter_element - intersect set operation correctly combines lvls" |>
+  vdoc[["add_spec"]](c(    
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "set_operation",
       operation = "intersect",
@@ -1008,7 +1219,11 @@ local({
     expect_identical(processed_element[["dataset_list_lvls"]], expected)
   })
 
-  test_that("process_subject_filter_element - intersect set operation fails when it does not have at least 1 children (subject filter)", {
+  test_that("process_subject_filter_element - intersect set operation fails when it does not have at least 1 children (subject filter)" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     e <- list(
       kind = "set_operation",
       operation = "intersect",
@@ -1021,7 +1236,11 @@ local({
     )
   })
 
-  test_that("process_subject_filter_element - union set operation returns subject set for 1 element", {
+  test_that("process_subject_filter_element - union set operation returns subject set for 1 element" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     e <- list(
       kind = "set_operation",
       operation = "union",
@@ -1043,7 +1262,11 @@ local({
     expect_identical(processed_element, expected)
   })
 
-  test_that("process_subject_filter_element - union set operation returns subject set for n elements", {
+  test_that("process_subject_filter_element - union set operation returns subject set for n elements" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     e <- list(
       kind = "set_operation",
       operation = "union",
@@ -1073,7 +1296,12 @@ local({
     expect_identical(processed_element, expected)
   })
 
-  test_that("process_dataset_filter_element - union set operation correctly combines lvls", {
+  test_that("process_dataset_filter_element - union set operation correctly combines lvls" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "set_operation",
       operation = "union",
@@ -1118,7 +1346,11 @@ local({
     expect_identical(processed_element[["dataset_list_lvls"]], expected)
   })
 
-  test_that("process_subject_filter_element - union set operation fails when it does not have at least 1 children (subject filter)", {
+  test_that("process_subject_filter_element - union set operation fails when it does not have at least 1 children (subject filter)" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     e <- list(
       kind = "set_operation",
       operation = "union",
@@ -1131,7 +1363,11 @@ local({
     )
   })
 
-  test_that("process_subject_filter_element - complement set operation returns subject set", {
+  test_that("process_subject_filter_element - complement set operation returns subject set" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     e <- list(
       kind = "set_operation",
       operation = "complement",
@@ -1153,7 +1389,12 @@ local({
     expect_identical(processed_element, expected)
   })
 
-  test_that("process_dataset_filter_element - complement set operation correctly combines lvls", {
+  test_that("process_dataset_filter_element - complement set operation correctly combines lvls" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     e <- list(
       kind = "set_operation",
       operation = "complement",
@@ -1174,7 +1415,11 @@ local({
     expect_identical(processed_element[["dataset_list_lvls"]], expected)
   })
 
-  test_that("process_subject_filter_element - complement set operation fails when it does not have exactly 1 children (subject filter)", {
+  test_that("process_subject_filter_element - complement set operation fails when it does not have exactly 1 children (subject filter)" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     e <- list(
       kind = "set_operation",
       operation = "complement",
@@ -1219,7 +1464,11 @@ local({
 
   ######################
 
-  test_that("set operations cannot be child of a row operation or a dataset filter", {
+  test_that("set operations cannot be child of a row operation or a dataset filter" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     e <- list(
       kind = "row_operation",
       operation = "not",
@@ -1277,13 +1526,21 @@ local({
     )
   })
 
-  test_that("dataset filter and subject filter fails when a field of element is not present", {
+  test_that("dataset filter and subject filter fails when a field of element is not present" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     e <- list()
     expect_error(process_dataset_filter_element(dataset_list = dataset_list, filter_element = e))
     expect_error(process_subject_filter_element(dataset_list = dataset_list, filter_element = e, sbj_var = "sbj_var", complete_subject_list = dataset_list[["d1"]][["sbj_var"]]))
   })
 
-  test_that("create_subject_set returns a subject set", {
+  test_that("create_subject_set returns a subject set" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     dataset_list <- list(
       d1 = data.frame(var1 = c("a", "b"), sbj = c("SBJ1", "SBJ2")),
       d2 = data.frame(var1 = "a", sbj = "SBJ3")
@@ -1308,7 +1565,11 @@ local({
     )
   })
 
-  test_that("create_subject_set returns full subject list, across datasets, for an empty filter", {
+  test_that("create_subject_set returns full subject list, across datasets, for an empty filter" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     dataset_list <- list(
       d1 = data.frame(var1 = c("a", "b"), sbj = c("SBJ1", "SBJ2")),
       d2 = data.frame(var1 = "a", sbj = "SBJ3")
@@ -1321,7 +1582,12 @@ local({
     expect_identical(create_subject_filter_info(dataset_list = dataset_list, e, "sbj")[["subjects"]], c("SBJ1", "SBJ2", "SBJ3"))
   })
 
-  test_that("apply_subject_filter_info applies lvl dropping, reintroduces lvl present still present in the variable, retains not present unfiltered lvls", {
+  test_that("apply_subject_filter_info applies lvl dropping, reintroduces lvl present still present in the variable, retains not present unfiltered lvls" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     d <- list(d = data.frame(
       subset_var = factor(
         c("a", "b", "c"),
@@ -1348,7 +1614,12 @@ local({
     )
   })
 
-  test_that("apply_subject_filter_info applies lvl dropping, reintroduces lvl present still present in the variable, retains not present unfiltered lvls", {
+  test_that("apply_subject_filter_info applies lvl dropping, reintroduces lvl present still present in the variable, retains not present unfiltered lvls" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY,
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )), {
     d <- list(d = data.frame(
       subset_var = factor(
         c("a", "b", "c"),
@@ -1381,7 +1652,12 @@ local({
 })
 
 local({
-  test_that("get_single_filter_data show correct counts and entries for character columns", {
+  test_that("get_single_filter_data show correct counts and entries for character columns" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA
+  )), {
     d <- data.frame(
       var = c("A", "A", "B", NA_character_)
     )
@@ -1404,7 +1680,12 @@ local({
     )
   })
 
-  test_that("get_single_filter_data show correct counts and entries for factor columns", {
+  test_that("get_single_filter_data show correct counts and entries for factor columns" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA
+  )), {
     d <- data.frame(
       var = factor(c("A", "A", "B", NA_character_), levels = c("A", "B", "C"))
     )
@@ -1428,7 +1709,12 @@ local({
     )
   })
 
-  test_that("get_single_filter_data show correct max and min for numeric columns", {
+  test_that("get_single_filter_data show correct max and min for numeric columns" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA
+  )), {
     d <- data.frame(
       var = c(1, 1, 2, NA_real_)
     )
@@ -1450,7 +1736,12 @@ local({
     )
   })
 
-  test_that("get_single_filter_data supports all NA columns", {
+  test_that("get_single_filter_data supports all NA columns" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA
+  )), {
     d <- data.frame(
       var = c(NA_real_, NA_real_)
     )
@@ -1472,7 +1763,12 @@ local({
     )
   })
 
-  test_that("get_single_filter_data show correct max and min for Date columns", {
+  test_that("get_single_filter_data show correct max and min for Date columns" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA
+  )), {
     d <- data.frame(
       var = as.Date(c("2024-01-01", "2024-01-02", NA))
     )
@@ -1493,7 +1789,12 @@ local({
     )
   })
 
-  test_that("get_single_filter_data show correct max and min for POSIXct columns", {
+  test_that("get_single_filter_data show correct max and min for POSIXct columns" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA
+  )), {
     d <- data.frame(
       var = as.POSIXct(as.Date(c("2024-01-01", "2024-01-02", NA)))
     )
@@ -1514,7 +1815,12 @@ local({
     )
   })
 
-  test_that("get_single_filter_data fails for unsupported types", {
+  test_that("get_single_filter_data fails for unsupported types" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA
+  )), {
     d <- data.frame(
       var = 1 + 2i
     )
@@ -1526,7 +1832,12 @@ local({
     )
   })
 
-  test_that("get_single_filter_data returns one entry per column", {
+  test_that("get_single_filter_data returns one entry per column" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA
+  )), {
     d <- data.frame(
       var1 = "a",
       var2 = "a"
@@ -1535,7 +1846,12 @@ local({
     expect_length(r, 2)
   })
 
-  test_that("get_filter_data returns one entry per dataset_list and dataset", {
+  test_that("get_filter_data returns one entry per dataset_list and dataset" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_SUPPORTED_TYPES,
+    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA
+  )), {
     dataset_lists <- list(
       dl1 = list(
         ds1 = data.frame(var1 = "a"),
@@ -1559,7 +1875,10 @@ local({
 })
 
 local({
-  test_that("match_set_order matches order of values to reference",{
+  test_that("match_set_order matches order of values to reference" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_LEVEL_DROP
+  )),{
     expect_identical(
       match_set_order(c("A", "B"), c("B", "A")),
       c("A", "B")
@@ -1630,7 +1949,10 @@ local({
 
   absolute_state_file <- file.path(getwd(), "./test_data/filter_state.txt")
 
-  test_that("A file state can be loaded in the app|all block types can be included in the application", {
+  test_that("A file state can be loaded in the app|all block types can be included in the application" |>
+  vdoc[["add_spec"]](c(
+    specs$DATASETS$DATASET_ENTRY_STRUCTURE
+  )), {
     # The filter includes all possible blocks which effectively test that all can be included
     # Because we are reading back the processed filter we also ensure that all blocks are processed properly
 
@@ -1657,7 +1979,10 @@ local({
     expect_identical(state_from_app, state_from_file)
   })
 
-  test_that("A string state can be loaded in the app", {
+  test_that("A string state can be loaded in the app" |>
+  vdoc[["add_spec"]](c(
+    c
+  )), {
     string_state <- paste(readLines(absolute_state_file), collapse = "\n")
 
     app <- start_app_driver(rlang::quo({
@@ -1683,7 +2008,10 @@ local({
     expect_identical(state_from_app, state_from_file)
   })
 
-  test_that("An app with no state has an empty filter", {
+  test_that("An app with no state has an empty filter" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST
+  )), {
     app <- start_app_driver(rlang::quo({
       dv.manager:::run_app(
         data = !!dataset_lists,
@@ -1728,7 +2056,10 @@ local({
   })
 
 
-  test_that("dataset filters are applied", {
+  test_that("dataset filters are applied" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST
+  )), {
     app <- start_app_driver(rlang::quo({
       dv.manager:::run_app(
         data = dataset_lists,
@@ -1774,7 +2105,12 @@ local({
     expect_identical(app$get_value(output = "mod-text"), "1")
   })
 
-  test_that("subject filters are applied", {
+  test_that("subject filters are applied" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+    specs$FILTERING$FILTER_GLOBAL_TABLE,
+    specs$FILTERING$FILTER_GLOBAL_KEY
+  )), {
     # Filter on ds2 see the effect on ds1
 
     app <- start_app_driver(rlang::quo({
@@ -1838,13 +2174,19 @@ local({
     url <- "?_inputs_&filter-IGNORE_INPUT=null&__tabset_0__=%22mod%22&open_options_modal=0&selector=%22dl1%22&click=true&filter-checkbox=false&filter-log=null&filter-json=%22%7B%5C%22filters%5C%22%3A%7B%5C%22datasets_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%5D%7D%2C%5C%22subject_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%7B%5C%22kind%5C%22%3A%5C%22filter%5C%22%2C%5C%22dataset%5C%22%3A%5C%22ds1%5C%22%2C%5C%22operation%5C%22%3A%5C%22select_subset%5C%22%2C%5C%22variable%5C%22%3A%5C%22sbj_var%5C%22%2C%5C%22values%5C%22%3A%5B%5C%22SBJ-1%5C%22%5D%2C%5C%22include_NA%5C%22%3Afalse%7D%5D%7D%7D%2C%5C%22dataset_list_name%5C%22%3A%5C%22dl1%5C%22%7D%22"
 
 
-    test_that("Bookmark can be restored | Bookmark overrides state", {
+    test_that("Bookmark can be restored | Bookmark overrides state"|>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_BOOKMARKABLE
+  )), {
       full_url <- paste0(root_app$get_url(), url)
       app <- shinytest2::AppDriver$new(full_url)
       expect_identical(app$get_value(output = "mod-text"), "1")
     })
 
-    test_that("Bookmark can be restored with no state", {
+    test_that("Bookmark can be restored with no state"|>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_BOOKMARKABLE
+  )), {
       root_app <- start_app_driver(rlang::quo({
         dv.manager:::run_app(
           data = dataset_lists,
@@ -1870,13 +2212,19 @@ local({
   })
 })
 
-test_that("filter only sends one value when it is updated", {
+test_that("filter only sends one value when it is updated" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST
+  )), {
   # Related to every time we change the filter, including first beat
 
   skip("skipped until we can set a state programatically")
 })
 
-test_that("modules bookmark state works with filter", {
+test_that("modules bookmark state works with filter" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_BOOKMARKABLE
+  )), {
   # Related to the first beat of the app
   # Mainly related to the above, the main requisite is that when starting the app on a bookmarked state
   # a single filtered dataset_list is sent to the modules, otherwise bookmark state is spent on the first filtered
@@ -1885,6 +2233,9 @@ test_that("modules bookmark state works with filter", {
   skip("skipped until we can set a state programatically")
 })
 
-test_that("filter labels are preserved", {
+test_that("filter labels are preserved" |>
+  vdoc[["add_spec"]](c(
+    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST
+  )), {
   expect_true(FALSE)
 })
