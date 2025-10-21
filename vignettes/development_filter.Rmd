@@ -45,6 +45,13 @@ Before describing each filter (*simple* or *blockly*), it is important to unders
 
 These filters apply to a single dataset. They are used to select specific rows within that dataset.
 
+::: {style="padding: 1em 1em 1em 1em;  margin-bottom: 5px;  border: 1px solid #64a1ce;  border-radius: 5px;  background:#f5f5f5 5px center/3em no-repeat;"}
+**Level dropping**
+
+This filter will drop filtered levels from the factor variables.
+
+:::
+
 ### Subject or subpopulation filters
 
 These filters apply across all datasets in the application. They are used to select a subpopulation that spans all datasets.
@@ -226,7 +233,7 @@ dv.manager::run_app(
   ),
   filter_data = "adsl",
   filter_key = "USUBJID",
-  filter_type = "blockly"
+  filter_type = "development"
 )
 ```
 

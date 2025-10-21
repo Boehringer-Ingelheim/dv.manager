@@ -349,25 +349,42 @@ test_that(
 )
 
 test_that(
-  "check_set_filter_info should ignore filter_default_state when filter_type is not blockly",
+  "check_set_filter_info should ignore filter_default_state when filter_type is not development",
   {
     check_set_filter_info("simple", "") |>
-    expect_warning(regexp = "^`filter_default_state` is ignored when `filter_type` is not blockly")
+    expect_warning(regexp = "^`filter_default_state` is ignored when `filter_type` is not development")
   }
 )
 
 test_that(
   "check_set_filter_info should error when filter_default_state is not a JSON parsable string",
   {
-    check_set_filter_info("blockly", "UNPARSABLE") |>
+    check_set_filter_info("development", "UNPARSABLE") |>
     expect_error(regexp = "^`filter_default_state` cannot be parsed as JSON")
   }
 )
 
 test_that(
+  "check_set_filter_info should error when filter_default_state is not a JSON parsable string",
+  {
+    check_set_filter_info("development", "UNPARSABLE") |>
+    expect_error(regexp = "^`filter_default_state` cannot be parsed as JSON")
+  }
+)
+
+test_that(
+  "check_parsable_json_input should error when passed a JSON parsable string",
+  {
+    check_parsable_json_input("UNPARSABLE") |>
+    expect_error(regexp = "^Error parsing JSON:")
+  }
+)
+
+
+test_that(
   "check_set_filter_info should return the JSON string",
   {
-    expect_identical(check_set_filter_info("blockly", "{}")[["filter_default_state"]], "{}")
+    expect_identical(check_set_filter_info("development", "{}")[["filter_default_state"]], "{}")
   }
 )
 
@@ -377,7 +394,7 @@ test_that(
     tmp_file <- tempfile()    
     writeLines("UNPARSABLE", tmp_file)
     on.exit(unlink(tmp_file), add = TRUE)
-    check_set_filter_info("blockly", tmp_file) |>
+    check_set_filter_info("development", tmp_file) |>
     expect_error(regexp = "^`filter_default_state` cannot be parsed as JSON")
   }
 )
@@ -388,7 +405,7 @@ test_that(
     tmp_file <- tempfile()    
     writeLines("{}", tmp_file)
     on.exit(unlink(tmp_file), add = TRUE)    
-    expect_identical(check_set_filter_info("blockly", tmp_file)[["filter_default_state"]], "{}")
+    expect_identical(check_set_filter_info("development", tmp_file)[["filter_default_state"]], "{}")
   }
 )
 
