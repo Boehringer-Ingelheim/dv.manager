@@ -375,8 +375,8 @@ test_that(
 test_that(
   "check_parsable_json_input should error when passed a JSON parsable string",
   {
-    check_parsable_json_input("development", "UNPARSABLE") |>
-    expect_error(regexp = "^`filter_default_state` cannot be parsed as JSON")
+    check_parsable_json_input("UNPARSABLE") |>
+    expect_error(regexp = "^Error parsing JSON:")
   }
 )
 

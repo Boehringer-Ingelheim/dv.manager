@@ -1360,11 +1360,12 @@ local({
     ))
 
     subject_filter_info <- list(
-      d = list(
-        subjects = c("S-1", "S-3"),
-        lvls = list(subset_var = c("a", "NO_ROW_STAY"))
+      subjects = c("S-1", "S-3"),
+      dataset_list_lvls = list(
+        d = list(subset_var = c("a", "NO_ROW_STAY"))
+        )
       )
-    )
+    
 
     expected <- c(
       "a", # Not filtered
@@ -1373,8 +1374,8 @@ local({
     )
 
     expect_identical(
-      expected,
-      levels(apply_dataset_filter_info(d, dataset_filter_info)[["d"]][["subset_var"]])
+      levels(apply_subject_filter_info(d, subject_filter_info, "subject_var")[["d"]][["subset_var"]]),
+      expected
     )
   })
 })
