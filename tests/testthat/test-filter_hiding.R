@@ -109,7 +109,7 @@ local({
       filter_data = "d1",
       filter_key = "cyl",
       enableBookmarking = "url",
-      filter_type = "blockly"
+      filter_type = "development"
     )
   })
 

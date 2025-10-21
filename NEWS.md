@@ -1,3 +1,6 @@
+# dv.manager 2.2.0-9002
+- Factor levels are dropped when filtered
+
 # dv.manager 2.2.0-9001
 - Development filter:
     - Revamps the UI for the filter in development
