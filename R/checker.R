@@ -230,7 +230,7 @@ check_set_filter_info <- function(filter_type, filter_default_state) {
         log_inform(msg)
         filter_default_state <- paste0(readLines(filter_default_state), collapse = "\n")
       }
-      x <- try(jsonlite::parse_json(filter_default_state), silent = TRUE)
+      x <- try(yyjsonr_read_json_str_with_options(filter_default_state), silent = TRUE)
       if (inherits(x, "try-error")) {
         # We only parse to check JSON is correctly set, it will be used further down the code
         stop("`filter_default_state` cannot be parsed as JSON")
@@ -242,4 +242,13 @@ check_set_filter_info <- function(filter_type, filter_default_state) {
   }
 
   list(filter_type = filter_type, filter_default_state = filter_default_state)
+}
+
+check_parsable_json_input <- function(x) {
+  p <- try(yyjsonr_read_json_str_with_options(x), silent = TRUE)
+  if (inherits(p, "try-error")) {
+    msg <- parse("Error parsing JSON:", substitute(x))
+    stop(msg)
+  }
+  NULL
 }

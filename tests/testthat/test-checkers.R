@@ -365,6 +365,23 @@ test_that(
 )
 
 test_that(
+  "check_set_filter_info should error when filter_default_state is not a JSON parsable string",
+  {
+    check_set_filter_info("development", "UNPARSABLE") |>
+    expect_error(regexp = "^`filter_default_state` cannot be parsed as JSON")
+  }
+)
+
+test_that(
+  "check_parsable_json_input should error when passed a JSON parsable string",
+  {
+    check_parsable_json_input("development", "UNPARSABLE") |>
+    expect_error(regexp = "^`filter_default_state` cannot be parsed as JSON")
+  }
+)
+
+
+test_that(
   "check_set_filter_info should return the JSON string",
   {
     expect_identical(check_set_filter_info("development", "{}")[["filter_default_state"]], "{}")

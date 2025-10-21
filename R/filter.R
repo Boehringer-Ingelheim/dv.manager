@@ -637,21 +637,19 @@ add_blockly_dependency <- function() {
   )
 }
 
+
+
 new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL, saved_states = NULL, strict = FALSE) {
   ns <- shiny::NS(id)
 
-  if (!is.null(state)) {
-    if (file.exists(state)) {
-      state <- paste0(readLines(state), collapse = "\n")
-    }
-  } else {
-    state <- "null" # Acts as a no filter JSON
-  }
+  # JSONify null
+  state <- state %||% "null"
+  saved_states <- saved_states %||% "null"
+  check_parsable_json_input(state)
+  check_parsable_json_input(saved_states)
 
   filter_bookmark <- shiny::restoreInput(ns(ID$FILTER_STATE_JSON_INPUT), state)
-  filter_bookmark <- filter_bookmark %||% "null"
   saved_states_bookmark <- shiny::restoreInput(ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT), saved_states)
-  saved_states_bookmark <- saved_states_bookmark %||% "null"
 
   log_inform(paste("Loading state", filter_bookmark))
   log_inform(paste("Loading saved states", saved_states_bookmark))
