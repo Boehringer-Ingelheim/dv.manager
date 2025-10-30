@@ -160,6 +160,13 @@ const BC = {
     DATASETS_FILTER: 'datasets_filter',
     SUBJECT_FILTER: 'subject_filter'
   },
+  COLOR: {
+    ROW_OPERATION: 0,
+    SUBJECT_FILTER: 30,
+    SET_OPERATION: 30,
+    DATASET_RANGE_MIN:90,
+    DATASET_RANGE_MAX:300,
+  },
   ATTRIBUTE: {
     INNER_FILTER: "data-inner-filter",
     MODAL: "data-blockly-modal"
@@ -689,7 +696,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
           [['and', 'and'], ['or', 'or']]
         ), "operation");
       this.setOutput(true, "row");
-      this.setColour(255);
+      this.setColour(BC.COLOR.ROW_OPERATION);
     },// This is called during serialization
     saveExtraState: function () {
       let saved_inputs = this.inputList.map(x => x.name).filter(x => x.startsWith("contents_"))
@@ -718,7 +725,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       this.appendValueInput("contents_fix")
         .setCheck(["filter", "row"]);
       this.setOutput(true, "row");
-      this.setColour(255);
+      this.setColour(BC.COLOR.ROW_OPERATION);
     }
   };
 
@@ -729,7 +736,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
           [['intersect', 'intersect'], ['union', 'union']]
         ), "operation");
       this.setOutput(true, "set");
-      this.setColour(160);
+      this.setColour(BC.COLOR.SET_OPERATION);
     },// This is called during serialization
     saveExtraState: function () {
       let saved_inputs = this.inputList.map(x => x.name).filter(x => x.startsWith("contents_"))
@@ -758,7 +765,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       this.appendValueInput("contents_fix")
         .setCheck(["set", "filter", "row"]);
       this.setOutput(true, "set");
-      this.setColour(160);
+      this.setColour(BC.COLOR.SET_OPERATION);
     }
   };
 
@@ -767,15 +774,16 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       this.appendDummyInput('label')
         .appendField('Subject Filter');
       this.appendValueInput("content");
-      this.setColour(160);
+      this.setColour(BC.COLOR.SUBJECT_FILTER);
       this.is_top_subject = true;
     }
   };
 
-  let current_color = 0;
+  let color_step = Math.floor((BC.COLOR.DATASET_RANGE_MAX - BC.COLOR.DATASET_RANGE_MIN) / selected_datasets.length);
+  let current_color = (BC.COLOR.DATASET_RANGE_MIN - color_step);
 
   for (let dataset of selected_datasets) {
-    current_color = current_color + 30;
+    current_color = current_color + color_step;
     const dataset_color = current_color;
     const dataset_name = dataset["name"];
     const dataset_type = get_block_dataset_type(dataset_name);
