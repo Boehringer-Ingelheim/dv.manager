@@ -90,9 +90,9 @@ app_server_ <- function(input, output, session, opts) {
   module_meta <- opts[["module_info"]][["meta"]]
   module_names <- opts[["module_info"]][["module_name"]]
   module_hierarchy_list <- opts[["module_info"]][["hierarchy"]]
-  data <- opts[["data"]]
-  filter_data <- opts[["filter_data"]]
-  filter_key <- opts[["filter_key"]]
+  datataset_lists <- opts[["data"]]
+  subject_filter_dataset_name <- opts[["filter_data"]]
+  filter_key_var <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
   filter_info <- opts[["filter_info"]]
@@ -102,7 +102,7 @@ app_server_ <- function(input, output, session, opts) {
 
   ######################################
 
-  datasets_filters_info <- get_dataset_filters_info(data, filter_data)
+  datasets_filters_info <- get_dataset_filters_info(datataset_lists, subject_filter_dataset_name)
 
   # Check if dataset must be reloaded in the next session
   check_data_reload(reload_period)
@@ -115,7 +115,7 @@ app_server_ <- function(input, output, session, opts) {
 
   url_parameters <- shiny::reactiveVal()
 
-  if (length(data) > 1) {
+  if (length(datataset_lists) > 1) {
     shinyjs::toggle(id = "dataset_selector")
   }
 
@@ -126,12 +126,12 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  unfiltered_dataset <- shiny::reactive({
+  unfiltered_dataset_list <- shiny::reactive({
     shiny::req(input$selector)
-    if (is.function(data[[input$selector]])) {
-      add_date_range(data[[input$selector]]())
+    if (is.function(datataset_lists[[input$selector]])) {
+      add_date_range(datataset_lists[[input$selector]]())
     } else {
-      add_date_range(data[[input$selector]])
+      add_date_range(datataset_lists[[input$selector]])
     }
   })
 
@@ -140,12 +140,12 @@ app_server_ <- function(input, output, session, opts) {
     dataset_filter <- new_filter_server(ID$FILTER, shiny::reactive({
       input$selector
     }),
-    subject_filter_dataset_name = filter_data,
-    filtered_dataset
+    subject_filter_dataset_name = subject_filter_dataset_name,
+    filtered_dataset_list
     )
 
-    filtered_dataset <- shiny::reactive({
-      ufd <- shiny::isolate(unfiltered_dataset())
+    filtered_dataset_list <- shiny::reactive({
+      ufd <- shiny::isolate(unfiltered_dataset_list())
 
       shiny::req(!is.na(dataset_filter()))
 
@@ -186,9 +186,9 @@ app_server_ <- function(input, output, session, opts) {
       # Check NA optimization in the future
       fd <- tryCatch(
         {
-          subject_filter_info <- create_subject_filter_info(ds, safe_filters[["subject_filter"]], filter_key)          
+          subject_filter_info <- create_subject_filter_info(ds, safe_filters[["subject_filter"]], filter_key_var)          
           if (!identical(subject_filter_info, NA_character_)) {
-            apply_subject_filter_info(fd, subject_filter_info, filter_key)
+            apply_subject_filter_info(fd, subject_filter_info, filter_key_var)
           } else {
             fd
           }
@@ -234,7 +234,7 @@ app_server_ <- function(input, output, session, opts) {
   } else {
     global_filtered_values <- dv.filter::data_filter_server(
       "global_filter",
-      shiny::reactive(unfiltered_dataset()[[filter_data]])
+      shiny::reactive(unfiltered_dataset_list()[[subject_filter_dataset_name]])
     )
 
 
@@ -250,7 +250,7 @@ app_server_ <- function(input, output, session, opts) {
             dv.filter::data_filter_server(
               curr_dataset_filter_info[["id"]],
               shiny::reactive({
-                unfiltered_dataset()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()
+                unfiltered_dataset_list()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()
               })
             )
           })
@@ -259,7 +259,7 @@ app_server_ <- function(input, output, session, opts) {
         l
       })
 
-      filtered_dataset <- shiny::reactive({
+      filtered_dataset_list <- shiny::reactive({
         # dv.filter returns a logical vector. This contemplates the case of empty lists
         shiny::req(is.logical(global_filtered_values()))
 
@@ -270,7 +270,7 @@ app_server_ <- function(input, output, session, opts) {
         # We filter the previous dataset which in the best case produces and extra reactive beat
         # and in the worst case produces an error in (mvbc)
         # We don't want to control the error in (mvbc) because filtered dataset only changes when filter changes
-        ufds <- shiny::isolate(unfiltered_dataset())
+        ufds <- shiny::isolate(unfiltered_dataset_list())
 
         curr_dataset_filters <- dataset_filters[intersect(names(dataset_filters), names(ufds))]
 
@@ -278,7 +278,7 @@ app_server_ <- function(input, output, session, opts) {
         # Check dataset filters check all datafilters are initialized
         purrr::walk(curr_dataset_filters, ~ shiny::req(checkmate::test_logical(.x(), min.len = 0)))
 
-        filtered_key_values <- ufds[[filter_data]][[filter_key]][global_filtered_values()]
+        filtered_key_values <- ufds[[subject_filter_dataset_name]][[filter_key_var]][global_filtered_values()]
 
         fds <- ufds
 
@@ -296,7 +296,7 @@ app_server_ <- function(input, output, session, opts) {
         # Global dataset filtering
         global_filtered <- purrr::map(
           fds, function(current_ds) {
-            mask <- current_ds[[filter_key]] %in% filtered_key_values
+            mask <- current_ds[[filter_key_var]] %in% filtered_key_values
             labels <- get_lbls(current_ds)
             current_ds <- current_ds[mask, , drop = FALSE]
             set_lbls(current_ds, labels)
@@ -339,14 +339,14 @@ app_server_ <- function(input, output, session, opts) {
     } else {
       log_inform("Single filter server")
 
-      filtered_dataset <- shiny::reactive({
+      filtered_dataset_list <- shiny::reactive({
         # dv.filter returns a logical vector. This contemplates the case of empty lists
         shiny::req(is.logical(global_filtered_values()))
         log_inform("New filter applied")
-        filtered_key_values <- unfiltered_dataset()[[filter_data]][[filter_key]][global_filtered_values()] # nolint
+        filtered_key_values <- unfiltered_dataset_list()[[subject_filter_dataset_name]][[filter_key_var]][global_filtered_values()] # nolint
         purrr::map(
-          unfiltered_dataset(),
-          ~ dplyr::filter(.x, .data[[filter_key]] %in% filtered_key_values) # nolint
+          unfiltered_dataset_list(),
+          ~ dplyr::filter(.x, .data[[filter_key_var]] %in% filtered_key_values) # nolint
         )
       })
     }
@@ -358,15 +358,22 @@ app_server_ <- function(input, output, session, opts) {
   module_output_fn <- function() {
     as_dv_manager_module_output_safe_list(module_output)
   }
-
-  # TODO: `unfiltered_dataset` should be `unfiltered_dataset_list` both var and entry name. Deprecate in future versions
+  
   afmm <- list(
-    data = data,
-    unfiltered_dataset = unfiltered_dataset,
-    filtered_dataset = filtered_dataset,
+    data = datataset_lists,
+    unfiltered_dataset = shiny::reactive({
+      rlang::warn("(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]].") # nolintr
+      unfiltered_dataset_list()
+    }),
+    unfiltered_dataset_list = unfiltered_dataset_list,
+    filtered_dataset = shiny::reactive({      
+      rlang::warn("(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]].") # nolintr
+      filtered_dataset_list()
+    }),
+    filtered_dataset_list = filtered_dataset_list,
     url_parameters = url_parameters,
     dataset_name = shiny::reactive({
-      rlang::warn("afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]].") # nolintr
+      rlang::warn("(Message for the module developer) afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]].") # nolintr
       input$selector
     }),
     dataset_metadata = list(
