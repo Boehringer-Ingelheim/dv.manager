@@ -90,7 +90,7 @@ app_server_ <- function(input, output, session, opts) {
   module_meta <- opts[["module_info"]][["meta"]]
   module_names <- opts[["module_info"]][["module_name"]]
   module_hierarchy_list <- opts[["module_info"]][["hierarchy"]]
-  datataset_lists <- opts[["data"]]
+  dataset_lists <- opts[["data"]]
   subject_filter_dataset_name <- opts[["filter_data"]]
   filter_key_var <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
@@ -102,7 +102,7 @@ app_server_ <- function(input, output, session, opts) {
 
   ######################################
 
-  datasets_filters_info <- get_dataset_filters_info(datataset_lists, subject_filter_dataset_name)
+  datasets_filters_info <- get_dataset_filters_info(dataset_lists, subject_filter_dataset_name)
 
   # Check if dataset must be reloaded in the next session
   check_data_reload(reload_period)
@@ -115,7 +115,7 @@ app_server_ <- function(input, output, session, opts) {
 
   url_parameters <- shiny::reactiveVal()
 
-  if (length(datataset_lists) > 1) {
+  if (length(dataset_lists) > 1) {
     shinyjs::toggle(id = "dataset_selector")
   }
 
@@ -127,16 +127,23 @@ app_server_ <- function(input, output, session, opts) {
   })
 
   unfiltered_dataset_list <- shiny::reactive({
-    shiny::req(input$selector)
-    if (is.function(datataset_lists[[input$selector]])) {
-      add_date_range(datataset_lists[[input$selector]]())
+    dataset_list_name <- input$selector
+    shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
+    assert(dataset_list_name %in% names(dataset_lists))
+
+    if (is.function(dataset_lists[[dataset_list_name]])) {
+      selected_dataset_list <- add_date_range(dataset_lists[[dataset_list_name]]())
     } else {
-      add_date_range(datataset_lists[[input$selector]])
+      selected_dataset_list <- add_date_range(dataset_lists[[dataset_list_name]])
     }
+    attr(selected_dataset_list, "dataset_list_name") <- dataset_list_name
+    selected_dataset_list
   })
 
 
   if (use_blockly_filter) {
+    
+
     dataset_filter <- new_filter_server(ID$FILTER, shiny::reactive({
       input$selector
     }),
@@ -145,7 +152,7 @@ app_server_ <- function(input, output, session, opts) {
     )
 
     filtered_dataset_list <- shiny::reactive({
-      ufd <- shiny::isolate(unfiltered_dataset_list())
+      ufd <- unfiltered_dataset_list()
 
       shiny::req(!is.na(dataset_filter()))
 
@@ -157,9 +164,9 @@ app_server_ <- function(input, output, session, opts) {
 
       safe_filters <- as_safe_list(safe_dsf[["parsed"]][["filters"]])
 
-      current_server_dataset_name <- shiny::isolate(input$selector)
+      current_server_dataset_list_name <- attr(ufd, "dataset_list_name")
       current_client_dataset_name <- safe_dsf[["parsed"]][["dataset_list_name"]]
-      shiny::req(current_server_dataset_name == current_client_dataset_name)
+      shiny::req(current_server_dataset_list_name == current_client_dataset_name)
 
       ds <- ufd
 
@@ -360,7 +367,7 @@ app_server_ <- function(input, output, session, opts) {
   }
   
   afmm <- list(
-    data = datataset_lists,
+    data = dataset_lists,
     unfiltered_dataset = shiny::reactive({
       rlang::warn("(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]].") # nolintr
       unfiltered_dataset_list()
@@ -450,7 +457,7 @@ app_server_ <- function(input, output, session, opts) {
   })
 
   output$dataset_date <- shiny::renderText({
-    date_range <- attr(unfiltered_dataset(), "date_range")
+    date_range <- attr(unfiltered_dataset_list(), "date_range")
 
     if (!any(is.na(date_range))) {
       date_range <- format(date_range, "%Y-%b-%d (%Z)")
