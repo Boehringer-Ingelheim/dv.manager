@@ -126,6 +126,19 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
+  apply_subgroups <- function(dataset_list, subgroups) {
+    for(idx in seq_along(subgroups)) {
+      name <- names(subgroups)[[idx]]
+      filter_json <- subgroups[[idx]]
+      subject_filter <- yyjsonr_read_json_str_with_options(filter_json)[["filters"]][["subject_filter"]]
+      subjects <- create_subject_filter_info(dataset_list, subject_filter, filter_key_var)[["subjects"]]
+      dataset_list[[subject_filter_dataset_name]][[name]] <- dataset_list[[subject_filter_dataset_name]][[filter_key_var]] %in% subjects
+    }
+
+    dataset_list
+    
+  } |> shiny::maskReactiveContext()
+
   unfiltered_dataset_list <- shiny::reactive({
     dataset_list_name <- input$selector
     shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
@@ -136,10 +149,64 @@ app_server_ <- function(input, output, session, opts) {
     } else {
       selected_dataset_list <- add_date_range(dataset_lists[[dataset_list_name]])
     }
+    r_subgroups <- subgroups()    
+    selected_dataset_list <- apply_subgroups(selected_dataset_list, r_subgroups)    
     attr(selected_dataset_list, "dataset_list_name") <- dataset_list_name
     selected_dataset_list
   })
 
+  subgroups <- shiny::reactiveVal(list())
+
+  output[["subgroups"]] <- shiny::renderUI({
+    r_subgroups <- subgroups()
+    ui <- vector(mode = "list", length = length(r_subgroups))
+    for(idx in seq_along(r_subgroups)) {
+      name <- names(r_subgroups)[[idx]]
+      ui[[idx]] <- shiny::div(name)
+    }
+    ui
+  })
+
+  shiny::observeEvent(input[["add_col"]], {
+    template_f <- r"--(
+    {
+    "filters": {
+        "datasets_filter": {
+            "children": [
+
+            ]
+        },
+        "subject_filter": {
+            "children": [
+                {
+                    "kind": "row_operation",
+                    "operation": "and",
+                    "children": [
+                        {
+                            "kind": "filter",
+                            "dataset": "adsl",
+                            "operation": "select_range",
+                            "variable": "AGE",
+                            "min": 50,
+                            "max": %d,
+                            "include_NA": true
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "dataset_list_name": "dummy"
+}
+
+    )--"
+    max <- sample(50:90, size = 1)
+    f <- sprintf(template_f, max)
+    n <- sprintf("MAXAGE%d", max)
+    sg <- subgroups()
+    sg[[n]] <- f
+    subgroups(sg)    
+  })
 
   if (use_blockly_filter) {
     

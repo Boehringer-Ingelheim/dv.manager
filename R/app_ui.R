@@ -44,6 +44,11 @@ app_ui <- function(request_id) {
 
   if (use_blockly_filter) {
     filter_ui <- new_filter_ui(ns(ID$FILTER), data, filter_data, state = filter_default_state)
+    filter_ui <- list(
+      shiny::actionButton(ns("add_col"), label = "Add random col to subject_data"),
+      shiny::uiOutput(ns("subgroups")),
+      filter_ui
+    )
   } else {
     filter_ui <- list(
       shiny::div(
