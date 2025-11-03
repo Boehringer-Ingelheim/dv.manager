@@ -729,7 +729,7 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
   combined_ui
 }
 
-new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dataset_name, after_filter_dataset_list, strict = FALSE) {
+new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_name, after_filter_dataset_list, strict = FALSE) {
   mod <- function(input, output, session) {
     shiny::setBookmarkExclude(
       c(
@@ -743,11 +743,17 @@ new_filter_server <- function(id, selected_dataset_list_name, subject_filter_dat
     log_inform(paste("Listening to:", ns(ID$FILTER_STATE_JSON_INPUT)))
     log_inform(paste("Listening to:", ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)))
 
-    shiny::observeEvent(selected_dataset_list_name(), {
+    shiny::observeEvent(selected_dataset_list(), {
+      dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
+      dataset_list_filter_data <- get_filter_data(stats::setNames(list(selected_dataset_list()), dataset_list_name))
+      dataset_list_filter_data_json <- yyjsonr::write_json_str(dataset_list_filter_data)
+      if (strict) assert(to_filter_validate(dataset_list_filter_data_json), "failed to validate message to filter")
+
       session[["sendCustomMessage"]](
         "init_filter",
         list(
-          dataset_list_name = selected_dataset_list_name()
+          dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
+          dataset_list_filter_data_json = dataset_list_filter_data_json
         )
       )
     })

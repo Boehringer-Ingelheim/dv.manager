@@ -211,12 +211,7 @@ app_server_ <- function(input, output, session, opts) {
   if (use_blockly_filter) {
     
 
-    dataset_filter <- new_filter_server(ID$FILTER, shiny::reactive({
-      input$selector
-    }),
-    subject_filter_dataset_name = subject_filter_dataset_name,
-    filtered_dataset_list
-    )
+    dataset_filter <- new_filter_server(ID$FILTER, unfiltered_dataset_list, subject_filter_dataset_name, filtered_dataset_list)
 
     filtered_dataset_list <- shiny::reactive({
       ufd <- unfiltered_dataset_list()

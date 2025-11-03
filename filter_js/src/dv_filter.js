@@ -1997,9 +1997,10 @@ let get_blockly_root_el = function(el){
   return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
 }
 
-let init_filter_handler = function (dataset_list_name, root_el, static_init_ret, selected_mode) {
+let init_filter_handler = function (dataset_list_data, dataset_list_name, root_el, static_init_ret, selected_mode) {
   __assert(()=>is_html_element(root_el));
   
+  set_filter_property(root_el, FC.PROPERTY.DATA, dataset_list_data);
   set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, dataset_list_name);  
 
   let filter_data = get_filter_property(root_el, FC.PROPERTY.DATA);
@@ -2266,11 +2267,12 @@ const init = function(root_id, filter_data_json, filter_state_json, saved_filter
 
   let change_filter_mode = function() {           
     __logger(`Changing to: ${select.value}`);
-    init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
+    init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATA), get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
   };
 
   let baked_init_filter_handler = function(msg) {
-    init_filter_handler(msg.dataset_list_name, root_el, static_init_ret, select.value);
+    debugger;
+    init_filter_handler(JSON.parse(msg.dataset_list_filter_data_json), msg.dataset_list_name, root_el, static_init_ret, select.value);
   };
   Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
 
@@ -2283,6 +2285,12 @@ const init = function(root_id, filter_data_json, filter_state_json, saved_filter
     show_hide_dataset_filters_handler(msg, root_el);
   };
   Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
+
+  let update_data = function(msg) {
+    set_filter_property(root_el, FC.PROPERTY.DATA, JSON.parse(msg.data));
+    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+  };
+  Shiny.addCustomMessageHandler("update_data", update_data);
 
   let request_dataset_filter_state = function(msg) {
     set_filter_property(root_el, FC.PROPERTY.STATE, msg.state);
