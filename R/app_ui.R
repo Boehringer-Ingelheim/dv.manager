@@ -45,7 +45,8 @@ app_ui <- function(request_id) {
   if (use_blockly_filter) {
     filter_ui <- new_filter_ui(ns(ID$FILTER), data, filter_data, state = filter_default_state)
     filter_ui <- list(
-      shiny::actionButton(ns("add_col"), label = "Add random col to subject_data"),
+      shiny::actionButton(ns("add_subgroup"), label = "Add subgroup from filter"),
+      shiny::textInput(ns("subgroup_name"), label = NULL, placeholder = "Enter subgroup name"),
       shiny::uiOutput(ns("subgroups")),
       filter_ui
     )

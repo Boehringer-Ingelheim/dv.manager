@@ -86,6 +86,21 @@ app_server_ <- function(input, output, session, opts) {
     }
   )
 
+      shiny::setBookmarkExclude(
+      c(
+        "add_subgroup"
+      )
+    )
+
+    shiny::onBookmark(function(state){
+      state$values$subgroups <- I(subgroups())
+      
+    })
+
+    shiny::onRestore(function(state){
+      subgroups(state$values$subgroups)
+    })
+
   module_server <- opts[["module_info"]][["server"]]
   module_meta <- opts[["module_info"]][["meta"]]
   module_names <- opts[["module_info"]][["module_name"]]
@@ -127,11 +142,10 @@ app_server_ <- function(input, output, session, opts) {
   })
 
   apply_subgroups <- function(dataset_list, subgroups) {
-    for(idx in seq_along(subgroups)) {
+    for(idx in seq_along(subgroups)) {      
       name <- names(subgroups)[[idx]]
-      filter_json <- subgroups[[idx]]
-      subject_filter <- yyjsonr_read_json_str_with_options(filter_json)[["filters"]][["subject_filter"]]
-      subjects <- create_subject_filter_info(dataset_list, subject_filter, filter_key_var)[["subjects"]]
+      parsed_subject_filter <- yyjsonr_read_json_str_with_options(subgroups[[idx]])[["filters"]][["subject_filter"]]
+      subjects <- create_subject_filter_info(dataset_list, parsed_subject_filter, filter_key_var)[["subjects"]]
       dataset_list[[subject_filter_dataset_name]][[name]] <- dataset_list[[subject_filter_dataset_name]][[filter_key_var]] %in% subjects
     }
 
@@ -139,7 +153,7 @@ app_server_ <- function(input, output, session, opts) {
     
   } |> shiny::maskReactiveContext()
 
-  unfiltered_dataset_list <- shiny::reactive({
+  unfiltered_dataset_list <- shiny::reactive({    
     dataset_list_name <- input$selector
     shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
     assert(dataset_list_name %in% names(dataset_lists))
@@ -149,7 +163,7 @@ app_server_ <- function(input, output, session, opts) {
     } else {
       selected_dataset_list <- add_date_range(dataset_lists[[dataset_list_name]])
     }
-    r_subgroups <- subgroups()    
+    r_subgroups <- subgroups()
     selected_dataset_list <- apply_subgroups(selected_dataset_list, r_subgroups)    
     attr(selected_dataset_list, "dataset_list_name") <- dataset_list_name
     selected_dataset_list
@@ -167,45 +181,18 @@ app_server_ <- function(input, output, session, opts) {
     ui
   })
 
-  shiny::observeEvent(input[["add_col"]], {
-    template_f <- r"--(
-    {
-    "filters": {
-        "datasets_filter": {
-            "children": [
-
-            ]
-        },
-        "subject_filter": {
-            "children": [
-                {
-                    "kind": "row_operation",
-                    "operation": "and",
-                    "children": [
-                        {
-                            "kind": "filter",
-                            "dataset": "adsl",
-                            "operation": "select_range",
-                            "variable": "AGE",
-                            "min": 50,
-                            "max": %d,
-                            "include_NA": true
-                        }
-                    ]
-                }
-            ]
-        }
-    },
-    "dataset_list_name": "dummy"
-}
-
-    )--"
-    max <- sample(50:90, size = 1)
-    f <- sprintf(template_f, max)
-    n <- sprintf("MAXAGE%d", max)
-    sg <- subgroups()
-    sg[[n]] <- f
-    subgroups(sg)    
+  shiny::observeEvent(input[["add_subgroup"]], {
+    r_dataset_filter <- dataset_filter()
+    r_subgroup_name <- input[["subgroup_name"]]
+    if(!isTRUE(is.na(r_dataset_filter[["raw"]])) && checkmate::test_string(r_subgroup_name, min.chars = 1)) {
+      # We store the json instead of the parsed value because its representation is inert and does not suffer
+      # from jsonlite autounboxing issues
+      json_subject_filter <- r_dataset_filter[["raw"]]
+      group_name <- r_subgroup_name
+      new_subgroups <- subgroups()
+      new_subgroups[[group_name]] <- json_subject_filter
+      subgroups(new_subgroups)    
+    }
   })
 
   if (use_blockly_filter) {
