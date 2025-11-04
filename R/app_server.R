@@ -86,20 +86,6 @@ app_server_ <- function(input, output, session, opts) {
     }
   )
 
-  shiny::setBookmarkExclude(
-    c(
-      "add_subgroup"
-    )
-  )
-
-  shiny::onBookmark(function(state) {
-    state$values$subgroups <- I(subgroups())
-  })
-
-  shiny::onRestore(function(state) {
-    subgroups(state$values$subgroups)
-  })
-
   module_server <- opts[["module_info"]][["server"]]
   module_meta <- opts[["module_info"]][["meta"]]
   module_names <- opts[["module_info"]][["module_name"]]
@@ -140,21 +126,11 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  apply_subgroups <- function(dataset_list, subgroups) {
-    {
-      for (idx in seq_along(subgroups)) {
-        name <- names(subgroups)[[idx]]
-        parsed_subject_filter <- yyjsonr_read_json_str_with_options(subgroups[[idx]])[["filters"]][["subject_filter"]]
-        subjects <- create_subject_filter_info(dataset_list, parsed_subject_filter, filter_key_var)[["subjects"]]
-        dataset_list[[subject_filter_dataset_name]][[name]] <- dataset_list[[subject_filter_dataset_name]][[filter_key_var]] %in% subjects
-      }
-
-      dataset_list
-    } |> shiny::maskReactiveContext()
-  }
+  apply_subgroups <- mod_subgroup_server(ID$SUBGROUP, dataset_filter)
 
   unfiltered_dataset_list <- shiny::reactive({
     dataset_list_name <- input$selector
+    r_apply_subgroups <- apply_subgroups()
     shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
     assert(dataset_list_name %in% names(dataset_lists))
 
@@ -163,64 +139,11 @@ app_server_ <- function(input, output, session, opts) {
     } else {
       selected_dataset_list <- add_date_range(dataset_lists[[dataset_list_name]])
     }
-    r_subgroups <- subgroups()
-    selected_dataset_list <- apply_subgroups(selected_dataset_list, r_subgroups)
+
+    selected_dataset_list <- r_apply_subgroups(selected_dataset_list, subject_filter_dataset_name, filter_key_var)
     attr(selected_dataset_list, "dataset_list_name") <- dataset_list_name
     selected_dataset_list
   })
-
-  subgroups <- shiny::reactiveVal(list())
-
-  output[["subgroups"]] <- shiny::renderUI({
-    r_subgroups <- subgroups()
-    tags <- shiny::tags
-
-    badge_ui <- vector(mode = "list", length = length(r_subgroups))
-
-    for (idx in seq_along(r_subgroups)) {
-      subgroup_name <- names(r_subgroups)[[idx]]
-      badge_ui[[idx]] <- tags[["span"]](subgroup_name, class = "badge w-auto bg-light text-dark")
-    }
-
-    tags[["div"]](
-      class = "card",
-      tags[["div"]](
-        class = "card-body",
-        style = "display:flex; flex-wrap: wrap; gap: .25rem;",
-        badge_ui,
-        onclick = sprintf("(function(event){Shiny.setInputValue('%s', event.target.previousElementSibling.textContent), {priority: 'event'}})(event)", ns("remove_subgroup"))
-      )
-    )
-  })
-
-  shiny::observeEvent(input[["add_subgroup"]], {
-    r_dataset_filter <- dataset_filter()
-    r_subgroup_name <- input[["subgroup_name"]]
-    if (!isTRUE(is.na(r_dataset_filter[["raw"]])) && checkmate::test_string(r_subgroup_name, min.chars = 1)) {
-      # We store the json instead of the parsed value because its representation is inert and does not suffer
-      # from jsonlite autounboxing issues
-      json_subject_filter <- r_dataset_filter[["raw"]]
-      group_name <- r_subgroup_name
-      new_subgroups <- subgroups()
-      new_subgroups[[group_name]] <- json_subject_filter
-      subgroups(new_subgroups)
-    }
-  })
-
-  shiny::observeEvent(input[["remove_subgroup"]], {    
-    r_subgroup_name_to_be_removed <- input[["remove_subgroup"]]
-    r_subgroups <- subgroups()
-    log_inform(paste0("Attempt to remove: ", r_subgroup_name_to_be_removed))
-    if (r_subgroup_name_to_be_removed %in% names(r_subgroups) && checkmate::test_string(r_subgroup_name_to_be_removed, min.chars = 1)) {
-      log_inform(paste0("Removing subgroup: ", r_subgroup_name_to_be_removed))
-      new_subgroups <- r_subgroups[setdiff(names(r_subgroups), r_subgroup_name_to_be_removed)]
-      subgroups(new_subgroups)
-    } else {
-      log_inform(paste0("Could not remove subgroup: ", r_subgroup_name_to_be_removed))
-    }
-  })
-
-
 
   if (use_blockly_filter) {
     dataset_filter <- new_filter_server(ID$FILTER, unfiltered_dataset_list, subject_filter_dataset_name, filtered_dataset_list)
@@ -573,4 +496,100 @@ app_server_test <- function(opts) {
   # Remove opts argument. It will be taken from this closure
   f <- rlang::new_function(rlang::exprs(input = , output = , session = ), rlang::fn_body(app_server_))
   f
+}
+
+mod_subgroup_ui <- function(id) {
+  ns <- shiny::NS(id)
+  bslib::accordion(
+    id = ns("accordion"),
+    bslib::accordion_panel(
+      title = "Subgroup menu",
+      shiny::textInput(ns("subgroup_name"), label = NULL, placeholder = "Enter subgroup name"),
+      shiny::textInput(ns("subgroup_label"), label = NULL, placeholder = "Enter subgroup label"),
+      shiny::actionButton(ns("add_subgroup"), label = "Add subgroup", class = "btn-sm"),
+      shiny::uiOutput(ns("subgroups")
+    ),
+      value = ns("subgroup_menu")
+    ),
+    open = FALSE
+  )
+}
+
+mod_subgroup_server <- function(id, dataset_filter) {
+  mod <- function(input, output, session) {
+
+    subgroups <- shiny::reactiveVal(list())
+
+    shiny::setBookmarkExclude(c("add_subgroup", "subgroup_name", "subgroup_label", "accordion"))
+
+    shiny::onBookmark(function(state) {
+      state$values$subgroups <- I(subgroups())
+    })
+
+    shiny::onRestore(function(state) {
+      subgroups(state$values$subgroups)
+    })
+
+    ns <- session[["ns"]]
+    subgroups <- shiny::reactiveVal(list())
+
+    output[["subgroups"]] <- shiny::renderUI({
+      r_subgroups <- subgroups()
+      tags <- shiny::tags
+
+      badge_ui <- vector(mode = "list", length = length(r_subgroups))
+
+      for (idx in seq_along(r_subgroups)) {
+        subgroup_name <- names(r_subgroups)[[idx]]
+        badge_ui[[idx]] <- tags[["span"]](subgroup_name, class = "badge w-auto bg-light text-dark")
+      }
+      
+      tags[["div"]](
+        class = "mt-2",
+        style = "display:flex; flex-wrap: wrap; gap: .25rem",
+        badge_ui
+    
+      )
+      
+    })
+
+    shiny::observeEvent(input[["add_subgroup"]], {
+      r_new_subgroup_json <- dataset_filter()
+      r_subgroup_name <- input[["subgroup_name"]]
+      r_subgroup_label <- input[["subgroup_label"]]
+      if (!isTRUE(is.na(r_new_subgroup_json[["raw"]])) && checkmate::test_string(r_subgroup_name, min.chars = 1)) {
+        # We store the json instead of the parsed value because its representation is inert and does not suffer
+        # from jsonlite autounboxing issues
+        json_subject_filter <- r_new_subgroup_json[["raw"]]
+        subgroup_name <- r_subgroup_name
+        subgroup_label <- if(checkmate::test_string(r_subgroup_label, min.chars = 1)) r_subgroup_label else NULL
+        new_subgroups <- subgroups()
+        new_subgroups[[subgroup_name]] <- list(json = json_subject_filter, label = subgroup_label)
+        subgroups(new_subgroups)
+      }
+    })
+
+    apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_key_var, subgroups) {
+      for (idx in seq_along(subgroups)) {
+        name <- names(subgroups)[[idx]]
+        label <- subgroups[[idx]][["label"]]
+        parsed_subject_filter <- yyjsonr_read_json_str_with_options(subgroups[[idx]][["json"]])[["filters"]][["subject_filter"]]
+        subjects <- create_subject_filter_info(dataset_list, parsed_subject_filter, filter_key_var)[["subjects"]]
+        dataset_list[[subject_filter_dataset_name]][[name]] <- dataset_list[[subject_filter_dataset_name]][[filter_key_var]] %in% subjects
+        attr(dataset_list[[subject_filter_dataset_name]][[name]], "label") <- label
+      }
+
+      dataset_list
+    }) |> shiny::maskReactiveContext()
+
+    res <- shiny::reactive({
+      r_subgroups <- subgroups()
+      function(...) {
+        apply_subgroups(..., subgroups = r_subgroups)
+      }
+    })
+
+    return(res)
+  }
+  shiny::moduleServer(id, mod)
 }

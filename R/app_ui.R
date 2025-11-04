@@ -44,12 +44,8 @@ app_ui <- function(request_id) {
 
   if (use_blockly_filter) {
     filter_ui <- new_filter_ui(ns(ID$FILTER), data, filter_data, state = filter_default_state)
-    filter_ui <- list(
-      shiny::actionButton(ns("add_subgroup"), label = "Add subgroup from filter"),
-      shiny::textInput(ns("subgroup_name"), label = NULL, placeholder = "Enter subgroup name"),
-      shiny::uiOutput(ns("subgroups")),
-      filter_ui
-    )
+    subgroup_ui <- mod_subgroup_ui(ns(ID$SUBGROUP))
+    filter_ui <- list(subgroup_ui, filter_ui)
   } else {
     filter_ui <- list(
       shiny::div(
