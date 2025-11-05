@@ -621,7 +621,7 @@ local({
     }
       )--"
 
-    parsed_fd <- deserialize_filter_from_client(fd)
+    parsed_fd <- deserialize_filter_data_from_client(fd)
 
     app <- start_app_driver(get_app_expr(fd = fd)) |> suppressWarnings()
     if (is.null(app)) stop("App could not be initialized")

@@ -1667,14 +1667,14 @@ local({
     expect_identical(
       r[[1]],
       list(
-        name = yyjsonr::as_scalar("var"),
-        label = yyjsonr::as_scalar("var_label"),
-        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
-        kind = yyjsonr::as_scalar("categorical"),
-        NA_count = yyjsonr::as_scalar(1L),
+        name = as_scalar("var"),
+        label = as_scalar("var_label"),
+        class = as_scalar(class(d[["var"]])[1]),
+        kind = as_scalar("categorical"),
+        NA_count = as_scalar(1L),
         values_count = list(
-          list(value = yyjsonr::as_scalar("A"), count = yyjsonr::as_scalar(2L)),
-          list(value = yyjsonr::as_scalar("B"), count = yyjsonr::as_scalar(1L))
+          list(value = as_scalar("A"), count = as_scalar(2L)),
+          list(value = as_scalar("B"), count = as_scalar(1L))
         )
       )
     )
@@ -1695,15 +1695,15 @@ local({
     expect_identical(
       r[[1]],
       list(
-        name = yyjsonr::as_scalar("var"),
-        label = yyjsonr::as_scalar("var_label"),
-        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
-        kind = yyjsonr::as_scalar("categorical"),
-        NA_count = yyjsonr::as_scalar(1L),
+        name = as_scalar("var"),
+        label = as_scalar("var_label"),
+        class = as_scalar(class(d[["var"]])[1]),
+        kind = as_scalar("categorical"),
+        NA_count = as_scalar(1L),
         values_count = list(
-          list(value = yyjsonr::as_scalar("A"), count = yyjsonr::as_scalar(2L)),
-          list(value = yyjsonr::as_scalar("B"), count = yyjsonr::as_scalar(1L)),
-          list(value = yyjsonr::as_scalar("C"), count = yyjsonr::as_scalar(0L))
+          list(value = as_scalar("A"), count = as_scalar(2L)),
+          list(value = as_scalar("B"), count = as_scalar(1L)),
+          list(value = as_scalar("C"), count = as_scalar(0L))
         )
       )
     )
@@ -1724,13 +1724,13 @@ local({
     expect_identical(
       r[[1]],
       list(
-        name = yyjsonr::as_scalar("var"),
-        label = yyjsonr::as_scalar("var_label"),
-        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
-        kind = yyjsonr::as_scalar("numerical"),
-        NA_count = yyjsonr::as_scalar(1L),
-        min = yyjsonr::as_scalar(1),
-        max = yyjsonr::as_scalar(2),
+        name = as_scalar("var"),
+        label = as_scalar("var_label"),
+        class = as_scalar(class(d[["var"]])[1]),
+        kind = as_scalar("numerical"),
+        NA_count = as_scalar(1L),
+        min = as_scalar(1),
+        max = as_scalar(2),
         density = hist(d[["var"]], plot = FALSE)[["density"]]
       )
     )
@@ -1751,13 +1751,13 @@ local({
     expect_identical(
       r[[1]],
       list(
-        name = yyjsonr::as_scalar("var"),
-        label = yyjsonr::as_scalar("var_label"),
-        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
-        kind = yyjsonr::as_scalar("numerical"),
-        NA_count = yyjsonr::as_scalar(2L),
-        min = yyjsonr::as_scalar("Inf"),
-        max = yyjsonr::as_scalar("-Inf"),
+        name = as_scalar("var"),
+        label = as_scalar("var_label"),
+        class = as_scalar(class(d[["var"]])[1]),
+        kind = as_scalar("numerical"),
+        NA_count = as_scalar(2L),
+        min = as_scalar("Inf"),
+        max = as_scalar("-Inf"),
         density = numeric(0)
       )
     )
@@ -1778,13 +1778,13 @@ local({
     expect_identical(
       r[[1]],
       list(
-        name = yyjsonr::as_scalar("var"),
-        label = yyjsonr::as_scalar("var_label"),
-        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
-        kind = yyjsonr::as_scalar("date"),
-        NA_count = yyjsonr::as_scalar(1L),
-        min = yyjsonr::as_scalar(as.Date(c("2024-01-01"))),
-        max = yyjsonr::as_scalar(as.Date(c("2024-01-02")))
+        name = as_scalar("var"),
+        label = as_scalar("var_label"),
+        class = as_scalar(class(d[["var"]])[1]),
+        kind = as_scalar("date"),
+        NA_count = as_scalar(1L),
+        min = as_scalar(as.Date(c("2024-01-01"))),
+        max = as_scalar(as.Date(c("2024-01-02")))
       )
     )
   })
@@ -1804,13 +1804,13 @@ local({
     expect_identical(
       r[[1]],
       list(
-        name = yyjsonr::as_scalar("var"),
-        label = yyjsonr::as_scalar("var_label"),
-        class = yyjsonr::as_scalar(class(d[["var"]])[1]),
-        kind = yyjsonr::as_scalar("date"),
-        NA_count = yyjsonr::as_scalar(1L),
-        min = yyjsonr::as_scalar(as.Date(c("2024-01-01"))),
-        max = yyjsonr::as_scalar(as.Date(c("2024-01-02")))
+        name = as_scalar("var"),
+        label = as_scalar("var_label"),
+        class = as_scalar(class(d[["var"]])[1]),
+        kind = as_scalar("date"),
+        NA_count = as_scalar(1L),
+        min = as_scalar(as.Date(c("2024-01-01"))),
+        max = as_scalar(as.Date(c("2024-01-02")))
       )
     )
   })
@@ -1868,9 +1868,9 @@ local({
     expect_length(r[["dataset_lists"]], 2)
     expect_length(r[["dataset_lists"]][[1]][["dataset_list"]], 2)
 
-    expect_identical(r[["dataset_lists"]][[1]][["name"]], yyjsonr::as_scalar("dl1"))
-    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["name"]], yyjsonr::as_scalar("ds1"))
-    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["variables"]][[1]][["name"]], yyjsonr::as_scalar("var1"))
+    expect_identical(r[["dataset_lists"]][[1]][["name"]], as_scalar("dl1"))
+    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["name"]], as_scalar("ds1"))
+    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["variables"]][[1]][["name"]], as_scalar("var1"))
   })
 })
 

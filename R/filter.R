@@ -112,9 +112,9 @@ get_single_filter_data <- function(dataset) {
     label <- attr(var, "label") %||% name # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
 
     l <- list(
-      name = yyjsonr::as_scalar(name),
-      label = yyjsonr::as_scalar(label),
-      class = yyjsonr::as_scalar(class(var)[1])
+      name = as_scalar(name),
+      label = as_scalar(label),
+      class = as_scalar(class(var)[1])
     )
 
 
@@ -123,8 +123,8 @@ get_single_filter_data <- function(dataset) {
 
     if (is.character(var) || is.factor(var)) {
       # FIXME: factor levels are ignored and only the values really present in the dataset are used
-      l[["kind"]] <- yyjsonr::as_scalar("categorical")
-      l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
+      l[["kind"]] <- as_scalar("categorical")
+      l[["NA_count"]] <- as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
       count <- sort(table(na_clean_var), decreasing = TRUE)
       values <- names(count)
@@ -132,18 +132,18 @@ get_single_filter_data <- function(dataset) {
       l[["values_count"]] <- vector(mode = "list", length = length(l[["values"]]))
       for (v_idx in seq_along(values)) {
         l[["values_count"]][[v_idx]] <- list(
-          value = yyjsonr::as_scalar(values[[v_idx]]),
-          count = yyjsonr::as_scalar(count[[v_idx]])
+          value = as_scalar(values[[v_idx]]),
+          count = as_scalar(count[[v_idx]])
         )
       }
     } else if (is.numeric(var)) {
       var <- as.numeric(var)
-      l[["kind"]] <- yyjsonr::as_scalar("numerical")
-      l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
+      l[["kind"]] <- as_scalar("numerical")
+      l[["NA_count"]] <- as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- yyjsonr::as_scalar(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
-      l[["max"]] <- yyjsonr::as_scalar(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
+      l[["min"]] <- as_scalar(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
+      l[["max"]] <- as_scalar(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
 
       if (length(na_clean_var) > 0) {
         hist_info <- hist(na_clean_var, plot = FALSE)
@@ -156,12 +156,12 @@ get_single_filter_data <- function(dataset) {
       if (inherits(var, "POSIXct")) {
         var <- as.Date(var)
       }
-      l[["kind"]] <- yyjsonr::as_scalar("date")
-      l[["NA_count"]] <- yyjsonr::as_scalar(sum(is.na(var)))
+      l[["kind"]] <- as_scalar("date")
+      l[["NA_count"]] <- as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- yyjsonr::as_scalar(inf_to_str(min(as.Date(Inf), na_clean_var, na.rm = TRUE)))
-      l[["max"]] <- yyjsonr::as_scalar(inf_to_str(max(as.Date(-Inf), na_clean_var, na.rm = TRUE)))
+      l[["min"]] <- as_scalar(inf_to_str(min(as.Date(Inf), na_clean_var, na.rm = TRUE)))
+      l[["max"]] <- as_scalar(inf_to_str(max(as.Date(-Inf), na_clean_var, na.rm = TRUE)))
     } else {
       stop(paste0("variable type unsupported:'", typeof(var), "' classes:", paste0("'", class(var), "'", collapse = ",")))
     }
@@ -185,13 +185,13 @@ get_filter_data <- function(dataset_lists) {
       current_dataset <- current_dataset_list[[jdx]]
       current_dataset_name <- nm_datasets[[jdx]]
       current_dataset_res[[jdx]] <- list(
-        name = yyjsonr::as_scalar(current_dataset_name),
-        nrow = yyjsonr::as_scalar(nrow(current_dataset)),
+        name = as_scalar(current_dataset_name),
+        nrow = as_scalar(nrow(current_dataset)),
         variables = get_single_filter_data(current_dataset)
       )
     }
     res[[idx]] <- list(
-      name = yyjsonr::as_scalar(current_dataset_list_name),
+      name = as_scalar(current_dataset_list_name),
       dataset_list = current_dataset_res
     )
   }
@@ -621,10 +621,6 @@ from_filter_validate <- jsonvalidate::json_validator(
   strict = TRUE
 )
 
-yyjsonr_read_json_str_with_options <- function(x, invisible = FALSE) {
-  yyjsonr::read_json_str(x, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
-}
-
 add_blockly_dependency <- function() {
   htmltools::htmlDependency(
     name = "filter_blockly",
@@ -654,7 +650,7 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
 
   d <- get_filter_data(dataset_lists)
 
-  filter_data <- serialize_filter_to_client(d)
+  filter_data <- serialize_filter_data_to_client(d)
 
   if (strict) assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
@@ -741,7 +737,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
     shiny::observeEvent(selected_dataset_list(), {
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
       dataset_list_filter_data <- get_filter_data(stats::setNames(list(selected_dataset_list()), dataset_list_name))
-      dataset_list_filter_data_json <- serialize_filter_to_client(dataset_list_filter_data)
+      dataset_list_filter_data_json <- serialize_filter_data_to_client(dataset_list_filter_data)
       if (strict) assert(to_filter_validate(dataset_list_filter_data_json), "failed to validate message to filter")
 
       session[["sendCustomMessage"]](
@@ -768,8 +764,8 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
 
       for (idx in seq_along(fd)) {
         row_count[[idx]] <- list(
-          count = yyjsonr::as_scalar(nrow(fd[[idx]])),
-          name = yyjsonr::as_scalar(fd_names[[idx]])
+          count = as_scalar(nrow(fd[[idx]])),
+          name = as_scalar(fd_names[[idx]])
         )
       }
 
@@ -779,7 +775,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
 
       session[["sendCustomMessage"]](
         "update_filter_result",
-        list(json = jsonlite::toJSON(msg))
+        list(json = toJSON(msg))
       )
     })
 
@@ -799,7 +795,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
         if (strict) assert(from_filter_validate(json_r), "failed to validate message from filter")
-        parsed_json <- deserialize_filter_from_client(json_r)
+        parsed_json <- deserialize_filter_data_from_client(json_r)
         log_inform("PROCESSING FILTER PARSED")
         list(
           parsed = parsed_json %||% NA_character_,
@@ -839,13 +835,12 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
   shiny::moduleServer(id, mod)
 }
 
-serialize_filter_to_client <- function(x) {
-  yyjsonr::write_json_str(x)
-}
+toJSON <- function(x) yyjsonr::write_json_str(x)
+fromJSON <- function(x) yyjsonr::read_json_str(x, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
+as_scalar <- yyjsonr::as_scalar
 
-deserialize_filter_from_client <- function(x) {
-  yyjsonr_read_json_str_with_options(x)
-}
+serialize_filter_data_to_client <- toJSON
+deserialize_filter_data_from_client <- fromJSON
 
 binary_serialize_filter_to_client <- function(x) {
   C <- pack_of_constants(
