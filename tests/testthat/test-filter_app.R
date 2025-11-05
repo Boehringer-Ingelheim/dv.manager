@@ -621,7 +621,7 @@ local({
     }
       )--"
 
-    parsed_fd <- yyjsonr_read_json_str_with_options(fd)
+    parsed_fd <- deserialize_filter_from_client(fd)
 
     app <- start_app_driver(get_app_expr(fd = fd)) |> suppressWarnings()
     if (is.null(app)) stop("App could not be initialized")

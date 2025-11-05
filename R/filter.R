@@ -208,7 +208,7 @@ subject_filter_operations <- local({
     children <- filter_element[["children"]]
     subjects <- character(0)
     assert(length(children) > 0, "`union` operation requires at least one child")
-    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
+    dataset_list_lvls <- rep_len(list(list()), length = length(dataset_list))
     names(dataset_list_lvls) <- names(dataset_list)
 
     for (child in children) {
@@ -219,12 +219,11 @@ subject_filter_operations <- local({
       for (dataset_name in names(child_dataset_list_lvls)) {
         dataset_lvls <- dataset_list_lvls[[dataset_name]]
         child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
-          relevant_factors <-  names(child_dataset_lvls)
-          for (fct in relevant_factors) {
-            dataset_lvls[[fct]]  <- union(dataset_lvls[[fct]], child_dataset_lvls[[fct]])
+        relevant_factors <- names(child_dataset_lvls)
+        for (fct in relevant_factors) {
+          dataset_lvls[[fct]] <- union(dataset_lvls[[fct]], child_dataset_lvls[[fct]])
         }
         dataset_list_lvls[[dataset_name]] <- dataset_lvls
-
       }
     }
     return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
@@ -234,7 +233,7 @@ subject_filter_operations <- local({
     children <- filter_element[["children"]]
     subjects <- complete_subject_list
     assert(length(children) > 0, "`intersect` operation requires at least one child")
-    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
+    dataset_list_lvls <- rep_len(list(list()), length = length(dataset_list))
     names(dataset_list_lvls) <- names(dataset_list)
 
     for (child in children) {
@@ -245,15 +244,14 @@ subject_filter_operations <- local({
       for (dataset_name in names(child_dataset_list_lvls)) {
         dataset_lvls <- dataset_list_lvls[[dataset_name]]
         child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
-          relevant_factors <- names(child_dataset_lvls)
-          for (fct in relevant_factors) {
-            dataset_lvls[[fct]] <- intersect(
-              dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]]),
-              child_dataset_lvls[[fct]]
-            )
+        relevant_factors <- names(child_dataset_lvls)
+        for (fct in relevant_factors) {
+          dataset_lvls[[fct]] <- intersect(
+            dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]]),
+            child_dataset_lvls[[fct]]
+          )
         }
         dataset_list_lvls[[dataset_name]] <- dataset_lvls
-
       }
     }
 
@@ -265,16 +263,16 @@ subject_filter_operations <- local({
     assert(length(children) == 1, "`complement` operation requires exactly one child")
     processed_element <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
     subjects <- setdiff(complete_subject_list, processed_element[["subjects"]])
-    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
+    dataset_list_lvls <- rep_len(list(list()), length = length(dataset_list))
     names(dataset_list_lvls) <- names(dataset_list)
 
     child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
     for (dataset_name in names(child_dataset_list_lvls)) {
       dataset_lvls <- dataset_list_lvls[[dataset_name]]
       child_dataset_lvls <- child_dataset_list_lvls[[dataset_name]]
-        relevant_factors <- names(child_dataset_lvls)
-        for (fct in relevant_factors) {
-          dataset_lvls[[fct]]  <- setdiff(
+      relevant_factors <- names(child_dataset_lvls)
+      for (fct in relevant_factors) {
+        dataset_lvls[[fct]] <- setdiff(
           levels(dataset_list[[dataset_name]][[fct]]),
           child_dataset_lvls[[fct]] %||% levels(dataset_list[[dataset_name]][[fct]])
         )
@@ -291,7 +289,7 @@ subject_filter_operations <- local({
     dataset <- processed_element[["dataset"]]
     subjects <- as.character(dataset_list[[dataset]][[sbj_var]][mask])
 
-    dataset_list_lvls <-  rep_len(list(list()), length = length(dataset_list))
+    dataset_list_lvls <- rep_len(list(list()), length = length(dataset_list))
     names(dataset_list_lvls) <- names(dataset_list)
     dataset_lvls <- processed_element[["lvls"]]
     dataset_name <- processed_element[["dataset"]]
@@ -304,7 +302,6 @@ subject_filter_operations <- local({
 
 
   actions
-
 })
 
 dataset_filter_operations <- local({
@@ -457,7 +454,6 @@ dataset_filter_operations <- local({
   }
 
   actions
-
 })
 
 process_dataset_filter_element <- function(dataset_list, filter_element) { # TODO: replace dataset for dataset_name
@@ -475,7 +471,6 @@ process_dataset_filter_element <- function(dataset_list, filter_element) { # TOD
 }
 
 process_subject_filter_element <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
-
   filter_element <- as_safe_list(filter_element)
   kind <- filter_element[["kind"]]
   operation <- filter_element[["operation"]]
@@ -533,7 +528,7 @@ create_subject_filter_info <- function(dataset_list, subject_filter, sbj_var) {
 
   if (length(children) == 0) {
     subject_filter_info <- list(subjects = complete_subject_list, dataset_list_lvls = list())
-  } else  if (length(children) == 1) {
+  } else if (length(children) == 1) {
     subject_filter_info <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
   }
 
@@ -659,7 +654,7 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
 
   d <- get_filter_data(dataset_lists)
 
-  filter_data <- yyjsonr::write_json_str(d)
+  filter_data <- serialize_filter_to_client(d)
 
   if (strict) assert(to_filter_validate(filter_data), "failed to validate message to filter")
 
@@ -746,7 +741,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
     shiny::observeEvent(selected_dataset_list(), {
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
       dataset_list_filter_data <- get_filter_data(stats::setNames(list(selected_dataset_list()), dataset_list_name))
-      dataset_list_filter_data_json <- yyjsonr::write_json_str(dataset_list_filter_data)
+      dataset_list_filter_data_json <- serialize_filter_to_client(dataset_list_filter_data)
       if (strict) assert(to_filter_validate(dataset_list_filter_data_json), "failed to validate message to filter")
 
       session[["sendCustomMessage"]](
@@ -784,7 +779,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
 
       session[["sendCustomMessage"]](
         "update_filter_result",
-        list(json = yyjsonr::write_json_str(msg))
+        list(json = jsonlite::toJSON(msg))
       )
     })
 
@@ -804,7 +799,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
         if (strict) assert(from_filter_validate(json_r), "failed to validate message from filter")
-        parsed_json <- yyjsonr_read_json_str_with_options(json_r)
+        parsed_json <- deserialize_filter_from_client(json_r)
         log_inform("PROCESSING FILTER PARSED")
         list(
           parsed = parsed_json %||% NA_character_,
@@ -842,4 +837,12 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
     )
   }
   shiny::moduleServer(id, mod)
+}
+
+serialize_filter_to_client <- function(x) {
+  yyjsonr::write_json_str(x)
+}
+
+deserialize_filter_from_client <- function(x) {
+  yyjsonr_read_json_str_with_options(x)
 }
