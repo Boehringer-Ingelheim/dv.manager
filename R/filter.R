@@ -842,13 +842,17 @@ as_scalar <- yyjsonr::as_scalar
 serialize_filter_data_to_client <- toJSON
 deserialize_filter_data_from_client <- fromJSON
 
-binary_serialize_filter_to_client <- function(x) {
-  C <- pack_of_constants(
+binary_serialize_filter_data <- function(x) {
+  C <- list(
     MAGICNUM = charToRaw("FILTDATA"),
     VERSION = 1L,
-    EIGHTBYTES = 8L,
     ENDIANNESS = "little"
   )
+
+  assert <- function(expr, msg) {
+  if (!isTRUE(expr)) stop(msg, call. = FALSE)
+}
+
 
   con <- rawConnection(raw(0), open = "wb")
   on.exit(close(con))
@@ -857,35 +861,29 @@ binary_serialize_filter_to_client <- function(x) {
     writeBin(..., con = con, endian = C$ENDIANNESS)
   }
 
-  remove_scalar_class <- function(x) {
-    class(x) <- setdiff(class(x), "scalar")
-    x
-  }
-
   w_int <- function(x) {
-    assert(length(x) == 1, "Must be length 1")
-    x <- remove_scalar_class(x)
-    w(as.integer(x), size = C$EIGHTBYTES)
+    # assert(length(x) == 1, "Must be length 1")
+    x <- as.integer(x)
+    writeBin(x, con = con, endian = C$ENDIANNESS)
   }
 
   w_double <- function(x) {
-    assert(length(x) == 1, "Must be length 1")
-    x <- remove_scalar_class(x)
-    w(as.double(x), size = C$EIGHTBYTES)
+    # assert(length(x) == 1, "Must be length 1")
+    x <- as.double(x)
+    writeBin(x, con = con, endian = C$ENDIANNESS)
   }
 
   w_doubles <- function(x) {
-    x <- remove_scalar_class(x)
-    w(as.double(x), size = C$EIGHTBYTES)
+    x <- as.double(x)
+    writeBin(x, con = con, endian = C$ENDIANNESS)
   }
 
   w_string <- function(x) {
-    assert(is.character(x) && length(x) == 1, "Must be character of length 1")
-    x <- remove_scalar_class(x)
+    # assert(is.character(x) && length(x) == 1, "Must be character of length 1")
     string_len <- nchar(x)
-    if(string_len > 100) message(string_len)
     w_int(string_len)
-    w(charToRaw(x))
+    x <- charToRaw(x)
+    writeBin(x, con = con, endian = C$ENDIANNESS)
   }
   
   w(C$MAGICNUM)
@@ -948,11 +946,10 @@ binary_serialize_filter_to_client <- function(x) {
   return(buf)
 }
 
-binary_deserialize_filter_to_client <- function(x) {
+binary_deserialize_filter_data <- function(x) {
   C <- pack_of_constants(
     MAGICNUM = charToRaw("FILTDATA"),
     VERSION = 1L,
-    EIGHTBYTES = 8L,
     ENDIANNESS = "little"
   )
 
@@ -960,23 +957,23 @@ binary_deserialize_filter_to_client <- function(x) {
   on.exit(close(con))
 
   r_int <- function() {
-    x <- readBin(con = con, what = integer(0), n = 1L, size = C$EIGHTBYTES, endian = C$ENDIANNESS)
+    x <- readBin(con = con, what = integer(0), n = 1L, endian = C$ENDIANNESS)
     x
   }
 
   r_double <- function() {
-    x <- readBin(con = con, what = double(0), n = 1L, size = C$EIGHTBYTES, endian = C$ENDIANNESS)
+    x <- readBin(con = con, what = double(0), n = 1L, endian = C$ENDIANNESS)
     x
   }
 
   r_doubles <- function() {
     doubles_length <- r_int()
-    x <- readBin(con = con, what = double(0), n = doubles_length,  size = C$EIGHTBYTES, endian = C$ENDIANNESS)
+    x <- readBin(con = con, what = double(0), n = doubles_length, endian = C$ENDIANNESS)
     x
   }
 
   r_string <- function() {
-    string_length <- r_int()    
+    string_length <- r_int()
     bytes <- readBin(con = con, what = raw(), n = string_length, size = 1, endian = C$ENDIANNESS)
     x <- rawToChar(bytes)
     x
@@ -1046,83 +1043,4 @@ binary_deserialize_filter_to_client <- function(x) {
   x <- list(dataset_lists = dataset_lists)
 
   return(x)
-}
-
-binary_serialize_filter_to_client_speed <- function(x) {
-  C <- pack_of_constants(
-    MAGICNUM = charToRaw("FILTDATA"),
-    VERSION = 1L,
-    EIGHTBYTES = 8L,
-    ENDIANNESS = "little"
-  )
-
-  con <- rawConnection(raw(0), "wb")
-  w   <- function(obj, size = NA) writeBin(obj, con, size = size, endian = C$ENDIANNESS)
-
-  # Fast scalar writes (no class stripping, no asserts)
-  w_int     <- function(v) w(as.integer(v))
-  w_double  <- function(v) w(as.double(v),  size = 8L)
-  w_doubles <- function(v) w(as.double(v),  size = 8L)
-
-  # Fast string writer (manual prefix, no overhead)
-  w_string <- function(s) {
-    n <- nchar(s, type = "bytes")
-    w_int(n)
-    writeBin(charToRaw(s), con)
-  }
-
-  # ---- Begin writing ----
-
-  writeBin(C$MAGICNUM, con)
-  w_int(C$VERSION)
-
-  dataset_lists <- x$dataset_lists
-  w_int(length(dataset_lists))
-
-  for (dl in dataset_lists) {
-    w_string(dl$name)
-
-    dataset_list <- dl$dataset_list
-    w_int(length(dataset_list))
-
-    for (ds in dataset_list) {
-      w_string(ds$name)
-      w_int(ds$nrow)
-
-      vars <- ds$variables
-      w_int(length(vars))
-
-      for (var in vars) {
-
-        w_string(var$name)
-        w_string(var$label)
-        w_string(var$class)
-        w_string(var$kind)
-
-        if (var$kind == "categorical") {
-          for (vc in var$values_count) {
-            w_string(vc$value)
-            w_int(vc$count)
-          }
-
-        } else if (var$kind == "numerical") {
-          w_double(var$max)
-          w_double(var$min)
-          d <- var$density
-          w_int(length(d))
-          w_doubles(d)
-
-        } else { # date
-          w_string(as.character(var$max))
-          w_string(as.character(var$min))
-        }
-
-        w_int(var$NA_count)
-      }
-    }
-  }
-
-  buf <- rawConnectionValue(con)
-  close(con)
-  buf
 }
