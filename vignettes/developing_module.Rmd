@@ -118,7 +118,7 @@ mod_uniq_values <- function(table_name, column_names, module_id) {
     server = function(afmm) {
       module_server(
         module_id,
-        dataset = reactive(afmm[["filtered_dataset"]]()[[table_name]])
+        dataset = reactive(afmm[["filtered_dataset_list"]]()[[table_name]])
       )
     },
     # Module ID
@@ -233,7 +233,7 @@ mod_uniq_values <- function(module_id) {
     server = function(afmm) {
       module_server(
         module_id,
-        dataset = afmm[["filtered_dataset"]]
+        dataset = afmm[["filtered_dataset_list"]]
       )
     },
     module_id = module_id

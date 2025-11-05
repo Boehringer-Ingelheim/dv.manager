@@ -83,7 +83,7 @@ mod_table <- function(table_name, mod_id) {
   mod <- list(
     ui = table_ui,
     server = function(afmm) {
-      table_server(id = mod_id, dataset = shiny::reactive(afmm[["filtered_dataset"]]()[[table_name]]))
+      table_server(id = mod_id, dataset = shiny::reactive(afmm[["filtered_dataset_list"]]()[[table_name]]))
     },
     module_id = mod_id
   )

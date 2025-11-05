@@ -111,8 +111,8 @@ local({
           server = function(afmm) {
             filter_test_server(
               id = module_id,
-              filtered_dataset_list = afmm[["filtered_dataset"]],
-              unfiltered_dataset_list = afmm[["unfiltered_dataset"]],
+              filtered_dataset_list = afmm[["filtered_dataset_list"]],
+              unfiltered_dataset_list = afmm[["unfiltered_dataset_list"]],
               filter_metadata = afmm[["filter_metadata"]]
             )
           },
