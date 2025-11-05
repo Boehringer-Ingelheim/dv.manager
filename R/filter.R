@@ -846,3 +846,288 @@ serialize_filter_to_client <- function(x) {
 deserialize_filter_from_client <- function(x) {
   yyjsonr_read_json_str_with_options(x)
 }
+
+binary_serialize_filter_to_client <- function(x) {
+  C <- pack_of_constants(
+    MAGICNUM = charToRaw("FILTDATA"),
+    VERSION = 1L,
+    EIGHTBYTES = 8L,
+    ENDIANNESS = "little"
+  )
+
+  con <- rawConnection(raw(0), open = "wb")
+  on.exit(close(con))
+
+  w <- function(...) {
+    writeBin(..., con = con, endian = C$ENDIANNESS)
+  }
+
+  remove_scalar_class <- function(x) {
+    class(x) <- setdiff(class(x), "scalar")
+    x
+  }
+
+  w_int <- function(x) {
+    assert(length(x) == 1, "Must be length 1")
+    x <- remove_scalar_class(x)
+    w(as.integer(x), size = C$EIGHTBYTES)
+  }
+
+  w_double <- function(x) {
+    assert(length(x) == 1, "Must be length 1")
+    x <- remove_scalar_class(x)
+    w(as.double(x), size = C$EIGHTBYTES)
+  }
+
+  w_doubles <- function(x) {
+    x <- remove_scalar_class(x)
+    w(as.double(x), size = C$EIGHTBYTES)
+  }
+
+  w_string <- function(x) {
+    assert(is.character(x) && length(x) == 1, "Must be character of length 1")
+    x <- remove_scalar_class(x)
+    string_len <- nchar(x)
+    if(string_len > 100) message(string_len)
+    w_int(string_len)
+    w(charToRaw(x))
+  }
+  
+  w(C$MAGICNUM)
+  w_int(C$VERSION)
+
+  dataset_lists <- x[["dataset_lists"]]
+  dataset_lists_len <- length(dataset_lists)
+  w_int(dataset_lists_len)
+
+  for (dataset_list_idx in seq_len(dataset_lists_len)) {
+    dataset_list_name <- dataset_lists[[dataset_list_idx]][["name"]]
+    dataset_list <- dataset_lists[[dataset_list_idx]][["dataset_list"]]
+    dataset_list_len <- length(dataset_list)
+    w_string(dataset_list_name)
+    w_int(dataset_list_len)
+
+    for (dataset_idx in seq_len(dataset_list_len)) {
+      dataset_name <- dataset_list[[dataset_idx]][["name"]]
+      dataset_var <- dataset_list[[dataset_idx]][["variables"]]
+      dataset_nrow <- dataset_list[[dataset_idx]][["nrow"]]
+      dataset_nvar <- length(dataset_var)
+      w_string(dataset_name)
+      w_int(dataset_nrow)
+      w_int(dataset_nvar)
+
+      for (var_idx in seq_len(dataset_nvar)) {
+        var <- dataset_var[[var_idx]]
+        kind <- var[["kind"]]        
+        w_string(var[["name"]])
+        w_string(var[["label"]])
+        w_string(var[["class"]])
+        w_string(kind)
+        w_int(var[["NA_count"]])
+        
+        if (kind == "categorical") {
+          var_vc <- var[["values_count"]]
+          var_vc_len <- length(var_vc)
+          w_int(var_vc_len)
+          for (vc_idx in seq_len(var_vc_len)) {
+            w_string(var_vc[[vc_idx]][["value"]])
+            w_int(var_vc[[vc_idx]][["count"]])
+          }
+        } else if (kind == "numerical") {
+          w_double(var[["min"]])
+          w_double(var[["max"]])
+          w_int(length(var[["density"]]))
+          w_doubles(var[["density"]])
+        } else if (kind == "date") {
+          w_string(as.character(var[["min"]])) # Replace by the numerical version
+          w_string(as.character(var[["max"]])) 
+        } else {
+          stop("Unknown kind")
+        }        
+      }
+    }
+  }
+
+  buf <- rawConnectionValue(con)
+
+  return(buf)
+}
+
+binary_deserialize_filter_to_client <- function(x) {
+  C <- pack_of_constants(
+    MAGICNUM = charToRaw("FILTDATA"),
+    VERSION = 1L,
+    EIGHTBYTES = 8L,
+    ENDIANNESS = "little"
+  )
+
+  con <- rawConnection(x, open = "rb")
+  on.exit(close(con))
+
+  r_int <- function() {
+    x <- readBin(con = con, what = integer(0), n = 1L, size = C$EIGHTBYTES, endian = C$ENDIANNESS)
+    x
+  }
+
+  r_double <- function() {
+    x <- readBin(con = con, what = double(0), n = 1L, size = C$EIGHTBYTES, endian = C$ENDIANNESS)
+    x
+  }
+
+  r_doubles <- function() {
+    doubles_length <- r_int()
+    x <- readBin(con = con, what = double(0), n = doubles_length,  size = C$EIGHTBYTES, endian = C$ENDIANNESS)
+    x
+  }
+
+  r_string <- function() {
+    string_length <- r_int()    
+    bytes <- readBin(con = con, what = raw(), n = string_length, size = 1, endian = C$ENDIANNESS)
+    x <- rawToChar(bytes)
+    x
+  }
+
+  magic <- rawToChar(readBin(con = con, what = raw(0), n = 8L, size = 1, endian = C$ENDIANNESS))
+  version <- r_int()
+
+  dataset_lists <- list()
+  dataset_lists_len <- r_int()
+
+  for (dataset_list_idx in seq_len(dataset_lists_len)) {
+    dataset_list <- list()
+    dataset_list_name <- r_string()
+    dataset_list_len <- r_int()
+
+    for (dataset_idx in seq_len(dataset_list_len)) {
+      dataset <- list()
+      dataset[["name"]] <- r_string()
+      dataset[["nrow"]] <- r_int()
+      dataset_nvar <- r_int()
+      dataset_var <- list()
+
+      for (var_idx in seq_len(dataset_nvar)) {
+        var <- list()
+        var[["name"]] <- r_string()
+        var[["label"]] <- r_string()
+        var[["class"]] <- r_string()
+        kind <- r_string()
+        var[["kind"]] <- kind
+        var[["NA_count"]] <- r_int()
+
+        
+        if (kind == "categorical") {
+          
+          var_vc <- list()
+          var_vc_len <- r_int()
+          for (vc_idx in seq_len(var_vc_len)) {
+            var_vc[[vc_idx]] <- list(
+              value = r_string(),
+              count = r_int()
+            )
+            
+          }
+          var[["values_count"]] <- var_vc
+        } else if (kind == "numerical") {
+          var[["min"]] <- r_double()
+          var[["max"]] <- r_double()
+          var[["density"]] <- r_doubles()
+        } else if (kind == "date") {
+          var[["min"]] <- as.Date(r_string(), format = "%Y-%m-%d")  # Replace by the numerical version
+          var[["max"]] <- as.Date(r_string(), format = "%Y-%m-%d")
+        } else {
+          stop("Unknown kind")
+        }        
+        dataset_var[[var_idx]] <- var
+      }
+      dataset[["variables"]] <- dataset_var
+      dataset_list[[dataset_idx]] <- dataset
+    }    
+    dataset_lists[[dataset_list_idx]] <- list(
+      name = dataset_list_name,
+      dataset_list = dataset_list
+    )
+  }
+
+  x <- list(dataset_lists = dataset_lists)
+
+  return(x)
+}
+
+binary_serialize_filter_to_client_speed <- function(x) {
+  C <- pack_of_constants(
+    MAGICNUM = charToRaw("FILTDATA"),
+    VERSION = 1L,
+    EIGHTBYTES = 8L,
+    ENDIANNESS = "little"
+  )
+
+  con <- rawConnection(raw(0), "wb")
+  w   <- function(obj, size = NA) writeBin(obj, con, size = size, endian = C$ENDIANNESS)
+
+  # Fast scalar writes (no class stripping, no asserts)
+  w_int     <- function(v) w(as.integer(v))
+  w_double  <- function(v) w(as.double(v),  size = 8L)
+  w_doubles <- function(v) w(as.double(v),  size = 8L)
+
+  # Fast string writer (manual prefix, no overhead)
+  w_string <- function(s) {
+    n <- nchar(s, type = "bytes")
+    w_int(n)
+    writeBin(charToRaw(s), con)
+  }
+
+  # ---- Begin writing ----
+
+  writeBin(C$MAGICNUM, con)
+  w_int(C$VERSION)
+
+  dataset_lists <- x$dataset_lists
+  w_int(length(dataset_lists))
+
+  for (dl in dataset_lists) {
+    w_string(dl$name)
+
+    dataset_list <- dl$dataset_list
+    w_int(length(dataset_list))
+
+    for (ds in dataset_list) {
+      w_string(ds$name)
+      w_int(ds$nrow)
+
+      vars <- ds$variables
+      w_int(length(vars))
+
+      for (var in vars) {
+
+        w_string(var$name)
+        w_string(var$label)
+        w_string(var$class)
+        w_string(var$kind)
+
+        if (var$kind == "categorical") {
+          for (vc in var$values_count) {
+            w_string(vc$value)
+            w_int(vc$count)
+          }
+
+        } else if (var$kind == "numerical") {
+          w_double(var$max)
+          w_double(var$min)
+          d <- var$density
+          w_int(length(d))
+          w_doubles(d)
+
+        } else { # date
+          w_string(as.character(var$max))
+          w_string(as.character(var$min))
+        }
+
+        w_int(var$NA_count)
+      }
+    }
+  }
+
+  buf <- rawConnectionValue(con)
+  close(con)
+  buf
+}
