@@ -128,7 +128,7 @@ get_single_filter_data <- function(dataset) {
       na_clean_var <- var[!is.na(var)]
       count <- sort(table(na_clean_var), decreasing = TRUE)
       values <- names(count)
-      count <- as.numeric(count)
+      count <- as.integer(count)
       l[["value"]] <- values
       l[["count"]] <- count
     } else if (is.numeric(var)) {
@@ -906,7 +906,7 @@ binary_serialize_filter_data <- function(x) {
 
       for (var_idx in seq_len(dataset_nvar)) {
         var <- dataset_var[[var_idx]]
-        kind <- var[["kind"]]        
+        kind <- var[["kind"]]
         w_string(var[["name"]])
         w_string(var[["label"]])
         w_string(var[["class"]])
@@ -918,7 +918,7 @@ binary_serialize_filter_data <- function(x) {
           var_count <- var[["count"]]
           w_int(length(var_value))
           w_strings(var_value)
-          w_int(var_count)          
+          w_int(var_count)
         } else if (kind == "numerical") {
           w_double(var[["min"]])
           w_double(var[["max"]])
@@ -980,6 +980,11 @@ binary_deserialize_filter_data <- function(x) {
     x
   }
 
+  r_ints_n <- function(n) {    
+    x <- readBin(con = con, what = integer(0), n = n, endian = C$ENDIANNESS)
+    x
+  }
+
   r_string <- function() {
     string_length <- r_int()
     bytes <- readBin(con = con, what = raw(), n = string_length, size = 1, endian = C$ENDIANNESS)
@@ -1016,17 +1021,12 @@ binary_deserialize_filter_data <- function(x) {
 
         
         if (kind == "categorical") {
-          
-          var_vc <- list()
-          var_vc_len <- r_int()
-          for (vc_idx in seq_len(var_vc_len)) {
-            var_vc[[vc_idx]] <- list(
-              value = r_string(),
-              count = r_int()
-            )
-            
+          value_len <- r_int()
+          var[["value"]] <- vector(mode = "character", length = value_len)
+          for (idx in seq_len(value_len)) {
+            var[["value"]][[idx]] <- r_string()
           }
-          var[["values_count"]] <- var_vc
+          var[["count"]] <- r_ints_n(value_len)
         } else if (kind == "numerical") {
           var[["min"]] <- r_double()
           var[["max"]] <- r_double()
