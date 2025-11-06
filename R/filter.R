@@ -880,7 +880,7 @@ binary_serialize_filter_data <- function(x) {
 
   w_string <- function(x) {
     # assert(is.character(x) && length(x) == 1, "Must be character of length 1")
-    string_len <- nchar(x)
+    string_len <- nchar(x) # length of rawToChar
     w_int(string_len)
     x <- charToRaw(x)
     writeBin(x, con = con, endian = C$ENDIANNESS)
@@ -945,6 +945,21 @@ binary_serialize_filter_data <- function(x) {
 
   return(buf)
 }
+
+#' Serialize filter data (binary form)
+#'
+#' @useDynLib dv.manager
+binary_serialize_ints_C <- function(x) {
+  .Call("binary_serialize_ints_C", x, PACKAGE = "dv.manager")
+}
+
+#' S
+#' @useDynLib dv.manager
+#' @export
+traverse_list_C <- function(x) {
+  .Call("traverse_list_C", x, PACKAGE = "dv.manager")
+}
+
 
 binary_deserialize_filter_data <- function(x) {
   C <- pack_of_constants(
