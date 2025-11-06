@@ -128,14 +128,9 @@ get_single_filter_data <- function(dataset) {
       na_clean_var <- var[!is.na(var)]
       count <- sort(table(na_clean_var), decreasing = TRUE)
       values <- names(count)
-      count <- unname(count)
-      l[["values_count"]] <- vector(mode = "list", length = length(l[["values"]]))
-      for (v_idx in seq_along(values)) {
-        l[["values_count"]][[v_idx]] <- list(
-          value = as_scalar(values[[v_idx]]),
-          count = as_scalar(count[[v_idx]])
-        )
-      }
+      count <- as.numeric(count)
+      l[["value"]] <- values
+      l[["count"]] <- count
     } else if (is.numeric(var)) {
       var <- as.numeric(var)
       l[["kind"]] <- as_scalar("numerical")
@@ -633,7 +628,7 @@ add_blockly_dependency <- function() {
 
 
 
-new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL, saved_states = NULL, strict = FALSE) {
+new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states = NULL) {
   ns <- shiny::NS(id)
 
   # JSONify null
@@ -648,12 +643,6 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
   log_inform(paste("Loading state", filter_bookmark))
   log_inform(paste("Loading saved states", saved_states_bookmark))
 
-  d <- get_filter_data(dataset_lists)
-
-  filter_data <- serialize_filter_data_to_client(d)
-
-  if (strict) assert(to_filter_validate(filter_data), "failed to validate message to filter")
-
   escape_special_chars <- function(x) {
     y <- gsub("\\\\", "\\\\\\\\", x)
     y <- gsub('"', '\\\\"', y)
@@ -667,9 +656,8 @@ new_filter_ui <- function(id, dataset_lists, subject_dataset_name, state = NULL,
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
-        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
         escape_special_chars(ns(ID$FILTER_CONTAINER)),
-        escape_special_chars(filter_data),
         escape_special_chars(filter_bookmark),
         escape_special_chars(saved_states_bookmark),
         escape_special_chars(subject_dataset_name),
@@ -737,6 +725,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
     shiny::observeEvent(selected_dataset_list(), {
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
       dataset_list_filter_data <- get_filter_data(stats::setNames(list(selected_dataset_list()), dataset_list_name))
+      
       dataset_list_filter_data_json <- serialize_filter_data_to_client(dataset_list_filter_data)
       if (strict) assert(to_filter_validate(dataset_list_filter_data_json), "failed to validate message to filter")
 
@@ -885,6 +874,12 @@ binary_serialize_filter_data <- function(x) {
     x <- charToRaw(x)
     writeBin(x, con = con, endian = C$ENDIANNESS)
   }
+
+  w_strings <- function(x) {
+    for(s in x) {
+      w_string(s)
+    }    
+  }
   
   w(C$MAGICNUM)
   w_int(C$VERSION)
@@ -919,13 +914,11 @@ binary_serialize_filter_data <- function(x) {
         w_int(var[["NA_count"]])
         
         if (kind == "categorical") {
-          var_vc <- var[["values_count"]]
-          var_vc_len <- length(var_vc)
-          w_int(var_vc_len)
-          for (vc_idx in seq_len(var_vc_len)) {
-            w_string(var_vc[[vc_idx]][["value"]])
-            w_int(var_vc[[vc_idx]][["count"]])
-          }
+          var_value <- var[["value"]]
+          var_count <- var[["count"]]
+          w_int(length(var_value))
+          w_strings(var_value)
+          w_int(var_count)          
         } else if (kind == "numerical") {
           w_double(var[["min"]])
           w_double(var[["max"]])

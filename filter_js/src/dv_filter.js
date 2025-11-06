@@ -250,7 +250,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
             let dataset_idx = dataset_list.map((x) => x.name).indexOf(current_filter.dataset);
             let variable_names = dataset_list[dataset_idx].variables.map((x) => x.name);
             let variable_idx = variable_names.indexOf(current_filter.variable);
-            let variable_values = dataset_list[dataset_idx].variables[variable_idx].values_count.map((x) => x.value);
+            let variable_values = dataset_list[dataset_idx].variables[variable_idx].value;
             let found = current_filter.values.filter((x) => variable_values.includes(x));
             let removed = current_filter.values.filter((x) => !variable_values.includes(x));
 
@@ -826,10 +826,10 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       const variable_na_label = "NA(" + variable["NA_count"] + "):"
 
       if (kind === "categorical") {
-        const values = variable["values_count"];
+        const values = variable.value;
         let dd_options = [];
-        for (let v of values) {
-          dd_options.push([v.value, v.value])
+        for (let i = 0; i < values.length; ++i) {
+          dd_options.push([v[i], v[i]])
         }
 
         if (dd_options.length == 0) dd_options = [['_EMPTY_VEC_', '_EMPTY_VEC_']]
@@ -1514,13 +1514,16 @@ let create_variable_filter_controls = function(variable_filter_control_container
       categorical_select.setAttribute('data-width', '100%');
       categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
-      __assert(()=>current_variable.values_count.every((v, i, a) => i === 0 || a[i-1].count >= v.count))
+      let value = current_variable.value;
+      let count = current_variable.value;
+      __assert(()=>count.every((v, i, a) => i === 0 || a[i-1] >= v)) // Check is sorted
+      __assert(()=>value.length === count.length) // Check is sorted
 
-      for(let i = 0; i < current_variable.values_count.length; ++i) {
+      for(let i = 0; i < value.length; ++i) {
         let option = document.createElement('option');
-        option.value = current_variable.values_count[i].value;
-        option.textContent = current_variable.values_count[i].value;
-        option.setAttribute("data-subtext", `${current_variable.values_count[i].count} / ${dataset.nrow}`);
+        option.value = values[i];
+        option.textContent = values[i];
+        option.setAttribute("data-subtext", `${count[i]} / ${dataset.nrow}`);
         if(current_state) {
           if(current_state.values.includes(option.value)) {
             option.setAttribute("selected", '');         
@@ -2145,8 +2148,7 @@ let set_filter_property = function(el, property, val) {
   return(get_root_el(el)[property] = val);
 }
 
-const init = function(root_id, filter_data_json, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {  
-  let filter_data = JSON.parse(filter_data_json);
+const init = function(root_id, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {  
   let filter_state = JSON.parse(filter_state_json);
   let saved_filter_states = JSON.parse(saved_filter_states_json);
 
@@ -2157,7 +2159,6 @@ const init = function(root_id, filter_data_json, filter_state_json, saved_filter
   __logger(saved_filter_states);
 
   let root_el = document.getElementById(root_id);
-  root_el[FC.PROPERTY.DATA] = filter_data;
   root_el[FC.PROPERTY.STATE] = filter_state;
   root_el[FC.PROPERTY.SAVED_STATES] = !saved_filter_states ? [] : saved_filter_states;
   root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
