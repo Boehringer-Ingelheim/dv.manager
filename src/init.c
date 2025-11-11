@@ -2,12 +2,12 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
-extern SEXP binary_serialize_ints_C(SEXP);
-extern SEXP traverse_list_C(SEXP);
+extern SEXP binary_serialize_filter_data_C(SEXP);
+extern SEXP binary_deserialize_filter_data_C(SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
-    {"binary_serialize_ints_C", (DL_FUNC) &binary_serialize_ints_C, 1},
-    {"traverse_list_C", (DL_FUNC) &traverse_list_C, 1},
+    {"binary_serialize_filter_data_C", (DL_FUNC) &binary_serialize_filter_data_C, 1},
+    {"binary_deserialize_filter_data_C", (DL_FUNC) &binary_deserialize_filter_data_C, 1},
     {NULL, NULL, 0}
 };
 

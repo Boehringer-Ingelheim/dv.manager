@@ -78,6 +78,8 @@ get_single_filter_data <- function(dataset) {
   res <- vector(mode = "list", length = n_var)
 
   inf_to_str <- function(x) {
+    return (x)
+    
     if (is.infinite(x)) {
       num_x <- as.numeric(x)
       if (sign(num_x) < 0) {
@@ -155,8 +157,8 @@ get_single_filter_data <- function(dataset) {
       l[["NA_count"]] <- as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- as_scalar(inf_to_str(min(as.Date(Inf), na_clean_var, na.rm = TRUE)))
-      l[["max"]] <- as_scalar(inf_to_str(max(as.Date(-Inf), na_clean_var, na.rm = TRUE)))
+      l[["min"]] <- as.character(as_scalar(inf_to_str(min(as.Date(Inf), na_clean_var, na.rm = TRUE))))
+      l[["max"]] <- as.character(as_scalar(inf_to_str(max(as.Date(-Inf), na_clean_var, na.rm = TRUE))))
     } else {
       stop(paste0("variable type unsupported:'", typeof(var), "' classes:", paste0("'", class(var), "'", collapse = ",")))
     }
@@ -912,7 +914,7 @@ binary_serialize_filter_data <- function(x) {
         w_string(var[["class"]])
         w_string(kind)
         w_int(var[["NA_count"]])
-        
+
         if (kind == "categorical") {
           var_value <- var[["value"]]
           var_count <- var[["count"]]
@@ -926,10 +928,10 @@ binary_serialize_filter_data <- function(x) {
           w_doubles(var[["density"]])
         } else if (kind == "date") {
           w_string(as.character(var[["min"]])) # Replace by the numerical version
-          w_string(as.character(var[["max"]])) 
+          w_string(as.character(var[["max"]]))
         } else {
           stop("Unknown kind")
-        }        
+        }
       }
     }
   }
@@ -942,15 +944,14 @@ binary_serialize_filter_data <- function(x) {
 #' Serialize filter data (binary form)
 #'
 #' @useDynLib dv.manager
-binary_serialize_ints_C <- function(x) {
-  .Call("binary_serialize_ints_C", x, PACKAGE = "dv.manager")
+binary_deserialize_filter_data_C <- function(x) {
+  .Call("binary_deserialize_filter_data_C", x, PACKAGE = "dv.manager")
 }
 
 #' S
 #' @useDynLib dv.manager
-#' @export
-traverse_list_C <- function(x) {
-  .Call("traverse_list_C", x, PACKAGE = "dv.manager")
+binary_serialize_filter_data_C <- function(x) {
+  .Call("binary_serialize_filter_data_C", x, PACKAGE = "dv.manager")
 }
 
 
@@ -980,7 +981,7 @@ binary_deserialize_filter_data <- function(x) {
     x
   }
 
-  r_ints_n <- function(n) {    
+  r_ints_n <- function(n) {
     x <- readBin(con = con, what = integer(0), n = n, endian = C$ENDIANNESS)
     x
   }
