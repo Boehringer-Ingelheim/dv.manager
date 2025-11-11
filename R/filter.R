@@ -838,7 +838,7 @@ deserialize_filter_data_from_client <- fromJSON
 
 binary_serialize_filter_data <- function(x) {
   C <- list(
-    MAGICNUM = charToRaw("FILTDATA"),
+    MAGICNUM = "FILTDATA",
     VERSION = 1L,
     ENDIANNESS = "little"
   )
@@ -851,8 +851,8 @@ binary_serialize_filter_data <- function(x) {
   con <- rawConnection(raw(0), open = "wb")
   on.exit(close(con))
 
-  w <- function(...) {
-    writeBin(..., con = con, endian = C$ENDIANNESS)
+  w <- function(x) {
+    writeBin(x, con = con, endian = C$ENDIANNESS)
   }
 
   w_int <- function(x) {
@@ -873,10 +873,9 @@ binary_serialize_filter_data <- function(x) {
   }
 
   w_string <- function(x) {
-    # assert(is.character(x) && length(x) == 1, "Must be character of length 1")
+    assert(is.character(x) && length(x) == 1, "Must be character of length 1")
     string_len <- nchar(x) # length of rawToChar
-    w_int(string_len)
-    x <- charToRaw(x)
+    w_int(string_len + 1)
     writeBin(x, con = con, endian = C$ENDIANNESS)
   }
 
@@ -933,7 +932,7 @@ binary_serialize_filter_data <- function(x) {
           w_string(as.character(var[["min"]])) # Replace by the numerical version
           w_string(as.character(var[["max"]]))
         } else {
-          stop("Unknown kind")
+          stop(paste("Unknown kind", kind))
         }
       }
     }
@@ -990,13 +989,12 @@ binary_deserialize_filter_data <- function(x) {
   }
 
   r_string <- function() {
-    string_length <- r_int()
-    bytes <- readBin(con = con, what = raw(), n = string_length, size = 1, endian = C$ENDIANNESS)
-    x <- rawToChar(bytes)
+    string_length <- r_int() # readBin uses the NULL character at the end of the string
+    x <- readBin(con = con, what = character(), n = 1, size = 1, endian = C$ENDIANNESS)
     x
   }
 
-  magic <- rawToChar(readBin(con = con, what = raw(0), n = 8L, size = 1, endian = C$ENDIANNESS))
+  magic <- readBin(con = con, what = character(0), n = 1, endian = C$ENDIANNESS)
   version <- r_int()
 
   dataset_lists <- list()
@@ -1022,7 +1020,6 @@ binary_deserialize_filter_data <- function(x) {
         kind <- r_string()
         var[["kind"]] <- kind
         var[["NA_count"]] <- r_int()
-
         
         if (kind == "categorical") {
           value_len <- r_int()
@@ -1036,10 +1033,10 @@ binary_deserialize_filter_data <- function(x) {
           var[["max"]] <- r_double()
           var[["density"]] <- r_doubles()
         } else if (kind == "date") {
-          var[["min"]] <- as.Date(r_string(), format = "%Y-%m-%d")  # Replace by the numerical version
-          var[["max"]] <- as.Date(r_string(), format = "%Y-%m-%d")
+          var[["min"]] <- r_string()
+          var[["max"]] <- r_string()
         } else {
-          stop("Unknown kind")
+          stop(paste("Unknown kind", kind))
         }        
         dataset_var[[var_idx]] <- var
       }
