@@ -72,14 +72,13 @@ create_dataset_filters_server <- function(datasets_filters_info, data_list) {
 
 # NEW FILTER ----
 
-get_single_filter_data <- function(dataset, local_as_scalar = as_scalar) {
+get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_char) {
   nm_var <- names(dataset)
   n_var <- length(nm_var)
   res <- vector(mode = "list", length = n_var)
-
-  inf_to_str <- function(x) {
-    return (x)
-
+  
+  if (inf_as_char) {
+    inf_to_str <- function(x) {
     if (is.infinite(x)) {
       num_x <- as.numeric(x)
       if (sign(num_x) < 0) {
@@ -92,6 +91,12 @@ get_single_filter_data <- function(dataset, local_as_scalar = as_scalar) {
     }
     return(res)
   }
+
+  } else {
+    inf_to_str <- identity
+  }
+
+  
 
   # In R all elements are vectors by default this makes complicated to transform into json as c("a") can be enconded
   # as "a" or ["a"]. To disambiguate this jsonlite offers `unbox`.
@@ -114,9 +119,9 @@ get_single_filter_data <- function(dataset, local_as_scalar = as_scalar) {
     label <- attr(var, "label") %||% name # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
 
     l <- list(
-      name = local_as_scalar(name),
-      label = local_as_scalar(label),
-      class = local_as_scalar(class(var)[1])
+      name = as_scalar_fn(name),
+      label = as_scalar_fn(label),
+      class = as_scalar_fn(class(var)[1])
     )
 
 
@@ -125,8 +130,8 @@ get_single_filter_data <- function(dataset, local_as_scalar = as_scalar) {
 
     if (is.character(var) || is.factor(var)) {
       # FIXME: factor levels are ignored and only the values really present in the dataset are used
-      l[["kind"]] <- local_as_scalar("categorical")
-      l[["NA_count"]] <- local_as_scalar(sum(is.na(var)))
+      l[["kind"]] <- as_scalar_fn("categorical")
+      l[["NA_count"]] <- as_scalar_fn(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
       count <- sort(table(na_clean_var), decreasing = TRUE)
       values <- names(count)
@@ -135,12 +140,12 @@ get_single_filter_data <- function(dataset, local_as_scalar = as_scalar) {
       l[["count"]] <- count
     } else if (is.numeric(var)) {
       var <- as.numeric(var)
-      l[["kind"]] <- local_as_scalar("numerical")
-      l[["NA_count"]] <- local_as_scalar(sum(is.na(var)))
+      l[["kind"]] <- as_scalar_fn("numerical")
+      l[["NA_count"]] <- as_scalar_fn(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- local_as_scalar(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
-      l[["max"]] <- local_as_scalar(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
+      l[["min"]] <- min(Inf, na_clean_var, na.rm = TRUE)
+      l[["max"]] <- max(-Inf, na_clean_var, na.rm = TRUE)
 
       if (length(na_clean_var) > 0) {
         hist_info <- hist(na_clean_var, plot = FALSE)
@@ -153,12 +158,22 @@ get_single_filter_data <- function(dataset, local_as_scalar = as_scalar) {
       if (inherits(var, "POSIXct")) {
         var <- as.Date(var)
       }
-      l[["kind"]] <- local_as_scalar("date")
-      l[["NA_count"]] <- local_as_scalar(sum(is.na(var)))
+
+      if (date_as_char) {
+        var <- as.numeric(var)
+        inf_date <- Inf
+        minus_inf_date <- -Inf
+      } else {
+        inf_date <- as.Date(Inf)
+        minus_inf_date <- as.Date(-Inf)
+      }
+      
+      l[["kind"]] <- as_scalar_fn("date")
+      l[["NA_count"]] <- as_scalar_fn(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- as.character(local_as_scalar(inf_to_str(min(as.Date(Inf), na_clean_var, na.rm = TRUE))))
-      l[["max"]] <- as.character(local_as_scalar(inf_to_str(max(as.Date(-Inf), na_clean_var, na.rm = TRUE))))
+      l[["min"]] <- as_scalar_fn(min(inf_date, na_clean_var, na.rm = TRUE))
+      l[["max"]] <- as_scalar_fn(max(minus_inf_date, na_clean_var, na.rm = TRUE))
     } else {
       stop(paste0("variable type unsupported:'", typeof(var), "' classes:", paste0("'", class(var), "'", collapse = ",")))
     }
@@ -168,7 +183,7 @@ get_single_filter_data <- function(dataset, local_as_scalar = as_scalar) {
   return(res)
 }
 
-get_filter_data <- function(dataset_lists, mark_scalar = TRUE) {
+get_filter_data <- function(dataset_lists, mark_scalar, date_as_character, inf_as_char) {
 
   local_as_scalar <- if (mark_scalar) as_scalar else identity
 
@@ -187,7 +202,7 @@ get_filter_data <- function(dataset_lists, mark_scalar = TRUE) {
       current_dataset_res[[jdx]] <- list(
         name = local_as_scalar(current_dataset_name),
         nrow = local_as_scalar(nrow(current_dataset)),
-        variables = get_single_filter_data(current_dataset, local_as_scalar)
+        variables = get_single_filter_data(current_dataset, local_as_scalar, date_as_character, inf_as_char)
       )
     }
     res[[idx]] <- list(
@@ -197,6 +212,14 @@ get_filter_data <- function(dataset_lists, mark_scalar = TRUE) {
   }
   res <- list(dataset_lists = res)
   return(res)
+}
+
+get_filter_data_binary_serialize <- function(dataset_lists) {
+  get_filter_data(dataset_lists, mark_scalar = FALSE, date_as_character = FALSE, inf_as_char = FALSE)
+}
+
+get_filter_data_json_serialize <- function(dataset_lists) {
+  get_filter_data(dataset_lists, mark_scalar = TRUE, date_as_character = TRUE, inf_as_char = TRUE)
 }
 
 subject_filter_operations <- local({
@@ -729,7 +752,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
 
     shiny::observeEvent(selected_dataset_list(), {
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
-      dataset_list_filter_data <- get_filter_data(stats::setNames(list(selected_dataset_list()), dataset_list_name))
+      dataset_list_filter_data <- get_filter_data_json_serialize(stats::setNames(list(selected_dataset_list()), dataset_list_name))
       
       dataset_list_filter_data_json <- serialize_filter_data_to_client(dataset_list_filter_data)
       if (strict) assert(to_filter_validate(dataset_list_filter_data_json), "failed to validate message to filter")
@@ -882,9 +905,9 @@ binary_serialize_filter_data <- function(x) {
   w_strings <- function(x) {
     for(s in x) {
       w_string(s)
-    }    
+    }
   }
-  
+
   w(C$MAGICNUM)
   w_int(C$VERSION)
 
@@ -929,8 +952,8 @@ binary_serialize_filter_data <- function(x) {
           w_int(length(var[["density"]]))
           w_doubles(var[["density"]])
         } else if (kind == "date") {
-          w_string(as.character(var[["min"]])) # Replace by the numerical version
-          w_string(as.character(var[["max"]]))
+          w_double(var[["min"]])
+          w_double(var[["max"]])
         } else {
           stop(paste("Unknown kind", kind))
         }
@@ -1033,8 +1056,8 @@ binary_deserialize_filter_data <- function(x) {
           var[["max"]] <- r_double()
           var[["density"]] <- r_doubles()
         } else if (kind == "date") {
-          var[["min"]] <- r_string()
-          var[["max"]] <- r_string()
+          var[["min"]] <- r_double()
+          var[["max"]] <- r_double()
         } else {
           stop(paste("Unknown kind", kind))
         }        

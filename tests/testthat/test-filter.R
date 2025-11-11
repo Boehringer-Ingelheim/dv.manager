@@ -1846,7 +1846,7 @@ local({
     expect_length(r, 2)
   })
 
-  test_that("get_filter_data returns one entry per dataset_list and dataset" |>
+  test_that("get_filter_data_json_serialize returns one entry per dataset_list and dataset" |>
   vdoc[["add_spec"]](c(
     specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
     specs$FILTERING$FILTER_SUPPORTED_TYPES,
@@ -1863,7 +1863,7 @@ local({
       )
     )
 
-    r <- get_filter_data(dataset_lists)
+    r <- get_filter_data_json_serialize(dataset_lists)
 
     expect_length(r[["dataset_lists"]], 2)
     expect_length(r[["dataset_lists"]][[1]][["dataset_list"]], 2)

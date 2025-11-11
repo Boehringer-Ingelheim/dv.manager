@@ -193,14 +193,10 @@ SEXP binary_serialize_filter_data_C(SEXP x)
                     buf_append(buf, &density_length, sizeof(density_length));
                     buf_append(buf, density, sizeof(double)*density_length);
                 } else if(!strcmp(variable_kind, "date")) {
-                    const char *min = CHAR(STRING_ELT(getListElement(variable_element, "min"), 0));
-                    const char *max = CHAR(STRING_ELT(getListElement(variable_element, "max"), 0));
-                    int32_t min_str_len = strlen(min) + 1;
-                    int32_t max_str_len = strlen(max) + 1;
-                    buf_append(buf, &min_str_len, sizeof(min_str_len));
-                    buf_append(buf, min, min_str_len);
-                    buf_append(buf, &max_str_len, sizeof(max_str_len));
-                    buf_append(buf, max, max_str_len);
+                    double min = REAL(getListElement(variable_element, "min"))[0];
+                    double max = REAL(getListElement(variable_element, "max"))[0];                    
+                    buf_append(buf, &min, sizeof(min));
+                    buf_append(buf, &max, sizeof(max));
                 } else{
                     Rf_error("Uknown kind: %s\n", variable_kind);
                 }
@@ -344,7 +340,8 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
                 SEXP R_NA_count = PROTECT(Rf_allocVector(INTSXP, 1)); n_protected++;
                 INTEGER(R_NA_count)[0] = NA_count;
 
-                if(!strcmp(variable_kind, "categorical")) {                    
+                if(!strcmp(variable_kind, "categorical")) {
+                    _DP("Processing categorical\n");                    
                     variable_element = PROTECT(Rf_allocVector(VECSXP, 7)); n_protected++;
                     variable_element_names = PROTECT(Rf_allocVector(STRSXP, 7)); n_protected++;
 
@@ -403,25 +400,26 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
                     SET_STRING_ELT(variable_element_names, 7, Rf_mkChar("density"));
 
                 } else if(!strcmp(variable_kind, "date")) {
+                    _DP("Processing date\n");
                     variable_element = PROTECT(Rf_allocVector(VECSXP, 7)); n_protected++;
                     variable_element_names = PROTECT(Rf_allocVector(STRSXP, 7)); n_protected++;
 
-                    int32_t min_len;
-                    buf_read(buf, &min_len, sizeof(min_len), &offset);
-                    char * min;
-                    min = malloc(min_len);
-                    buf_read(buf, min, min_len, &offset);
+                    double min;
+                    buf_read(buf, &min, sizeof(min), &offset);
+                    SEXP R_min = PROTECT(Rf_allocVector(REALSXP, 1)); n_protected++;
+                    REAL(R_min)[0] = min;
+                    _DP("MIN: %f\n", min);
 
-                    int32_t max_len;
-                    buf_read(buf, &max_len, sizeof(max_len), &offset);
-                    char * max;
-                    max = malloc(max_len);
-                    buf_read(buf, max, max_len, &offset);
+                    double max;
+                    buf_read(buf, &max, sizeof(max), &offset);
+                    SEXP R_max = PROTECT(Rf_allocVector(REALSXP, 1)); n_protected++;
+                    REAL(R_max)[0] = max;
+                    _DP("MAX: %f\n", max);
 
-                    SET_VECTOR_ELT(variable_element, 5, Rf_mkString(min));
+                    SET_VECTOR_ELT(variable_element, 5, R_min);
                     SET_STRING_ELT(variable_element_names, 5, Rf_mkChar("min"));
-                    SET_VECTOR_ELT(variable_element, 6, Rf_mkString(max));
-                    SET_STRING_ELT(variable_element_names, 6, Rf_mkChar("max"));                    
+                    SET_VECTOR_ELT(variable_element, 6, R_max);
+                    SET_STRING_ELT(variable_element_names, 6, Rf_mkChar("max"));
                 } else{
                     Rf_error("Uknown kind: %s\n", variable_kind);
                 }
