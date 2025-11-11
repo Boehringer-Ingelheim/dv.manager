@@ -136,7 +136,7 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
       count <- sort(table(na_clean_var), decreasing = TRUE)
       values <- names(count)
       count <- as.integer(count)
-      l[["value"]] <- values
+      l[["value"]] <- values %||% character(0)
       l[["count"]] <- count
     } else if (is.numeric(var)) {
       var <- as.numeric(var)
@@ -144,8 +144,8 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
       l[["NA_count"]] <- as_scalar_fn(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- min(Inf, na_clean_var, na.rm = TRUE)
-      l[["max"]] <- max(-Inf, na_clean_var, na.rm = TRUE)
+      l[["min"]] <- as_scalar_fn(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
+      l[["max"]] <- as_scalar_fn(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
 
       if (length(na_clean_var) > 0) {
         hist_info <- hist(na_clean_var, plot = FALSE)
@@ -160,20 +160,20 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
       }
 
       if (date_as_char) {
+        inf_date <- as.Date(Inf)
+        minus_inf_date <- as.Date(-Inf)
+      } else {
         var <- as.numeric(var)
         inf_date <- Inf
         minus_inf_date <- -Inf
-      } else {
-        inf_date <- as.Date(Inf)
-        minus_inf_date <- as.Date(-Inf)
       }
-      
+
       l[["kind"]] <- as_scalar_fn("date")
       l[["NA_count"]] <- as_scalar_fn(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- as_scalar_fn(min(inf_date, na_clean_var, na.rm = TRUE))
-      l[["max"]] <- as_scalar_fn(max(minus_inf_date, na_clean_var, na.rm = TRUE))
+      l[["min"]] <- as_scalar_fn(inf_to_str(min(inf_date, na_clean_var, na.rm = TRUE)))
+      l[["max"]] <- as_scalar_fn(inf_to_str(max(minus_inf_date, na_clean_var, na.rm = TRUE)))
     } else {
       stop(paste0("variable type unsupported:'", typeof(var), "' classes:", paste0("'", class(var), "'", collapse = ",")))
     }
