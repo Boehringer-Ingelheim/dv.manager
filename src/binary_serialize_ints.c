@@ -230,7 +230,7 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
     const char expected_magicnum[] = "FILTDATA";
     const int32_t expected_version = 1;
 
-    _DP("EV: %u\n", expected_version);
+    _DP("EV: %u", expected_version);
     // Rf_error("Expected version: %d\n", expected_version);
     uint32_t offset = 0;
 
@@ -241,14 +241,14 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
 
     char magicnum[strlen(expected_magicnum)+1];
     buf_read(buf, magicnum, strlen(expected_magicnum) + 1, &offset);
-    _DP("Magicnum: %s\n", magicnum);
+    _DP("Magicnum: %s", magicnum);
 
     if (strcmp(magicnum, expected_magicnum) != 0)
         Rf_error("Invalid magicnum");
 
     int32_t version;
     buf_read(buf, &version, sizeof(version), &offset);
-    _DP("Version: %d\n", version);
+    _DP("Version: %d", version);
 
     if (version != expected_version)
     {
@@ -267,15 +267,15 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
 
         int32_t dataset_list_name_len;
         buf_read(buf, &dataset_list_name_len, sizeof(dataset_list_name_len), &offset);
-        _DP("DSLN_LEN: %d\n", dataset_list_name_len);
+        _DP("DSLN_LEN: %d", dataset_list_name_len);
 
         char *dataset_list_name = malloc(dataset_list_name_len);
         buf_read(buf, dataset_list_name, dataset_list_name_len, &offset);
-        _DP("DSLN_name: %s\n", dataset_list_name);
+        _DP("DSLN_name: %s", dataset_list_name);
 
         int32_t dataset_list_len;
         buf_read(buf, &dataset_list_len, sizeof(dataset_list_len), &offset);
-        _DP("DSL_LENGTH: %d\n", dataset_list_len);
+        _DP("DSL_LENGTH: %d", dataset_list_len);
 
         SEXP dataset_list = PROTECT(Rf_allocVector(VECSXP, dataset_list_len)); n_protected++;
 
@@ -286,54 +286,54 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
 
             int32_t dataset_name_len;
             buf_read(buf, &dataset_name_len, sizeof(dataset_name_len), &offset);
-            _DP("DSN_LEN: %d\n", dataset_name_len);
+            _DP("DSN_LEN: %d", dataset_name_len);
 
             char *dataset_name = malloc(dataset_name_len); // Free replace by static array with a sensible size
             buf_read(buf, dataset_name, dataset_name_len, &offset);
-            _DP("DSN_name: %s\n", dataset_name);
+            _DP("DSN_name: %s", dataset_name);
 
             int32_t dataset_nrow;
             buf_read(buf, &dataset_nrow, sizeof(dataset_nrow), &offset);
-            _DP("DS_NROW: %d\n", dataset_nrow);
+            _DP("DS_NROW: %d", dataset_nrow);
 
             int32_t dataset_nvar;
             buf_read(buf, &dataset_nvar, sizeof(dataset_nvar), &offset);
-            _DP("DS_NVAR: %d\n", dataset_nvar);
+            _DP("DS_NVAR: %d", dataset_nvar);
 
             SEXP variables = PROTECT(Rf_allocVector(VECSXP, dataset_nvar)); n_protected++;
 
             for(int variable_idx = 0; variable_idx < dataset_nvar; variable_idx++)
             {
-                _DP("Processing variable: %d\n", variable_idx);
+                _DP("Processing variable: %d", variable_idx);
                 SEXP variable_element;
                 SEXP variable_element_names;
                 int32_t variable_name_len;
                 buf_read(buf, &variable_name_len, sizeof(variable_name_len), &offset);
-                _DP("VN_L: %d\n", variable_name_len);
+                _DP("VN_L: %d", variable_name_len);
                 char *variable_name = malloc(variable_name_len);                
                 buf_read(buf, variable_name, variable_name_len, &offset);
-                _DP("VN: %s\n", variable_name);
+                _DP("VN: %s", variable_name);
 
                 int32_t variable_label_len;
                 buf_read(buf, &variable_label_len, sizeof(variable_label_len), &offset);
-                _DP("VL_L: %d\n", variable_label_len);
+                _DP("VL_L: %d", variable_label_len);
                 char *variable_label = malloc(variable_label_len);
                 buf_read(buf, variable_label, variable_label_len, &offset);
-                _DP("VL: %s\n", variable_label);
+                _DP("VL: %s", variable_label);
 
                 int32_t variable_class_len;
                 buf_read(buf, &variable_class_len, sizeof(variable_class_len), &offset);
-                _DP("VC_L: %d\n", variable_class_len);
+                _DP("VC_L: %d", variable_class_len);
                 char *variable_class = malloc(variable_class_len);
                 buf_read(buf, variable_class, variable_class_len, &offset);
-                _DP("VC: %s\n", variable_class);
+                _DP("VC: %s", variable_class);
 
                 int32_t variable_kind_len;
                 buf_read(buf, &variable_kind_len, sizeof(variable_kind_len), &offset);
-                _DP("VK_L: %d\n", variable_kind_len);
+                _DP("VK_L: %d", variable_kind_len);
                 char *variable_kind = malloc(variable_kind_len);
                 buf_read(buf, variable_kind, variable_kind_len, &offset);
-                _DP("VK: %s\n", variable_kind);
+                _DP("VK: %s", variable_kind);
                 
                 int32_t NA_count;
                 buf_read(buf, &NA_count, sizeof(NA_count), &offset);
@@ -341,7 +341,7 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
                 INTEGER(R_NA_count)[0] = NA_count;
 
                 if(!strcmp(variable_kind, "categorical")) {
-                    _DP("Processing categorical\n");                    
+                    _DP("Processing categorical");                    
                     variable_element = PROTECT(Rf_allocVector(VECSXP, 7)); n_protected++;
                     variable_element_names = PROTECT(Rf_allocVector(STRSXP, 7)); n_protected++;
 
@@ -368,7 +368,7 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
                     SET_STRING_ELT(variable_element_names, 6, Rf_mkChar("count"));
 
                 } else if(!strcmp(variable_kind, "numerical")) {
-                    _DP("Processing numerical\n");
+                    _DP("Processing numerical");
                     variable_element = PROTECT(Rf_allocVector(VECSXP, 8)); n_protected++;
                     variable_element_names = PROTECT(Rf_allocVector(STRSXP, 8)); n_protected++;
 
@@ -376,17 +376,17 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
                     buf_read(buf, &min, sizeof(min), &offset);
                     SEXP R_min = PROTECT(Rf_allocVector(REALSXP, 1)); n_protected++;
                     REAL(R_min)[0] = min;
-                    _DP("MIN: %f\n", min);
+                    _DP("MIN: %f", min);
 
                     double max;
                     buf_read(buf, &max, sizeof(max), &offset);
                     SEXP R_max = PROTECT(Rf_allocVector(REALSXP, 1)); n_protected++;
                     REAL(R_max)[0] = max;
-                    _DP("MAX: %f\n", max);
+                    _DP("MAX: %f", max);
 
                     int32_t density_len;
                     buf_read(buf, &density_len, sizeof(density_len), &offset);
-                    _DP("DL: %d\n", density_len);
+                    _DP("DL: %d", density_len);
 
                     SEXP R_density = PROTECT(Rf_allocVector(REALSXP, density_len)); n_protected++;
                     buf_read(buf, REAL(R_density), sizeof(double) * density_len, &offset);
@@ -400,7 +400,7 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
                     SET_STRING_ELT(variable_element_names, 7, Rf_mkChar("density"));
 
                 } else if(!strcmp(variable_kind, "date")) {
-                    _DP("Processing date\n");
+                    _DP("Processing date");
                     variable_element = PROTECT(Rf_allocVector(VECSXP, 7)); n_protected++;
                     variable_element_names = PROTECT(Rf_allocVector(STRSXP, 7)); n_protected++;
 
@@ -408,20 +408,20 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
                     buf_read(buf, &min, sizeof(min), &offset);
                     SEXP R_min = PROTECT(Rf_allocVector(REALSXP, 1)); n_protected++;
                     REAL(R_min)[0] = min;
-                    _DP("MIN: %f\n", min);
+                    _DP("MIN: %f", min);
 
                     double max;
                     buf_read(buf, &max, sizeof(max), &offset);
                     SEXP R_max = PROTECT(Rf_allocVector(REALSXP, 1)); n_protected++;
                     REAL(R_max)[0] = max;
-                    _DP("MAX: %f\n", max);
+                    _DP("MAX: %f", max);
 
                     SET_VECTOR_ELT(variable_element, 5, R_min);
                     SET_STRING_ELT(variable_element_names, 5, Rf_mkChar("min"));
                     SET_VECTOR_ELT(variable_element, 6, R_max);
                     SET_STRING_ELT(variable_element_names, 6, Rf_mkChar("max"));
                 } else{
-                    Rf_error("Uknown kind: %s\n", variable_kind);
+                    Rf_error("Uknown kind: %s", variable_kind);
                 }
 
                 SET_VECTOR_ELT(variable_element, 0, Rf_mkString(variable_name));
@@ -468,20 +468,20 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
         SET_VECTOR_ELT(dataset_lists, dataset_list_idx, dataset_list_element);
     }
 
-    SEXP out = PROTECT(Rf_allocVector(VECSXP, 3));
-    n_protected++;
-    SEXP names = PROTECT(Rf_allocVector(STRSXP, 3));
-    n_protected++;
+    // SEXP out = PROTECT(Rf_allocVector(VECSXP, 3));
+    // n_protected++;
+    // SEXP names = PROTECT(Rf_allocVector(STRSXP, 3));
+    // n_protected++;
 
-    SET_STRING_ELT(names, 0, Rf_mkChar("magicnum"));
-    SET_VECTOR_ELT(out, 0, Rf_mkString(expected_magicnum));
+    // SET_STRING_ELT(names, 0, Rf_mkChar("magicnum"));
+    // SET_VECTOR_ELT(out, 0, Rf_mkString(expected_magicnum));
 
-    SEXP ver = PROTECT(Rf_allocVector(INTSXP, 1));
-    n_protected++;
-    INTEGER(ver)
-    [0] = version;
-    SET_VECTOR_ELT(out, 1, ver);
-    SET_STRING_ELT(names, 1, Rf_mkChar("version"));
+    // SEXP ver = PROTECT(Rf_allocVector(INTSXP, 1));
+    // n_protected++;
+    // INTEGER(ver)
+    // [0] = version;
+    // SET_VECTOR_ELT(out, 1, ver);
+    // SET_STRING_ELT(names, 1, Rf_mkChar("version"));
 
     SEXP x_out = PROTECT(Rf_allocVector(VECSXP, 1));
     n_protected++;
@@ -491,11 +491,11 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
     SET_STRING_ELT(x_out_names, 0, Rf_mkChar("dataset_lists"));
     Rf_setAttrib(x_out, R_NamesSymbol, x_out_names);
 
-    SET_VECTOR_ELT(out, 2, x_out);
-    SET_STRING_ELT(names, 2, Rf_mkChar("x"));
+    // SET_VECTOR_ELT(out, 2, x_out);
+    // SET_STRING_ELT(names, 2, Rf_mkChar("x"));
 
-    Rf_setAttrib(out, R_NamesSymbol, names);
+    // Rf_setAttrib(out, R_NamesSymbol, names);
     UNPROTECT(n_protected);
-    return out;
+    return x_out;
 }
 
