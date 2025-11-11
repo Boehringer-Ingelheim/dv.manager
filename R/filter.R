@@ -72,14 +72,14 @@ create_dataset_filters_server <- function(datasets_filters_info, data_list) {
 
 # NEW FILTER ----
 
-get_single_filter_data <- function(dataset) {
+get_single_filter_data <- function(dataset, local_as_scalar = as_scalar) {
   nm_var <- names(dataset)
   n_var <- length(nm_var)
   res <- vector(mode = "list", length = n_var)
 
   inf_to_str <- function(x) {
     return (x)
-    
+
     if (is.infinite(x)) {
       num_x <- as.numeric(x)
       if (sign(num_x) < 0) {
@@ -114,9 +114,9 @@ get_single_filter_data <- function(dataset) {
     label <- attr(var, "label") %||% name # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
 
     l <- list(
-      name = as_scalar(name),
-      label = as_scalar(label),
-      class = as_scalar(class(var)[1])
+      name = local_as_scalar(name),
+      label = local_as_scalar(label),
+      class = local_as_scalar(class(var)[1])
     )
 
 
@@ -125,8 +125,8 @@ get_single_filter_data <- function(dataset) {
 
     if (is.character(var) || is.factor(var)) {
       # FIXME: factor levels are ignored and only the values really present in the dataset are used
-      l[["kind"]] <- as_scalar("categorical")
-      l[["NA_count"]] <- as_scalar(sum(is.na(var)))
+      l[["kind"]] <- local_as_scalar("categorical")
+      l[["NA_count"]] <- local_as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
       count <- sort(table(na_clean_var), decreasing = TRUE)
       values <- names(count)
@@ -135,12 +135,12 @@ get_single_filter_data <- function(dataset) {
       l[["count"]] <- count
     } else if (is.numeric(var)) {
       var <- as.numeric(var)
-      l[["kind"]] <- as_scalar("numerical")
-      l[["NA_count"]] <- as_scalar(sum(is.na(var)))
+      l[["kind"]] <- local_as_scalar("numerical")
+      l[["NA_count"]] <- local_as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- as_scalar(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
-      l[["max"]] <- as_scalar(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
+      l[["min"]] <- local_as_scalar(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
+      l[["max"]] <- local_as_scalar(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
 
       if (length(na_clean_var) > 0) {
         hist_info <- hist(na_clean_var, plot = FALSE)
@@ -153,12 +153,12 @@ get_single_filter_data <- function(dataset) {
       if (inherits(var, "POSIXct")) {
         var <- as.Date(var)
       }
-      l[["kind"]] <- as_scalar("date")
-      l[["NA_count"]] <- as_scalar(sum(is.na(var)))
+      l[["kind"]] <- local_as_scalar("date")
+      l[["NA_count"]] <- local_as_scalar(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- as.character(as_scalar(inf_to_str(min(as.Date(Inf), na_clean_var, na.rm = TRUE))))
-      l[["max"]] <- as.character(as_scalar(inf_to_str(max(as.Date(-Inf), na_clean_var, na.rm = TRUE))))
+      l[["min"]] <- as.character(local_as_scalar(inf_to_str(min(as.Date(Inf), na_clean_var, na.rm = TRUE))))
+      l[["max"]] <- as.character(local_as_scalar(inf_to_str(max(as.Date(-Inf), na_clean_var, na.rm = TRUE))))
     } else {
       stop(paste0("variable type unsupported:'", typeof(var), "' classes:", paste0("'", class(var), "'", collapse = ",")))
     }
@@ -168,7 +168,10 @@ get_single_filter_data <- function(dataset) {
   return(res)
 }
 
-get_filter_data <- function(dataset_lists) {
+get_filter_data <- function(dataset_lists, mark_scalar = TRUE) {
+
+  local_as_scalar <- if (mark_scalar) as_scalar else identity
+
   nm_dataset_list <- names(dataset_lists)
   n_dataset_list <- length(nm_dataset_list)
   res <- vector(mode = "list", length = n_dataset_list)
@@ -182,13 +185,13 @@ get_filter_data <- function(dataset_lists) {
       current_dataset <- current_dataset_list[[jdx]]
       current_dataset_name <- nm_datasets[[jdx]]
       current_dataset_res[[jdx]] <- list(
-        name = as_scalar(current_dataset_name),
-        nrow = as_scalar(nrow(current_dataset)),
-        variables = get_single_filter_data(current_dataset)
+        name = local_as_scalar(current_dataset_name),
+        nrow = local_as_scalar(nrow(current_dataset)),
+        variables = get_single_filter_data(current_dataset, local_as_scalar)
       )
     }
     res[[idx]] <- list(
-      name = as_scalar(current_dataset_list_name),
+      name = local_as_scalar(current_dataset_list_name),
       dataset_list = current_dataset_res
     )
   }
@@ -755,8 +758,8 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
 
       for (idx in seq_along(fd)) {
         row_count[[idx]] <- list(
-          count = as_scalar(nrow(fd[[idx]])),
-          name = as_scalar(fd_names[[idx]])
+          count = local_as_scalar(nrow(fd[[idx]])),
+          name = local_as_scalar(fd_names[[idx]])
         )
       }
 
