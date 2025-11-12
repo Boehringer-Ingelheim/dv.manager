@@ -147,7 +147,7 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
       l[["min"]] <- as_scalar_fn(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
       l[["max"]] <- as_scalar_fn(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
 
-      if (length(na_clean_var) > 0) {
+      if (length(na_clean_var) > 0 && !all(is.infinite(na_clean_var))) {
         hist_info <- hist(na_clean_var, plot = FALSE)
       } else {
         hist_info <- list(density = numeric(0))
