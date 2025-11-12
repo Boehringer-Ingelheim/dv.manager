@@ -458,21 +458,10 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
         SET_VECTOR_ELT(dataset_lists, dataset_list_idx, dataset_list_element);
     }
 
-    // SEXP out = PROTECT(Rf_allocVector(VECSXP, 3));
-    // n_protected++;
-    // SEXP names = PROTECT(Rf_allocVector(STRSXP, 3));
-    // n_protected++;
-
-    // SET_STRING_ELT(names, 0, Rf_mkChar("magicnum"));
-    // SET_VECTOR_ELT(out, 0, Rf_mkString(expected_magicnum));
-
-    // SEXP ver = PROTECT(Rf_allocVector(INTSXP, 1));
-    // n_protected++;
-    // INTEGER(ver)
-    // [0] = version;
-    // SET_VECTOR_ELT(out, 1, ver);
-    // SET_STRING_ELT(names, 1, Rf_mkChar("version"));
-
+    SEXP x_out = COUNTED_PROTECT(Rf_allocVector(VECSXP, 1));
+    
+    SEXP x_out_names = COUNTED_PROTECT(Rf_allocVector(STRSXP, 1));
+    
     SEXP x_out = PROTECT(Rf_allocVector(VECSXP, 1));
     n_protected++;
     SEXP x_out_names = PROTECT(Rf_allocVector(STRSXP, 1));
