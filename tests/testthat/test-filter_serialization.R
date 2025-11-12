@@ -30,7 +30,7 @@ expect_identical_serialization_deserialization_quietly <- function(...){
   capture.output(expect_identical_serialization_deserialization(...))
 }
 
-basic_dataset_lists <- local({
+basic_dataset_lists_mixed_NA_INF <- local({
   date_var <- as.Date("2024-01-01") + c(0L:4L, NA, Inf, -Inf)
 
   dataset_list_1 <- list(
@@ -64,6 +64,45 @@ basic_dataset_lists <- local({
   
   dataset_list_2 <- dataset_list_1
   dataset_list_2$dataset_1$sbj_var <- paste0("SBJ-", c(1:6, Inf, -Inf) * 2)
+  dataset_list_2$dataset_2$sbj_var <- paste0("SBJ-", c(1:6) * 2)
+
+  dataset_lists <- list(dataset_list_1 = dataset_list_1, dataset_list_2 = dataset_list_2)
+})
+
+basic_dataset_lists_mixed_NA_no_mixed_INF <- local({
+  date_var <- as.Date("2024-01-01") + c(0L:4L, NA)
+
+  dataset_list_1 <- list(
+    dataset_1 = data.frame(
+      row.names = 1:6    
+      , range_var = c(1.0:5.0, NA)
+      , date_var = date_var
+      , posix_var = as.POSIXct(date_var)
+      , subset_var = factor(c(letters[1:5], NA))
+      , logical_var = c(FALSE, TRUE, TRUE, FALSE, FALSE, NA)
+      , sbj_var = paste0("SBJ-", c(1:6))
+      , ALL_NA_real = NA_real_
+      , ALL_NA_integer = NA_integer_
+      , ALL_NA_factor = as.factor(NA_character_)
+      , ALL_NA_date = as.Date(NA)
+      , ALL_NA_POSIXct = as.POSIXct(NA)
+      # , ALL_integer_inf = as.integer(Inf) # Inf not representable as Integer
+      , ALL_real_inf = as.double(Inf)
+      , ALL_date_inf = as.Date(Inf)
+      , ALL_posixct_minf = as.POSIXct(-Inf)
+      # , ALL_integer_minf = as.integer(-Inf) # Inf not representable as Integer
+      , ALL_real_minf = as.double(-Inf)
+      , ALL_date_minf = as.Date(-Inf)
+      , ALL_posixct_minf = as.POSIXct(-Inf)
+    ),
+    dataset_2 = data.frame(
+      row.names = 1:6,
+      sbj_var = paste0("SBJ-", 1:6)
+    )
+  )
+  
+  dataset_list_2 <- dataset_list_1
+  dataset_list_2$dataset_1$sbj_var <- paste0("SBJ-", c(1:6) * 2)
   dataset_list_2$dataset_2$sbj_var <- paste0("SBJ-", c(1:6) * 2)
 
   dataset_lists <- list(dataset_list_1 = dataset_list_1, dataset_list_2 = dataset_list_2)
@@ -104,7 +143,12 @@ test_that("Supports one dataset_list with 1 datasets and 0 rows serialization de
 })
 
 test_that("Supports a regular dataset_lists", {
-  expect_identical_serialization_deserialization_quietly(basic_dataset_lists)
+  expect_identical_serialization_deserialization_quietly(basic_dataset_lists_mixed_NA_no_mixed_INF)
+})
+
+test_that("Supports a regular dataset_lists with Infs", {
+  # Separated because Infs will always be the the max and min values
+  expect_identical_serialization_deserialization_quietly(basic_dataset_lists_mixed_NA_INF)
 })
 
 generate_dataset_lists <- function() {
