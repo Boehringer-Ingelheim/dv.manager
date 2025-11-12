@@ -15,12 +15,8 @@ expect_identical_serialization_deserialization <- function(dataset_lists) {
 
   # Unserialization are equal
   expect_identical(Runser_liteR, Runser_liteC)
-  expect_identical(Runser_liteR, Runser_liteC)
-  expect_identical(Runser_liteR, Cunser_liteR)
-  expect_identical(Runser_liteR, Cunser_liteC)
-  expect_identical(Runser_liteR, Cunser_liteR)
-  expect_identical(Runser_liteC, Cunser_liteC)
-  expect_identical(Cunser_liteR, Cunser_liteC)
+  expect_identical(Runser_liteC, Cunser_liteR)
+  expect_identical(Cunser_liteR, Cunser_liteC)  
 
   # Given that all are identical any should work
   expect_identical(Cunser_liteC, fd_lite)  
