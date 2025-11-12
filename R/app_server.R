@@ -573,7 +573,7 @@ mod_subgroup_server <- function(id, dataset_filter) {
       for (idx in seq_along(subgroups)) {
         name <- names(subgroups)[[idx]]
         label <- subgroups[[idx]][["label"]]
-        parsed_subject_filter <- deserialize_filter_data_from_client(subgroups[[idx]][["json"]])[["filters"]][["subject_filter"]]
+        parsed_subject_filter <- deserialize_filter_state_from_client(subgroups[[idx]][["json"]])[["filters"]][["subject_filter"]]
         subjects <- create_subject_filter_info(dataset_list, parsed_subject_filter, filter_key_var)[["subjects"]]
         dataset_list[[subject_filter_dataset_name]][[name]] <- dataset_list[[subject_filter_dataset_name]][[filter_key_var]] %in% subjects
         attr(dataset_list[[subject_filter_dataset_name]][[name]], "label") <- label

@@ -1,4 +1,8 @@
-# TODO: review naming
+toJSON <- function(x) yyjsonr::write_json_str(x)
+fromJSON <- function(x) yyjsonr::read_json_str(x, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
+as_scalar <- yyjsonr::as_scalar
+serialize_filter_data_to_client <- if (use_binary_ser_filter_data) function(x) jsonlite::base64_enc(binary_serialize_filter_data_C(x)) else toJSON
+deserialize_filter_state_from_client <- fromJSON
 
 get_dataset_filters_info <- function(data, filter_data) {
   dataset_filter_names <- setdiff(get_data_tables_names(data), filter_data)
@@ -76,7 +80,7 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
   nm_var <- names(dataset)
   n_var <- length(nm_var)
   res <- vector(mode = "list", length = n_var)
-  
+
   if (inf_as_char) {
     inf_to_str <- function(x) {
     if (is.infinite(x)) {
@@ -95,8 +99,6 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
   } else {
     inf_to_str <- identity
   }
-
-  
 
   # In R all elements are vectors by default this makes complicated to transform into json as c("a") can be enconded
   # as "a" or ["a"]. To disambiguate this jsonlite offers `unbox`.
@@ -654,8 +656,6 @@ add_blockly_dependency <- function() {
   )
 }
 
-
-
 new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states = NULL) {
   ns <- shiny::NS(id)
 
@@ -752,17 +752,30 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
 
     shiny::observeEvent(selected_dataset_list(), {
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
-      dataset_list_filter_data <- get_filter_data_json_serialize(stats::setNames(list(selected_dataset_list()), dataset_list_name))
-      
-      dataset_list_filter_data_json <- serialize_filter_data_to_client(dataset_list_filter_data)
-      if (strict) assert(to_filter_validate(dataset_list_filter_data_json), "failed to validate message to filter")
+
+      if (use_binary_ser_filter_data) {
+        dataset_list_filter_data <- get_filter_data_binary_serialize(stats::setNames(list(selected_dataset_list()), dataset_list_name))
+        msg <- list(
+          dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
+          dataset_list_filter_data_binary64 = serialize_filter_data_to_client(dataset_list_filter_data),
+          encode = "bin64"
+        )
+      } else {
+        dataset_list_filter_data <- get_filter_data_json_serialize(stats::setNames(list(selected_dataset_list()), dataset_list_name))
+
+        dataset_list_filter_data_json <- serialize_filter_data_to_client(dataset_list_filter_data)
+        if (strict) assert(to_filter_validate(dataset_list_filter_data_json), "failed to validate message to filter")
+
+        msg <- list(
+          dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
+          dataset_list_filter_data_json = dataset_list_filter_data_json,
+          encode = "json"
+        )
+      }
 
       session[["sendCustomMessage"]](
         "init_filter",
-        list(
-          dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
-          dataset_list_filter_data_json = dataset_list_filter_data_json
-        )
+        msg
       )
     })
 
@@ -781,8 +794,8 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
 
       for (idx in seq_along(fd)) {
         row_count[[idx]] <- list(
-          count = local_as_scalar(nrow(fd[[idx]])),
-          name = local_as_scalar(fd_names[[idx]])
+          count = as_scalar(nrow(fd[[idx]])),
+          name = as_scalar(fd_names[[idx]])
         )
       }
 
@@ -812,7 +825,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
         if (strict) assert(from_filter_validate(json_r), "failed to validate message from filter")
-        parsed_json <- deserialize_filter_data_from_client(json_r)
+        parsed_json <- deserialize_filter_state_from_client(json_r)
         log_inform("PROCESSING FILTER PARSED")
         list(
           parsed = parsed_json %||% NA_character_,
@@ -851,13 +864,6 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
   }
   shiny::moduleServer(id, mod)
 }
-
-toJSON <- function(x) yyjsonr::write_json_str(x)
-fromJSON <- function(x) yyjsonr::read_json_str(x, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
-as_scalar <- yyjsonr::as_scalar
-
-serialize_filter_data_to_client <- toJSON
-deserialize_filter_data_from_client <- fromJSON
 
 binary_serialize_filter_data <- function(x) {
   C <- list(
