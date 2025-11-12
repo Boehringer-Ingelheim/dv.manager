@@ -144,6 +144,14 @@ let min_str_date = function(date1, date2) {
   return(res);
 }
 
+function replace_inf_str_by_today(x) {
+  if (x === "Inf" || x === "-Inf") {
+        const d = new Date();
+        x = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;         
+      }
+  return(x);  
+}
+
 let is_numeric_finite = function (value) {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -1549,6 +1557,9 @@ let create_variable_filter_controls = function(variable_filter_control_container
         from = current_variable.min;
         to = current_variable.max;
       }
+
+      from = replace_inf_str_by_today(from);
+      to = replace_inf_str_by_today(to);
 
       let date_group = document.createElement("div");
       date_group.className = "input-daterange input-group";
