@@ -25,6 +25,7 @@ import * as Blockly from 'blockly';
 import { rangeSliderField } from './range_slider.js'; ``
 import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
+import { deserializeb64_filter_data } from './js_deserializer/deserializer.mjs';
 import './toolbox-search/index.js'
 
 const __DEV_MODE = false;
@@ -2283,6 +2284,7 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   };
 
   let baked_init_filter_handler = function(msg) {
+    debugger;
     init_filter_handler(JSON.parse(msg.dataset_list_filter_data_json), msg.dataset_list_name, root_el, static_init_ret, select.value);
   };
   Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
