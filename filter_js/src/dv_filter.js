@@ -1521,8 +1521,8 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
       for(let i = 0; i < value.length; ++i) {
         let option = document.createElement('option');
-        option.value = values[i];
-        option.textContent = values[i];
+        option.value = value[i];
+        option.textContent = value[i];
         option.setAttribute("data-subtext", `${count[i]} / ${dataset.nrow}`);
         if(current_state) {
           if(current_state.values.includes(option.value)) {
