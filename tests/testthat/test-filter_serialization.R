@@ -120,7 +120,7 @@ test_that("Supports one dataset_list with no datasets serialization deserializat
 test_that("Supports one dataset_list with 1 datasets and 0 rows serialization deserialization", {
 
   dataset_lists <- local({
-    dataset_lists <- basic_dataset_lists
+    dataset_lists <- basic_dataset_lists_mixed_NA_no_mixed_INF
 
     for(dataset_list_idx in seq_along(dataset_lists)){
       dataset_list <- dataset_lists[[dataset_list_idx]]
