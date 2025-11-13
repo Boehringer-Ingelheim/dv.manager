@@ -755,22 +755,10 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
       current_dataset_lists <- stats::setNames(list(selected_dataset_list()), dataset_list_name)
 
-      if (use_binary_ser_filter_data) {
-        msg <- list(
-          dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
-          dataset_lists_filter_data = serialize_filter_data_to_client_bin64(current_dataset_lists),
-          encode = "bin64"
-        )
-      } else {
-        dataset_lists_filter_data_json <- serialize_filter_data_to_client_json(current_dataset_lists)
-        if (strict) assert(to_filter_validate(dataset_lists_filter_data_json), "failed to validate message to filter")
-
-        msg <- list(
-          dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
-          dataset_lists_filter_data = dataset_lists_filter_data_json,
-          encode = "json"
-        )
-      }
+      msg <- list(
+        dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
+        dataset_lists_filter_data = serialize_filter_data_to_client_bin64(current_dataset_lists)
+      )
 
       session[["sendCustomMessage"]](
         "init_filter",

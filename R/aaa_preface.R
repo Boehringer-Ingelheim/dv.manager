@@ -202,5 +202,3 @@ pack_of_constants <- function(...) {
 }
 
 poc <- pack_of_constants
-
-use_binary_ser_filter_data <- isTRUE(as.logical(getOption("dv_manager_binary_serialize")))
