@@ -201,7 +201,7 @@ app_server_ <- function(input, output, session, opts) {
           msg <- paste("Filter not applied. Error found:\n", e[["message"]])
           warning(msg)
           shiny::showNotification(msg, type = "error")
-          NA_character_
+          ds
         }
       )
 
