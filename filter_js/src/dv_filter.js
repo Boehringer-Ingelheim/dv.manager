@@ -2053,6 +2053,7 @@ let init_filter_handler = function (dataset_list_data, dataset_list_name, root_e
 }
 
 let update_filter_result_handler = function(msg, root_el){
+
   let parsed_msg = JSON.parse(msg.json)
   console.log(parsed_msg);
 
@@ -2064,7 +2065,6 @@ let update_filter_result_handler = function(msg, root_el){
   for(let idx = 0; idx < row_count.length; ++idx) {
     let name = row_count[idx].name;
     let current_nrow = row_count[idx].count;
-    debugger;
     let total_nrow = current_dataset_list.dataset_list.find(obj=>obj.name === name).nrow;
 
     root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${name}] ${SC.TAG.ROW_COUNT_TAG}`).textContent = `${current_nrow} / ${total_nrow}`;
