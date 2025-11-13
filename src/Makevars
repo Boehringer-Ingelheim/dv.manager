@@ -1,1 +1,1 @@
-PKG_CFLAGS = -I../inst/include/ -Werror -Wstrict-prototypes -Wold-style-definition -DDEBUG -O0 -g
+PKG_CFLAGS = -I../inst/include/ -Werror -Wstrict-prototypes -Wold-style-definition
