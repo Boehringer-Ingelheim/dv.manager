@@ -29,6 +29,8 @@ static char __buf_variable_class[MAX_STRING_LENGTH];
 static char __buf_variable_kind[MAX_STRING_LENGTH];
 static char __buf_value[MAX_STRING_LENGTH];
 
+#define MIN_BUFFER_SIZE 4096
+
 typedef uint8_t byte_t;
 
 #define COUNTED_PROTECT(x) (n_protected++, PROTECT(x)) // Forces the name n_protected to be declared in the scope
@@ -58,60 +60,53 @@ typedef struct
     size_t capacity;
 } buffer_t;
 
-static inline void buf_init(buffer_t *b)
+static void buf_init(buffer_t *b)
 {
     b->data = NULL;
     b->size = 0;
     b->capacity = 0;
 }
 
-static inline allocation_result buf_reserve(buffer_t *b, size_t new_size)
+static void buf_reserve(buffer_t *b, size_t new_size)
 {
     if (new_size > b->capacity)
     {
-        size_t new_cap = (b->capacity ? b->capacity * 2 : 64);
+        size_t new_cap = (b->capacity ? b->capacity * 2 : MIN_BUFFER_SIZE);
         while (new_cap < new_size)
             new_cap *= 2;
         uint8_t *new_data = realloc(b->data, new_cap);
         if (!new_data)
-            return ALLOCATION_FAIL; // allocation failed ENUM instead of 0
+            Rf_error("Could not allocate new buffer capacity");            
         b->data = new_data;
         b->capacity = new_cap;
-    }
-    return ALLOCATION_SUCCESS;
+    }    
 }
 
-static inline allocation_result buf_append(buffer_t *b, const void *src, size_t n)
+static void buf_append(buffer_t *b, const void *src, size_t n)
 {
-    if (buf_reserve(b, b->size + n)!=ALLOCATION_SUCCESS)
-        return ALLOCATION_FAIL; // fail // allocation failed ENUM instead of 0
+    buf_reserve(b, b->size + n);
     memcpy(b->data + b->size, src, n);
-    b->size += n; 
-    return ALLOCATION_SUCCESS;
+    b->size += n;
 }
 
-static inline allocation_result buf_append_str(buffer_t *b, const char *str) {
+static void buf_append_str(buffer_t *b, const char *str) {
     int32_t str_size = strlen(str) + 1;
-    allocation_result size_append = buf_append(b, &str_size, sizeof(str_size));
-    allocation_result str_append = buf_append(b, str, str_size);
-    return(!size_append || !str_append);
+    buf_append(b, &str_size, sizeof(str_size));
+    buf_append(b, str, str_size);    
 }
 
-
-static inline void buf_read(const byte_t *buf, void *out, size_t n, uint32_t *offset)
+static void buf_read(const byte_t *buf, void *out, size_t n, uint32_t *offset)
 {
     memcpy(out, buf + (*offset), n);
     (*offset) += n;
 }
 
-static inline void buf_read_str(const byte_t *buf, void *out, uint32_t *offset)
+static void buf_read_str(const byte_t *buf, void *out, uint32_t *offset)
 {
     int32_t str_size;
     buf_read(buf, &str_size, sizeof(str_size), offset);
     buf_read(buf, out, str_size, offset);
 }
-
-
 
 static SEXP getListElement(SEXP list, const char *str)
 {
@@ -316,7 +311,7 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
                 
                 int32_t NA_count;
                 buf_read(buf, &NA_count, sizeof(NA_count), &offset);
-                SEXP R_NA_count = COUNTED_PROTECT(Rf_allocVector(INTSXP, 1)); 
+                SEXP R_NA_count = COUNTED_PROTECT(Rf_allocVector(INTSXP, 1)); //TODO: Consider writing directly as in #333
                 INTEGER(R_NA_count)[0] = NA_count;
 
                 if(!strcmp(__buf_variable_kind, "categorical")) {
