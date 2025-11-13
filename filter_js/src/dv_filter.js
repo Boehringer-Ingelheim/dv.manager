@@ -25,7 +25,7 @@ import * as Blockly from 'blockly';
 import { rangeSliderField } from './range_slider.js'; ``
 import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
-import {deserialize_b64_filter_data, R_numeric_date_JS_Date, format_date_dd_mm_yyyy} from './js_deserializer/deserializer.mjs';
+import {deserialize_b64_filter_data} from './js_deserializer/deserializer.mjs';
 import './toolbox-search/index.js'
 
 const __DEV_MODE = false;
@@ -884,8 +884,8 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
         }
         json_generator.forBlock[variable_type] = filter_generator_range;
       } else if (kind === "date") {        
-        const min = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(variable["min"], new Date(0)));
-        const max = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(variable["max"], new Date(Date.now() + 86400000)));;
+        const min = variable["min"];
+        const max = variable["max"];
 
         Blockly.Blocks[variable_type] = {
           init: function () {
@@ -1551,19 +1551,14 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
       let from;
       let to;      
+
       if(current_state) {
-        from = Math.max(current_state.min, current_variable.min);
-        to = Math.min(current_state.max, current_variable.max);
+        from = max_str_date(current_state.min, current_variable.min);
+        to = max_str_date(current_state.max, current_variable.max);
       } else {
         from = current_variable.min;
         to = current_variable.max;
       }
-
-      let min = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(current_variable.min, new Date(0)));      
-      let max = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(current_variable.max, new Date(Date.now() + 86400000))); // Today = 1 day
-
-      from = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(from, new Date(0)));      
-      to = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(to, new Date(Date.now() + 86400000))); // Today = 1 day
 
       let date_group = document.createElement("div");
       date_group.className = "input-daterange input-group";
@@ -1597,8 +1592,8 @@ let create_variable_filter_controls = function(variable_filter_control_container
       $(date_group).bsDatepicker({
         format: "yyyy-mm-dd",
         autoclose: true,
-        startDate: min,
-        endDate: max
+        startDate: current_variable.min,
+        endDate: current_variable.max
       });      
     } else if (current_variable.kind === SC.VARIABLE.NUMERICAL) {
 

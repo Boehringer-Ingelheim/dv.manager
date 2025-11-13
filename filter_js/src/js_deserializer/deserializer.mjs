@@ -140,6 +140,11 @@ let deserialize_binary_filter_data = function(buf) {
         } else if (variable_kind === "date") {
           variable.min = buf_read_double(b_struct);
           variable.max = buf_read_double(b_struct);
+
+          // Format to string as it is how is used downstream
+          // Infs are treated as epoch origin for min and today + 1 for max
+          variable.min = format_date_yyyy_mm_dd(R_numeric_date_JS_Date(variable.min, new Date(0)));
+          variable.max = format_date_yyyy_mm_dd(R_numeric_date_JS_Date(variable.max, new Date(Date.now() + 86400000))); // Today = 1 day
         } else {
           throw new Error(`Unknown kind ${variable_kind}`);          
         }
@@ -162,8 +167,6 @@ let deserialize_binary_filter_data = function(buf) {
 
 }
 
-
-
 let R_numeric_date_JS_Date = function(days_since_epoch, default_if_nan) {
 
   let MILISECONDS_PER_DAY = 86400000;    
@@ -179,15 +182,12 @@ let R_numeric_date_JS_Date = function(days_since_epoch, default_if_nan) {
   return(res);  
 }
 
-let format_date_dd_mm_yyyy = function(date){
+let format_date_yyyy_mm_dd = function(date){
   day = String(date.getDate()).padStart(2, '0');
   month = String(date.getMonth() + 1).padStart(2, '0');
   year = date.getFullYear();
-  formatted = `${day}-${month}-${year}`;
+  formatted = `${year}-${month}-${day}`;
   return(formatted);
 }
 
-  
-
-
-export {deserialize_binary_filter_data, deserialize_b64_filter_data, R_numeric_date_JS_Date, format_date_dd_mm_yyyy};
+export {deserialize_binary_filter_data, deserialize_b64_filter_data, R_numeric_date_JS_Date, format_date_yyyy_mm_dd as format_date_dd_mm_yyyy};
