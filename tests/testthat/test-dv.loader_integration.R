@@ -73,7 +73,7 @@ test_that(
 
     testServer(app_server_test(testing_options), {
       session$setInputs(selector = "mpg_carb")
-      expect_equal(unfiltered_dataset(), dated_dataset)
+      expect_equal(unfiltered_dataset_list(), dated_dataset)
       expect_equal(output$dataset_date, expected_date_string)
     })
   }
