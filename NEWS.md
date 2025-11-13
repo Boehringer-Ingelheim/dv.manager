@@ -1,3 +1,7 @@
+# dv.manager 2.2.0-9005
+- Filter: Includes fast routine for binary serialization for filter_data
+
+
 # dv.manager 2.2.0-9004
 - Filter: Fixes out of range blockly color
 
