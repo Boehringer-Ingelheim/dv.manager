@@ -383,7 +383,7 @@ app_server_ <- function(input, output, session, opts) {
       name = shiny::reactive({
         attr(unfiltered_dataset_list(), "dataset_list_name")
       }),
-      date_range = shiny::reactive(attr(unfiltered_dataset(), "date_range"))
+      date_range = shiny::reactive(attr(unfiltered_dataset_list(), "date_range"))
     ),
     module_output = module_output_fn,
     module_names = module_names,
