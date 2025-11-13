@@ -25,7 +25,7 @@ import * as Blockly from 'blockly';
 import { rangeSliderField } from './range_slider.js'; ``
 import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
-import { deserializeb64_filter_data } from './js_deserializer/deserializer.mjs';
+import {deserialize_b64_filter_data, R_numeric_date_JS_Date, format_date_dd_mm_yyyy} from './js_deserializer/deserializer.mjs';
 import './toolbox-search/index.js'
 
 const __DEV_MODE = false;
@@ -145,12 +145,12 @@ let min_str_date = function(date1, date2) {
   return(res);
 }
 
-function replace_inf_str_by_today(x) {
-  if (x === "Inf" || x === "-Inf") {
-        const d = new Date();
-        x = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;         
-      }
-  return(x);  
+function replace_NAN_inf_by_today(x) {
+  if (Number.isFinite(x)) {
+    return(x)
+  } else {
+    return(new Date())
+  }
 }
 
 let is_numeric_finite = function (value) {
@@ -838,7 +838,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
         const values = variable.value;
         let dd_options = [];
         for (let i = 0; i < values.length; ++i) {
-          dd_options.push([v[i], v[i]])
+          dd_options.push([values[i], values[i]])
         }
 
         if (dd_options.length == 0) dd_options = [['_EMPTY_VEC_', '_EMPTY_VEC_']]
@@ -883,9 +883,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
           }
         }
         json_generator.forBlock[variable_type] = filter_generator_range;
-      } else if (kind === "date") {
-        const min = variable["min"];
-        const max = variable["max"];
+      } else if (kind === "date") {        
+        const min = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(variable["min"], new Date(0)));
+        const max = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(variable["max"], new Date(Date.now() + 86400000)));;
 
         Blockly.Blocks[variable_type] = {
           init: function () {
@@ -1550,17 +1550,20 @@ let create_variable_filter_controls = function(variable_filter_control_container
     } else if (current_variable.kind === SC.VARIABLE.DATE) {
 
       let from;
-      let to;
+      let to;      
       if(current_state) {
-        from = max_str_date(current_state.min, current_variable.min);
-        to = min_str_date(current_state.max, current_variable.max);
+        from = Math.max(current_state.min, current_variable.min);
+        to = Math.min(current_state.max, current_variable.max);
       } else {
         from = current_variable.min;
         to = current_variable.max;
       }
 
-      from = replace_inf_str_by_today(from);
-      to = replace_inf_str_by_today(to);
+      let min = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(current_variable.min, new Date(0)));      
+      let max = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(current_variable.max, new Date(Date.now() + 86400000))); // Today = 1 day
+
+      from = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(from, new Date(0)));      
+      to = format_date_dd_mm_yyyy(R_numeric_date_JS_Date(to, new Date(Date.now() + 86400000))); // Today = 1 day
 
       let date_group = document.createElement("div");
       date_group.className = "input-daterange input-group";
@@ -1594,8 +1597,8 @@ let create_variable_filter_controls = function(variable_filter_control_container
       $(date_group).bsDatepicker({
         format: "yyyy-mm-dd",
         autoclose: true,
-        startDate: current_variable.min,
-        endDate: current_variable.max
+        startDate: min,
+        endDate: max
       });      
     } else if (current_variable.kind === SC.VARIABLE.NUMERICAL) {
 
@@ -2061,6 +2064,7 @@ let update_filter_result_handler = function(msg, root_el){
   for(let idx = 0; idx < row_count.length; ++idx) {
     let name = row_count[idx].name;
     let current_nrow = row_count[idx].count;
+    debugger;
     let total_nrow = current_dataset_list.dataset_list.find(obj=>obj.name === name).nrow;
 
     root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${name}] ${SC.TAG.ROW_COUNT_TAG}`).textContent = `${current_nrow} / ${total_nrow}`;
@@ -2288,7 +2292,7 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
     if(msg.encode === "json") {
       dataset_lists_filter_data = JSON.parse(msg.dataset_lists_filter_data);
     } else if (msg.encode = "b64") {
-      dataset_lists_filter_data = deserializeb64_filter_data(msg.dataset_lists_filter_data);
+      dataset_lists_filter_data = deserialize_b64_filter_data(msg.dataset_lists_filter_data);
     } else {
       throw new Error (`Unknown encoding: ${msg.encode}`)
     }
