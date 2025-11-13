@@ -67,6 +67,7 @@ test_that(
 
 
     dated_dataset <- dv.manager:::add_date_range(datasets[["mpg_carb"]])
+    attr(dated_dataset, "dataset_list_name") <- "mpg_carb"
     date_range <- attr(dated_dataset, "date_range")
     date_range <- format(date_range, "%Y-%b-%d (%Z)")
     expected_date_string <- as.character(glue::glue("Dataset date: {date_range[1]}"))
