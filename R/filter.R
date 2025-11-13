@@ -1,7 +1,8 @@
-toJSON <- function(x) yyjsonr::write_json_str(x)
-fromJSON <- function(x) yyjsonr::read_json_str(x, obj_of_arrs_to_df = FALSE, arr_of_objs_to_df = FALSE, num_specials = "special")
-as_scalar <- yyjsonr::as_scalar
-serialize_filter_data_to_client <- if (use_binary_ser_filter_data) function(x) jsonlite::base64_enc(binary_serialize_filter_data_C(x)) else toJSON
+toJSON <- function(x) unclass(jsonlite::toJSON(x))
+fromJSON <- function(x) jsonlite::fromJSON(x, simplifyVector = FALSE)
+as_scalar <- jsonlite::unbox
+serialize_filter_data_to_client_bin64 <- function(x) jsonlite::base64_enc(binary_serialize_filter_data_C(get_filter_data_for_binary(x)))
+serialize_filter_data_to_client_json <- function(x) toJSON(get_filter_data_for_json(x))
 deserialize_filter_state_from_client <- fromJSON
 
 get_dataset_filters_info <- function(data, filter_data) {
@@ -216,11 +217,11 @@ get_filter_data <- function(dataset_lists, mark_scalar, date_as_character, inf_a
   return(res)
 }
 
-get_filter_data_binary_serialize <- function(dataset_lists) {
+get_filter_data_for_binary <- function(dataset_lists) {
   get_filter_data(dataset_lists, mark_scalar = FALSE, date_as_character = FALSE, inf_as_char = FALSE)
 }
 
-get_filter_data_json_serialize <- function(dataset_lists) {
+get_filter_data_for_json <- function(dataset_lists) {
   get_filter_data(dataset_lists, mark_scalar = TRUE, date_as_character = TRUE, inf_as_char = TRUE)
 }
 
@@ -752,23 +753,21 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
 
     shiny::observeEvent(selected_dataset_list(), {
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
+      current_dataset_lists <- stats::setNames(list(selected_dataset_list()), dataset_list_name)
 
       if (use_binary_ser_filter_data) {
-        dataset_list_filter_data <- get_filter_data_binary_serialize(stats::setNames(list(selected_dataset_list()), dataset_list_name))
         msg <- list(
           dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
-          dataset_list_filter_data_binary64 = serialize_filter_data_to_client(dataset_list_filter_data),
+          dataset_lists_filter_data = serialize_filter_data_to_client_bin64(current_dataset_lists),
           encode = "bin64"
         )
       } else {
-        dataset_list_filter_data <- get_filter_data_json_serialize(stats::setNames(list(selected_dataset_list()), dataset_list_name))
-
-        dataset_list_filter_data_json <- serialize_filter_data_to_client(dataset_list_filter_data)
-        if (strict) assert(to_filter_validate(dataset_list_filter_data_json), "failed to validate message to filter")
+        dataset_lists_filter_data_json <- serialize_filter_data_to_client_json(current_dataset_lists)
+        if (strict) assert(to_filter_validate(dataset_lists_filter_data_json), "failed to validate message to filter")
 
         msg <- list(
           dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
-          dataset_list_filter_data_json = dataset_list_filter_data_json,
+          dataset_lists_filter_data = dataset_lists_filter_data_json,
           encode = "json"
         )
       }

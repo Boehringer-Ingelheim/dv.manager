@@ -1863,7 +1863,7 @@ local({
       )
     )
 
-    r <- get_filter_data_json_serialize(dataset_lists)
+    r <- get_filter_data_for_json(dataset_lists)
 
     expect_length(r[["dataset_lists"]], 2)
     expect_length(r[["dataset_lists"]][[1]][["dataset_list"]], 2)

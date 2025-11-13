@@ -2283,9 +2283,16 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
     init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATA), get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
   };
 
-  let baked_init_filter_handler = function(msg) {
-    debugger;
-    init_filter_handler(JSON.parse(msg.dataset_list_filter_data_json), msg.dataset_list_name, root_el, static_init_ret, select.value);
+  let baked_init_filter_handler = function(msg) {    
+    let dataset_lists_filter_data;
+    if(msg.encode === "json") {
+      dataset_lists_filter_data = JSON.parse(msg.dataset_lists_filter_data);
+    } else if (msg.encode = "b64") {
+      dataset_lists_filter_data = deserializeb64_filter_data(msg.dataset_lists_filter_data);
+    } else {
+      throw new Error (`Unknown encoding: ${msg.encode}`)
+    }
+    init_filter_handler(dataset_lists_filter_data, msg.dataset_list_name, root_el, static_init_ret, select.value);
   };
   Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
 
