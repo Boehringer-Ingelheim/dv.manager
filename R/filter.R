@@ -1,5 +1,5 @@
 toJSON <- function(x) unclass(jsonlite::toJSON(x))
-fromJSON <- function(x) jsonlite::fromJSON(x, simplifyVector = FALSE)
+fromJSON <- function(x) jsonlite::fromJSON(x, simplifyVector = TRUE, simplifyDataFrame = FALSE)
 as_scalar <- jsonlite::unbox
 serialize_filter_data_to_client_bin64 <- function(x) jsonlite::base64_enc(binary_serialize_filter_data_C(get_filter_data_for_binary(x)))
 serialize_filter_data_to_client_json <- function(x) toJSON(get_filter_data_for_json(x))
