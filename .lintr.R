@@ -15,7 +15,7 @@ linters <- lintr::modify_defaults(
 if(identical(Sys.getenv('CI'), "true")){
   linters <- lintr::modify_defaults(
     linters
-    , return_linter = NULL                      # irrelevant
+    # , return_linter = NULL                    # irrelevant
     , object_usage_linter = NULL              # R lacks var declarations; it's easy to assign to the wrong variable by mistake
   )                                           # We only disable this lint rule on github because it fails there because
 }                                             # of a long-standing lintr bug
