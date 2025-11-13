@@ -1,5 +1,5 @@
 expect_identical_serialization_deserialization <- function(dataset_lists) {  
-  fd_lite <- get_filter_data_binary_serialize(dataset_lists)
+  fd_lite <- get_filter_data_for_binary(dataset_lists)
   Rser_lite <- binary_serialize_filter_data(fd_lite)
   Runser_liteR <- binary_deserialize_filter_data(Rser_lite)
 
