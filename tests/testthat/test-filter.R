@@ -1672,10 +1672,8 @@ local({
         class = as_scalar(class(d[["var"]])[1]),
         kind = as_scalar("categorical"),
         NA_count = as_scalar(1L),
-        values_count = list(
-          list(value = as_scalar("A"), count = as_scalar(2L)),
-          list(value = as_scalar("B"), count = as_scalar(1L))
-        )
+        value = c("A", "B"),
+        count = c(2L, 1L)
       )
     )
   })
@@ -1700,11 +1698,8 @@ local({
         class = as_scalar(class(d[["var"]])[1]),
         kind = as_scalar("categorical"),
         NA_count = as_scalar(1L),
-        values_count = list(
-          list(value = as_scalar("A"), count = as_scalar(2L)),
-          list(value = as_scalar("B"), count = as_scalar(1L)),
-          list(value = as_scalar("C"), count = as_scalar(0L))
-        )
+        value = c("A", "B", "C"),
+        count = c(2L, 1L, 0L)
       )
     )
   })
