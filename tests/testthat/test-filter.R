@@ -1662,7 +1662,7 @@ local({
       var = c("A", "A", "B", NA_character_)
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, as_scalar_fn = TRUE, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d, as_scalar_fn = dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
@@ -1690,7 +1690,7 @@ local({
       var = factor(c("A", "A", "B", NA_character_), levels = c("A", "B", "C"))
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, as_scalar_fn = TRUE, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
@@ -1719,7 +1719,7 @@ local({
       var = c(1, 1, 2, NA_real_)
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, as_scalar_fn = TRUE, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
@@ -1746,7 +1746,7 @@ local({
       var = c(NA_real_, NA_real_)
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, as_scalar_fn = TRUE, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
@@ -1773,7 +1773,7 @@ local({
       var = as.Date(c("2024-01-01", "2024-01-02", NA))
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, as_scalar_fn = TRUE, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
@@ -1799,7 +1799,7 @@ local({
       var = as.POSIXct(as.Date(c("2024-01-01", "2024-01-02", NA)))
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, as_scalar_fn = TRUE, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
@@ -1826,7 +1826,7 @@ local({
     )
     attr(d[["var"]], "label") <- "var_label"
     expect_error(
-      get_single_filter_data(d, as_scalar_fn = TRUE, date_as_char = TRUE, inf_as_char = TRUE),
+      get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE),
       regexp = "variable type unsupported:'complex' classes:'complex'",
       fixed = TRUE
     )
@@ -1842,7 +1842,7 @@ local({
       var1 = "a",
       var2 = "a"
     )
-    r <- get_single_filter_data(d, as_scalar_fn = TRUE, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
     expect_length(r, 2)
   })
 
