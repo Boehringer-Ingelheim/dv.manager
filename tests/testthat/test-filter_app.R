@@ -46,85 +46,88 @@ local({
     dataset_lists <- list(dataset_list_1 = dataset_list_1, dataset_list_2 = dataset_list_2)
   })
 
+  mod_filter_test <- local({
+    filter_test_UI <- function(id) { # nolint
+      ns <- shiny::NS(id)
+      shiny::tagList(
+        shiny::uiOutput(ns("out"))
+      )
+    }
+
+    filter_test_server <- function(id, filtered_dataset_list, unfiltered_dataset_list, filter_metadata) {
+      shiny::moduleServer(
+        id,
+        function(input, output, session) {
+          root_session <- shiny:::find_ancestor_session(session)
+          shiny::observe({
+            shiny::reactiveValuesToList(root_session[["input"]]) # Trigger this observer every time an input changes
+            session$doBookmark()
+          })
+          shiny::onBookmarked(shiny::updateQueryString, session = root_session)
+
+          output[["out"]] <- shiny::renderUI({
+            dsl_count <- function(dsl, name) {
+              shiny::div(
+                id = substitute(dsl),
+                shiny::h3(substitute(dsl)),
+                local({
+                  r_dataset <- dsl()
+                  shiny::tags[["pre"]](paste("{", paste("{", names(r_dataset), ":", purrr::map_dbl(r_dataset, nrow), "}"), collapse = ",", "}"))
+                })
+              )
+            }
+
+            filter_metadata_ui <- shiny::div(
+              id = "filter_metadata",
+              shiny::h3("filter_metadata"),
+              shiny::h4("json"),
+              shiny::tags[["pre"]](id = "raw", filter_metadata$output()$raw),
+              shiny::h4("parsed"),
+              shiny::verbatimTextOutput(outputId = session$ns("parsed"))
+            )
+
+            output[["parsed"]] <- shiny::renderPrint(filter_metadata$output()$parsed)
+
+            list(
+              dsl_count(unfiltered_dataset_list),
+              dsl_count(filtered_dataset_list),
+              filter_metadata_ui
+            )
+          })
+
+          shiny::exportTestValues(
+            unfiltered_dataset_list = unfiltered_dataset_list,
+            filtered_dataset_list = filtered_dataset_list,
+            filter_metadata = filter_metadata
+          )
+        }
+      )
+    }
+
+    mod_filter_test <- function(module_id) {
+      mod <- list(
+        ui = filter_test_UI,
+        server = function(afmm) {
+          filter_test_server(
+            id = module_id,
+            filtered_dataset_list = afmm[["filtered_dataset_list"]],
+            unfiltered_dataset_list = afmm[["unfiltered_dataset_list"]],
+            filter_metadata = afmm[["filter_metadata"]]
+          )
+        },
+        module_id = module_id
+      )
+      mod
+    }
+  })
+
+
   get_app_expr <- function(fd = NULL) {
     rlang::quo({
-      filter_test_UI <- function(id) { # nolint
-        ns <- shiny::NS(id)
-        shiny::tagList(
-          shiny::uiOutput(ns("out"))
-        )
-      }
-
-      filter_test_server <- function(id, filtered_dataset_list, unfiltered_dataset_list, filter_metadata) {
-        shiny::moduleServer(
-          id,
-          function(input, output, session) {
-            root_session <- shiny:::find_ancestor_session(session)
-            shiny::observe({
-              shiny::reactiveValuesToList(root_session[["input"]]) # Trigger this observer every time an input changes
-              session$doBookmark()
-            })
-            shiny::onBookmarked(shiny::updateQueryString, session = root_session)
-
-            output[["out"]] <- shiny::renderUI({
-              dsl_count <- function(dsl, name) {
-                shiny::div(
-                  id = substitute(dsl),
-                  shiny::h3(substitute(dsl)),
-                  local({
-                    r_dataset <- dsl()
-                    shiny::tags[["pre"]](paste("{", paste("{", names(r_dataset), ":", purrr::map_dbl(r_dataset, nrow), "}"), collapse = ",", "}"))
-                  })
-                )
-              }
-
-              filter_metadata_ui <- shiny::div(
-                id = "filter_metadata",
-                shiny::h3("filter_metadata"),
-                shiny::h4("json"),
-                shiny::tags[["pre"]](id = "raw", filter_metadata$output()$raw),
-                shiny::h4("parsed"),
-                shiny::verbatimTextOutput(outputId = session$ns("parsed"))
-              )
-
-              output[["parsed"]] <- shiny::renderPrint(filter_metadata$output()$parsed)
-
-              list(
-                dsl_count(unfiltered_dataset_list),
-                dsl_count(filtered_dataset_list),
-                filter_metadata_ui
-              )
-            })
-
-            shiny::exportTestValues(
-              unfiltered_dataset_list = unfiltered_dataset_list,
-              filtered_dataset_list = filtered_dataset_list,
-              filter_metadata = filter_metadata
-            )
-          }
-        )
-      }
-
-      mod_filter_test <- function(module_id) {
-        mod <- list(
-          ui = filter_test_UI,
-          server = function(afmm) {
-            filter_test_server(
-              id = module_id,
-              filtered_dataset_list = afmm[["filtered_dataset_list"]],
-              unfiltered_dataset_list = afmm[["unfiltered_dataset_list"]],
-              filter_metadata = afmm[["filter_metadata"]]
-            )
-          },
-          module_id = module_id
-        )
-        mod
-      }
-
       app <- dv.manager::run_app(
         data = !!dataset_lists,
         module_list = list(
-          "filter_test" = mod_filter_test(
+          "filter_test" = (!!mod_filter_test)(
             module_id = "filter_test"
           )
         ),
@@ -244,6 +247,49 @@ local({
     # For an undefined reason these two tests must run before the rest otherwise the application refuses to start
     # Assumed a weird shinytest2
 
+    test_that("Filter accepts empty dataset_list in dataset_lists. An NA filter state is returned."|>
+      vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ACTIVE_DATASET_LIST)), {
+
+        app <- start_app_driver(rlang::quo({                    
+          dv.manager::run_app(
+            data = list(),
+            module_list = list("filter_test" = mod_filter_test(module_id = "filter_test")),
+            filter_type = "development",
+            filter_data = "adsl",
+            filter_key = "USUBJID",
+            enableBookmarking = "url"
+          )
+        })) |> suppressWarnings()
+        if (is.null(app)) stop("App could not be initialized")
+        on.exit(app$stop(), add = TRUE, after = FALSE)
+
+        fs <- get_filter_state(app)
+
+        expect_true(is.na(fs))
+    })
+
+    test_that("Filter accepts empty 0 rows in a dataset. A filter state is returned"|>
+      vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ACTIVE_DATASET_LIST)), {
+
+        app <- start_app_driver(rlang::quo({                    
+          dv.manager::run_app(
+            data = list(dummy = list(adsl = data.frame(USUBJID=character(0)))),
+            module_list = list("filter_test" = mod_filter_test(module_id = "filter_test")),
+            filter_type = "development",
+            filter_data = "adsl",
+            filter_key = "USUBJID",
+            enableBookmarking = "url"
+          )
+        })) |> suppressWarnings()
+        if (is.null(app)) stop("App could not be initialized")
+        on.exit(app$stop(), add = TRUE, after = FALSE)
+
+        fs <- get_filter_state(app)
+
+        expect_true(is.list(fs))
+        expect_true("filters" %in% names(fs))
+    })
+
 
   test_that("incompatible filters appear as such in the UI", {
     app <- start_app_driver(get_app_expr(fd = r"--(
@@ -322,9 +368,6 @@ local({
   })
 
   })
-
-
-
 
   root_app <- start_app_driver(get_app_expr()) |> suppressWarnings()
   if (is.null(root_app)) stop("App could not be initialized")
@@ -652,7 +695,6 @@ local({
     bmk_input_values <- bookmark_app$get_values()[["input"]]
     expect_identical(app_input_values, bmk_input_values)
   })
-
 
   # dataset_list switching. What to test? More undefined cases than anything else...
   # Missing variables,
