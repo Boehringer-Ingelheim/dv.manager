@@ -1,8 +1,7 @@
 toJSON <- function(x) unclass(jsonlite::toJSON(x))
 fromJSON <- function(x) jsonlite::fromJSON(x, simplifyVector = TRUE, simplifyDataFrame = FALSE)
 as_scalar <- jsonlite::unbox
-serialize_filter_data_to_client_bin64 <- function(x) jsonlite::base64_enc(binary_serialize_filter_data_C(get_filter_data_for_binary(x)))
-serialize_filter_data_to_client_json <- function(x) toJSON(get_filter_data_for_json(x))
+serialize_filter_data_to_client_bin64 <- function(x) jsonlite::base64_enc(binary_serialize_filter_data_C(get_filter_data(x)))
 deserialize_filter_state_from_client <- fromJSON
 
 get_dataset_filters_info <- function(data, filter_data) {
@@ -77,29 +76,10 @@ create_dataset_filters_server <- function(datasets_filters_info, data_list) {
 
 # NEW FILTER ----
 
-get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_char) {
+get_single_filter_data <- function(dataset) {
   nm_var <- names(dataset)
   n_var <- length(nm_var)
   res <- vector(mode = "list", length = n_var)
-
-  if (inf_as_char) {
-    inf_to_str <- function(x) {
-    if (is.infinite(x)) {
-      num_x <- as.numeric(x)
-      if (sign(num_x) < 0) {
-        res <- "-Inf"
-      } else {
-        res <- "Inf"
-      }
-    } else {
-      res <- x
-    }
-    return(res)
-  }
-
-  } else {
-    inf_to_str <- identity
-  }
 
   for (idx in seq_len(n_var)) {
     name <- nm_var[[idx]]
@@ -107,19 +87,17 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
     label <- attr(var, "label") %||% name # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
 
     l <- list(
-      name = as_scalar_fn(name),
-      label = as_scalar_fn(label),
-      class = as_scalar_fn(class(var)[1])
+      name = name,
+      label = label,
+      class = class(var)[1]
     )
-
 
     # Logical is treated as a factor in the client
     if (is.logical(var)) var <- factor(var)
 
     if (is.character(var) || is.factor(var)) {
       l[["kind"]] <- "categorical"
-      l[["kind"]] <- as_scalar_fn("categorical")
-      l[["NA_count"]] <- as_scalar_fn(sum(is.na(var)))
+      l[["NA_count"]] <- sum(is.na(var))
       na_clean_var <- var[!is.na(var)]
       count <- sort(table(na_clean_var), decreasing = TRUE)
       values <- names(count)
@@ -128,12 +106,12 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
       l[["count"]] <- count
     } else if (is.numeric(var)) {
       var <- as.numeric(var)
-      l[["kind"]] <- as_scalar_fn("numerical")
-      l[["NA_count"]] <- as_scalar_fn(sum(is.na(var)))
+      l[["kind"]] <- "numerical"
+      l[["NA_count"]] <- sum(is.na(var))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- as_scalar_fn(inf_to_str(min(Inf, na_clean_var, na.rm = TRUE)))
-      l[["max"]] <- as_scalar_fn(inf_to_str(max(-Inf, na_clean_var, na.rm = TRUE)))
+      l[["min"]] <- min(Inf, na_clean_var, na.rm = TRUE)
+      l[["max"]] <- max(-Inf, na_clean_var, na.rm = TRUE)
 
       if (length(na_clean_var) > 0 && !all(is.infinite(na_clean_var))) {
         hist_info <- hist(na_clean_var, plot = FALSE)
@@ -147,21 +125,16 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
         var <- as.Date(var)
       }
 
-      if (date_as_char) {
-        inf_date <- as.Date(Inf)
-        minus_inf_date <- as.Date(-Inf)
-      } else {
-        var <- as.numeric(var)
-        inf_date <- Inf
-        minus_inf_date <- -Inf
-      }
+      var <- as.numeric(var)
+      inf_date <- Inf
+      minus_inf_date <- -Inf
 
-      l[["kind"]] <- as_scalar_fn("date")
-      l[["NA_count"]] <- as_scalar_fn(sum(is.na(var)))
+      l[["kind"]] <- "date"
+      l[["NA_count"]] <- sum(is.na(var))
       na_clean_var <- var[!is.na(var)]
 
-      l[["min"]] <- as_scalar_fn(inf_to_str(min(inf_date, na_clean_var, na.rm = TRUE)))
-      l[["max"]] <- as_scalar_fn(inf_to_str(max(minus_inf_date, na_clean_var, na.rm = TRUE)))
+      l[["min"]] <- min(inf_date, na_clean_var, na.rm = TRUE)
+      l[["max"]] <- max(minus_inf_date, na_clean_var, na.rm = TRUE)
     } else {
       stop(paste0("variable type unsupported:'", typeof(var), "' classes:", paste0("'", class(var), "'", collapse = ",")))
     }
@@ -171,9 +144,7 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
   return(res)
 }
 
-get_filter_data <- function(dataset_lists, mark_scalar, date_as_character, inf_as_char) {
-
-  local_as_scalar <- if (mark_scalar) as_scalar else identity
+get_filter_data <- function(dataset_lists) {
 
   nm_dataset_list <- names(dataset_lists)
   n_dataset_list <- length(nm_dataset_list)
@@ -188,26 +159,18 @@ get_filter_data <- function(dataset_lists, mark_scalar, date_as_character, inf_a
       current_dataset <- current_dataset_list[[jdx]]
       current_dataset_name <- nm_datasets[[jdx]]
       current_dataset_res[[jdx]] <- list(
-        name = local_as_scalar(current_dataset_name),
-        nrow = local_as_scalar(nrow(current_dataset)),
-        variables = get_single_filter_data(current_dataset, local_as_scalar, date_as_character, inf_as_char)
+        name = current_dataset_name,
+        nrow = nrow(current_dataset),
+        variables = get_single_filter_data(current_dataset)
       )
     }
     res[[idx]] <- list(
-      name = local_as_scalar(current_dataset_list_name),
+      name = current_dataset_list_name,
       dataset_list = current_dataset_res
     )
   }
   res <- list(dataset_lists = res)
   return(res)
-}
-
-get_filter_data_for_binary <- function(dataset_lists) {
-  get_filter_data(dataset_lists, mark_scalar = FALSE, date_as_character = FALSE, inf_as_char = FALSE)
-}
-
-get_filter_data_for_json <- function(dataset_lists) {
-  get_filter_data(dataset_lists, mark_scalar = TRUE, date_as_character = TRUE, inf_as_char = TRUE)
 }
 
 subject_filter_operations <- local({

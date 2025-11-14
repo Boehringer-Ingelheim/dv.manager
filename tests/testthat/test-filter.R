@@ -1662,16 +1662,16 @@ local({
       var = c("A", "A", "B", NA_character_)
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, as_scalar_fn = dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
       list(
-        name = as_scalar("var"),
-        label = as_scalar("var_label"),
-        class = as_scalar(class(d[["var"]])[1]),
-        kind = as_scalar("categorical"),
-        NA_count = as_scalar(1L),
+        name = "var",
+        label = "var_label",
+        class = class(d[["var"]])[1],
+        kind = "categorical",
+        NA_count = 1L,
         value = c("A", "B"),
         count = c(2L, 1L)
       )
@@ -1688,16 +1688,16 @@ local({
       var = factor(c("A", "A", "B", NA_character_), levels = c("A", "B", "C"))
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
       list(
-        name = as_scalar("var"),
-        label = as_scalar("var_label"),
-        class = as_scalar(class(d[["var"]])[1]),
-        kind = as_scalar("categorical"),
-        NA_count = as_scalar(1L),
+        name = "var",
+        label = "var_label",
+        class = class(d[["var"]])[1],
+        kind = "categorical",
+        NA_count = 1L,
         value = c("A", "B", "C"),
         count = c(2L, 1L, 0L)
       )
@@ -1714,18 +1714,18 @@ local({
       var = c(1, 1, 2, NA_real_)
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
       list(
-        name = as_scalar("var"),
-        label = as_scalar("var_label"),
-        class = as_scalar(class(d[["var"]])[1]),
-        kind = as_scalar("numerical"),
-        NA_count = as_scalar(1L),
-        min = as_scalar(1),
-        max = as_scalar(2),
+        name = "var",
+        label = "var_label",
+        class = class(d[["var"]])[1],
+        kind = "numerical",
+        NA_count = 1L,
+        min = 1,
+        max = 2,
         density = hist(d[["var"]], plot = FALSE)[["density"]]
       )
     )
@@ -1741,18 +1741,18 @@ local({
       var = c(NA_real_, NA_real_)
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
       list(
-        name = as_scalar("var"),
-        label = as_scalar("var_label"),
-        class = as_scalar(class(d[["var"]])[1]),
-        kind = as_scalar("numerical"),
-        NA_count = as_scalar(2L),
-        min = as_scalar("Inf"),
-        max = as_scalar("-Inf"),
+        name = "var",
+        label = "var_label",
+        class = class(d[["var"]])[1],
+        kind = "numerical",
+        NA_count = 2L,
+        min = Inf,
+        max = -Inf,
         density = numeric(0)
       )
     )
@@ -1768,18 +1768,18 @@ local({
       var = as.Date(c("2024-01-01", "2024-01-02", NA))
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
       list(
-        name = as_scalar("var"),
-        label = as_scalar("var_label"),
-        class = as_scalar(class(d[["var"]])[1]),
-        kind = as_scalar("date"),
-        NA_count = as_scalar(1L),
-        min = as_scalar(as.Date(c("2024-01-01"))),
-        max = as_scalar(as.Date(c("2024-01-02")))
+        name =     "var",
+        label =    "var_label",
+        class =    class(d[["var"]])[1],
+        kind =     "date",
+        NA_count = 1L,
+        min =      as.numeric(as.Date(c("2024-01-01"))),
+        max = as.numeric(as.Date(c("2024-01-02")))
       )
     )
   })
@@ -1794,18 +1794,18 @@ local({
       var = as.POSIXct(as.Date(c("2024-01-01", "2024-01-02", NA)))
     )
     attr(d[["var"]], "label") <- "var_label"
-    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d)
     expect_length(r, 1)
     expect_identical(
       r[[1]],
       list(
-        name = as_scalar("var"),
-        label = as_scalar("var_label"),
-        class = as_scalar(class(d[["var"]])[1]),
-        kind = as_scalar("date"),
-        NA_count = as_scalar(1L),
-        min = as_scalar(as.Date(c("2024-01-01"))),
-        max = as_scalar(as.Date(c("2024-01-02")))
+        name = "var",
+        label = "var_label",
+        class = class(d[["var"]])[1],
+        kind = "date",
+        NA_count = 1L,
+        min = as.numeric(as.Date(c("2024-01-01"))),
+        max = as.numeric(as.Date(c("2024-01-02")))
       )
     )
   })
@@ -1821,7 +1821,7 @@ local({
     )
     attr(d[["var"]], "label") <- "var_label"
     expect_error(
-      get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE),
+      get_single_filter_data(d),
       regexp = "variable type unsupported:'complex' classes:'complex'",
       fixed = TRUE
     )
@@ -1837,11 +1837,11 @@ local({
       var1 = "a",
       var2 = "a"
     )
-    r <- get_single_filter_data(d, dv.manager:::as_scalar, date_as_char = TRUE, inf_as_char = TRUE)
+    r <- get_single_filter_data(d)
     expect_length(r, 2)
   })
 
-  test_that("get_filter_data_json_serialize returns one entry per dataset_list and dataset" |>
+  test_that("get_filter_data returns one entry per dataset_list and dataset" |>
   vdoc[["add_spec"]](c(
     specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
     specs$FILTERING$FILTER_SUPPORTED_TYPES,
@@ -1858,14 +1858,14 @@ local({
       )
     )
 
-    r <- get_filter_data_for_json(dataset_lists)
+    r <- get_filter_data(dataset_lists)
 
     expect_length(r[["dataset_lists"]], 2)
     expect_length(r[["dataset_lists"]][[1]][["dataset_list"]], 2)
 
-    expect_identical(r[["dataset_lists"]][[1]][["name"]], as_scalar("dl1"))
-    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["name"]], as_scalar("ds1"))
-    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["variables"]][[1]][["name"]], as_scalar("var1"))
+    expect_identical(r[["dataset_lists"]][[1]][["name"]], "dl1")
+    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["name"]], "ds1")
+    expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["variables"]][[1]][["name"]], "var1")
   })
 })
 
