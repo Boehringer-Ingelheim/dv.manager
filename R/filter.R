@@ -132,7 +132,7 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
     if (is.logical(var)) var <- factor(var)
 
     if (is.character(var) || is.factor(var)) {
-      # FIXME: factor levels are ignored and only the values really present in the dataset are used
+      l[["kind"]] <- "categorical"
       l[["kind"]] <- as_scalar_fn("categorical")
       l[["NA_count"]] <- as_scalar_fn(sum(is.na(var)))
       na_clean_var <- var[!is.na(var)]
