@@ -872,13 +872,13 @@ binary_serialize_filter_data <- function(x) {
   }
 
   w_int <- function(x) {
-    # assert(length(x) == 1, "Must be length 1")
+    assert(length(x) == 1, "Must be length 1")
     x <- as.integer(x)
     writeBin(x, con = con, endian = C$ENDIANNESS)
   }
 
   w_double <- function(x) {
-    # assert(length(x) == 1, "Must be length 1")
+    assert(length(x) == 1, "Must be length 1")
     x <- as.double(x)
     writeBin(x, con = con, endian = C$ENDIANNESS)
   }
@@ -896,7 +896,7 @@ binary_serialize_filter_data <- function(x) {
   }
 
   w_strings <- function(x) {
-    for(s in x) {
+    for (s in x) {
       w_string(s)
     }
   }
@@ -959,15 +959,18 @@ binary_serialize_filter_data <- function(x) {
   return(buf)
 }
 
-#' Serialize filter data (binary form)
+#' @rdname serializer
+#' De/Serialize filter data (binary form)
 #'
 #' @useDynLib dv.manager
+#' @keywords internal
 binary_deserialize_filter_data_C <- function(x) {
   .Call("binary_deserialize_filter_data_C", x, PACKAGE = "dv.manager")
 }
 
-#' S
+#' @rdname serializer
 #' @useDynLib dv.manager
+#' @keywords internal
 binary_serialize_filter_data_C <- function(x) {
   .Call("binary_serialize_filter_data_C", x, PACKAGE = "dv.manager")
 }
@@ -1005,13 +1008,16 @@ binary_deserialize_filter_data <- function(x) {
   }
 
   r_string <- function() {
-    string_length <- r_int() # readBin uses the NULL character at the end of the string
+    r_int() # readBin uses the NULL character at the end of the string
     x <- readBin(con = con, what = character(), n = 1, size = 1, endian = C$ENDIANNESS)
     x
   }
 
   magic <- readBin(con = con, what = character(0), n = 1, endian = C$ENDIANNESS)
+  stopifnot(!identical(magic, C$MAGICUM))
+
   version <- r_int()
+  stopifnot(!identical(version, C$VERSION))
 
   dataset_lists <- list()
   dataset_lists_len <- r_int()
@@ -1036,7 +1042,7 @@ binary_deserialize_filter_data <- function(x) {
         kind <- r_string()
         var[["kind"]] <- kind
         var[["NA_count"]] <- r_int()
-        
+
         if (kind == "categorical") {
           value_len <- r_int()
           var[["value"]] <- vector(mode = "character", length = value_len)
@@ -1053,12 +1059,12 @@ binary_deserialize_filter_data <- function(x) {
           var[["max"]] <- r_double()
         } else {
           stop(paste("Unknown kind", kind))
-        }        
+        }
         dataset_var[[var_idx]] <- var
       }
       dataset[["variables"]] <- dataset_var
       dataset_list[[dataset_idx]] <- dataset
-    }    
+    }
     dataset_lists[[dataset_list_idx]] <- list(
       name = dataset_list_name,
       dataset_list = dataset_list

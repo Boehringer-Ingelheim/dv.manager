@@ -101,7 +101,8 @@ run_app <- function(data = NULL,
       "# in `filter_type` argument.                                 #",
       "##############################################################",
       sep = "\n"
-    )   
+    )
+    message(msg)
   }
 
   check_meta_mtime_attribute(dataset_lists)

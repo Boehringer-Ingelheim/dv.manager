@@ -530,7 +530,6 @@ mod_subgroup_server <- function(id, dataset_filter) {
       subgroups(state$values$subgroups)
     })
 
-    ns <- session[["ns"]]
     subgroups <- shiny::reactiveVal(list())
 
     output[["subgroups"]] <- shiny::renderUI({
@@ -543,14 +542,14 @@ mod_subgroup_server <- function(id, dataset_filter) {
         subgroup_name <- names(r_subgroups)[[idx]]
         badge_ui[[idx]] <- tags[["span"]](subgroup_name, class = "badge w-auto bg-light text-dark")
       }
-      
+
       tags[["div"]](
         class = "mt-2",
         style = "display:flex; flex-wrap: wrap; gap: .25rem",
         badge_ui
-    
+
       )
-      
+
     })
 
     shiny::observeEvent(input[["add_subgroup"]], {
@@ -562,7 +561,7 @@ mod_subgroup_server <- function(id, dataset_filter) {
         # from jsonlite autounboxing issues
         json_subject_filter <- r_new_subgroup_json[["raw"]]
         subgroup_name <- r_subgroup_name
-        subgroup_label <- if(checkmate::test_string(r_subgroup_label, min.chars = 1)) r_subgroup_label else NULL
+        subgroup_label <- if (checkmate::test_string(r_subgroup_label, min.chars = 1)) r_subgroup_label else NULL
         new_subgroups <- subgroups()
         new_subgroups[[subgroup_name]] <- list(json = json_subject_filter, label = subgroup_label)
         subgroups(new_subgroups)
