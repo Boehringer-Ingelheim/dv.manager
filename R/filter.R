@@ -962,7 +962,7 @@ binary_deserialize_filter_data <- function(x) {
   }
 
   magic <- readBin(con = con, what = character(0), n = 1, endian = C$ENDIANNESS)
-  stopifnot(!identical(magic, C$MAGICUM))
+  stopifnot(!identical(magic, C$MAGICNUM))
 
   version <- r_int()
   stopifnot(!identical(version, C$VERSION))
