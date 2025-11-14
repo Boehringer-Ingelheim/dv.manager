@@ -820,13 +820,11 @@ binary_serialize_filter_data <- function(x) {
   }
 
   w_int <- function(x) {
-    assert(length(x) == 1, "Must be length 1")
     x <- as.integer(x)
     writeBin(x, con = con, endian = C$ENDIANNESS)
   }
 
   w_double <- function(x) {
-    assert(length(x) == 1, "Must be length 1")
     x <- as.double(x)
     writeBin(x, con = con, endian = C$ENDIANNESS)
   }
@@ -837,7 +835,6 @@ binary_serialize_filter_data <- function(x) {
   }
 
   w_string <- function(x) {
-    assert(is.character(x) && length(x) == 1, "Must be character of length 1")
     string_len <- nchar(x) # length of rawToChar
     w_int(string_len + 1)
     writeBin(x, con = con, endian = C$ENDIANNESS)
@@ -926,7 +923,7 @@ binary_serialize_filter_data_C <- function(x) {
 
 binary_deserialize_filter_data <- function(x) {
   C <- pack_of_constants(
-    MAGICNUM = charToRaw("FILTDATA"),
+    MAGICNUM = "FILTDATA",
     VERSION = 1L,
     ENDIANNESS = "little"
   )
@@ -962,10 +959,10 @@ binary_deserialize_filter_data <- function(x) {
   }
 
   magic <- readBin(con = con, what = character(0), n = 1, endian = C$ENDIANNESS)
-  stopifnot(!identical(magic, C$MAGICNUM))
+  stopifnot(identical(magic, C$MAGICNUM))
 
   version <- r_int()
-  stopifnot(!identical(version, C$VERSION))
+  stopifnot(identical(version, C$VERSION))
 
   dataset_lists <- list()
   dataset_lists_len <- r_int()
