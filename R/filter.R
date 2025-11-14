@@ -101,21 +101,6 @@ get_single_filter_data <- function(dataset, as_scalar_fn, date_as_char, inf_as_c
     inf_to_str <- identity
   }
 
-  # In R all elements are vectors by default this makes complicated to transform into json as c("a") can be enconded
-  # as "a" or ["a"]. To disambiguate this jsonlite offers `unbox`.
-
-  # Why are we inserting NA values in some of the fields?
-  # `jsonlite` transforms `NA` `null` by default, seems reasonable as JSON as has no support for NA values
-  # Therefore, we remove all NA values from the fields before making our calculations making all `null`
-  # values in the JSON intentional.
-  # Why not using NULL? NULL is interpreted as an empty object `{}` by default by `jsonlite::toJSON`. We can modify the
-  # behavior and making NULL transform into `null`. But this brings two problems, one is that once NULL is gone we
-  # cannot create `{}` which although not required now, maybe required in the future. Second `NULL` is very particular
-  # in R and although we can `list(a=NULL)`
-  # we cannot `x <- list(); x[["a"]] <- NULL` (this has the effect of deleting the entry "a")
-  # we must do instead `x <- list(); x["a"] <- list(NULL)`
-  # Therefore it seems more reasonable to work with NAs in this case.
-
   for (idx in seq_len(n_var)) {
     name <- nm_var[[idx]]
     var <- dataset[[name]]
