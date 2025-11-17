@@ -832,7 +832,8 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       const variable_label = typeof (variable["label"]) === "string" ? variable["label"] : "";
       const kind = variable["kind"];
       const block_color = dataset_color; // Otherwise it takes the value of dataset_color from the outer closure
-      const variable_na_label = "NA(" + variable["NA_count"] + "):"
+      const variable_na_label = "NA(" + variable["NA_count"] + "):";
+      let disabled = "false";
 
       if (kind === "categorical") {
         const values = variable.value;
@@ -905,10 +906,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
           }
         }
         json_generator.forBlock[variable_type] = filter_generator_date_range;
-      } else {
-        console.error("Unknown variable kind: " + kind)
-        continue;
-        // throw new Error("Unknown field kind: " + kind);
+      } else {        
+        console.warn("Unknown kind variable: " + variable_name);
+        continue; 
       }
 
       let variable_block = {
@@ -1350,6 +1350,11 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   for(let i = 0; i < dataset.variables.length; ++i) {
     let option = document.createElement('option');
     option.value = dataset.variables[i].name;
+    let disabled;
+    if (dataset.variables[i].kind === "unknown") {
+      option.setAttribute("disabled", "");            
+    }
+
     option.setAttribute('data-content', `
       <span class="glyphicon glyphicon-${SC.CLASS_ICON[dataset.variables[i].class]}"></span>
       ${dataset.variables[i].name}
@@ -1358,7 +1363,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
       </br>
       <small class="text-muted">${dataset.variables[i].label}</small>
     `);
-    option.setAttribute('data-subtext', `Description for`);
+    option.setAttribute('data-subtext', `Description for`);    
     if(selected_variables.includes(option.value)) {
       option.setAttribute("selected", "");
     }
@@ -2024,7 +2029,7 @@ let init_filter_handler = function (dataset_list_data, dataset_list_name, root_e
   
   if(selected_mode === FC.MODE.SIMPLE) {
     get_simple_root_el(root_el).style.display = 'block';
-    get_blockly_root_el(root_el).style.display = 'none';    
+    get_blockly_root_el(root_el).style.display = 'none';   
     simple_dynamic_init(
       get_simple_root_el(root_el),
       dataset_list,

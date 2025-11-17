@@ -146,7 +146,7 @@ let deserialize_binary_filter_data = function(buf) {
           variable.min = format_date_yyyy_mm_dd(R_numeric_date_JS_Date(variable.min, new Date(0)));
           variable.max = format_date_yyyy_mm_dd(R_numeric_date_JS_Date(variable.max, new Date(Date.now() + 86400000))); // Today = 1 day
         } else {
-          throw new Error(`Unknown kind ${variable_kind}`);          
+          console.warn("Unknown kind variable: " + variable_name);         
         }
         log("Pushing variable:", variable_name);
         dataset.variables.push(variable);
