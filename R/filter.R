@@ -704,7 +704,8 @@ new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states =
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
-        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+        escape_special_chars(id),
         escape_special_chars(ns(ID$FILTER_CONTAINER)),
         escape_special_chars(filter_bookmark),
         escape_special_chars(saved_states_bookmark),
@@ -775,6 +776,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
       current_dataset_lists <- stats::setNames(list(selected_dataset_list()), dataset_list_name)
 
       msg <- list(
+        id = id,
         dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
         dataset_lists_filter_data = serialize_filter_data_to_client_bin64(current_dataset_lists)
       )
@@ -805,13 +807,16 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
         )
       }
 
-      msg <- list(
+      payload <- list(
         row_count = row_count
       )
 
       session[["sendCustomMessage"]](
         "update_filter_result",
-        list(json = toJSON(msg))
+        list(
+          id = id,
+          json = toJSON(payload)
+        )
       )
     })
 

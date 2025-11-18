@@ -2155,7 +2155,7 @@ let set_filter_property = function(el, property, val) {
   return(get_root_el(el)[property] = val);
 }
 
-const init = function(root_id, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {  
+const init = function(shiny_id, root_id, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {  
   let filter_state = JSON.parse(filter_state_json);
   let saved_filter_states = JSON.parse(saved_filter_states_json);
 
@@ -2278,32 +2278,42 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
     init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATA), get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
   };
 
-  let baked_init_filter_handler = function(msg) {    
-    let dataset_lists_filter_data;    
-    dataset_lists_filter_data = deserialize_b64_filter_data(msg.dataset_lists_filter_data);    
-    init_filter_handler(dataset_lists_filter_data, msg.dataset_list_name, root_el, static_init_ret, select.value);
+  let baked_init_filter_handler = function(msg) {
+    if(msg.id === shiny_id){
+      let dataset_lists_filter_data = deserialize_b64_filter_data(msg.dataset_lists_filter_data);    
+      init_filter_handler(dataset_lists_filter_data, msg.dataset_list_name, root_el, static_init_ret, select.value);
+    }    
   };
   Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
 
   let baked_update_filter_result_handler= function(msg) {
-    update_filter_result_handler(msg, root_el);
+    if(msg.id === shiny_id){
+      update_filter_result_handler(msg, root_el);
+    }
   };
   Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
 
   let baked_show_hide_dataset_filters_handlers = function(msg) {
+    if(msg.id === shiny_id){
     show_hide_dataset_filters_handler(msg, root_el);
+    }
   };
   Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
 
   let update_data = function(msg) {
+    if(msg.id === shiny_id){
     set_filter_property(root_el, FC.PROPERTY.DATA, JSON.parse(msg.data));
-    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+    select.dispatchEvent(new Event('change', { bubbles: true }));  // Trigger filter redraw after cleaning filters
+    }
   };
   Shiny.addCustomMessageHandler("update_data", update_data);
 
   let request_dataset_filter_state = function(msg) {
-    set_filter_property(root_el, FC.PROPERTY.STATE, msg.state);
+    if(msg.id === shiny_id){
+    set_filter_property(root_el, FC.PROPERTY.STATE, JSON.parse(msg.state));
+    debugger;
     select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+    }    
   };
   Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
 
