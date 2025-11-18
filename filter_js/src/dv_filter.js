@@ -1335,7 +1335,13 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   select.setAttribute('data-width', '100%');
   select.setAttribute('data-style', 'btn');
   select.setAttribute('data-selected-text-format', 'static');
-  select.setAttribute('data-container', 'body .dv_main_panel');
+  let data_container;
+  if(document.querySelector(".dv_main_panel")) {
+    data_container = 'body .dv_main_panel'     
+  } else {
+    data_container = 'body'
+  }
+  select.setAttribute('data-container', data_container);
   select.setAttribute(SC.ATTRIBUTE.VARIABLE_SELECTOR, '');
 
   for(let i = 0; i < dataset.variables.length; ++i) {
@@ -1369,9 +1375,8 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   
   dataset_filter_container.appendChild(card_body);
   simple_root_el.appendChild(dataset_filter_container);
-  
+    
   $(select).selectpicker();
-
 
   create_variable_filter_controls(variable_filter_control_container, dataset, selected_variables,  dataset_filter_state);
   __time_function_end() 
