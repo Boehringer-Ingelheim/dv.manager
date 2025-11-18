@@ -43,9 +43,16 @@ app_ui <- function(request_id) {
   )
 
   if (use_blockly_filter) {
-    filter_ui <- new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
-    subgroup_ui <- mod_subgroup_ui(ns(ID$SUBGROUP))
-    filter_ui <- list(subgroup_ui, filter_ui)
+    filter_ui <- shiny::tabsetPanel(
+      shiny::tabPanel(
+        title = "Filter",
+        new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
+      ),
+      shiny::tabPanel(
+        title = "Subgroup",
+        mod_subgroup_ui(ns(ID$SUBGROUP), subject_filter_dataset_name)
+      )
+    )
   } else {
     filter_ui <- list(
       shiny::div(

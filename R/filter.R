@@ -766,17 +766,18 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
       )
     )
     ns <- session[["ns"]]
+    ns_id <- substr(ns(""), start = 0, stop = nchar(ns("")) - 1)
 
     log_inform(paste("Listening to:", ns(ID$FILTER_STATE_JSON_INPUT)))
     log_inform(paste("Listening to:", ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)))
 
     shiny::observeEvent(selected_dataset_list(), {
-      log_inform(paste0("Send init message to ", id))
+      log_inform(paste0("Send init message to ", ns_id))
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
       current_dataset_lists <- stats::setNames(list(selected_dataset_list()), dataset_list_name)
 
       msg <- list(
-        id = id,
+        id = ns_id,
         dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
         dataset_lists_filter_data = serialize_filter_data_to_client_bin64(current_dataset_lists)
       )
@@ -814,7 +815,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
       session[["sendCustomMessage"]](
         "update_filter_result",
         list(
-          id = id,
+          id = ns_id,
           json = toJSON(payload)
         )
       )

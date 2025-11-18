@@ -126,7 +126,7 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  apply_subgroups <- mod_subgroup_server(ID$SUBGROUP, dataset_filter)
+  apply_subgroups <- mod_subgroup_server(ID$SUBGROUP, unfiltered_dataset_list, subject_filter_dataset_name)
 
   unfiltered_dataset_list <- shiny::reactive({
     dataset_list_name <- input$selector
@@ -230,7 +230,7 @@ app_server_ <- function(input, output, session, opts) {
           unused_nm <- character(0)
         }
 
-        session$sendCustomMessage("show_hide_dataset_filters", list(hidden = unused_nm))
+        session$sendCustomMessage("show_hide_dataset_filters", list(id = ns(ID$FILTER), hidden = unused_nm))
       },
       ignoreNULL = FALSE
     )
@@ -498,29 +498,26 @@ app_server_test <- function(opts) {
   f
 }
 
-mod_subgroup_ui <- function(id) {
+mod_subgroup_ui <- function(id, subject_filter_dataset_name) {
   ns <- shiny::NS(id)
-  bslib::accordion(
-    id = ns("accordion"),
-    bslib::accordion_panel(
-      title = "Subgroup menu",
+  list(    
       shiny::textInput(ns("subgroup_name"), label = NULL, placeholder = "Enter subgroup name"),
       shiny::textInput(ns("subgroup_label"), label = NULL, placeholder = "Enter subgroup label"),
       shiny::actionButton(ns("add_subgroup"), label = "Add subgroup", class = "btn-sm"),
-      shiny::uiOutput(ns("subgroups")
-    ),
-      value = ns("subgroup_menu")
-    ),
-    open = FALSE
+      shiny::uiOutput(ns("subgroups")),
+      new_filter_ui(ns("filter"), subject_filter_dataset_name, state = NULL)
   )
+  
 }
 
-mod_subgroup_server <- function(id, dataset_filter) {
+mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_dataset_name) {
   mod <- function(input, output, session) {
 
     subgroups <- shiny::reactiveVal(list())
 
     shiny::setBookmarkExclude(c("add_subgroup", "subgroup_name", "subgroup_label", "accordion"))
+
+    subgroup_filter <- new_filter_server("filter", unfiltered_dataset_list, subject_filter_dataset_name, unfiltered_dataset_list) # FIXME: Pass filtered one
 
     shiny::onBookmark(function(state) {
       state$values$subgroups <- I(subgroups())
@@ -553,7 +550,7 @@ mod_subgroup_server <- function(id, dataset_filter) {
     })
 
     shiny::observeEvent(input[["add_subgroup"]], {
-      r_new_subgroup_json <- dataset_filter()
+      r_new_subgroup_json <- subgroup_filter()
       r_subgroup_name <- input[["subgroup_name"]]
       r_subgroup_label <- input[["subgroup_label"]]
       if (!isTRUE(is.na(r_new_subgroup_json[["raw"]])) && checkmate::test_string(r_subgroup_name, min.chars = 1)) {
