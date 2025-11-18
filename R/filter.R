@@ -205,7 +205,7 @@ get_single_filter_data <- function(dataset) {
     } else {
       l[[FDF$KIND]] <- K$UNKNOWN
       l[[FDF$NA_COUNT]] <- NA_integer_
-      log_warn(paste0("variable type unsupported:'", typeof(var), "' classes:", paste0("'", class(var), "'", collapse = ",")))
+      # log_warn(paste0("variable type unsupported:'", typeof(var), "' classes:", paste0("'", class(var), "'", collapse = ",")))
     }
 
     res[[idx]] <- l
