@@ -1038,9 +1038,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
 
 let blockly_disposal = function(){}; // FIXME: GLobal to all instances, if several dv.filter instances appear it won't work
 
-let blockly_static_init = function(blockly_root_el) {
+let blockly_static_init = function(blockly_root_el, id) {
 
-  let show_button_id = "blockly-filter-checkbox";
+  let show_button_id = id + "-blockly-filter-checkbox"; // Namespaced button
 
   let show_label = document.createElement('label');
   show_label.textContent = "Show filter";
@@ -2289,7 +2289,7 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   bottom_container.appendChild(blockly_div);
   root_el.appendChild(bottom_container);
 
-  static_ret[FC.MODE.BLOCKLY] = blockly_static_init(blockly_div);
+  static_ret[FC.MODE.BLOCKLY] = blockly_static_init(blockly_div, root_id);
   set_filter_property(root_el, FC.PROPERTY.STATIC_RET, static_ret);
   
   select.value = FC.MODE.SIMPLE;
