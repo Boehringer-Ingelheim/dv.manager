@@ -534,7 +534,8 @@ const get_blockly_code = function ({ workspace, generator, dataset_name }) {
 }
 
 const init_blockly = function (el, dataset_name, filter_data, init_state) {
-  let namespace = get_blockly_root_el(el).id + "-dataset_name";
+  let id = get_root_el(el).id;
+  let namespace = id + "-dataset_name";
   let ns = function(x) {return(namespace + "-" + x)};
 
   {
@@ -559,8 +560,12 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     const block_names = Object.keys(Blockly.Blocks);
     for (let idx = 0; idx < block_names.length; ++idx) {
       let current_name = block_names[idx];
-      if(current_name.startsWith(namespace))
-      Blockly.Blocks[block_names[idx]] = null;
+      if(current_name.startsWith(namespace)){
+        __logger("Removing: " + block_names[idx]);
+        Blockly.Blocks[block_names[idx]] = null;
+      } else {
+        __logger("Keeping: " + block_names[idx]);
+      }
     }
 
   }
@@ -998,9 +1003,13 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
   toolbox.contents[idx_singleton_cat].contents.map((x) => options.maxInstances[x.type] = 1)
 
   options.toolbox = toolbox;
+
+  if(blockly_disposal[id]){
+    blockly_disposal[id];
+    blockly_disposal[id] = undefined;
+  }  
   let ws = Blockly.inject(container_div, options);
-
-
+  blockly_disposal[id] = function(){ws.disposal();}
 
   ws.MAX_UNDO = 0; //Disconnect undo because of listeners
   // When removing elements using JS the undo is messed up
@@ -1032,7 +1041,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
   return (res)
 }
 
-let blockly_disposal = function(){}; // FIXME: GLobal to all instances, if several dv.filter instances appear it won't work
+let blockly_disposal = {}; // FIXME: This is a very ugly way of disposing the workspace but less resistance route currently
 
 let blockly_static_init = function(blockly_root_el, id) {
 
@@ -1118,11 +1127,6 @@ let blockly_static_init = function(blockly_root_el, id) {
     blockly_root_el.dispatchEvent(event);
   };
 
-  blockly_disposal = function(){
-    const filter = $(inner_filter_el).data("filter");
-    filter.workspace.dispose();
-    $(inner_filter_el).data("filter", undefined);        
-  }
   gen_code_button.addEventListener('click', send_code);
 
 
