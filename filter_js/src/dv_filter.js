@@ -28,8 +28,8 @@ import { multiPickerField } from './multi_picker.js';
 import {deserialize_b64_filter_data} from './js_deserializer/deserializer.mjs';
 import './toolbox-search/index.js'
 
-const __DEV_MODE = false;
-const __LOGGER = false;
+const __DEV_MODE = true;
+const __LOGGER = true;
 const __TIMER = false;
 
 let __logger = function(x){};
@@ -1114,7 +1114,7 @@ let blockly_static_init = function(blockly_root_el) {
   let send_code = function () {
     const filter = $(inner_filter_el).data('filter');
     const code = get_blockly_code(filter);
-    const event = new CustomEvent(FC.EVENT.UPDATED_FILTER, {
+    const event = new CustomEvent(FC.EVENT.NEW_FILTER_VALUE, {
       detail: {filter: code, mode: FC.MODE.BLOCKLY},
       bubbles: true,
       cancelable: true
@@ -1880,7 +1880,7 @@ let simple_static_init = function(simple_root_el) {
     __logger("Simple sending code");
     let dataset_list_name = get_filter_property(simple_root_el, FC.PROPERTY.DATASET_LIST_NAME);
     let code = get_filter_state(simple_root_el, dataset_list_name);
-    const new_event = new CustomEvent(FC.EVENT.UPDATED_FILTER, {
+    const new_event = new CustomEvent(FC.EVENT.NEW_FILTER_VALUE, {
       detail: {filter: code, mode: FC.MODE.SIMPLE},
       bubbles: true,
       cancelable: true
@@ -2006,17 +2006,13 @@ let get_blockly_root_el = function(el){
   return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
 }
 
-let init_filter_handler = function (dataset_list_data, dataset_list_name, root_el, static_init_ret, selected_mode) {
+let init_filter_handler = function (root_el, dataset_list_data, dataset_list_name, subject_filter_dataset_name, filter_state, static_init_ret, selected_mode) {
+  __logger(`init_filter_handler: ${root_el}`);
+  __logger(root_el);
+  __logger(dataset_list_data);
   __assert(()=>is_html_element(root_el));
   
-  set_filter_property(root_el, FC.PROPERTY.DATA, dataset_list_data);
-  set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, dataset_list_name);  
-
-  let filter_data = get_filter_property(root_el, FC.PROPERTY.DATA);
-  let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME);
-  let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
-
-  let dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
+  let dataset_list = dataset_list_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
   
   if(selected_mode === FC.MODE.SIMPLE) {
     get_simple_root_el(root_el).style.display = 'block';
@@ -2035,7 +2031,7 @@ let init_filter_handler = function (dataset_list_data, dataset_list_name, root_e
     blockly_dynamic_init(
       get_blockly_root_el(root_el),   
       dataset_list_name,    
-      filter_data, filter_state
+      dataset_list_data, filter_state
     );
     static_init_ret[FC.MODE.BLOCKLY].send_code();
   } else {
@@ -2104,7 +2100,8 @@ let FC = {
     BLOCKLY: "blockly"
   },
   EVENT: {
-    UPDATED_FILTER: "updated_filter"
+    NEW_FILTER_VALUE: "new_filter_value",
+    REQUESTED_REDRAW: "requested_redraw"
   },
   ATTRIBUTE: {
     ROOT: "data-root",
@@ -2113,11 +2110,14 @@ let FC = {
     SAVED_FILTER_STATE_NAME: "data-saved-filter-name"
   },
   PROPERTY: {
+    FIELD: "dv_filter_properties", // Container of all properties
     DATA: "filter_data",
     STATE: "filter_state",
     SAVED_STATES: "saved_states",
     DATASET_LIST_NAME: "dataset_list_name",
-    SUBJECT_DATASET_NAME: "subject_dataset_name"
+    SUBJECT_DATASET_NAME: "subject_dataset_name",
+    STATIC_RET: "static_ret",
+    FILTER_MODE: "filter_mode"
   },
   VAL: {
     EMPTY_FILTER: {
@@ -2145,32 +2145,51 @@ let get_root_el = function(el) {
   return(root_el);
 }
 
-let get_filter_property = function(el, property) {  
-  __assert(()=>is_html_element(el))
-  return(structuredClone(get_root_el(el)[property]));  
+let get_root_el_by_id = function(id) {
+  return(document.getElementById(id));  
 }
 
+// Should be called only inside listeners/message handlers to get the current state of the filter
+let get_filter_property = function(el, property, clone = true) {  
+  __assert(()=>is_html_element(el));
+  __logger("Getting property: " + property);  
+  if(clone) {
+    return(structuredClone(get_root_el(el)[FC.PROPERTY.FIELD][property]));  
+  } else {
+    return(get_root_el(el)[FC.PROPERTY.FIELD][property]);  
+  }
+  
+}
+
+// Should be called only inside listeners/message handlers or during main init to set the state of the filter
 let set_filter_property = function(el, property, val) {
   __assert(()=>is_html_element(el))
-  return(get_root_el(el)[property] = val);
+  return(get_root_el(el)[FC.PROPERTY.FIELD][property] = val);
 }
 
-const init = function(shiny_id, root_id, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {  
+let init_filter_property_field = function(el) {  
+  __assert(()=>is_html_element(el));
+  get_root_el(el)[FC.PROPERTY.FIELD] = {};
+}
+
+const init = function(root_id, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {  
   let filter_state = JSON.parse(filter_state_json);
   let saved_filter_states = JSON.parse(saved_filter_states_json);
 
-  __logger("Filter root id: " + root_id);
+  __logger("Filter shiny id: " + root_id);
   __logger(`Initial filter state:`);
   __logger(filter_state_json);
   __logger(`Initial saved states:`);
   __logger(saved_filter_states);
 
   let root_el = document.getElementById(root_id);
-  root_el[FC.PROPERTY.STATE] = filter_state;
-  root_el[FC.PROPERTY.SAVED_STATES] = !saved_filter_states ? [] : saved_filter_states;
-  root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
-
-
+  __logger("root el for " + root_id);
+  __logger(root_el);
+  init_filter_property_field(root_el);
+  set_filter_property(root_el, FC.PROPERTY.STATE, filter_state);
+  set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, !saved_filter_states ? [] : saved_filter_states);
+  set_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME, subject_dataset_name);
+  
   let top_control_container = document.createElement("dv-filter-top-control-container");
   top_control_container.className = "p-3 m-3 bg-light border rounded";
 
@@ -2227,7 +2246,6 @@ const init = function(shiny_id, root_id, filter_state_json, saved_filter_states_
   let saved_states_list = document.createElement(FC.TAG.SAVED_STATES_LIST);
   saved_states_container.appendChild(saved_states_list);
 
-
   top_control_container.appendChild(select);
   top_control_container.appendChild(export_button);
   top_control_container.appendChild(clear_all_button);
@@ -2237,7 +2255,8 @@ const init = function(shiny_id, root_id, filter_state_json, saved_filter_states_
   let bottom_container = document.createElement("div");
   bottom_container.className = "mb-3 p-1 border bg-light";
 
-  let static_init_ret = {};
+  
+  static_ret = {};
 
   // Simple
   let simple_option = document.createElement('option');
@@ -2249,7 +2268,9 @@ const init = function(shiny_id, root_id, filter_state_json, saved_filter_states_
   simple_div.setAttribute(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.SIMPLE);
   bottom_container.appendChild(simple_div);
 
-  static_init_ret[FC.MODE.SIMPLE] = simple_static_init(simple_div);
+  static_ret[FC.MODE.SIMPLE] = simple_static_init(simple_div);
+
+  set_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME, subject_dataset_name);
 
   // Blockly
 
@@ -2263,9 +2284,11 @@ const init = function(shiny_id, root_id, filter_state_json, saved_filter_states_
   bottom_container.appendChild(blockly_div);
   root_el.appendChild(bottom_container);
 
-  static_init_ret[FC.MODE.BLOCKLY] = blockly_static_init(blockly_div);
+  static_ret[FC.MODE.BLOCKLY] = blockly_static_init(blockly_div);
+  set_filter_property(root_el, FC.PROPERTY.STATIC_RET, static_ret);
   
   select.value = FC.MODE.SIMPLE;
+  set_filter_property(root_el, FC.PROPERTY.FILTER_MODE, select.value);
 
   let dev_current_filter_div;
   if(__DEV_MODE) {
@@ -2273,53 +2296,31 @@ const init = function(shiny_id, root_id, filter_state_json, saved_filter_states_
     root_el.appendChild(dev_current_filter_div);
   }
 
-  let change_filter_mode = function() {           
-    __logger(`Changing to: ${select.value}`);
-    init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATA), get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
-  };
+  root_el.addEventListener(FC.EVENT.REQUESTED_REDRAW, function(){    
+    let dataset_list_data = get_filter_property(root_el, FC.PROPERTY.DATA);    
+    let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
+    let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME);
+    let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
+    let static_init_ret = get_filter_property(root_el, FC.PROPERTY.STATIC_RET, false);
+    let filter_mode = get_filter_property(root_el, FC.PROPERTY.FILTER_MODE);
+    
+    init_filter_handler( 
+      root_el,      
+      dataset_list_data,
+      dataset_list_name,
+      subject_filter_dataset_name,
+      filter_state,
+      static_init_ret,
+      filter_mode      
+    );
+  })
 
-  let baked_init_filter_handler = function(msg) {
-    if(msg.id === shiny_id){
-      let dataset_lists_filter_data = deserialize_b64_filter_data(msg.dataset_lists_filter_data);    
-      init_filter_handler(dataset_lists_filter_data, msg.dataset_list_name, root_el, static_init_ret, select.value);
-    }    
-  };
-  Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
+  select.addEventListener('change', function(){
+    set_filter_property(root_el, FC.PROPERTY.FILTER_MODE, select.value);
+    root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));    
+  });
 
-  let baked_update_filter_result_handler= function(msg) {
-    if(msg.id === shiny_id){
-      update_filter_result_handler(msg, root_el);
-    }
-  };
-  Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
-
-  let baked_show_hide_dataset_filters_handlers = function(msg) {
-    if(msg.id === shiny_id){
-    show_hide_dataset_filters_handler(msg, root_el);
-    }
-  };
-  Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
-
-  let update_data = function(msg) {
-    if(msg.id === shiny_id){
-    set_filter_property(root_el, FC.PROPERTY.DATA, JSON.parse(msg.data));
-    select.dispatchEvent(new Event('change', { bubbles: true }));  // Trigger filter redraw after cleaning filters
-    }
-  };
-  Shiny.addCustomMessageHandler("update_data", update_data);
-
-  let request_dataset_filter_state = function(msg) {
-    if(msg.id === shiny_id){
-    set_filter_property(root_el, FC.PROPERTY.STATE, JSON.parse(msg.state));
-    debugger;
-    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
-    }    
-  };
-  Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
-
-  select.addEventListener('change', change_filter_mode);
-
-  root_el.addEventListener(FC.EVENT.UPDATED_FILTER, function(event){
+  root_el.addEventListener(FC.EVENT.NEW_FILTER_VALUE, function(event){
     __logger("Sending to Shiny " + filter_state_json_input_id);
     set_filter_property(root_el, FC.PROPERTY.STATE, event.detail.filter);
     Shiny.setInputValue(filter_state_json_input_id, JSON.stringify(event.detail.filter), { priority: 'event' });
@@ -2330,7 +2331,7 @@ const init = function(shiny_id, root_id, filter_state_json, saved_filter_states_
 
   clear_all_button.addEventListener("click", function(){
     set_filter_property(root_el, FC.PROPERTY.STATE, FC.VAL.EMPTY_FILTER);
-    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+    root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true })); // Trigger filter redraw after cleaning filters
   });
 
   let render_saved_states = function (saved_states) {
@@ -2398,7 +2399,7 @@ const init = function(shiny_id, root_id, filter_state_json, saved_filter_states_
         throw new Error(`Could not find saved state ${state_name}`);
       }
       set_filter_property(root_el, FC.PROPERTY.STATE, new_state.state);
-      select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+      root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true })); // Trigger filter redraw after cleaning filters
     };
 
     
@@ -2420,11 +2421,70 @@ const init = function(shiny_id, root_id, filter_state_json, saved_filter_states_
     send_saved_states(get_filter_property(root_el, FC.PROPERTY.SAVED_STATES));
   });
   
-}
+};
+
+let baked_update_filter_result_handler= function(msg) {
+  let root_el = get_root_el_by_id(msg.id)
+  if(!root_el) console.error("Root el: " + msg.id + "not found");  
+  update_filter_result_handler(msg, root_el);  
+};
+Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
+
+let update_data = function(msg) {
+  let root_el = get_root_el_by_id(msg.id)
+  if(!root_el) console.error("Root el: " + msg.id + "not found");  
+  set_filter_property(root_el, FC.PROPERTY.DATA, JSON.parse(msg.data));
+  root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));
+  //FIXME: select reference and event cannot happen here
+};
+Shiny.addCustomMessageHandler("update_data", update_data);
+
+let request_dataset_filter_state = function(msg) {
+  let root_el = get_root_el_by_id(msg.id)
+  if(!root_el) console.error("Root el: " + msg.id + "not found");
+  set_filter_property(root_el, FC.PROPERTY.STATE, JSON.parse(msg.state));
+  root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));  
+};
+Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
+
+let baked_show_hide_dataset_filters_handlers = function(msg) {
+  let root_el = get_root_el_by_id(msg.id)
+  if(!root_el) console.error("Root el: " + msg.id + "not found");  
+  show_hide_dataset_filters_handler(msg, root_el);
+};
+Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
+
+let baked_init_filter_handler = function(msg) {            
+    let root_el = get_root_el_by_id(msg.id)
+    if(!root_el) console.error("Root el: " + msg.id + "not found");
+    let dataset_lists_filter_data = deserialize_b64_filter_data(msg.dataset_lists_filter_data);
+    set_filter_property(root_el, FC.PROPERTY.DATA, dataset_lists_filter_data);
+    set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, msg.dataset_list_name);
+    
+    let dataset_list_data = dataset_lists_filter_data;    
+    let dataset_list_name = msg.dataset_list_name;
+    let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME);
+    let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
+    let static_init_ret = get_filter_property(root_el, FC.PROPERTY.STATIC_RET, false);
+    let filter_mode = get_filter_property(root_el, FC.PROPERTY.FILTER_MODE);
+    
+    init_filter_handler( 
+      root_el,      
+      dataset_list_data,
+      dataset_list_name,
+      subject_filter_dataset_name,
+      filter_state,
+      static_init_ret,
+      filter_mode      
+    );
+};
+Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
 
 //#endregion
 
 export {init}
+
+// FIXME: move the read and set properties to top level handlers
 
 // A wall will be hit regarding who is responsible of the state managing things are getting complicated, maybe full state
 // should be passed back and forth, otherwise state gets divided.

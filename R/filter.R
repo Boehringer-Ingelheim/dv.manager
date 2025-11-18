@@ -704,9 +704,8 @@ new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states =
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
-        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
         escape_special_chars(id),
-        escape_special_chars(ns(ID$FILTER_CONTAINER)),
         escape_special_chars(filter_bookmark),
         escape_special_chars(saved_states_bookmark),
         escape_special_chars(subject_dataset_name),
@@ -748,7 +747,7 @@ new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states =
     tag_dv_filter_wrapper(
       dependencies,
       tag_dv_filter_root(
-        id = ns(ID$FILTER_CONTAINER),
+        id = id,
         init_tag
       )
     )
@@ -772,6 +771,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
     log_inform(paste("Listening to:", ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)))
 
     shiny::observeEvent(selected_dataset_list(), {
+      log_inform(paste0("Send init message to ", id))
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
       current_dataset_lists <- stats::setNames(list(selected_dataset_list()), dataset_list_name)
 
