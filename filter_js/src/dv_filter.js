@@ -28,8 +28,8 @@ import { multiPickerField } from './multi_picker.js';
 import {deserialize_b64_filter_data} from './js_deserializer/deserializer.mjs';
 import './toolbox-search/index.js'
 
-const __DEV_MODE = true;
-const __LOGGER = true;
+const __DEV_MODE = false;
+const __LOGGER = false;
 const __TIMER = false;
 
 let __logger = function(x){};
@@ -897,7 +897,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
         }
         json_generator.forBlock[nsed_variable_type] = filter_generator_date_range;
       } else {        
-        console.warn("Unknown kind variable: " + variable_name);
+        // console.warn("Unknown kind variable: " + variable_name);
         continue; 
       }
 
