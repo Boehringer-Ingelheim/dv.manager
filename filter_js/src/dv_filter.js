@@ -134,21 +134,9 @@ let max_str_date = function(date1, date2) {
   return(res);
 }
 
-let min_str_date = function(date1, date2) {
-  let num_date1 = new Date(date1).getTime();
-  let num_date2 = new Date(date2).getTime();
-
-  let res = date1;
-  if (num_date2<num_date1) {
-    res = date2;  
-  }
-  return(res);
-}
-
 let is_numeric_finite = function (value) {
   return typeof value === "number" && Number.isFinite(value);
 }
-
 
 //#region BLOCKLY FILTER
 
@@ -186,7 +174,7 @@ const get_random_input_id = function () {
   return ("contents_" + Blockly.utils.idGenerator.genUid());
 }
 
-const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
+const filter_state_to_blockly_state = function (previous_filter, dataset_list, ns) {
 
   let filter = undefined;
   if (previous_filter) {
@@ -220,7 +208,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
         __logger(current_filter);
 
         if (current_filter.kind === "filter") {
-          current_block.type = get_block_filter_type(current_filter.dataset, current_filter.variable);
+          current_block.type = ns(get_block_filter_type(current_filter.dataset, current_filter.variable));
           current_block.id = Blockly.utils.idGenerator.genUid();
 
           /* Check if filter is applicable
@@ -285,7 +273,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
         } else if (current_filter.kind === "set_operation") {
 
           if (current_filter.operation === "intersect" || current_filter.operation === "union") {
-            current_block.type = BC.TYPE.SET_COMB_OPERATION;
+            current_block.type = ns(BC.TYPE.SET_COMB_OPERATION);
             current_block.id = Blockly.utils.idGenerator.genUid();
             current_block.extraState = {
               data: []
@@ -300,7 +288,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
             }
             current_block.extraState.data.push(get_random_input_id()); // One extra because we want a free input
           } else if (current_filter.operation === "complement") {
-            current_block.type = BC.TYPE.SET_COMPLEMENT_OPERATION;
+            current_block.type = ns(BC.TYPE.SET_COMPLEMENT_OPERATION);
             current_block.id = Blockly.utils.idGenerator.genUid();
             current_block.fields = { operation: current_filter.operation };
             current_block.inputs = {
@@ -314,7 +302,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
         } else if (current_filter.kind === "row_operation") {
 
           if (current_filter.operation === "and" || current_filter.operation === "or") {
-            current_block.type = BC.TYPE.ROW_COMB_OPERATION;
+            current_block.type = ns(BC.TYPE.ROW_COMB_OPERATION);
             current_block.id = Blockly.utils.idGenerator.genUid();
             current_block.extraState = {
               data: []
@@ -329,7 +317,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
             }
             current_block.extraState.data.push(get_random_input_id()); // One extra because we want a free input
           } else if (current_filter.operation === "not") {
-            current_block.type = BC.TYPE.ROW_NOT_OPERATION;
+            current_block.type = ns(BC.TYPE.ROW_NOT_OPERATION);
             current_block.id = Blockly.utils.idGenerator.genUid();
             current_block.fields = { operation: current_filter.operation };
             current_block.inputs = {
@@ -352,7 +340,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
       let processed_filter = process_filter(filter[BC.TYPE.SUBJECT_FILTER].children[0]);
       if (processed_filter !== null) {
         let subject_filter = {
-          type: BC.TYPE.SUBJECT_FILTER,
+          type: ns(BC.TYPE.SUBJECT_FILTER),
           id: Blockly.utils.idGenerator.genUid(),
           x: 0,
           y: 0,
@@ -368,7 +356,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
         let processed_filter = process_filter(curr_dataset_filter.children[0]);
         if (processed_filter !== null) {
           let dataset_filter = {
-            type: get_block_dataset_type(curr_dataset_filter.name),
+            type: ns(get_block_dataset_type(curr_dataset_filter.name)),
             id: Blockly.utils.idGenerator.genUid(),
             x: 0,
             y: 0,
@@ -546,6 +534,9 @@ const get_blockly_code = function ({ workspace, generator, dataset_name }) {
 }
 
 const init_blockly = function (el, dataset_name, filter_data, init_state) {
+  let namespace = get_blockly_root_el(el).id + "-dataset_name";
+  let ns = function(x) {return(namespace + "-" + x)};
+
   {
     /* Clear previous block definitions
     Otherwise block definitions are kept from one dataset to the other
@@ -564,8 +555,11 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     we leave the description as the side effects of Blockly.Blocks must be taken into account.
 
     */
+    
     const block_names = Object.keys(Blockly.Blocks);
     for (let idx = 0; idx < block_names.length; ++idx) {
+      let current_name = block_names[idx];
+      if(current_name.startsWith(namespace))
       Blockly.Blocks[block_names[idx]] = null;
     }
 
@@ -588,7 +582,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     return code;
   };
 
-  json_generator.forBlock[BC.TYPE.SUBJECT_FILTER] = subject_filter_generator;
+  json_generator.forBlock[ns(BC.TYPE.SUBJECT_FILTER)] = subject_filter_generator;
 
   let toolbox = {
     kind: 'categoryToolbox',
@@ -604,7 +598,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
         contents: [
           {
             kind: 'block',
-            type: BC.TYPE.SUBJECT_FILTER
+            type: ns(BC.TYPE.SUBJECT_FILTER)
           },
         ]
       },
@@ -614,29 +608,29 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
         contents: [
           {
             kind: 'block',
-            type: BC.TYPE.ROW_COMB_OPERATION
+            type: ns(BC.TYPE.ROW_COMB_OPERATION)
           },
           {
             kind: 'block',
-            type: BC.TYPE.ROW_NOT_OPERATION
+            type: ns(BC.TYPE.ROW_NOT_OPERATION)
           },
           {
             kind: 'block',
-            type: BC.TYPE.SET_COMB_OPERATION
+            type: ns(BC.TYPE.SET_COMB_OPERATION)
           },
           {
             kind: 'block',
-            type: BC.TYPE.SET_COMPLEMENT_OPERATION
+            type: ns(BC.TYPE.SET_COMPLEMENT_OPERATION)
           }
         ]
       },
     ]
   };
 
-  json_generator.forBlock[BC.TYPE.ROW_COMB_OPERATION] = row_operation_generator;
-  json_generator.forBlock[BC.TYPE.ROW_NOT_OPERATION] = row_operation_generator;
-  json_generator.forBlock[BC.TYPE.SET_COMB_OPERATION] = set_operation_generator;
-  json_generator.forBlock[BC.TYPE.SET_COMPLEMENT_OPERATION] = set_operation_generator;
+  json_generator.forBlock[ns(BC.TYPE.ROW_COMB_OPERATION)] = row_operation_generator;
+  json_generator.forBlock[ns(BC.TYPE.ROW_NOT_OPERATION)] = row_operation_generator;
+  json_generator.forBlock[ns(BC.TYPE.SET_COMB_OPERATION)] = set_operation_generator;
+  json_generator.forBlock[ns(BC.TYPE.SET_COMPLEMENT_OPERATION)] = set_operation_generator;
 
   // Preface End
 
@@ -690,7 +684,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     remove_value_inputs(block, empty_input_names)
   };
 
-  Blockly.Blocks[BC.TYPE.ROW_COMB_OPERATION] = {
+  Blockly.Blocks[ns(BC.TYPE.ROW_COMB_OPERATION)] = {
     init: function () {
       this.appendDummyInput("header")
         .appendField(new Blockly.FieldDropdown(
@@ -717,7 +711,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     }
   };
 
-  Blockly.Blocks[BC.TYPE.ROW_NOT_OPERATION] = {
+  Blockly.Blocks[ns(BC.TYPE.ROW_NOT_OPERATION)] = {
     init: function () {
       this.appendDummyInput("header")
         .appendField(new Blockly.FieldDropdown(
@@ -730,7 +724,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     }
   };
 
-  Blockly.Blocks[BC.TYPE.SET_COMB_OPERATION] = {
+  Blockly.Blocks[ns(BC.TYPE.SET_COMB_OPERATION)] = {
     init: function () {
       this.appendDummyInput("header")
         .appendField(new Blockly.FieldDropdown(
@@ -757,7 +751,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     }
   };
 
-  Blockly.Blocks[BC.TYPE.SET_COMPLEMENT_OPERATION] = {
+  Blockly.Blocks[ns(BC.TYPE.SET_COMPLEMENT_OPERATION)] = {
     init: function () {
       this.appendDummyInput("header")
         .appendField(new Blockly.FieldDropdown(
@@ -770,7 +764,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     }
   };
 
-  Blockly.Blocks[BC.TYPE.SUBJECT_FILTER] = {
+  Blockly.Blocks[ns(BC.TYPE.SUBJECT_FILTER)] = {
     init: function () {
       this.appendDummyInput('label')
         .appendField('Subject Filter');
@@ -794,7 +788,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       contents: [],
     };
 
-    Blockly.Blocks[dataset_type] = {
+    Blockly.Blocks[ns(dataset_type)] = {
       init: function () {
         this.appendDummyInput()
           .appendField("Dataset Filter: ")
@@ -810,17 +804,17 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     toolbox.contents[1].contents.push(
       {
         kind: 'block',
-        type: dataset_type
+        type: ns(dataset_type)
       }
     );
 
-    json_generator.forBlock[dataset_type] = dataset_filter_generator;
+    json_generator.forBlock[ns(dataset_type)] = dataset_filter_generator;
 
     __logger(toolbox);
 
     for (let variable of dataset["variables"]) {
       const variable_name = variable["name"];
-      const variable_type = get_block_filter_type(dataset_name, variable_name);
+      const nsed_variable_type = ns(get_block_filter_type(dataset_name, variable_name));
       const variable_label = typeof (variable["label"]) === "string" ? variable["label"] : "";
       const kind = variable["kind"];
       const block_color = dataset_color; // Otherwise it takes the value of dataset_color from the outer closure
@@ -835,7 +829,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
 
         if (dd_options.length == 0) dd_options = [['_EMPTY_VEC_', '_EMPTY_VEC_']]
 
-        Blockly.Blocks[variable_type] = {
+        Blockly.Blocks[nsed_variable_type] = {
           init: function () {
             this.appendEndRowInput()
               .appendField(`[(${dataset_name}) - ${variable_name}]`)
@@ -850,13 +844,13 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
           }
         }
 
-        json_generator.forBlock[variable_type] = filter_generator_subset;
+        json_generator.forBlock[nsed_variable_type] = filter_generator_subset;
 
       } else if (kind === "numerical") {
         const min = variable["min"];
         const max = variable["max"];
 
-        Blockly.Blocks[variable_type] = {
+        Blockly.Blocks[nsed_variable_type] = {
           init: function () {
             this.appendDummyInput()
               .appendField(`[(${dataset_name}) - ${variable_name}]`)
@@ -874,12 +868,12 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
             this.dataset_name = dataset_name;
           }
         }
-        json_generator.forBlock[variable_type] = filter_generator_range;
+        json_generator.forBlock[nsed_variable_type] = filter_generator_range;
       } else if (kind === "date") {        
         const min = variable["min"];
         const max = variable["max"];
 
-        Blockly.Blocks[variable_type] = {
+        Blockly.Blocks[nsed_variable_type] = {
           init: function () {
             this.appendEndRowInput()
               .appendField(`[(${dataset_name}) - ${variable_name}]`)
@@ -896,7 +890,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
             this.dataset_name = dataset_name;
           }
         }
-        json_generator.forBlock[variable_type] = filter_generator_date_range;
+        json_generator.forBlock[nsed_variable_type] = filter_generator_date_range;
       } else {        
         console.warn("Unknown kind variable: " + variable_name);
         continue; 
@@ -904,7 +898,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
 
       let variable_block = {
         kind: 'block',
-        type: variable_type
+        type: nsed_variable_type
       };
       dataset_category.contents.push(variable_block);
     }
@@ -1006,6 +1000,8 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
   options.toolbox = toolbox;
   let ws = Blockly.inject(container_div, options);
 
+
+
   ws.MAX_UNDO = 0; //Disconnect undo because of listeners
   // When removing elements using JS the undo is messed up
   // For example when removing an element from an operation the id of the input changes
@@ -1015,10 +1011,10 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
   ws.addChangeListener(onChange);
 
   let filter_state, filter_state_log;
-  [filter_state, filter_state_log] = filter_state_to_blockly_state(init_state, selected_datasets);
+  [filter_state, filter_state_log] = filter_state_to_blockly_state(init_state, selected_datasets, ns);
 
   if (filter_state) {
-    try {
+    try {      
       Blockly.serialization.workspaces.load(filter_state, ws);
       ws.cleanUp(); // If overlap reorganize
     } catch (error) {

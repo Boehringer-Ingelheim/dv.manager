@@ -28,7 +28,7 @@ class ToolboxSearchCategory extends Blockly.ToolboxCategory {
         super(categoryDef, parentToolbox, opt_parent);
         this.blockSearcher = new BlockSearcher();
         this.initBlockSearcher();
-        this.registerShortcut();
+        // this.registerShortcut();
     }
     /**
      * Initializes the search field toolbox category.
