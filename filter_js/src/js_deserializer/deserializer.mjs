@@ -144,7 +144,7 @@ let deserialize_binary_filter_data = function(buf) {
           // Format to string as it is how is used downstream
           // Infs are treated as epoch origin for min and today + 1 for max
           variable.min = format_date_yyyy_mm_dd(R_numeric_date_JS_Date(variable.min, new Date(0)));
-          variable.max = format_date_yyyy_mm_dd(R_numeric_date_JS_Date(variable.max, new Date(Date.now() + 86400000))); // Today = 1 day
+          variable.max = format_date_yyyy_mm_dd(R_numeric_date_JS_Date(variable.max, new Date(Date.now() + 86400000))); // Today + 1 day
         } else {
           console.warn("Unknown kind variable: " + variable_name);         
         }
