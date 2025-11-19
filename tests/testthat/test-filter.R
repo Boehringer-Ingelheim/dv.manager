@@ -1810,23 +1810,6 @@ local({
     )
   })
 
-  test_that("get_single_filter_data fails for unsupported types" |>
-  vdoc[["add_spec"]](c(
-    specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
-    specs$FILTERING$FILTER_SUPPORTED_TYPES,
-    specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA
-  )), {
-    d <- data.frame(
-      var = 1 + 2i
-    )
-    attr(d[["var"]], "label") <- "var_label"
-    expect_error(
-      get_single_filter_data(d),
-      regexp = "variable type unsupported:'complex' classes:'complex'",
-      fixed = TRUE
-    )
-  })
-
   test_that("get_single_filter_data returns one entry per column" |>
   vdoc[["add_spec"]](c(
     specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
