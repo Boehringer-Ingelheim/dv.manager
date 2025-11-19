@@ -970,16 +970,14 @@ binary_serialize_filter_data <- function(x) {
   return(buf)
 }
 
-#' @rdname serializer
-#' De/Serialize filter data (binary form)
-#'
+#' @noRd
 #' @useDynLib dv.manager
 #' @keywords internal
 binary_deserialize_filter_data_C <- function(x) {
   .Call("binary_deserialize_filter_data_C", x, PACKAGE = "dv.manager")
 }
 
-#' @rdname serializer
+#' @noRd
 #' @useDynLib dv.manager
 #' @keywords internal
 binary_serialize_filter_data_C <- function(x) {
