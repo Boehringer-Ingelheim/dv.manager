@@ -145,14 +145,6 @@ let min_str_date = function(date1, date2) {
   return(res);
 }
 
-function replace_NAN_inf_by_today(x) {
-  if (Number.isFinite(x)) {
-    return(x)
-  } else {
-    return(new Date())
-  }
-}
-
 let is_numeric_finite = function (value) {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -833,7 +825,6 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       const kind = variable["kind"];
       const block_color = dataset_color; // Otherwise it takes the value of dataset_color from the outer closure
       const variable_na_label = "NA(" + variable["NA_count"] + "):";
-      let disabled = "false";
 
       if (kind === "categorical") {
         const values = variable.value;
