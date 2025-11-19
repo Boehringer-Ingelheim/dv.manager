@@ -4,7 +4,7 @@ as_scalar <- jsonlite::unbox
 serialize_filter_data_to_client_bin64 <- function(x) jsonlite::base64_enc(binary_serialize_filter_data_C(get_filter_data(x)))
 deserialize_filter_state_from_client <- fromJSON
 
-FC <- poc(  
+FC <- poc(
   KIND = poc(
     CATEGORICAL = "categorical",
     NUMERICAL = "numerical",
@@ -55,7 +55,7 @@ FC <- poc(
     )
   ),
   SFE = poc(
-    F = poc (NAME = "name",
+    F = poc(NAME = "name",
       KIND = "kind",
       OPERATION = "operation",
       CHILDREN = "children"
@@ -877,11 +877,6 @@ binary_serialize_filter_data <- function(x) {
     VERSION = 1L,
     ENDIANNESS = "little"
   )
-
-  assert <- function(expr, msg) {
-  if (!isTRUE(expr)) stop(msg, call. = FALSE)
-}
-
 
   con <- rawConnection(raw(0), open = "wb")
   on.exit(close(con))
