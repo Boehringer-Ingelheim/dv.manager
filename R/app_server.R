@@ -90,9 +90,9 @@ app_server_ <- function(input, output, session, opts) {
   module_meta <- opts[["module_info"]][["meta"]]
   module_names <- opts[["module_info"]][["module_name"]]
   module_hierarchy_list <- opts[["module_info"]][["hierarchy"]]
-  data <- opts[["data"]]
-  filter_data <- opts[["filter_data"]]
-  filter_key <- opts[["filter_key"]]
+  dataset_lists <- opts[["data"]]
+  subject_filter_dataset_name <- opts[["filter_data"]]
+  filter_key_var <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
   filter_info <- opts[["filter_info"]]
@@ -102,7 +102,7 @@ app_server_ <- function(input, output, session, opts) {
 
   ######################################
 
-  datasets_filters_info <- get_dataset_filters_info(data, filter_data)
+  datasets_filters_info <- get_dataset_filters_info(dataset_lists, subject_filter_dataset_name)
 
   # Check if dataset must be reloaded in the next session
   check_data_reload(reload_period)
@@ -111,11 +111,11 @@ app_server_ <- function(input, output, session, opts) {
     shiny::showModal(startup_msg)
   }
 
-  log_inform(glue::glue("Filtering key: {filter_key}"))
+  log_inform(glue::glue("Filtering key: {filter_key_var}"))
 
   url_parameters <- shiny::reactiveVal()
 
-  if (length(data) > 1) {
+  if (length(dataset_lists) > 1) {
     shinyjs::toggle(id = "dataset_selector")
   }
 
@@ -126,26 +126,30 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  unfiltered_dataset <- shiny::reactive({
-    shiny::req(input$selector)
-    if (is.function(data[[input$selector]])) {
-      add_date_range(data[[input$selector]]())
+  apply_subgroups <- mod_subgroup_server(ID$SUBGROUP, dataset_filter)
+
+  unfiltered_dataset_list <- shiny::reactive({
+    dataset_list_name <- input$selector
+    r_apply_subgroups <- apply_subgroups()
+    shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
+    assert(dataset_list_name %in% names(dataset_lists))
+
+    if (is.function(dataset_lists[[dataset_list_name]])) {
+      selected_dataset_list <- add_date_range(dataset_lists[[dataset_list_name]]())
     } else {
-      add_date_range(data[[input$selector]])
+      selected_dataset_list <- add_date_range(dataset_lists[[dataset_list_name]])
     }
+
+    selected_dataset_list <- r_apply_subgroups(selected_dataset_list, subject_filter_dataset_name, filter_key_var)
+    attr(selected_dataset_list, "dataset_list_name") <- dataset_list_name
+    selected_dataset_list
   })
 
-
   if (use_blockly_filter) {
-    dataset_filter <- new_filter_server(ID$FILTER, shiny::reactive({
-      input$selector
-    }),
-    subject_filter_dataset_name = filter_data,
-    filtered_dataset
-    )
+    dataset_filter <- new_filter_server(ID$FILTER, unfiltered_dataset_list, subject_filter_dataset_name, filtered_dataset_list)
 
-    filtered_dataset <- shiny::reactive({
-      ufd <- shiny::isolate(unfiltered_dataset())
+    filtered_dataset_list <- shiny::reactive({
+      ufd <- unfiltered_dataset_list()
 
       shiny::req(!is.na(dataset_filter()))
 
@@ -157,9 +161,9 @@ app_server_ <- function(input, output, session, opts) {
 
       safe_filters <- as_safe_list(safe_dsf[["parsed"]][["filters"]])
 
-      current_server_dataset_name <- shiny::isolate(input$selector)
+      current_server_dataset_list_name <- attr(ufd, "dataset_list_name")
       current_client_dataset_name <- safe_dsf[["parsed"]][["dataset_list_name"]]
-      shiny::req(current_server_dataset_name == current_client_dataset_name)
+      shiny::req(current_server_dataset_list_name == current_client_dataset_name)
 
       ds <- ufd
 
@@ -186,9 +190,9 @@ app_server_ <- function(input, output, session, opts) {
       # Check NA optimization in the future
       fd <- tryCatch(
         {
-          subject_filter_info <- create_subject_filter_info(ds, safe_filters[["subject_filter"]], filter_key)          
+          subject_filter_info <- create_subject_filter_info(ds, safe_filters[["subject_filter"]], filter_key_var)
           if (!identical(subject_filter_info, NA_character_)) {
-            apply_subject_filter_info(fd, subject_filter_info, filter_key)
+            apply_subject_filter_info(fd, subject_filter_info, filter_key_var)
           } else {
             fd
           }
@@ -197,44 +201,43 @@ app_server_ <- function(input, output, session, opts) {
           msg <- paste("Filter not applied. Error found:\n", e[["message"]])
           warning(msg)
           shiny::showNotification(msg, type = "error")
-          NA_character_
+          ds
         }
-      )      
+      )
 
       fd
     })
 
     shiny::observeEvent(
-        {
-          input[[ID$NAV_HEADER]]
-        },
-        {
-          all_nm <- names(datasets_filters_info)
-          current_tab <- input[[ID$NAV_HEADER]]
+      {
+        input[[ID$NAV_HEADER]]
+      },
+      {
+        all_nm <- names(datasets_filters_info)
+        current_tab <- input[[ID$NAV_HEADER]]
 
-          if (!is.null(current_tab)) {
-            used_ds <- used_datasets[[current_tab]]
-          } else {
-            used_ds <- NULL
-          }
+        if (!is.null(current_tab)) {
+          used_ds <- used_datasets[[current_tab]]
+        } else {
+          used_ds <- NULL
+        }
 
-          if (!is.null(used_ds)) {
-            used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
-            unused_nm <- setdiff(all_nm, used_nm)
-          } else {
-            used_nm <- all_nm
-            unused_nm <- character(0)
-          }
+        if (!is.null(used_ds)) {
+          used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
+          unused_nm <- setdiff(all_nm, used_nm)
+        } else {
+          used_nm <- all_nm
+          unused_nm <- character(0)
+        }
 
-          session$sendCustomMessage("show_hide_dataset_filters", list(hidden = unused_nm))
-        },
-        ignoreNULL = FALSE
-      )
-
+        session$sendCustomMessage("show_hide_dataset_filters", list(hidden = unused_nm))
+      },
+      ignoreNULL = FALSE
+    )
   } else {
     global_filtered_values <- dv.filter::data_filter_server(
       "global_filter",
-      shiny::reactive(unfiltered_dataset()[[filter_data]])
+      shiny::reactive(unfiltered_dataset_list()[[subject_filter_dataset_name]])
     )
 
 
@@ -250,7 +253,7 @@ app_server_ <- function(input, output, session, opts) {
             dv.filter::data_filter_server(
               curr_dataset_filter_info[["id"]],
               shiny::reactive({
-                unfiltered_dataset()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()
+                unfiltered_dataset_list()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()
               })
             )
           })
@@ -259,7 +262,7 @@ app_server_ <- function(input, output, session, opts) {
         l
       })
 
-      filtered_dataset <- shiny::reactive({
+      filtered_dataset_list <- shiny::reactive({
         # dv.filter returns a logical vector. This contemplates the case of empty lists
         shiny::req(is.logical(global_filtered_values()))
 
@@ -270,7 +273,7 @@ app_server_ <- function(input, output, session, opts) {
         # We filter the previous dataset which in the best case produces and extra reactive beat
         # and in the worst case produces an error in (mvbc)
         # We don't want to control the error in (mvbc) because filtered dataset only changes when filter changes
-        ufds <- shiny::isolate(unfiltered_dataset())
+        ufds <- shiny::isolate(unfiltered_dataset_list())
 
         curr_dataset_filters <- dataset_filters[intersect(names(dataset_filters), names(ufds))]
 
@@ -278,7 +281,7 @@ app_server_ <- function(input, output, session, opts) {
         # Check dataset filters check all datafilters are initialized
         purrr::walk(curr_dataset_filters, ~ shiny::req(checkmate::test_logical(.x(), min.len = 0)))
 
-        filtered_key_values <- ufds[[filter_data]][[filter_key]][global_filtered_values()]
+        filtered_key_values <- ufds[[subject_filter_dataset_name]][[filter_key_var]][global_filtered_values()]
 
         fds <- ufds
 
@@ -296,7 +299,7 @@ app_server_ <- function(input, output, session, opts) {
         # Global dataset filtering
         global_filtered <- purrr::map(
           fds, function(current_ds) {
-            mask <- current_ds[[filter_key]] %in% filtered_key_values
+            mask <- current_ds[[filter_key_var]] %in% filtered_key_values
             labels <- get_lbls(current_ds)
             current_ds <- current_ds[mask, , drop = FALSE]
             set_lbls(current_ds, labels)
@@ -339,14 +342,14 @@ app_server_ <- function(input, output, session, opts) {
     } else {
       log_inform("Single filter server")
 
-      filtered_dataset <- shiny::reactive({
+      filtered_dataset_list <- shiny::reactive({
         # dv.filter returns a logical vector. This contemplates the case of empty lists
         shiny::req(is.logical(global_filtered_values()))
         log_inform("New filter applied")
-        filtered_key_values <- unfiltered_dataset()[[filter_data]][[filter_key]][global_filtered_values()] # nolint
+        filtered_key_values <- unfiltered_dataset_list()[[subject_filter_dataset_name]][[filter_key_var]][global_filtered_values()] # nolint
         purrr::map(
-          unfiltered_dataset(),
-          ~ dplyr::filter(.x, .data[[filter_key]] %in% filtered_key_values) # nolint
+          unfiltered_dataset_list(),
+          ~ dplyr::filter(.x, .data[[filter_key_var]] %in% filtered_key_values) # nolint
         )
       })
     }
@@ -359,19 +362,28 @@ app_server_ <- function(input, output, session, opts) {
     as_dv_manager_module_output_safe_list(module_output)
   }
 
-  # TODO: `unfiltered_dataset` should be `unfiltered_dataset_list` both var and entry name. Deprecate in future versions
   afmm <- list(
-    data = data,
-    unfiltered_dataset = unfiltered_dataset,
-    filtered_dataset = filtered_dataset,
+    data = dataset_lists,
+    unfiltered_dataset = shiny::reactive({
+      log_warn("(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]].") # nolintr
+      unfiltered_dataset_list()
+    }),
+    unfiltered_dataset_list = unfiltered_dataset_list,
+    filtered_dataset = shiny::reactive({
+      log_warn("(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]].") # nolintr
+      filtered_dataset_list()
+    }),
+    filtered_dataset_list = filtered_dataset_list,
     url_parameters = url_parameters,
     dataset_name = shiny::reactive({
-      rlang::warn("afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]].") # nolintr
+      log_warn("(Message for the module developer) afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]].") # nolintr
       input$selector
     }),
     dataset_metadata = list(
-      name = shiny::reactive(input$selector),
-      date_range = shiny::reactive(attr(unfiltered_dataset(), "date_range"))
+      name = shiny::reactive({
+        attr(unfiltered_dataset_list(), "dataset_list_name")
+      }),
+      date_range = shiny::reactive(attr(unfiltered_dataset_list(), "date_range"))
     ),
     module_output = module_output_fn,
     module_names = module_names,
@@ -434,8 +446,8 @@ app_server_ <- function(input, output, session, opts) {
     module_output[[id]] <- fn(afmm)
     used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
   }
-  
-  
+
+
   # Dataset name and date
 
   output$dataset_name <- shiny::renderText({
@@ -443,7 +455,7 @@ app_server_ <- function(input, output, session, opts) {
   })
 
   output$dataset_date <- shiny::renderText({
-    date_range <- attr(unfiltered_dataset(), "date_range")
+    date_range <- attr(unfiltered_dataset_list(), "date_range")
 
     if (!any(is.na(date_range))) {
       date_range <- format(date_range, "%Y-%b-%d (%Z)")
@@ -463,7 +475,6 @@ app_server_ <- function(input, output, session, opts) {
   shiny::observeEvent(input$open_options_modal, {
     shiny::showModal(create_info_modal(session = session, input = input, ns = ns))
   })
-
 }
 
 # nolint end cyclocomp_linter
@@ -485,4 +496,99 @@ app_server_test <- function(opts) {
   # Remove opts argument. It will be taken from this closure
   f <- rlang::new_function(rlang::exprs(input = , output = , session = ), rlang::fn_body(app_server_))
   f
+}
+
+mod_subgroup_ui <- function(id) {
+  ns <- shiny::NS(id)
+  bslib::accordion(
+    id = ns("accordion"),
+    bslib::accordion_panel(
+      title = "Subgroup menu",
+      shiny::textInput(ns("subgroup_name"), label = NULL, placeholder = "Enter subgroup name"),
+      shiny::textInput(ns("subgroup_label"), label = NULL, placeholder = "Enter subgroup label"),
+      shiny::actionButton(ns("add_subgroup"), label = "Add subgroup", class = "btn-sm"),
+      shiny::uiOutput(ns("subgroups")
+    ),
+      value = ns("subgroup_menu")
+    ),
+    open = FALSE
+  )
+}
+
+mod_subgroup_server <- function(id, dataset_filter) {
+  mod <- function(input, output, session) {
+
+    subgroups <- shiny::reactiveVal(list())
+
+    shiny::setBookmarkExclude(c("add_subgroup", "subgroup_name", "subgroup_label", "accordion"))
+
+    shiny::onBookmark(function(state) {
+      state$values$subgroups <- I(subgroups())
+    })
+
+    shiny::onRestore(function(state) {
+      subgroups(state$values$subgroups)
+    })
+
+    subgroups <- shiny::reactiveVal(list())
+
+    output[["subgroups"]] <- shiny::renderUI({
+      r_subgroups <- subgroups()
+      tags <- shiny::tags
+
+      badge_ui <- vector(mode = "list", length = length(r_subgroups))
+
+      for (idx in seq_along(r_subgroups)) {
+        subgroup_name <- names(r_subgroups)[[idx]]
+        badge_ui[[idx]] <- tags[["span"]](subgroup_name, class = "badge w-auto bg-light text-dark")
+      }
+
+      tags[["div"]](
+        class = "mt-2",
+        style = "display:flex; flex-wrap: wrap; gap: .25rem",
+        badge_ui
+
+      )
+
+    })
+
+    shiny::observeEvent(input[["add_subgroup"]], {
+      r_new_subgroup_json <- dataset_filter()
+      r_subgroup_name <- input[["subgroup_name"]]
+      r_subgroup_label <- input[["subgroup_label"]]
+      if (!isTRUE(is.na(r_new_subgroup_json[["raw"]])) && checkmate::test_string(r_subgroup_name, min.chars = 1)) {
+        # We store the json instead of the parsed value because its representation is inert and does not suffer
+        # from jsonlite autounboxing issues
+        json_subject_filter <- r_new_subgroup_json[["raw"]]
+        subgroup_name <- r_subgroup_name
+        subgroup_label <- if (checkmate::test_string(r_subgroup_label, min.chars = 1)) r_subgroup_label else NULL
+        new_subgroups <- subgroups()
+        new_subgroups[[subgroup_name]] <- list(json = json_subject_filter, label = subgroup_label)
+        subgroups(new_subgroups)
+      }
+    })
+
+    apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_key_var, subgroups) {
+      for (idx in seq_along(subgroups)) {
+        name <- names(subgroups)[[idx]]
+        label <- subgroups[[idx]][["label"]]
+        parsed_subject_filter <- deserialize_filter_state_from_client(subgroups[[idx]][["json"]])[["filters"]][["subject_filter"]]
+        subjects <- create_subject_filter_info(dataset_list, parsed_subject_filter, filter_key_var)[["subjects"]]
+        dataset_list[[subject_filter_dataset_name]][[name]] <- dataset_list[[subject_filter_dataset_name]][[filter_key_var]] %in% subjects
+        attr(dataset_list[[subject_filter_dataset_name]][[name]], "label") <- label
+      }
+
+      dataset_list
+    }) |> shiny::maskReactiveContext()
+
+    res <- shiny::reactive({
+      r_subgroups <- subgroups()
+      function(...) {
+        apply_subgroups(..., subgroups = r_subgroups)
+      }
+    })
+
+    return(res)
+  }
+  shiny::moduleServer(id, mod)
 }

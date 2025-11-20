@@ -92,7 +92,7 @@ local({
         # Test we can select one
         session$setInputs(selector = "mpg_wt")
         # Test it is loaded and available in the app
-        expect_equal(unfiltered_dataset(), datasets[["mpg_wt"]],
+        expect_equal(unfiltered_dataset_list(), datasets[["mpg_wt"]],
           ignore_attr = TRUE
         )
         # Test when passed through identity module is the same as the input one
@@ -108,7 +108,7 @@ local({
     {
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb") # Test we can select one using the label provided
-        expect_equal(unfiltered_dataset(), datasets[["mpg_carb"]],
+        expect_equal(unfiltered_dataset_list(), datasets[["mpg_carb"]],
           ignore_attr = TRUE
         )
       })
@@ -130,11 +130,11 @@ local({
     {
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb") # Test we can select one
-        expect_equal(unfiltered_dataset(), datasets[["mpg_carb"]],
+        expect_equal(unfiltered_dataset_list(), datasets[["mpg_carb"]],
           ignore_attr = TRUE
         ) # Test expected output
         session$setInputs(selector = "mpg_wt") # Test we can select another one
-        expect_equal(unfiltered_dataset(), datasets[["mpg_wt"]],
+        expect_equal(unfiltered_dataset_list(), datasets[["mpg_wt"]],
           ignore_attr = TRUE
         )
       })
@@ -146,11 +146,11 @@ local({
     {
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb") # Test we can select one
-        expect_equal(unfiltered_dataset(), datasets[["mpg_carb"]],
+        expect_equal(unfiltered_dataset_list(), datasets[["mpg_carb"]],
           ignore_attr = TRUE
         ) # Test expected output
         session$setInputs(selector = "mpg_wt") # Test we can select another one
-        expect_equal(unfiltered_dataset(), datasets[["mpg_wt"]],
+        expect_equal(unfiltered_dataset_list(), datasets[["mpg_wt"]],
           ignore_attr = TRUE
         )
       })

@@ -28,8 +28,8 @@ test_that("values are returned when datafilter returns are false", {
     session$elapse(1001) # Datafilter now has a debounce
 
 
-    expect_s3_class(filtered_dataset()[["a"]], "data.frame")
-    expect_equal(nrow(filtered_dataset()[["a"]]), 0)
+    expect_s3_class(filtered_dataset_list()[["a"]], "data.frame")
+    expect_equal(nrow(filtered_dataset_list()[["a"]]), 0)
   }) %>%
     expect_warning(regexp = "a has no date.*")
 })

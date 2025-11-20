@@ -53,31 +53,27 @@
         "kind": {
           "enum": ["categorical"]
         },
-        "values_count": {
+        "value":{
           "type": "array",
-          "description": "Array of unique values in the table variable and its count",
+          "description": "Array of unique values",
           "items": {
-            "type": "object",
-            "properties": {
-              "value": {
-                "description": "Unique value",
-                "type": "string"
-              },
-              "count": {
-                "description": "Number of times the value appears in the variable",
-                "type": "integer"
-              }
-            },
-            "required": ["value", "count"]
-          },        
-          "minItems": 0
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "count":{
+          "type": "array",
+          "description": "Count of unique values",
+          "items": {
+            "type": "integer"
+          }
         },
         "NA_count": {
           "description": "Number of NA values in the variable",
           "type": "integer"
         }
       },
-      "required": ["kind", "values_count", "NA_count"]
+      "required": ["kind", "value", "count", "NA_count"]
     },
     "continuous_variable": {
       "type": "object",

@@ -22,9 +22,9 @@ app_ui <- function(request_id) {
 
   ######################################
 
-  data <- get_config("data")
+  dataset_lists <- get_config("data")
   module_info <- get_config("module_info")
-  filter_data <- get_config("filter_data")
+  subject_filter_dataset_name <- get_config("filter_data")
   filter_info <- get_config("filter_info")
 
   use_dataset_filter <- filter_info[["filter_type"]] == FILTER$TYPE$DATASETS
@@ -38,12 +38,14 @@ app_ui <- function(request_id) {
   subject_filter_ui <- create_subject_level_ui(ns("global_filter"))
 
   dataset_filters_ui <- create_dataset_filters_ui(
-    get_dataset_filters_info(data, filter_data),
+    get_dataset_filters_info(dataset_lists, subject_filter_dataset_name),
     ns
   )
 
   if (use_blockly_filter) {
-    filter_ui <- new_filter_ui(ns(ID$FILTER), data, filter_data, state = filter_default_state)
+    filter_ui <- new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
+    subgroup_ui <- mod_subgroup_ui(ns(ID$SUBGROUP))
+    filter_ui <- list(subgroup_ui, filter_ui)
   } else {
     filter_ui <- list(
       shiny::div(
@@ -80,7 +82,7 @@ app_ui <- function(request_id) {
         shinyjs::hidden(shiny::div(
           id = ns("dataset_selector"),
           class = "ps-3 pe-3 pt-3 m-3 bg-light border rounded",
-          shiny::selectInput(ns("selector"), label = NULL, choices = names(data))
+          shiny::selectInput(ns("selector"), label = NULL, choices = names(dataset_lists))
         )),
         filter_ui
       )

@@ -25,6 +25,7 @@ import * as Blockly from 'blockly';
 import { rangeSliderField } from './range_slider.js'; ``
 import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
+import {deserialize_b64_filter_data} from './js_deserializer/deserializer.mjs';
 import './toolbox-search/index.js'
 
 const __DEV_MODE = false;
@@ -250,7 +251,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
             let dataset_idx = dataset_list.map((x) => x.name).indexOf(current_filter.dataset);
             let variable_names = dataset_list[dataset_idx].variables.map((x) => x.name);
             let variable_idx = variable_names.indexOf(current_filter.variable);
-            let variable_values = dataset_list[dataset_idx].variables[variable_idx].values_count.map((x) => x.value);
+            let variable_values = dataset_list[dataset_idx].variables[variable_idx].value;
             let found = current_filter.values.filter((x) => variable_values.includes(x));
             let removed = current_filter.values.filter((x) => !variable_values.includes(x));
 
@@ -823,13 +824,13 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       const variable_label = typeof (variable["label"]) === "string" ? variable["label"] : "";
       const kind = variable["kind"];
       const block_color = dataset_color; // Otherwise it takes the value of dataset_color from the outer closure
-      const variable_na_label = "NA(" + variable["NA_count"] + "):"
+      const variable_na_label = "NA(" + variable["NA_count"] + "):";
 
       if (kind === "categorical") {
-        const values = variable["values_count"];
+        const values = variable.value;
         let dd_options = [];
-        for (let v of values) {
-          dd_options.push([v.value, v.value])
+        for (let i = 0; i < values.length; ++i) {
+          dd_options.push([values[i], values[i]])
         }
 
         if (dd_options.length == 0) dd_options = [['_EMPTY_VEC_', '_EMPTY_VEC_']]
@@ -874,7 +875,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
           }
         }
         json_generator.forBlock[variable_type] = filter_generator_range;
-      } else if (kind === "date") {
+      } else if (kind === "date") {        
         const min = variable["min"];
         const max = variable["max"];
 
@@ -896,10 +897,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
           }
         }
         json_generator.forBlock[variable_type] = filter_generator_date_range;
-      } else {
-        console.error("Unknown variable kind: " + kind)
-        continue;
-        // throw new Error("Unknown field kind: " + kind);
+      } else {        
+        console.warn("Unknown kind variable: " + variable_name);
+        continue; 
       }
 
       let variable_block = {
@@ -1341,6 +1341,11 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   for(let i = 0; i < dataset.variables.length; ++i) {
     let option = document.createElement('option');
     option.value = dataset.variables[i].name;
+    let disabled;
+    if (dataset.variables[i].kind === "unknown") {
+      option.setAttribute("disabled", "");            
+    }
+
     option.setAttribute('data-content', `
       <span class="glyphicon glyphicon-${SC.CLASS_ICON[dataset.variables[i].class]}"></span>
       ${dataset.variables[i].name}
@@ -1349,7 +1354,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
       </br>
       <small class="text-muted">${dataset.variables[i].label}</small>
     `);
-    option.setAttribute('data-subtext', `Description for`);
+    option.setAttribute('data-subtext', `Description for`);    
     if(selected_variables.includes(option.value)) {
       option.setAttribute("selected", "");
     }
@@ -1514,13 +1519,16 @@ let create_variable_filter_controls = function(variable_filter_control_container
       categorical_select.setAttribute('data-width', '100%');
       categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
-      __assert(()=>current_variable.values_count.every((v, i, a) => i === 0 || a[i-1].count >= v.count))
+      let value = current_variable.value;
+      let count = current_variable.value;
+      __assert(()=>count.every((v, i, a) => i === 0 || a[i-1] >= v)) // Check is sorted
+      __assert(()=>value.length === count.length) // Check is sorted
 
-      for(let i = 0; i < current_variable.values_count.length; ++i) {
+      for(let i = 0; i < value.length; ++i) {
         let option = document.createElement('option');
-        option.value = current_variable.values_count[i].value;
-        option.textContent = current_variable.values_count[i].value;
-        option.setAttribute("data-subtext", `${current_variable.values_count[i].count} / ${dataset.nrow}`);
+        option.value = value[i];
+        option.textContent = value[i];
+        option.setAttribute("data-subtext", `${count[i]} / ${dataset.nrow}`);
         if(current_state) {
           if(current_state.values.includes(option.value)) {
             option.setAttribute("selected", '');         
@@ -1538,10 +1546,11 @@ let create_variable_filter_controls = function(variable_filter_control_container
     } else if (current_variable.kind === SC.VARIABLE.DATE) {
 
       let from;
-      let to;
+      let to;      
+
       if(current_state) {
         from = max_str_date(current_state.min, current_variable.min);
-        to = min_str_date(current_state.max, current_variable.max);
+        to = max_str_date(current_state.max, current_variable.max);
       } else {
         from = current_variable.min;
         to = current_variable.max;
@@ -1997,9 +2006,10 @@ let get_blockly_root_el = function(el){
   return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
 }
 
-let init_filter_handler = function (dataset_list_name, root_el, static_init_ret, selected_mode) {
+let init_filter_handler = function (dataset_list_data, dataset_list_name, root_el, static_init_ret, selected_mode) {
   __assert(()=>is_html_element(root_el));
   
+  set_filter_property(root_el, FC.PROPERTY.DATA, dataset_list_data);
   set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, dataset_list_name);  
 
   let filter_data = get_filter_property(root_el, FC.PROPERTY.DATA);
@@ -2010,7 +2020,7 @@ let init_filter_handler = function (dataset_list_name, root_el, static_init_ret,
   
   if(selected_mode === FC.MODE.SIMPLE) {
     get_simple_root_el(root_el).style.display = 'block';
-    get_blockly_root_el(root_el).style.display = 'none';    
+    get_blockly_root_el(root_el).style.display = 'none';   
     simple_dynamic_init(
       get_simple_root_el(root_el),
       dataset_list,
@@ -2034,6 +2044,7 @@ let init_filter_handler = function (dataset_list_name, root_el, static_init_ret,
 }
 
 let update_filter_result_handler = function(msg, root_el){
+
   let parsed_msg = JSON.parse(msg.json)
   console.log(parsed_msg);
 
@@ -2144,8 +2155,7 @@ let set_filter_property = function(el, property, val) {
   return(get_root_el(el)[property] = val);
 }
 
-const init = function(root_id, filter_data_json, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {  
-  let filter_data = JSON.parse(filter_data_json);
+const init = function(root_id, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {  
   let filter_state = JSON.parse(filter_state_json);
   let saved_filter_states = JSON.parse(saved_filter_states_json);
 
@@ -2156,7 +2166,6 @@ const init = function(root_id, filter_data_json, filter_state_json, saved_filter
   __logger(saved_filter_states);
 
   let root_el = document.getElementById(root_id);
-  root_el[FC.PROPERTY.DATA] = filter_data;
   root_el[FC.PROPERTY.STATE] = filter_state;
   root_el[FC.PROPERTY.SAVED_STATES] = !saved_filter_states ? [] : saved_filter_states;
   root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
@@ -2266,11 +2275,13 @@ const init = function(root_id, filter_data_json, filter_state_json, saved_filter
 
   let change_filter_mode = function() {           
     __logger(`Changing to: ${select.value}`);
-    init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
+    init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATA), get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
   };
 
-  let baked_init_filter_handler = function(msg) {
-    init_filter_handler(msg.dataset_list_name, root_el, static_init_ret, select.value);
+  let baked_init_filter_handler = function(msg) {    
+    let dataset_lists_filter_data;    
+    dataset_lists_filter_data = deserialize_b64_filter_data(msg.dataset_lists_filter_data);    
+    init_filter_handler(dataset_lists_filter_data, msg.dataset_list_name, root_el, static_init_ret, select.value);
   };
   Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
 
@@ -2283,6 +2294,12 @@ const init = function(root_id, filter_data_json, filter_state_json, saved_filter
     show_hide_dataset_filters_handler(msg, root_el);
   };
   Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
+
+  let update_data = function(msg) {
+    set_filter_property(root_el, FC.PROPERTY.DATA, JSON.parse(msg.data));
+    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+  };
+  Shiny.addCustomMessageHandler("update_data", update_data);
 
   let request_dataset_filter_state = function(msg) {
     set_filter_property(root_el, FC.PROPERTY.STATE, msg.state);

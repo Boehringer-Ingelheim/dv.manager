@@ -671,7 +671,7 @@ mod_simple2 <- function(dataset_name, module_id) {
   mod <- list(
     ui = simple_UI,
     server = function(afmm) {
-      simple_server(module_id, shiny::reactive(afmm[["filtered_dataset"]]()[[dataset_name]]))
+      simple_server(module_id, shiny::reactive(afmm[["filtered_dataset_list"]]()[[dataset_name]]))
     },
     module_id = module_id,
     meta = list(dataset_info = list(all = dataset_name))
@@ -693,7 +693,7 @@ mod_dataset_labels <- function(dataset_names, module_id) {
   mod <- list(
     ui = dataset_labels_UI,
     server = function(afmm) {
-      dataset_labels_server(module_id, shiny::reactive(afmm[["filtered_dataset"]]()[dataset_names]))
+      dataset_labels_server(module_id, shiny::reactive(afmm[["filtered_dataset_list"]]()[dataset_names]))
     },
     module_id = module_id,
     meta = list(dataset_info = list(all = dataset_names))
@@ -809,7 +809,7 @@ mod_multi_simple <- function(module_id) {
   mod <- list(
     ui = multi_simple_UI,
     server = function(afmm) {
-        multi_simple_server(module_id, afmm[["filtered_dataset"]])
+        multi_simple_server(module_id, afmm[["filtered_dataset_list"]])
     },
     module_id = module_id
   )

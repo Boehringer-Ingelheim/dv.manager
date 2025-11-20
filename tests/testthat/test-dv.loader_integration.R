@@ -67,13 +67,14 @@ test_that(
 
 
     dated_dataset <- dv.manager:::add_date_range(datasets[["mpg_carb"]])
+    attr(dated_dataset, "dataset_list_name") <- "mpg_carb"
     date_range <- attr(dated_dataset, "date_range")
     date_range <- format(date_range, "%Y-%b-%d (%Z)")
     expected_date_string <- as.character(glue::glue("Dataset date: {date_range[1]}"))
 
     testServer(app_server_test(testing_options), {
       session$setInputs(selector = "mpg_carb")
-      expect_equal(unfiltered_dataset(), dated_dataset)
+      expect_equal(unfiltered_dataset_list(), dated_dataset)
       expect_equal(output$dataset_date, expected_date_string)
     })
   }

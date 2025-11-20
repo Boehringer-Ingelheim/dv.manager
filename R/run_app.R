@@ -102,21 +102,7 @@ run_app <- function(data = NULL,
       "##############################################################",
       sep = "\n"
     )
-    log_warn(msg)
-
-    yyjsonr_required_version <- "0.1.21"
-    yyjsonr_current_version <- as.character(utils::packageVersion("yyjsonr"))
-
-    if (yyjsonr_current_version < yyjsonr_required_version) {
-      stop(
-        paste(
-        "",
-        sprintf("`filter_type` = 'development' requires yyjsonr version %s or higher", yyjsonr_required_version),
-        sprintf("current yyjsonr version is %s", yyjsonr_current_version),
-        sep = "\n"
-        )
-      )
-    }
+    message(msg)
   }
 
   check_meta_mtime_attribute(dataset_lists)
