@@ -272,6 +272,10 @@ input[type="checkbox"]#click {
   opacity: 1;
 }
 
+div.dv_subgroup_menu dv-filter-top-control-container > *:not(:first-child){   
+  display: none;
+}
+
 dv-filter-wrapper {
   display: block;
 

@@ -50,9 +50,10 @@ app_ui <- function(request_id) {
       ),
       shiny::tabPanel(
         title = "Subgroup",
-        mod_subgroup_ui(ns(ID$SUBGROUP), subject_filter_dataset_name)
+        shiny::div(class = "dv_subgroup_menu", mod_subgroup_ui(ns(ID$SUBGROUP), subject_filter_dataset_name))
       )
     )
+    filter_ui
   } else {
     filter_ui <- list(
       shiny::div(
