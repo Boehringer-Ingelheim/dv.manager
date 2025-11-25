@@ -1,3 +1,7 @@
+# dv.manager 2.2.0-9012
+- Adapt tests for devtools::check
+- Introduce binary64 to Uint8Array function in Javascript for Chromium version <140
+
 # dv.manager 2.2.0-9011
 - Adds the possibility of adding labels to datasets
 - Adds an overlay to indicate filter loading times
@@ -23,7 +27,7 @@
 
 # dv.manager 2.2.0-9005
 - Filter: Includes fast routine for binary serialization for filter_data
-- Subgroup: Includes initial POC for subgroup creation in app runtime
+- Subgroup: Includes initial POC for subgroup creation in app runtime 
 
 
 # dv.manager 2.2.0-9004

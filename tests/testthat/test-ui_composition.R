@@ -2,7 +2,6 @@
 
 local({
   skip_if_not_running_shiny_tests()
-  skip_if_suspect_check()
 
   app_expr <- rlang::quo({
     dv.manager:::run_mock_app_tab_group()

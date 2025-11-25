@@ -1,7 +1,6 @@
 test_that("modules can switch between tabs using switch2mod" |>
   vdoc[["add_spec"]](c(specs$MODULES$MODULE_SWITCHING_PROGRAMMATIC)), {
   skip_if_not_running_shiny_tests()
-  skip_if_suspect_check()
 
   app <- start_app_driver({
     dv.manager::run_app(

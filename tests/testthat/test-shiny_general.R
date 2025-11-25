@@ -188,7 +188,6 @@ local({
         vdoc[["add_spec"]](c(specs$INTERFACE$INTERFACE_SIDEBAR)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
 
         expect_gt(nchar(app$get_html("div.sidebar")), 1)
       }
@@ -199,7 +198,6 @@ local({
         vdoc[["add_spec"]](c(specs$MODULES$MODULE_TABS_TOPNAV, specs$MODULES$UI_TAB_SELECTOR)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
 
         # Get all navbar elements elements
         tabs <- app$get_js(
@@ -224,7 +222,6 @@ local({
         vdoc[["add_spec"]](c(specs$MODULES$MODULE_CONTENT_DISPLAY)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
         output_values <- app$get_values(output = TRUE)[["output"]]
         expect_identical(output_values[["afmm-test_text"]], "test")
       }
@@ -236,8 +233,6 @@ local({
       vdoc[["add_spec"]](c(specs$DATASETS$DATASET_LIST_SWITCHING_ALLOWED)),
     {
       skip_if_not_running_shiny_tests()
-
-      skip_if_suspect_check()
 
       app <- shinytest2::AppDriver$new(root_app$get_url())
       unfiltered_dataset_list <- shiny::isolate(app$get_values(export = "afmm-afmm")[["export"]][["afmm-afmm"]][[
@@ -268,7 +263,6 @@ local({
       )),
     {
       skip_if_not_running_shiny_tests()
-      skip_if_suspect_check()
 
       # TODO: brittle too coupled with dv.filters
 
@@ -324,7 +318,6 @@ local({
         vdoc[["add_spec"]](c(specs$MODULES$MODULE_ACCESS_FILTERED_DATASET_LIST)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
 
         set_filter(app, c(2, 3))
         app$wait_for_idle()
@@ -343,7 +336,6 @@ local({
         vdoc[["add_spec"]](c(specs$MODULES$MODULE_ACCESS_OTHER_OUTPUTS)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
         afmm_output <- shiny::isolate(exported_values[["module_output"]]()[["afmm"]]())
         expect_identical("afmm", afmm_output)
       }
@@ -362,7 +354,6 @@ local({
         )),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
 
         unfiltered_dataset_list <- shiny::isolate(exported_values[["unfiltered_dataset_list"]]())
         current_name <- attr(unfiltered_dataset_list, "dataset_list_name")
