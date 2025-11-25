@@ -30,9 +30,9 @@ let buf_read_str = function(b_struct) {
 };
 
 let deserialize_b64_filter_data = function(base64){
-  console.time("deserializeb64")
-  let res = deserialize_binary_filter_data(Uint8Array.fromBase64(base64));
-  console.timeEnd("deserializeb64")
+  console.time("deserializeb64");
+  let res = deserialize_binary_filter_data(base64_to_Uint8Array(base64));
+  console.timeEnd("deserializeb64");
   return(res);
 }
 
@@ -193,5 +193,27 @@ let format_date_yyyy_mm_dd = function(date){
   formatted = `${year}-${month}-${day}`;
   return(formatted);
 }
+
+let base64_to_Uint8Array = function (base64) {
+  if (typeof Uint8Array.fromBase64 === "function") {
+    return(Uint8Array.fromBase64(base64));
+  } else {    
+    return (base64_to_Uint8Array_chromium_less_than_140(base64));
+  }
+}
+
+let base64_to_Uint8Array_chromium_less_than_140 = function (base64) {
+  const binary = atob(base64);
+  const len = binary.length;
+
+  const bytes = new Uint8Array(len);
+
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+
 
 export {deserialize_binary_filter_data, deserialize_b64_filter_data, R_numeric_date_JS_Date, format_date_yyyy_mm_dd as format_date_dd_mm_yyyy};
