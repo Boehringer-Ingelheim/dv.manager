@@ -140,7 +140,13 @@ app_server_ <- function(input, output, session, opts) {
       selected_dataset_list <- add_date_range(dataset_lists[[dataset_list_name]])
     }
 
-    selected_dataset_list <- r_apply_subgroups(selected_dataset_list, subject_filter_dataset_name, filter_key_var)
+    res_apply_subgroups <- r_apply_subgroups(selected_dataset_list, subject_filter_dataset_name, filter_key_var)
+
+    for(error in res_apply_subgroups[["errors"]]) {
+      shiny::showNotification(error, type = "warning")
+    }
+
+    selected_dataset_list <- res_apply_subgroups[["dataset_list"]]
     attr(selected_dataset_list, "dataset_list_name") <- dataset_list_name
     selected_dataset_list
   })
@@ -503,11 +509,12 @@ mod_subgroup_ui <- function(id, subject_filter_dataset_name) {
   list(    
       shiny::textInput(ns("subgroup_name"), label = NULL, placeholder = "Enter subgroup name"),
       shiny::textInput(ns("subgroup_label"), label = NULL, placeholder = "Enter subgroup label"),
+      shiny::textInput(ns("true_label"), label = NULL, placeholder = "Enter label for TRUE elements"),
+      shiny::textInput(ns("false_label"), label = NULL, placeholder = "Enter label for FALSE elements"),
       shiny::actionButton(ns("add_subgroup"), label = "Add subgroup", class = "btn-sm"),
       shiny::uiOutput(ns("subgroups")),
       new_filter_ui(ns("filter"), subject_filter_dataset_name, state = NULL)
-  )
-  
+  )  
 }
 
 mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_dataset_name) {
@@ -553,29 +560,65 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       r_new_subgroup_json <- subgroup_filter()
       r_subgroup_name <- input[["subgroup_name"]]
       r_subgroup_label <- input[["subgroup_label"]]
-      if (!isTRUE(is.na(r_new_subgroup_json[["raw"]])) && checkmate::test_string(r_subgroup_name, min.chars = 1)) {
-        # We store the json instead of the parsed value because its representation is inert and does not suffer
-        # from jsonlite autounboxing issues
-        json_subject_filter <- r_new_subgroup_json[["raw"]]
-        subgroup_name <- r_subgroup_name
-        subgroup_label <- if (checkmate::test_string(r_subgroup_label, min.chars = 1)) r_subgroup_label else NULL
-        new_subgroups <- subgroups()
-        new_subgroups[[subgroup_name]] <- list(json = json_subject_filter, label = subgroup_label)
-        subgroups(new_subgroups)
+      r_true_label <- input[["true_label"]]
+      r_false_label <- input[["false_label"]]
+      subject_dataset <- unfiltered_dataset_list()[[subject_filter_dataset_name]]
+      current_subgroups <- subgroups()
+      if (!isTRUE(is.na(r_new_subgroup_json[["raw"]])) &&
+      checkmate::test_string(r_subgroup_name, min.chars = 1) &&
+      checkmate::test_string(r_true_label, min.chars = 1) &&
+      checkmate::test_string(r_false_label, min.chars = 1)
+      ) {
+        original_names <- setdiff(names(subject_dataset), names(current_subgroups))
+        if (!r_subgroup_name %in% original_names) {
+          # We store the json instead of the parsed value because its representation is inert and does not suffer
+          # from jsonlite autounboxing issues
+          json_subject_filter <- r_new_subgroup_json[["raw"]]
+          subgroup_name <- r_subgroup_name
+          subgroup_label <- if (checkmate::test_string(r_subgroup_label, min.chars = 1)) r_subgroup_label else NULL
+          new_subgroups <- subgroups()
+          new_subgroups[[subgroup_name]] <- list(json = json_subject_filter, label = subgroup_label, true_label = r_true_label, false_label = r_false_label)
+          subgroups(new_subgroups)
+        } else {
+          shiny::showNotification(
+            paste(r_subgroup_name, "is already a column in", subject_filter_dataset_name, "dataset"),
+            type = "error"
+          )
+        }
       }
     })
 
     apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_key_var, subgroups) {
+
+      subject_dataset <- dataset_list[[subject_filter_dataset_name]]
+      errors <- list()
+
       for (idx in seq_along(subgroups)) {
         name <- names(subgroups)[[idx]]
         label <- subgroups[[idx]][["label"]]
-        parsed_subject_filter <- deserialize_filter_state_from_client(subgroups[[idx]][["json"]])[["filters"]][["subject_filter"]]
-        subjects <- create_subject_filter_info(dataset_list, parsed_subject_filter, filter_key_var)[["subjects"]]
-        dataset_list[[subject_filter_dataset_name]][[name]] <- dataset_list[[subject_filter_dataset_name]][[filter_key_var]] %in% subjects
-        attr(dataset_list[[subject_filter_dataset_name]][[name]], "label") <- label
+        true_label <- subgroups[[idx]][["true_label"]]
+        false_label <- subgroups[[idx]][["false_label"]]
+        if (!name %in% names(subject_dataset)) {
+          parsed_subject_filter <- deserialize_filter_state_from_client(subgroups[[idx]][["json"]])[["filters"]][["subject_filter"]]
+          subjects <- create_subject_filter_info(dataset_list, parsed_subject_filter, filter_key_var)[["subjects"]]
+          mask <- subject_dataset[[filter_key_var]] %in% subjects
+          new_var <- rep_len(false_label, nrow(subject_dataset))
+          new_var[mask] <- true_label
+          new_var <- factor(new_var)
+          subject_dataset[[name]] <- new_var
+          attr(subject_dataset[[name]], "label") <- label
+        } else {
+          errors[length(errors) + 1] <- simpleCondition(message = paste("Could not add `", name, "` subgroup. Variable already exists in `", subject_filter_dataset_name, "` dataset"))
+        }
       }
-
+      dataset_list[[subject_filter_dataset_name]] <- subject_dataset
       dataset_list
+      return(
+        list(
+          dataset_list = dataset_list,
+          errors = errors
+        )
+      )
     }) |> shiny::maskReactiveContext()
 
     res <- shiny::reactive({
