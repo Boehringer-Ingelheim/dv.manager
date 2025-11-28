@@ -627,18 +627,28 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       )
     })
 
-    notify_and_early_out <- function(x) {
-        shiny::showNotification(x, type = "error", duration = Inf)
+    notify_and_early_out <- function(expr, msg) {
+      if (!expr) {
+        shiny::showNotification(msg, type = "error", duration = Inf)
         shiny::req(FALSE)
+      }
+      NULL
+    }
+
+    if_conditions_notify_and_early_out <- function(x) {
+      for (idx in seq_along(x)) {
+        shiny::showNotification(x[[idx]]$message, type = "error", duration = Inf)
+      }
+
+      if (length(x) > 0) shiny::req(FALSE)
+
+      NULL
     }
 
     shiny::observeEvent(input[[assign_btn_id]], {
       idx <- as.integer(input[[assign_btn_id]])
       r_new_subgroup_filter <- subgroup_filter()
-
-      if (isTRUE(is.na(r_new_subgroup_filter[["raw"]]))) {
-        notify_and_early_out("Filter not ready")
-      }
+      notify_and_early_out(isTRUE(is.na(r_new_subgroup_filter[["raw"]])), "Filter not ready")
 
       new_assignment <- r_new_subgroup_filter[["raw"]]
       current_assingments <- cat_assignments()
@@ -656,20 +666,20 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       original_names <- setdiff(names(subject_dataset), names(current_subgroups))
       new_subgroups <- subgroups()
 
-      if (!checkmate::test_string(r_subgroup_name, min.chars = 1)) {
-        notify_and_early_out("Subgroup name is empty")
-      }
+      notify_and_early_out(!checkmate::test_string(r_subgroup_name, min.chars = 1), "Subgroup name is empty")
+      notify_and_early_out(
+        r_subgroup_name %in% original_names,
+        sprintf(
+          "Subgroup name: `%s` is already a column name in the dataset `%s`",
+          r_subgroup_name,
+          subject_filter_dataset_name
+        )
+      )
 
-      if (r_subgroup_name %in% original_names) {
-        notify_and_early_out(sprintf("Subgroup name: `%s` is already a column name in the dataset `%s`", r_subgroup_name, subject_filter_dataset_name))
-      }
 
       if (r_subgroup_cat_num == 2) {
         r_new_subgroup_filter <- subgroup_filter()
-
-        if (isTRUE(is.na(r_new_subgroup_filter[["raw"]]))) {
-          notify_and_early_out("Filter is not ready")
-        }
+        notify_and_early_out(isTRUE(is.na(r_new_subgroup_filter[["raw"]])), "Filter is not ready")
 
         r_true_label <- input[[get_cat_label_id(1)]]
         r_false_label <- input[[label_others_id]]
@@ -709,22 +719,20 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
         new_subgroups
       )
 
-      if (length(apply_check[["errors"]]) > 0) {
-        notify_and_early_out(apply_check[["errors"]][[1]]$message)
-      } else {
-        subgroups(new_subgroups)
+      if_conditions_notify_and_early_out(apply_check[["errors"]])
 
-        # Cleaning after adding
-        for (idx in seq_len(r_subgroup_cat_num - 1)) {
-          shiny::updateTextInput(inputId = get_cat_label_id(idx), value = "")
-        }
+      subgroups(new_subgroups)
 
-        shiny::updateTextInput(inputId = label_others_id, value = "")
-        shiny::updateTextInput(inputId = "subgroup_name", value = "")
-        shiny::updateTextInput(inputId = "subgroup_label", value = "")
-
-        cat_assignments(DEFAULT_CAT_ASSIGNMENTS)
+      # Clean inputs for next subgroup
+      for (idx in seq_len(r_subgroup_cat_num - 1)) {
+        shiny::updateTextInput(inputId = get_cat_label_id(idx), value = "")
       }
+
+      shiny::updateTextInput(inputId = label_others_id, value = "")
+      shiny::updateTextInput(inputId = "subgroup_name", value = "")
+      shiny::updateTextInput(inputId = "subgroup_label", value = "")
+
+      cat_assignments(DEFAULT_CAT_ASSIGNMENTS)
     })
 
     apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_key_var, subgroups) {
@@ -777,7 +785,6 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
             other_category_label <- cat_labels[[length(cat_labels)]]
             other_category_mask <- !categorized_subject_mask
             new_var[other_category_mask] <- other_category_label
-            browser()
             subject_dataset[[name]] <- factor(new_var, levels = cat_labels)
             attr(subject_dataset[[name]], "label") <- label
           }
