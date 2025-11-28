@@ -126,7 +126,7 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  apply_subgroups <- mod_subgroup_server(ID$SUBGROUP, unfiltered_dataset_list, subject_filter_dataset_name)
+  apply_subgroups <- mod_subgroup_server(ID$SUBGROUP, unfiltered_dataset_list, subject_filter_dataset_name, filter_key_var)
 
   unfiltered_dataset_list <- shiny::reactive({
     dataset_list_name <- input$selector
@@ -524,15 +524,18 @@ mod_subgroup_ui <- function(id, subject_filter_dataset_name) {
   )
 }
 
-mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_dataset_name) {
+mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_dataset_name, filter_key_var) {
   mod <- function(input, output, session) {
     ns <- session[["ns"]]
 
     assign_btn_id <- "assign_button"
     view_btn_id <- "view_button"
+    get_cat_label_id <- function(idx) paste0("label_", idx)
+    label_others_id <- "label_others"
 
     subgroups <- shiny::reactiveVal(list())
-    cat_assignments <- shiny::reactiveVal(vector(mode = "list", length = MAX_CATEGORIES + 1))
+    DEFAULT_CAT_ASSIGNMENTS <- vector(mode = "list", length = MAX_CATEGORIES + 1)
+    cat_assignments <- shiny::reactiveVal(DEFAULT_CAT_ASSIGNMENTS)
 
     shiny::setBookmarkExclude(
       c("add_subgroup", "subgroup_name", "subgroup_label", "accordion", "subgroup_cat_num", "label_1", "label_2", "check_subgroup")
@@ -555,7 +558,7 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       ui <- vector(mode = "list", length = r_subgroup_cat_num)
 
       for (idx in seq_len(r_subgroup_cat_num - 1)) {
-        label_id <- ns(paste0("label_", idx))
+        label_id <- ns(get_cat_label_id(idx))
 
         if (r_subgroup_cat_num > 2) {
           ui[[idx]] <- shiny::div(
@@ -571,17 +574,18 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
                   ns(assign_btn_id),
                   idx
                 )
-              ),
-              shiny::tags[["button"]](
-                shiny::icon("magnifying-glass"),
-                class = "btn btn-sm mb-3 btn-default",
-                title = "Load filter for assigned subjects",
-                onclick = sprintf(
-                  "Shiny.setInputValue('%s', '%d', { priority: 'event' })",
-                  ns(view_btn_id),
-                  idx
-                )
               )
+              # ,
+              # shiny::tags[["button"]](
+              #   shiny::icon("magnifying-glass"),
+              #   class = "btn btn-sm mb-3 btn-default",
+              #   title = "Load filter for assigned subjects",
+              #   onclick = sprintf(
+              #     "Shiny.setInputValue('%s', '%d', { priority: 'event' })",
+              #     ns(view_btn_id),
+              #     idx
+              #   )
+              # )
             )
           )
         } else {
@@ -594,15 +598,11 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
         }
       }
 
-      label_id <- ns("label_others")
+      label_id <- ns(label_others_id)
       ui[[r_subgroup_cat_num]] <- shiny::div(
         style = "display: flex; justify-content: flex-end;",
         shiny::textInput(label_id, label = NULL, placeholder = "Label for other subjects", value = "")
       )
-
-      if (r_subgroup_cat_num > 2) {
-        ui[[r_subgroup_cat_num + 2]] <- shiny::actionButton(ns("check_subgroup"), label = "Check subgroup", class = "btn-sm")
-      }
       ui
     })
 
@@ -627,87 +627,103 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       )
     })
 
+    notify_and_early_out <- function(x) {
+        shiny::showNotification(x, type = "error", duration = Inf)
+        shiny::req(FALSE)
+    }
+
     shiny::observeEvent(input[[assign_btn_id]], {
-      idx <- input[[assign_btn_id]]
-      r_label <- input[[paste("label_", idx)]]
+      idx <- as.integer(input[[assign_btn_id]])
       r_new_subgroup_filter <- subgroup_filter()
 
-      errors <- list()
-      push_error <- function(x) {
-        errors[length(errors) + 1] <<- simpleCondition(message = x)
-      }
-
-      if (!checkmate::test_string(r_label, min.chars = 1)) {
-        push_error(paste("No label for category", idx))
-      } 
-
       if (isTRUE(is.na(r_new_subgroup_filter[["raw"]]))) {
-        push_error("Filter not ready")
+        notify_and_early_out("Filter not ready")
       }
 
-      if (length(errors) == 0) {
-        new_assignment <- list(json = r_new_subgroup_filter[["raw"]], label = r_label)
-        current_assingments <- cat_assignments()
-        current_assingments[[idx]] <- new_assignment
-        cat_assignments(current_assingments)
-      }
-
-      for (error in errors) {
-        shiny::showNotification(error$message, type = "error")
-      }
+      new_assignment <- r_new_subgroup_filter[["raw"]]
+      current_assingments <- cat_assignments()
+      current_assingments[[idx]] <- new_assignment
+      cat_assignments(current_assingments)
     })
 
     shiny::observeEvent(input[["add_subgroup"]], {
       r_subgroup_cat_num <- as.integer(input[["subgroup_cat_num"]])
       r_subgroup_name <- input[["subgroup_name"]]
-      r_subgroup_label <- input[["subgroup_label"]]
+      r_subgroup_label <- if (checkmate::test_string(input[["subgroup_label"]], min.chars = 1)) input[["subgroup_label"]] else NULL
+
       subject_dataset <- unfiltered_dataset_list()[[subject_filter_dataset_name]]
       current_subgroups <- subgroups()
       original_names <- setdiff(names(subject_dataset), names(current_subgroups))
-
-      errors <- list()
-      push_error <- function(x) {
-        errors[length(errors) + 1] <<- simpleCondition(message = x)
-      }
+      new_subgroups <- subgroups()
 
       if (!checkmate::test_string(r_subgroup_name, min.chars = 1)) {
-        push_error("Subgroup name is empty")
-      } else {
-        if (r_subgroup_name %in% original_names) {
-          push_error(sprintf("Subgroup name: `%s` is already a column name in the dataset `%s`", r_subgroup_name, subject_filter_dataset_name))
-        }
+        notify_and_early_out("Subgroup name is empty")
+      }
+
+      if (r_subgroup_name %in% original_names) {
+        notify_and_early_out(sprintf("Subgroup name: `%s` is already a column name in the dataset `%s`", r_subgroup_name, subject_filter_dataset_name))
       }
 
       if (r_subgroup_cat_num == 2) {
         r_new_subgroup_filter <- subgroup_filter()
 
         if (isTRUE(is.na(r_new_subgroup_filter[["raw"]]))) {
-          push_error("Filter is not ready")
+          notify_and_early_out("Filter is not ready")
         }
 
-        if (length(errors) == 0) {
-          r_true_label <- input[["label_1"]]
-          r_false_label <- input[["label_others"]]
-          if (!checkmate::test_string(r_true_label, min.chars = 1)) r_true_label <- "TRUE"
-          if (!checkmate::test_string(r_false_label, min.chars = 1)) r_false_label <- "FALSE"
+        r_true_label <- input[[get_cat_label_id(1)]]
+        r_false_label <- input[[label_others_id]]
+        if (!checkmate::test_string(r_true_label, min.chars = 1)) r_true_label <- "TRUE"
+        if (!checkmate::test_string(r_false_label, min.chars = 1)) r_false_label <- "FALSE"
 
-          # We store the json instead of the parsed value because its representation is inert and does not suffer
-          # from jsonlite autounboxing issues
-          json_subject_filter <- r_new_subgroup_filter[["raw"]]
-          subgroup_name <- r_subgroup_name
-          subgroup_label <- if (checkmate::test_string(r_subgroup_label, min.chars = 1)) r_subgroup_label else NULL
-          new_subgroups <- subgroups()
-          cat_labels <- c(r_true_label, r_false_label)
-          cat_filters <- c(json_subject_filter)
-          new_subgroups[[subgroup_name]] <- I(list(label = subgroup_label, cat_labels = cat_labels, cat_filters = cat_filters))
-          subgroups(new_subgroups)
+        # We store the json instead of the parsed value because its representation is inert and does not suffer
+        # from jsonlite autounboxing issues
+        json_subject_filter <- r_new_subgroup_filter[["raw"]]
+        cat_labels <- c(r_true_label, r_false_label)
+        cat_filters <- c(json_subject_filter)
+        new_subgroup <- I(list(label = r_subgroup_label, cat_labels = cat_labels, cat_filters = cat_filters))
+      } else if (r_subgroup_cat_num > 2) {
+        cat_labels <- vector(mode = "character", length = r_subgroup_cat_num)
+        cat_filters <- vector(mode = "character", length = r_subgroup_cat_num - 1)
+        curr_cat_assignments <- cat_assignments()
+        for (idx in seq_len(r_subgroup_cat_num - 1)) {
+          cat_label <- input[[get_cat_label_id(idx)]]
+          if (!checkmate::test_string(cat_label, min.chars = 1)) notify_and_early_out(sprintf("No label for category %d", idx))
+          cat_assign <- curr_cat_assignments[[idx]]
+          if (!checkmate::test_string(cat_assign, min.chars = 1)) notify_and_early_out(sprintf("No filter assignment for category %d", idx))
+          cat_labels[[idx]] <- cat_label
+          cat_filters[[idx]] <- cat_assign
         }
-      } else {
-
+        r_others_label <- input[[label_others_id]]
+        if (!checkmate::test_string(r_others_label, min.chars = 1)) notify_and_early_out("No label for last category")
+        cat_labels[[length(cat_labels)]] <- r_others_label
+        new_subgroup <- I(list(label = r_subgroup_label, cat_labels = cat_labels, cat_filters = cat_filters))
       }
 
-      for (error in errors) {
-        shiny::showNotification(error$message, type = "error")
+      new_subgroups[[r_subgroup_name]] <- new_subgroup
+
+      apply_check <- apply_subgroups(
+        unfiltered_dataset_list(),
+        subject_filter_dataset_name,
+        filter_key_var,
+        new_subgroups
+      )
+
+      if (length(apply_check[["errors"]]) > 0) {
+        notify_and_early_out(apply_check[["errors"]][[1]]$message)
+      } else {
+        subgroups(new_subgroups)
+
+        # Cleaning after adding
+        for (idx in seq_len(r_subgroup_cat_num - 1)) {
+          shiny::updateTextInput(inputId = get_cat_label_id(idx), value = "")
+        }
+
+        shiny::updateTextInput(inputId = label_others_id, value = "")
+        shiny::updateTextInput(inputId = "subgroup_name", value = "")
+        shiny::updateTextInput(inputId = "subgroup_label", value = "")
+
+        cat_assignments(DEFAULT_CAT_ASSIGNMENTS)
       }
     })
 
@@ -728,7 +744,7 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
         categorized_subject_mask <- rep_len(FALSE, nrow(subject_dataset))
 
         if (name %in% names(subject_dataset)) {
-          push_error(sprintf("Skipping subgroup: `%s`. It is already a column name in the dataset `%s`.", r_subgroup_name, subject_filter_dataset_name))
+          push_error(sprintf("Skipping subgroup: `%s`. It is already a column name in the dataset `%s`.", name, subject_filter_dataset_name))
         }
 
         if (length(errors) == 0) {
@@ -736,8 +752,8 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
           subgroup_ok <- TRUE
 
           for (cat_idx in seq_len(length(cat_filters))) { # Others will be treated separately
-            category_label <- cat_labels[[idx]]
-            category_filter <- cat_filters[[idx]]
+            category_label <- cat_labels[[cat_idx]]
+            category_filter <- cat_filters[[cat_idx]]
             log_inform(sprintf("Adding category: %s", category_label))
 
             parsed_category_filter <- deserialize_filter_state_from_client(category_filter)[["filters"]][["subject_filter"]]
@@ -761,7 +777,8 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
             other_category_label <- cat_labels[[length(cat_labels)]]
             other_category_mask <- !categorized_subject_mask
             new_var[other_category_mask] <- other_category_label
-            subject_dataset[[name]] <- factor(new_var)
+            browser()
+            subject_dataset[[name]] <- factor(new_var, levels = cat_labels)
             attr(subject_dataset[[name]], "label") <- label
           }
         }
