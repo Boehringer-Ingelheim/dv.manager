@@ -627,16 +627,18 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       )
     })
 
-    notify_and_early_out <- function(expr, msg) {
+    assert_or_notify_and_early_out <- function(expr, msg) {
       if (!expr) {
+        log_warn(msg)
         shiny::showNotification(msg, type = "error", duration = Inf)
         shiny::req(FALSE)
       }
       NULL
     }
 
-    if_conditions_notify_and_early_out <- function(x) {
+    assert_conditions_or_notify_and_early_out <- function(x) {
       for (idx in seq_along(x)) {
+        log_warn(x[[idx]]$message)
         shiny::showNotification(x[[idx]]$message, type = "error", duration = Inf)
       }
 
@@ -648,7 +650,7 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
     shiny::observeEvent(input[[assign_btn_id]], {
       idx <- as.integer(input[[assign_btn_id]])
       r_new_subgroup_filter <- subgroup_filter()
-      notify_and_early_out(isTRUE(is.na(r_new_subgroup_filter[["raw"]])), "Filter not ready")
+      assert_or_notify_and_early_out(!isTRUE(is.na(r_new_subgroup_filter[["raw"]])), "Filter is not ready")
 
       new_assignment <- r_new_subgroup_filter[["raw"]]
       current_assingments <- cat_assignments()
@@ -666,9 +668,9 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       original_names <- setdiff(names(subject_dataset), names(current_subgroups))
       new_subgroups <- subgroups()
 
-      notify_and_early_out(!checkmate::test_string(r_subgroup_name, min.chars = 1), "Subgroup name is empty")
-      notify_and_early_out(
-        r_subgroup_name %in% original_names,
+      assert_or_notify_and_early_out(checkmate::test_string(r_subgroup_name, min.chars = 1), "Subgroup name is empty")
+      assert_or_notify_and_early_out(
+        !r_subgroup_name %in% original_names,
         sprintf(
           "Subgroup name: `%s` is already a column name in the dataset `%s`",
           r_subgroup_name,
@@ -679,7 +681,7 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
 
       if (r_subgroup_cat_num == 2) {
         r_new_subgroup_filter <- subgroup_filter()
-        notify_and_early_out(isTRUE(is.na(r_new_subgroup_filter[["raw"]])), "Filter is not ready")
+        assert_or_notify_and_early_out(!isTRUE(is.na(r_new_subgroup_filter[["raw"]])), "Filter is not ready")
 
         r_true_label <- input[[get_cat_label_id(1)]]
         r_false_label <- input[[label_others_id]]
@@ -698,14 +700,14 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
         curr_cat_assignments <- cat_assignments()
         for (idx in seq_len(r_subgroup_cat_num - 1)) {
           cat_label <- input[[get_cat_label_id(idx)]]
-          if (!checkmate::test_string(cat_label, min.chars = 1)) notify_and_early_out(sprintf("No label for category %d", idx))
+          assert_or_notify_and_early_out(checkmate::test_string(cat_label, min.chars = 1), sprintf("No label for category %d", idx))
           cat_assign <- curr_cat_assignments[[idx]]
-          if (!checkmate::test_string(cat_assign, min.chars = 1)) notify_and_early_out(sprintf("No filter assignment for category %d", idx))
+          assert_or_notify_and_early_out(checkmate::test_string(cat_assign, min.chars = 1), sprintf("No filter assignment for category %d", idx))
           cat_labels[[idx]] <- cat_label
           cat_filters[[idx]] <- cat_assign
         }
         r_others_label <- input[[label_others_id]]
-        if (!checkmate::test_string(r_others_label, min.chars = 1)) notify_and_early_out("No label for last category")
+        assert_or_notify_and_early_out(checkmate::test_string(r_others_label, min.chars = 1), "No label for last category")
         cat_labels[[length(cat_labels)]] <- r_others_label
         new_subgroup <- I(list(label = r_subgroup_label, cat_labels = cat_labels, cat_filters = cat_filters))
       }
@@ -719,7 +721,7 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
         new_subgroups
       )
 
-      if_conditions_notify_and_early_out(apply_check[["errors"]])
+      assert_conditions_or_notify_and_early_out(apply_check[["errors"]])
 
       subgroups(new_subgroups)
 
