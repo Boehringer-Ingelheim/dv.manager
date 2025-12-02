@@ -934,9 +934,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       // Look for the highest block that is a row operation or a dataset filter
 
       while (root_block.getParent() !== null &&
-        root_block.getParent().type !== BC.TYPE.SET_COMB_OPERATION &&
-        root_block.getParent().type !== BC.TYPE.SET_COMPLEMENT_OPERATION &&
-        root_block.getParent().type !== BC.TYPE.SUBJECT_FILTER
+        root_block.getParent().type !== ns(BC.TYPE.SET_COMB_OPERATION) &&
+        root_block.getParent().type !== ns(BC.TYPE.SET_COMPLEMENT_OPERATION) &&
+        root_block.getParent().type !== ns(BC.TYPE.SUBJECT_FILTER)
       ) {
         root_block = root_block.getParent();
       }
@@ -945,8 +945,8 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
 
       if (
         root_block.is_top_dataset ||
-        root_block.type === BC.TYPE.ROW_COMB_OPERATION ||
-        root_block.type === BC.TYPE.ROW_NOT_OPERATION
+        root_block.type === ns(BC.TYPE.ROW_COMB_OPERATION) ||
+        root_block.type === ns(BC.TYPE.ROW_NOT_OPERATION)
       ) {
 
         // If a dataset filter is on the top we take set the target dataset as that one
@@ -974,17 +974,17 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
         }
       }
 
-      if (new_parent_block && new_parent_block.type === BC.TYPE.ROW_COMB_OPERATION) {
+      if (new_parent_block && new_parent_block.type === ns(BC.TYPE.ROW_COMB_OPERATION)) {
         remove_empty_inputs(new_parent_block);
         append_value_input_row_comb(new_parent_block);
       }
 
-      if (new_parent_block && new_parent_block.type === BC.TYPE.SET_COMB_OPERATION) {
+      if (new_parent_block && new_parent_block.type === ns(BC.TYPE.SET_COMB_OPERATION)) {
         remove_empty_inputs(new_parent_block);
         append_value_input_set_comb(new_parent_block);
       }
     } else if (event.reason.includes("disconnect")) {
-      if (old_parent_block && (old_parent_block.type === BC.TYPE.ROW_COMB_OPERATION || old_parent_block.type === BC.TYPE.SET_COMB_OPERATION)) {
+      if (old_parent_block && (old_parent_block.type === ns(BC.TYPE.ROW_COMB_OPERATION) || old_parent_block.type === ns(BC.TYPE.SET_COMB_OPERATION))) {
         // Remove the input that has been disconnected
         const input_for_removal = event.oldInputName;
         remove_value_inputs(old_parent_block, [input_for_removal]);
