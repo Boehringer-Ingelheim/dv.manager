@@ -30,6 +30,7 @@ app_ui <- function(request_id) {
   use_dataset_filter <- filter_info[["filter_type"]] == FILTER$TYPE$DATASETS
   use_blockly_filter <- filter_info[["filter_type"]] == FILTER$TYPE$BLOCKLY
   filter_default_state <- filter_info[["filter_default_state"]]
+  enable_subgroup <- get_config("subgroup")[["enable"]]
 
   log_inform("Initializing HTML template UI")
   log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
@@ -43,16 +44,25 @@ app_ui <- function(request_id) {
   )
 
   if (use_blockly_filter) {
-    filter_ui <- shiny::tabsetPanel(
-      shiny::tabPanel(
-        title = "Filter",
-        new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
-      ),
-      shiny::tabPanel(
-        title = "Subgroup",
-        shiny::div(class = "dv_subgroup_menu", mod_subgroup_ui(ns(ID$SUBGROUP), subject_filter_dataset_name))
+    if (enable_subgroup) {
+      filter_ui <- shiny::tabsetPanel(
+        shiny::tabPanel(
+          title = "Filter",
+          new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
+        ),
+        shiny::tabPanel(
+          title = "Subgroup",
+          shiny::div(class = "dv_subgroup_menu", mod_subgroup_ui(ns(ID$SUBGROUP), subject_filter_dataset_name))
+        )
       )
-    )
+    } else {
+      filter_ui <- shiny::tabsetPanel(
+        shiny::tabPanel(
+          title = "Filter",
+          new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
+        )
+      )
+    }
     filter_ui
   } else {
     filter_ui <- list(
