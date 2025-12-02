@@ -741,7 +741,7 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       subject_dataset <- dataset_list[[subject_filter_dataset_name]]
       errors <- list()
       push_error <- function(x) {
-        errors[length(errors) + 1] <<- simpleCondition(message = x)
+        errors[[length(errors) + 1]] <<- simpleCondition(message = x)
       }
 
       for (idx in seq_along(subgroups)) {
