@@ -558,13 +558,20 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       ui <- vector(mode = "list", length = r_subgroup_cat_num)
 
       for (idx in seq_len(r_subgroup_cat_num - 1)) {
-        label_id <- ns(get_cat_label_id(idx))
+        label_id <- get_cat_label_id(idx)
 
         if (r_subgroup_cat_num > 2) {
+
+          if (checkmate::test_string(cat_assignments()[[idx]], min.chars = 1)) {
+            icon_state <- shiny::icon("circle-check")
+          } else {
+            icon_state <- shiny::icon("circle-xmark")
+          }
+
           ui[[idx]] <- shiny::div(
             shiny::div(
-              style = "display: flex",
-              shiny::textInput(label_id, label = NULL, placeholder = paste("Label for category", idx)),
+              style = "display: flex; align-items:baseline; gap: 2px",
+              shiny::textInput(ns(label_id), label = NULL, placeholder = paste("Label for category", idx), value = shiny::isolate(input[[label_id]])),
               shiny::tags[["button"]](
                 shiny::icon("user-plus"),
                 class = "btn btn-sm mb-3 btn-default",
@@ -574,7 +581,8 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
                   ns(assign_btn_id),
                   idx
                 )
-              )
+              ),
+              icon_state
               # ,
               # shiny::tags[["button"]](
               #   shiny::icon("magnifying-glass"),
