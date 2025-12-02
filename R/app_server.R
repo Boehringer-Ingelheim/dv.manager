@@ -635,6 +635,16 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       )
     })
 
+    shiny::observe({
+      session$sendCustomMessage(
+        "show_hide_dataset_filters",
+        list(
+          id = ns("filter"),
+          hidden = setdiff(names(unfiltered_dataset_list()), subject_filter_dataset_name)
+      )
+    )
+    })
+
     assert_or_notify_and_early_out <- function(expr, msg) {
       if (!expr) {
         log_warn(msg)
