@@ -541,7 +541,7 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       c("add_subgroup", "subgroup_name", "subgroup_label", "accordion", "subgroup_cat_num", "label_1", "label_2", "check_subgroup")
     )
 
-    subgroup_filter <- new_filter_server("filter", unfiltered_dataset_list, subject_filter_dataset_name, unfiltered_dataset_list) # FIXME: Pass filtered one
+    subgroup_filter <- new_filter_server("filter", unfiltered_dataset_list, subject_filter_dataset_name, unfiltered_dataset_list, skip_dataset_filters = TRUE) # FIXME: Pass filtered one
 
     shiny::onBookmark(function(state) {
       state$values$subgroups <- I(subgroups())

@@ -756,7 +756,7 @@ new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states =
   combined_ui
 }
 
-new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_name, after_filter_dataset_list, strict = FALSE) {
+new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_name, after_filter_dataset_list, skip_dataset_filters = FALSE, strict = FALSE) {
   mod <- function(input, output, session) {
     shiny::setBookmarkExclude(
       c(
@@ -779,7 +779,8 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
       msg <- list(
         id = ns_id,
         dataset_list_name = attr(selected_dataset_list(), "dataset_list_name"),
-        dataset_lists_filter_data = serialize_filter_data_to_client_bin64(current_dataset_lists)
+        dataset_lists_filter_data = serialize_filter_data_to_client_bin64(current_dataset_lists),
+        skip_dataset_filters = skip_dataset_filters
       )
 
       session[["sendCustomMessage"]](

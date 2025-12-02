@@ -533,7 +533,7 @@ const get_blockly_code = function ({ workspace, generator, dataset_name }) {
   return (res_state)
 }
 
-const init_blockly = function (el, dataset_name, filter_data, init_state) {
+const init_blockly = function (el, dataset_name, filter_data, init_state, skip_dataset_filters) {
   let id = get_root_el(el).id;
   let namespace = id + "-dataset_name";
   let ns = function(x) {return(namespace + "-" + x)};
@@ -793,27 +793,30 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       contents: [],
     };
 
-    Blockly.Blocks[ns(dataset_type)] = {
-      init: function () {
-        this.appendDummyInput()
-          .appendField("Dataset Filter: ")
-          .appendField(dataset_name, "dataset_name");
-        this.appendValueInput("children")
-          .setCheck(["filter", "row"]);
-        this.setColour(dataset_color);
-        this.dataset_name = dataset_name;
-        this.is_top_dataset = true;
-      }
-    };
+    if (!skip_dataset_filters) {
+      Blockly.Blocks[ns(dataset_type)] = {
+        init: function () {
+          this.appendDummyInput()
+            .appendField("Dataset Filter: ")
+            .appendField(dataset_name, "dataset_name");
+          this.appendValueInput("children")
+            .setCheck(["filter", "row"]);
+          this.setColour(dataset_color);
+          this.dataset_name = dataset_name;
+          this.is_top_dataset = true;
+        }
+      };
 
-    toolbox.contents[1].contents.push(
-      {
-        kind: 'block',
-        type: ns(dataset_type)
-      }
-    );
+      toolbox.contents[1].contents.push(
+        {
+          kind: 'block',
+          type: ns(dataset_type)
+        }
+      );
 
-    json_generator.forBlock[ns(dataset_type)] = dataset_filter_generator;
+      json_generator.forBlock[ns(dataset_type)] = dataset_filter_generator;
+    }
+    
 
     __logger(toolbox);
 
@@ -2011,7 +2014,7 @@ let get_blockly_root_el = function(el){
   return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
 }
 
-let init_filter_handler = function (root_el, dataset_list_data, dataset_list_name, subject_filter_dataset_name, filter_state, static_init_ret, selected_mode) {
+let init_filter_handler = function (root_el, dataset_list_data, dataset_list_name, subject_filter_dataset_name, filter_state, static_init_ret, selected_mode, skip_dataset_filters) {
   __logger(`init_filter_handler: ${root_el}`);
   __logger(root_el);
   __logger(dataset_list_data);
@@ -2036,7 +2039,8 @@ let init_filter_handler = function (root_el, dataset_list_data, dataset_list_nam
     blockly_dynamic_init(
       get_blockly_root_el(root_el),   
       dataset_list_name,    
-      dataset_list_data, filter_state
+      dataset_list_data, filter_state,
+      skip_dataset_filters
     );
     static_init_ret[FC.MODE.BLOCKLY].send_code();
   } else {
@@ -2076,7 +2080,7 @@ let show_hide_dataset_filters_handler =  function(msg, root_el){
   }
 }
 
-let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state) {
+let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters) {
   __assert(()=>is_html_element(blockly_root_el))
 
   let inner_filter_el = blockly_root_el.querySelector(`[${BC.ATTRIBUTE.INNER_FILTER}]`);
@@ -2085,7 +2089,7 @@ let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_d
     filter.workspace.dispose();
     $(inner_filter_el).data("filter", undefined);
   }
-  $(inner_filter_el).data('filter', init_blockly(inner_filter_el, dataset_list_name, filter_data, filter_state));
+  $(inner_filter_el).data('filter', init_blockly(inner_filter_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters));
 }
 
 let FC = {
@@ -2122,7 +2126,8 @@ let FC = {
     DATASET_LIST_NAME: "dataset_list_name",
     SUBJECT_DATASET_NAME: "subject_dataset_name",
     STATIC_RET: "static_ret",
-    FILTER_MODE: "filter_mode"
+    FILTER_MODE: "filter_mode",
+    SKIP_DATASET_FILTERS: "skip_dataset_filters"
   },
   VAL: {
     EMPTY_FILTER: {
@@ -2308,6 +2313,7 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
     let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
     let static_init_ret = get_filter_property(root_el, FC.PROPERTY.STATIC_RET, false);
     let filter_mode = get_filter_property(root_el, FC.PROPERTY.FILTER_MODE);
+    let skip_dataset_filters = get_filter_property(root_el, FC.PROPERTY.SKIP_DATASET_FILTERS);
     
     init_filter_handler( 
       root_el,      
@@ -2316,7 +2322,8 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
       subject_filter_dataset_name,
       filter_state,
       static_init_ret,
-      filter_mode      
+      filter_mode,
+      skip_dataset_filters      
     );
   })
 
@@ -2465,6 +2472,7 @@ let baked_init_filter_handler = function(msg) {
     let dataset_lists_filter_data = deserialize_b64_filter_data(msg.dataset_lists_filter_data);
     set_filter_property(root_el, FC.PROPERTY.DATA, dataset_lists_filter_data);
     set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, msg.dataset_list_name);
+    set_filter_property(root_el, FC.PROPERTY.SKIP_DATASET_FILTERS, msg.skip_dataset_filters);
     
     let dataset_list_data = dataset_lists_filter_data;    
     let dataset_list_name = msg.dataset_list_name;
@@ -2472,6 +2480,7 @@ let baked_init_filter_handler = function(msg) {
     let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
     let static_init_ret = get_filter_property(root_el, FC.PROPERTY.STATIC_RET, false);
     let filter_mode = get_filter_property(root_el, FC.PROPERTY.FILTER_MODE);
+    let skip_dataset_filters = msg.skip_dataset_filters;
     
     init_filter_handler( 
       root_el,      
@@ -2480,7 +2489,8 @@ let baked_init_filter_handler = function(msg) {
       subject_filter_dataset_name,
       filter_state,
       static_init_ret,
-      filter_mode      
+      filter_mode,
+      skip_dataset_filters  
     );
 };
 Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
