@@ -105,6 +105,8 @@ run_app <- function(data = NULL,
     message(msg)
   }
 
+  assert_not_shiny_1_11_0()
+
   check_meta_mtime_attribute(dataset_lists)
 
   # Add logging
