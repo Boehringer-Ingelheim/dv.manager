@@ -217,6 +217,8 @@ app_server_ <- function(input, output, session, opts) {
     shiny::observeEvent(
       {
         input[[ID$NAV_HEADER]]
+        dataset_filter() # FIXME: We depend on this because redrawing the filter replaces the elements on the screen and removes the hidden property
+        # We don't want to redraw everytime we switch tabs an alternative to this strategy should be found (hovng)
       },
       {
         all_nm <- names(datasets_filters_info)
@@ -636,6 +638,11 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
     })
 
     shiny::observe({
+      subgroup_filter() # FIXME: We depend on this because redrawing the filter replaces the elements on the screen and removes the hidden property
+        # We don't want to redraw everytime we switch tabs an alternative to this strategy should be found (hovng)
+        # The message sets the a property in the filter with hidden filters, hides and shows directly in the handler by applying the list. When
+        # redrawing the property is consulted and the class is applied on draw.
+
       session$sendCustomMessage(
         "show_hide_dataset_filters",
         list(
