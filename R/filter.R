@@ -822,8 +822,8 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
       )
     })
 
-    shiny::observeEvent(input[[ID$FILTER_STATE_JSON_INPUT]], {
-      log_inform("RECEIVED FILTER")
+    shiny::observeEvent(input[[ID$FILTER_STATE_JSON_INPUT]], {      
+      log_inform(paste("RECEIVED FILTER", ns(id)))
     })
 
     shiny::observeEvent(input[[ID$FILTER_LOG_INPUT]], {

@@ -539,9 +539,12 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
     DEFAULT_CAT_ASSIGNMENTS <- vector(mode = "list", length = MAX_CATEGORIES + 1)
     cat_assignments <- shiny::reactiveVal(DEFAULT_CAT_ASSIGNMENTS)
 
-    shiny::setBookmarkExclude(
-      c("add_subgroup", "subgroup_name", "subgroup_label", "accordion", "subgroup_cat_num", "label_1", "label_2", "check_subgroup")
-    )
+    shiny::setBookmarkExclude({
+      c(
+        "add_subgroup", "subgroup_name", "subgroup_label", "accordion", "subgroup_cat_num", "check_subgroup",
+        label_others_id, get_cat_label_id(1:MAX_CATEGORIES)
+      )
+    })
 
     subgroup_filter <- new_filter_server("filter", unfiltered_dataset_list, subject_filter_dataset_name, unfiltered_dataset_list, skip_dataset_filters = TRUE) # FIXME: Pass filtered one
 
@@ -602,16 +605,15 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
           ui[[idx]] <- shiny::div(
             shiny::div(
               style = "display: flex",
-              shiny::textInput(label_id, label = NULL, placeholder = paste("Label for category", idx))
+              shiny::textInput(ns(label_id), label = NULL, placeholder = paste("Label for category", idx))
             )
           )
         }
       }
 
-      label_id <- ns(label_others_id)
       ui[[r_subgroup_cat_num]] <- shiny::div(
         style = "display: flex; justify-content: flex-end;",
-        shiny::textInput(label_id, label = NULL, placeholder = "Label for other subjects", value = "")
+        shiny::textInput(ns(label_others_id), label = NULL, placeholder = "Label for other subjects", value = "")
       )
       ui
     })
