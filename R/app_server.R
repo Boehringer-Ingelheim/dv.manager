@@ -739,8 +739,11 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
 
       new_subgroups[[r_subgroup_name]] <- new_subgroup
 
+      # We assume no wrong dataset can be added
+      no_subgroup_dataset_list <- unfiltered_dataset_list()
+      no_subgroup_dataset_list[[subject_filter_dataset_name]] <- no_subgroup_dataset_list[[subject_filter_dataset_name]][,!names(unfiltered_dataset_list()[[subject_filter_dataset_name]]) %in% names(new_subgroups), drop = FALSE]
       apply_check <- apply_subgroups(
-        unfiltered_dataset_list(),
+        no_subgroup_dataset_list,
         subject_filter_dataset_name,
         filter_key_var,
         new_subgroups
