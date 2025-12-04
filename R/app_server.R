@@ -605,7 +605,7 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
           ui[[idx]] <- shiny::div(
             shiny::div(
               style = "display: flex",
-              shiny::textInput(ns(label_id), label = NULL, placeholder = paste("Label for category", idx))
+              shiny::textInput(ns(label_id), label = NULL, placeholder = paste("Label for category", idx), value = shiny::isolate(input[[label_id]]))
             )
           )
         }
@@ -613,7 +613,7 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
 
       ui[[r_subgroup_cat_num]] <- shiny::div(
         style = "display: flex; justify-content: flex-end;",
-        shiny::textInput(ns(label_others_id), label = NULL, placeholder = "Label for other subjects", value = "")
+        shiny::textInput(ns(label_others_id), label = NULL, placeholder = "Label for other subjects", value = shiny::isolate(input[[label_others_id]]))
       )
       ui
     })
