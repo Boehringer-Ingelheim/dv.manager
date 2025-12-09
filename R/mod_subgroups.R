@@ -17,11 +17,12 @@ mod_subgroup_ui <- function(id, subject_filter_dataset_name) {
   )
 }
 
-mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_dataset_name, filter_key_var) {
+mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_dataset_name, filter_key_var) {
   mod <- function(input, output, session) {
     ns <- session[["ns"]]
 
     assign_btn_id <- "assign_button"
+    clear_assign_btn_id <- "clear_assign_button"
     view_btn_id <- "view_button"
     get_cat_label_id <- function(idx) paste0("label_", idx)
     label_others_id <- "label_others"
@@ -37,7 +38,7 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       )
     })
 
-    subgroup_filter <- new_filter_server("filter", unfiltered_dataset_list, subject_filter_dataset_name, unfiltered_dataset_list, skip_dataset_filters = TRUE) # FIXME: Pass filtered one
+    subgroup_filter <- new_filter_server("filter", selected_dataset_list, subject_filter_dataset_name, selected_dataset_list, skip_dataset_filters = TRUE) # FIXME: Pass filtered one
 
     shiny::onBookmark(function(state) {
       state$values$subgroups <- I(subgroups())
@@ -53,15 +54,43 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
 
       ui <- vector(mode = "list", length = r_subgroup_cat_num)
 
+      category_conflicts <- local({
+        non_other_cat_num <- r_subgroup_cat_num - 1
+
+        cat_subjects <- vector(mode = "list", length = non_other_cat_num)
+        cat_conflicts <- vector(mode = "list", length = non_other_cat_num)
+        cat_conflicts[] <- list(integer(0))
+
+        for (idx in seq_len(r_subgroup_cat_num - 1)) {
+          assigned_filter <- cat_assignments()[[idx]]
+          if (checkmate::test_string(assigned_filter, min.chars = 1)) {
+            parsed_assigned_filter <- deserialize_filter_state_from_client(assigned_filter)[["filters"]][["subject_filter"]]
+            cat_subjects[[idx]] <- create_subject_filter_info(selected_dataset_list(), parsed_assigned_filter, filter_key_var)[["subjects"]]
+            for (jdx in seq_len(idx - 1)) {
+              if (length(intersect(cat_subjects[[idx]], cat_subjects[[jdx]])) > 0) {
+                cat_conflicts[[idx]] <- union(cat_conflicts[[idx]], jdx)
+                cat_conflicts[[jdx]] <- union(cat_conflicts[[jdx]], idx)
+              }
+            }
+          } else {
+            cat_conflicts[[idx]] <- NA_integer_
+          }
+        }
+        cat_conflicts
+      })
+
       for (idx in seq_len(r_subgroup_cat_num - 1)) {
         label_id <- get_cat_label_id(idx)
 
         if (r_subgroup_cat_num > 2) {
 
-          if (checkmate::test_string(cat_assignments()[[idx]], min.chars = 1)) {
-            icon_state <- shiny::icon("circle-check")
-          } else {
-            icon_state <- shiny::icon("circle-xmark")
+          if (identical(category_conflicts[[idx]], NA_integer_)) {
+            icon_state <- shiny::icon("circle-question", class = "text-warning", title = "Pending assignment")
+          } else if (length(category_conflicts[[idx]]) == 0) {
+            icon_state <- shiny::icon("circle-check", class = "text-success", title = "Correct")
+          } else if (length(category_conflicts[[idx]]) > 0) {
+            title <- paste("Category", idx, "shares at least one subject with categories", paste(category_conflicts[[idx]], collapse = ","))
+            icon_state <- shiny::icon("circle-xmark", class = "text-danger", title = title)
           }
 
           ui[[idx]] <- shiny::div(
@@ -75,6 +104,16 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
                 onclick = sprintf(
                   "Shiny.setInputValue('%s', '%d', { priority: 'event' })",
                   ns(assign_btn_id),
+                  idx
+                )
+              ),
+              shiny::tags[["button"]](
+                shiny::icon("user-minus"),
+                class = "btn btn-sm mb-3 btn-default",
+                title = "Clear assignment",
+                onclick = sprintf(
+                  "Shiny.setInputValue('%s', '%d', { priority: 'event' })",
+                  ns(clear_assign_btn_id),                  
                   idx
                 )
               ),
@@ -140,7 +179,7 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
         "show_hide_dataset_filters",
         list(
           id = ns("filter"),
-          hidden = setdiff(names(unfiltered_dataset_list()), subject_filter_dataset_name)
+          hidden = setdiff(names(selected_dataset_list()), subject_filter_dataset_name)
       )
     )
     })
@@ -176,12 +215,19 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       cat_assignments(current_assingments)
     })
 
+    shiny::observeEvent(input[[clear_assign_btn_id]], {
+      idx <- as.integer(input[[clear_assign_btn_id]])
+      current_assingments <- cat_assignments()
+      current_assingments[[idx]] <- NULL
+      cat_assignments(current_assingments)
+    })
+
     shiny::observeEvent(input[["add_subgroup"]], {
       r_subgroup_cat_num <- as.integer(input[["subgroup_cat_num"]])
       r_subgroup_name <- input[["subgroup_name"]]
       r_subgroup_label <- if (checkmate::test_string(input[["subgroup_label"]], min.chars = 1)) input[["subgroup_label"]] else NULL
 
-      subject_dataset <- unfiltered_dataset_list()[[subject_filter_dataset_name]]
+      subject_dataset <- selected_dataset_list()[[subject_filter_dataset_name]]
       current_subgroups <- subgroups()
       original_names <- setdiff(names(subject_dataset), names(current_subgroups))
       new_subgroups <- subgroups()
@@ -233,8 +279,8 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
       new_subgroups[[r_subgroup_name]] <- new_subgroup
 
       # We assume no wrong dataset can be added
-      no_subgroup_dataset_list <- unfiltered_dataset_list()
-      no_subgroup_dataset_list[[subject_filter_dataset_name]] <- no_subgroup_dataset_list[[subject_filter_dataset_name]][,!names(unfiltered_dataset_list()[[subject_filter_dataset_name]]) %in% names(new_subgroups), drop = FALSE]
+      no_subgroup_dataset_list <- selected_dataset_list()
+      no_subgroup_dataset_list[[subject_filter_dataset_name]] <- no_subgroup_dataset_list[[subject_filter_dataset_name]][,!names(selected_dataset_list()[[subject_filter_dataset_name]]) %in% names(new_subgroups), drop = FALSE]
       apply_check <- apply_subgroups(
         no_subgroup_dataset_list,
         subject_filter_dataset_name,
@@ -334,3 +380,4 @@ mod_subgroup_server <- function(id, unfiltered_dataset_list, subject_filter_data
   }
   shiny::moduleServer(id, mod)
 }
+
