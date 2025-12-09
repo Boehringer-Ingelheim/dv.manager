@@ -126,29 +126,37 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  apply_subgroups <- mod_subgroup_server(ID$SUBGROUP, unfiltered_dataset_list, subject_filter_dataset_name, filter_key_var)
-
-  unfiltered_dataset_list <- shiny::reactive({
+  selected_dataset_list <- shiny::reactive({
     dataset_list_name <- input$selector
-    r_apply_subgroups <- apply_subgroups()
     shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
     assert(dataset_list_name %in% names(dataset_lists))
 
     if (is.function(dataset_lists[[dataset_list_name]])) {
-      selected_dataset_list <- add_date_range(dataset_lists[[dataset_list_name]]())
+      res <- add_date_range(dataset_lists[[dataset_list_name]]())
     } else {
-      selected_dataset_list <- add_date_range(dataset_lists[[dataset_list_name]])
+      res <- add_date_range(dataset_lists[[dataset_list_name]])
     }
 
-    res_apply_subgroups <- r_apply_subgroups(selected_dataset_list, subject_filter_dataset_name, filter_key_var)
+    attr(res, "dataset_list_name") <- dataset_list_name
+    res
+  })
+
+  apply_subgroups <- mod_subgroup_server(ID$SUBGROUP, selected_dataset_list, subject_filter_dataset_name, filter_key_var)
+
+  unfiltered_dataset_list <- shiny::reactive({
+
+    r_selected_dataset_list <- selected_dataset_list()
+
+    r_apply_subgroups <- apply_subgroups()
+    res_apply_subgroups <- r_apply_subgroups(r_selected_dataset_list, subject_filter_dataset_name, filter_key_var)
 
     for (error in res_apply_subgroups[["errors"]]) {
       shiny::showNotification(error, type = "warning")
     }
 
-    selected_dataset_list <- res_apply_subgroups[["dataset_list"]]
-    attr(selected_dataset_list, "dataset_list_name") <- dataset_list_name
-    selected_dataset_list
+    subgrouped_dataset_list <- res_apply_subgroups[["dataset_list"]]
+    attr(subgrouped_dataset_list, "dataset_list_name") <- attr(r_selected_dataset_list, "dataset_list_name")
+    subgrouped_dataset_list
   })
 
   if (use_blockly_filter) {
