@@ -86,11 +86,14 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
 
           if (identical(category_conflicts[[idx]], NA_integer_)) {
             icon_state <- shiny::icon("circle-question", class = "text-warning", title = "Pending assignment")
+            clear_assignment_disabled <- TRUE
           } else if (length(category_conflicts[[idx]]) == 0) {
             icon_state <- shiny::icon("circle-check", class = "text-success", title = "Correct")
+            clear_assignment_disabled <- FALSE
           } else if (length(category_conflicts[[idx]]) > 0) {
             title <- paste("Category", idx, "shares at least one subject with categories", paste(category_conflicts[[idx]], collapse = ","))
             icon_state <- shiny::icon("circle-xmark", class = "text-danger", title = title)
+            clear_assignment_disabled <- FALSE
           }
 
           ui[[idx]] <- shiny::div(
@@ -113,9 +116,10 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
                 title = "Clear assignment",
                 onclick = sprintf(
                   "Shiny.setInputValue('%s', '%d', { priority: 'event' })",
-                  ns(clear_assign_btn_id),                  
+                  ns(clear_assign_btn_id),
                   idx
-                )
+                ),
+                disabled = if(clear_assignment_disabled) NA_character_ else NULL
               ),
               icon_state
               # ,
@@ -135,7 +139,8 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
           ui[[idx]] <- shiny::div(
             shiny::div(
               style = "display: flex",
-              shiny::textInput(ns(label_id), label = NULL, placeholder = paste("Label for category", idx), value = shiny::isolate(input[[label_id]]))
+              shiny::textInput(ns(label_id), label = NULL, placeholder = paste("Label for catego
+              ry", idx), value = shiny::isolate(input[[label_id]]))
             )
           )
         }
