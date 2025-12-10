@@ -256,7 +256,7 @@ check_parsable_json_input <- function(x) {
 
 assert_not_shiny_1_11_0 <- function() {
   shiny_forbidden_version <- "1.11.0"
-  shiny_current_version <- as.character(utils::packageVersion("yyjsonr"))
+  shiny_current_version <- as.character(utils::packageVersion("shiny"))
 
   if (shiny_forbidden_version == shiny_current_version) {
     stop("shiny version 1.11.0 has critical bugs please update")
