@@ -92,7 +92,7 @@ run_app <- function(data = NULL,
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
   config[["filter_info"]] <- check_set_filter_info(filter_type, filter_default_state)
-  config[["subgroup"]] <- list(enable = enable_subgroup)
+  config[["subgroup"]] <- check_set_subgroup_info(enable_subgroup, filter_type)
 
   check_meta_mtime_attribute(dataset_lists)
 

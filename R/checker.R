@@ -258,6 +258,12 @@ check_set_filter_info <- function(filter_type, filter_default_state) {
   list(filter_type = filter_type, filter_default_state = filter_default_state)
 }
 
+check_set_subgroup_info <-  function(enable_subgroup, filter_type) {  
+  if(filter_type != FILTER$TYPE$BLOCKLY && enable_subgroup) {
+    stop(sprintf("subgrouping is only available for `%s` filter type", FILTER$TYPE$BLOCKLY))  }
+  res <- list(enable = enable_subgroup)
+}
+
 check_parsable_json_input <- function(x) {
   capture.output(p <- try(deserialize_filter_state_from_client(x), silent = TRUE))
   if (inherits(p, "try-error")) {

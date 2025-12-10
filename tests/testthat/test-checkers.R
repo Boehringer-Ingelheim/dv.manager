@@ -409,4 +409,23 @@ test_that(
   }
 )
 
+test_that(
+  "check_set_subgroup_info should return a list with enable entry",
+  {
+    expect_identical(check_set_subgroup_info(TRUE, FILTER$TYPE$BLOCKLY), list(enable = TRUE))
+    expect_identical(check_set_subgroup_info(FALSE, FILTER$TYPE$BLOCKLY), list(enable = FALSE))    
+    expect_identical(check_set_subgroup_info(FALSE, "Any filter"), list(enable = FALSE))    
+  }
+)
+
+test_that(
+  "check_set_subgroup_info fails when filter is not set to development",
+  {
+    expect_error(
+      check_set_subgroup_info(TRUE, "Other filter"),
+      regexp = "^subgrouping is only available for"
+    )
+  }
+)
+
 # nolint end
