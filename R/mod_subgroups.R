@@ -139,8 +139,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
           ui[[idx]] <- shiny::div(
             shiny::div(
               style = "display: flex",
-              shiny::textInput(ns(label_id), label = NULL, placeholder = paste("Label for catego
-              ry", idx), value = shiny::isolate(input[[label_id]]))
+              shiny::textInput(ns(label_id), label = NULL, placeholder = paste("Label for category", idx), value = shiny::isolate(input[[label_id]]))
             )
           )
         }
