@@ -241,6 +241,20 @@ check_set_filter_info <- function(filter_type, filter_default_state) {
     }
   }
 
+  if (filter_type == FILTER$TYPE$BLOCKLY) {
+    msg <- paste(
+      "",
+      "##############################################################",
+      "# You are using using an experimental filter not ready for   #",
+      "# production.                                                #",
+      "# If this is not intended, please use 'simple' or 'datasets' #",
+      "# in `filter_type` argument.                                 #",
+      "##############################################################",
+      sep = "\n"
+    )
+    message(msg)
+  }
+
   list(filter_type = filter_type, filter_default_state = filter_default_state)
 }
 

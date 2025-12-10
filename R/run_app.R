@@ -94,20 +94,6 @@ run_app <- function(data = NULL,
   config[["filter_info"]] <- check_set_filter_info(filter_type, filter_default_state)
   config[["subgroup"]] <- list(enable = enable_subgroup)
 
-  if (config[["filter_info"]][["filter_type"]] == FILTER$TYPE$BLOCKLY) {
-    msg <- paste(
-      "",
-      "##############################################################",
-      "# You are using using an experimental filter not ready for   #",
-      "# production.                                                #",
-      "# If this is not intended, please use 'simple' or 'datasets' #",
-      "# in `filter_type` argument.                                 #",
-      "##############################################################",
-      sep = "\n"
-    )
-    message(msg)
-  }
-
   check_meta_mtime_attribute(dataset_lists)
 
   # Add logging
