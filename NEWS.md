@@ -1,3 +1,6 @@
+# dv.manager 2.2.0-9006
+- Prevents running application with Shiny version 1.11.0 which container several bugs
+
 # dv.manager 2.2.0-9005
 - Filter: Includes fast routine for binary serialization for filter_data
 - Subgroup: Includes initial POC for subgroup creation in app runtime
