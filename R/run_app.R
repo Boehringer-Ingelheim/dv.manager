@@ -94,6 +94,8 @@ run_app <- function(data = NULL,
   config[["filter_info"]] <- check_set_filter_info(filter_type, filter_default_state)
   config[["subgroup"]] <- check_set_subgroup_info(enable_subgroup, filter_type)
 
+  assert_not_shiny_1_11_0()
+
   check_meta_mtime_attribute(dataset_lists)
 
   # Add logging
