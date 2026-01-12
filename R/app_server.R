@@ -160,64 +160,31 @@ app_server_ <- function(input, output, session, opts) {
   })
 
   if (use_blockly_filter) {
-    dataset_filter <- new_filter_server(ID$FILTER, unfiltered_dataset_list, subject_filter_dataset_name, filtered_dataset_list)
+    dataset_list_filter <- new_filter_server(ID$FILTER, unfiltered_dataset_list, subject_filter_dataset_name, filtered_dataset_list)
 
     filtered_dataset_list <- shiny::reactive({
-      ufd <- unfiltered_dataset_list()
 
-      shiny::req(!is.na(dataset_filter()))
+      unfiltered_dataset_list_r <- unfiltered_dataset_list()
+      dataset_list_filter_r <- dataset_list_filter()
 
-      safe_dsf <- as_safe_list(dataset_filter())
+      res <- apply_filter_to_dataset_list(
+        unfiltered_dataset_list_r,
+        dataset_list_filter_r,
+        filter_key_var
+      )
 
-      if (isTRUE(is.na(safe_dsf[["parsed"]]))) {
-        return(ufd)
+      error_list <- res$error_list
+      fd <- res$fd
+
+      shiny::req(        
+          !error_list$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
+          !error_list$any_has_class(FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class)        
+      )
+
+      for(error_message in error_list$get_messages()) {
+        warning(error_message)
+        shiny::showNotification(error_message, type = "error")
       }
-
-      safe_filters <- as_safe_list(safe_dsf[["parsed"]][["filters"]])
-
-      current_server_dataset_list_name <- attr(ufd, "dataset_list_name")
-      current_client_dataset_name <- safe_dsf[["parsed"]][["dataset_list_name"]]
-      shiny::req(current_server_dataset_list_name == current_client_dataset_name)
-
-      ds <- ufd
-
-      # JS client may not fully control that the selected filter is correct.
-      # (e.g. blocks that must have children, like `and`,  has them).
-      # The server must also control for those (and it actually does it right now). See asserts in the create*_masks functions
-      # This is required as the server must NOT trust the client and always assert that the filter is correct.
-      # Errors must be caught here as downstream modules may crash when an errors happens inside one of the observes
-      # Errors should be controlled inside the observes by modules themselves, unfortunately it is not always the case
-
-      fd <- tryCatch(
-        {
-          dataset_filter_info <- create_dataset_filter_info(ds, safe_filters[["datasets_filter"]])
-          apply_dataset_filter_info(ds, dataset_filter_info)
-        },
-        error = function(e) {
-          msg <- paste("Filter not applied. Error found:\n", e[["message"]])
-          warning(msg)
-          shiny::showNotification(msg, type = "error")
-          ds
-        }
-      )
-
-      # Check NA optimization in the future
-      fd <- tryCatch(
-        {
-          subject_filter_info <- create_subject_filter_info(ds, safe_filters[["subject_filter"]], filter_key_var)
-          if (!identical(subject_filter_info, NA_character_)) {
-            apply_subject_filter_info(fd, subject_filter_info, filter_key_var)
-          } else {
-            fd
-          }
-        },
-        error = function(e) {
-          msg <- paste("Filter not applied. Error found:\n", e[["message"]])
-          warning(msg)
-          shiny::showNotification(msg, type = "error")
-          ds
-        }
-      )
 
       fd
     })
@@ -225,7 +192,7 @@ app_server_ <- function(input, output, session, opts) {
     shiny::observeEvent(
       {
         input[[ID$NAV_HEADER]]
-        dataset_filter() # FIXME: We depend on this because redrawing the filter replaces the elements on the screen and removes the hidden property
+        dataset_list_filter() # FIXME: We depend on this because redrawing the filter replaces the elements on the screen and removes the hidden property
         # We don't want to redraw everytime we switch tabs an alternative to this strategy should be found (hovng)
       },
       {
@@ -444,7 +411,7 @@ app_server_ <- function(input, output, session, opts) {
     filter_metadata = list(
       output = shiny::reactive({
         log_warn("You are using afmm[['filter_metadata']][['output']]. This is not a public element and it may disappear or be modified without notice")
-        dataset_filter()
+        dataset_list_filter()
       })
     )
   )

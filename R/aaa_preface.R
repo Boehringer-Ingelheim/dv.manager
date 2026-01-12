@@ -202,3 +202,52 @@ pack_of_constants <- function(...) {
 }
 
 poc <- pack_of_constants
+
+new_error_list <- function() {
+  errors <- list()
+  push_error <- function(x) {
+    if (!is.list(x)) {
+      x <- list(message = x)
+    }
+
+    errors[[length(errors) + 1]] <<- do.call(errorCondition, x)
+  }
+
+  get_errors <- function() {
+    return(errors)
+  }
+
+  get_messages <- function() {
+    messages <- character(0)
+    for (idx in seq_along(errors)) {
+      messages[[idx]] <- errors[[idx]][["message"]]
+    }
+    return(messages)
+  }
+
+  any_error <- function() {
+    return(length(errors) > 0)
+  }
+
+  any_error_has_class <- function(class_name) {
+    for (error in errors) {
+      if (any(class_name %in% class(error))) {
+        return(TRUE)
+      }
+    }
+    return(FALSE)
+  }
+
+  return(
+    as_safe_list(
+      list(
+        push = push_error,
+        get_errors = get_errors,
+        get_messages = get_messages,
+        any = any_error,
+        any_has_class = any_error_has_class
+        )
+      )
+    )
+}
+

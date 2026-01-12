@@ -66,6 +66,20 @@ FC <- poc(
       INTERSECT = "intersect",
       COMPLEMENT = "complement"
     )
+  ),
+  ERRORS = poc(
+    FILTER_IS_NA = list(
+      class = "UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH",
+      message = "Mismatch between unfiltered dataset list name and filter dataset list name"
+    ),
+    UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH = list(
+      class = "UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH",
+      message = "Mismatch between unfiltered dataset list name and filter dataset list name"
+    ),
+    GENERIC_FILTER_APPLICATION = list(
+      class = "GENERIC_FILTER_APPLICATION",
+      message = NA
+    )
   )
 )
 
@@ -654,6 +668,55 @@ apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_va
   return(filtered_dataset_list)
 }
 
+apply_filter_to_dataset_list <- function(unfiltered_dataset_list, dataset_list_filter, filter_key_var) {
+  error_list <- new_error_list()
+  fd <- NULL
+
+  if (identical(as.character(dataset_list_filter), NA_character_)) {
+    error_list$push(FC$ERRORS$FILTER_IS_NA)
+  } else if (isTRUE(is.na(dataset_list_filter[["parsed"]]))) {
+    fd <- unfiltered_dataset_list
+  } else {
+    unfiltered_dataset_list_name <- attr(unfiltered_dataset_list, "dataset_list_name")
+    filter_dataset_list_name <- dataset_list_filter[["parsed"]][["dataset_list_name"]]
+
+    if (unfiltered_dataset_list_name != filter_dataset_list_name) {
+    error_list$push(FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH)
+    } else {
+          safe_filters <- dataset_list_filter[["parsed"]][["filters"]]
+      fd <- tryCatch(
+        {
+          dataset_filter_info <- create_dataset_filter_info(unfiltered_dataset_list, safe_filters[["datasets_filter"]])
+          subject_filter_info <- create_subject_filter_info(unfiltered_dataset_list, safe_filters[["subject_filter"]], filter_key_var)
+
+          apply_dataset_filter_info(
+            unfiltered_dataset_list,
+            dataset_filter_info
+          ) |> apply_subject_filter_info(
+            subject_filter_info,
+            filter_key_var
+          )
+        },
+        error = function(e) {
+          error <- FC$ERRORS$GENERIC_FILTER_APPLICATION
+          error$message <- paste("Filter not applied. Error found:\n", e[["message"]])
+          error_list$push(error)
+          unfiltered_dataset_list
+        }
+      )
+
+    }
+  }
+
+  res <- list(
+    fd = fd,
+    error_list = error_list
+  )
+
+  return(res)
+
+} |> shiny::maskReactiveContext()
+
 to_filter_validate <- jsonvalidate::json_validator(
   system.file("to_filter_schema.json", package = "dv.manager", mustWork = TRUE),
   engine = "ajv",
@@ -822,7 +885,7 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
       )
     })
 
-    shiny::observeEvent(input[[ID$FILTER_STATE_JSON_INPUT]], {      
+    shiny::observeEvent(input[[ID$FILTER_STATE_JSON_INPUT]], {
       log_inform(paste("RECEIVED FILTER", ns(id)))
     })
 
