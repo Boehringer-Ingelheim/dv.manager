@@ -1,7 +1,17 @@
 MAX_CATEGORIES <- 10
 
-build_subgroup_category_ui <- function(cat_num, cat_assignments, selected_dataset_list, filter_key_var, ns, get_cat_label_id, label_others_id, assign_btn_id, clear_assign_btn_id, current_values) {
-
+build_subgroup_category_ui <- function(
+  cat_num,
+  cat_assignments,
+  selected_dataset_list,
+  filter_key_var,
+  ns,
+  get_cat_label_id,
+  label_others_id,
+  assign_btn_id,
+  clear_assign_btn_id,
+  current_values
+) {
   ui <- vector(mode = "list", length = cat_num)
   is_multicat <- cat_num > 2
 
@@ -17,7 +27,11 @@ build_subgroup_category_ui <- function(cat_num, cat_assignments, selected_datase
       assigned_filter <- cat_assignments[[idx]]
       if (checkmate::test_string(assigned_filter, min.chars = 1)) {
         parsed_assigned_filter <- deserialize_filter_state_from_client(assigned_filter)[["filters"]][["subject_filter"]]
-        cat_subjects[[idx]] <- create_subject_filter_info(selected_dataset_list, parsed_assigned_filter, filter_key_var)[["subjects"]]
+        cat_subjects[[idx]] <- create_subject_filter_info(
+          selected_dataset_list,
+          parsed_assigned_filter,
+          filter_key_var
+        )[["subjects"]]
 
         for (jdx in seq_len(idx - 1)) {
           if (length(intersect(cat_subjects[[idx]], cat_subjects[[jdx]])) > 0) {
@@ -45,7 +59,12 @@ build_subgroup_category_ui <- function(cat_num, cat_assignments, selected_datase
         status_icon <- shiny::icon("circle-check", class = "text-success", title = "Correct")
         clear_disabled <- FALSE
       } else {
-        icon_title <- paste("Category", idx, "shares at least one subject with categories", paste(conflicts, collapse = ","))
+        icon_title <- paste(
+          "Category",
+          idx,
+          "shares at least one subject with categories",
+          paste(conflicts, collapse = ",")
+        )
         status_icon <- shiny::icon("circle-xmark", class = "text-danger", title = icon_title)
         clear_disabled <- FALSE
       }
@@ -53,7 +72,12 @@ build_subgroup_category_ui <- function(cat_num, cat_assignments, selected_datase
       ui[[idx]] <- shiny::div(
         shiny::div(
           style = "display: flex; align-items:baseline; gap: 2px",
-          shiny::textInput(ns(label_id), label = NULL, placeholder = paste("Label for category", idx), value = current_values[idx]),
+          shiny::textInput(
+            ns(label_id),
+            label = NULL,
+            placeholder = paste("Label for category", idx),
+            value = current_values[idx]
+          ),
           shiny::tags[["button"]](
             shiny::icon("user-plus"),
             class = "btn btn-sm mb-3 btn-default",
@@ -82,7 +106,12 @@ build_subgroup_category_ui <- function(cat_num, cat_assignments, selected_datase
       ui[[idx]] <- shiny::div(
         shiny::div(
           style = "display: flex",
-          shiny::textInput(ns(label_id), label = NULL, placeholder = paste("Label for category", idx), value = current_values[idx])
+          shiny::textInput(
+            ns(label_id),
+            label = NULL,
+            placeholder = paste("Label for category", idx),
+            value = current_values[idx]
+          )
         )
       )
     }
@@ -91,7 +120,12 @@ build_subgroup_category_ui <- function(cat_num, cat_assignments, selected_datase
   # Build "others" category UI (always right-aligned, no buttons)
   ui[[cat_num]] <- shiny::div(
     style = "display: flex; justify-content: flex-end;",
-    shiny::textInput(ns(label_others_id), label = NULL, placeholder = "Label for other subjects", value = current_values[cat_num])
+    shiny::textInput(
+      ns(label_others_id),
+      label = NULL,
+      placeholder = "Label for other subjects",
+      value = current_values[cat_num]
+    )
   )
 
   ui
@@ -105,7 +139,14 @@ mod_subgroup_ui <- function(id, subject_filter_dataset_name) {
     shiny::div(
       style = "display: flex; align-items:baseline",
       shiny::span("Categories in subgroup", class = "mb-3 pe-1"),
-      shiny::selectInput(ns("subgroup_cat_num"), NULL, choices = 2:MAX_CATEGORIES, selected = 2, width = "auto", selectize = FALSE)
+      shiny::selectInput(
+        ns("subgroup_cat_num"),
+        NULL,
+        choices = 2:MAX_CATEGORIES,
+        selected = 2,
+        width = "auto",
+        selectize = FALSE
+      )
     ),
     shiny::uiOutput(ns("subgroup_cat_container")),
     shiny::actionButton(ns("add_subgroup"), label = "Add subgroup", class = "btn-sm", style = "flex: 2;"),
@@ -146,20 +187,27 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
     categorized_subject_mask <- rep_len(FALSE, nrow(subject_dataset))
 
     if (name %in% names(subject_dataset)) {
-      error_list$push(sprintf("Skipping subgroup: `%s`. It is already a column name in the dataset `%s`.", name, subject_filter_dataset_name))
+      error_list$push(sprintf(
+        "Skipping subgroup: `%s`. It is already a column name in the dataset `%s`.",
+        name,
+        subject_filter_dataset_name
+      ))
     } else if (any(duplicated(cat_labels))) {
       error_list$push(sprintf("Skipping subgroup: `%s`. Category labels are duplicated.", name))
-     } else {
+    } else {
       new_var <- rep_len(NA_character_, nrow(subject_dataset))
       subgroup_ok <- TRUE
 
-      for (cat_idx in seq_len(length(cat_filters))) { # Others will be treated separately
+      for (cat_idx in seq_len(length(cat_filters))) {
+        # Others will be treated separately
         category_label <- cat_labels[[cat_idx]]
         category_filter <- cat_filters[[cat_idx]]
         log_inform(sprintf("Adding category: %s", category_label))
 
         parsed_category_filter <- deserialize_filter_state_from_client(category_filter)[["filters"]][["subject_filter"]]
-        category_subjects <- create_subject_filter_info(dataset_list, parsed_category_filter, filter_key_var)[["subjects"]]
+        category_subjects <- create_subject_filter_info(dataset_list, parsed_category_filter, filter_key_var)[[
+          "subjects"
+        ]]
         category_mask <- subject_dataset[[filter_key_var]] %in% category_subjects
 
         if (any(categorized_subject_mask & category_mask)) {
@@ -190,7 +238,8 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
       errors = error_list
     )
   )
-}) |> shiny::maskReactiveContext()
+}) |>
+  shiny::maskReactiveContext()
 
 #' Subgroup Module Server
 #'
@@ -251,15 +300,26 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
 
     shiny::setBookmarkExclude({
       c(
-        "add_subgroup", "subgroup_name", "subgroup_label", "accordion", "subgroup_cat_num", "check_subgroup",
-        label_others_id, get_cat_label_id(1:MAX_CATEGORIES)
+        "add_subgroup",
+        "subgroup_name",
+        "subgroup_label",
+        "accordion",
+        "subgroup_cat_num",
+        "check_subgroup",
+        label_others_id,
+        get_cat_label_id(1:MAX_CATEGORIES)
       )
     })
 
-    subgroup_filter <- new_filter_server("filter", selected_dataset_list, subject_filter_dataset_name, filtered_subgroup_dataset_list, skip_dataset_filters = TRUE) # FIXME: Pass filtered one
+    subgroup_filter <- new_filter_server(
+      "filter",
+      selected_dataset_list,
+      subject_filter_dataset_name,
+      filtered_subgroup_dataset_list,
+      skip_dataset_filters = TRUE
+    ) # FIXME: Pass filtered one
 
     filtered_subgroup_dataset_list <- shiny::reactive({
-
       unfiltered_dataset_list_r <- selected_dataset_list()
       dataset_list_filter_r <- subgroup_filter()
 
@@ -269,7 +329,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       fd <- res$fd
 
       shiny::req(
-          !error_list$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
+        !error_list$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
           !error_list$any_has_class(FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class)
       )
 
@@ -290,9 +350,14 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
     })
 
     output[["subgroup_cat_container"]] <- shiny::renderUI({
-
       r_subgroup_cat_num <- as.integer(input[["subgroup_cat_num"]])
-      shiny::req(checkmate::test_integer(r_subgroup_cat_num, lower = 2, len = 1, upper = MAX_CATEGORIES, any.missing = FALSE))
+      shiny::req(checkmate::test_integer(
+        r_subgroup_cat_num,
+        lower = 2,
+        len = 1,
+        upper = MAX_CATEGORIES,
+        any.missing = FALSE
+      ))
 
       current_values <- character(r_subgroup_cat_num)
       for (i in seq_len(r_subgroup_cat_num - 1)) {
@@ -329,7 +394,6 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
         class = "mt-2",
         style = "display:flex; flex-wrap: wrap; gap: .25rem",
         badge_ui
-
       )
     })
 
@@ -363,7 +427,9 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
         shiny::showNotification(x[[idx]]$message, type = "error", duration = Inf)
       }
 
-      if (length(x) > 0) shiny::req(FALSE)
+      if (length(x) > 0) {
+        shiny::req(FALSE)
+      }
 
       NULL
     }
@@ -389,7 +455,11 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
     shiny::observeEvent(input[["add_subgroup"]], {
       r_subgroup_cat_num <- as.integer(input[["subgroup_cat_num"]])
       r_subgroup_name <- input[["subgroup_name"]]
-      r_subgroup_label <- if (checkmate::test_string(input[["subgroup_label"]], min.chars = 1)) input[["subgroup_label"]] else NULL
+      r_subgroup_label <- if (checkmate::test_string(input[["subgroup_label"]], min.chars = 1)) {
+        input[["subgroup_label"]]
+      } else {
+        NULL
+      }
       subject_dataset <- selected_dataset_list()[[subject_filter_dataset_name]]
       current_subgroups <- subgroups()
 
@@ -409,8 +479,16 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
           return(list(subgroup = NULL, errors = errors))
         }
 
-        r_true_label <- if (checkmate::test_string(input[[get_cat_label_id(1)]], min.chars = 1)) input[[get_cat_label_id(1)]] else "TRUE"
-        r_false_label <- if (checkmate::test_string(input[[label_others_id]], min.chars = 1)) input[[label_others_id]] else "FALSE"
+        r_true_label <- if (checkmate::test_string(input[[get_cat_label_id(1)]], min.chars = 1)) {
+          input[[get_cat_label_id(1)]]
+        } else {
+          "TRUE"
+        }
+        r_false_label <- if (checkmate::test_string(input[[label_others_id]], min.chars = 1)) {
+          input[[label_others_id]]
+        } else {
+          "FALSE"
+        }
 
         json_subject_filter <- r_subgroup_filter[["raw"]]
         cat_labels <- c(r_true_label, r_false_label)
@@ -467,7 +545,12 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
 
       new_subgroups <- current_subgroups
       new_subgroups[[r_subgroup_name]] <- new_subgroup
-      apply_check <- apply_subgroups(selected_dataset_list(), subject_filter_dataset_name, filter_key_var, new_subgroups)
+      apply_check <- apply_subgroups(
+        selected_dataset_list(),
+        subject_filter_dataset_name,
+        filter_key_var,
+        new_subgroups
+      )
 
       notify_conditions_and_early_out(apply_check[["errors"]]$get_errors())
 
