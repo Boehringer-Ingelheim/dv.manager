@@ -150,7 +150,7 @@ app_server_ <- function(input, output, session, opts) {
     r_apply_subgroups <- apply_subgroups()
     res_apply_subgroups <- r_apply_subgroups(r_selected_dataset_list, subject_filter_dataset_name, filter_key_var)
 
-    for (error in res_apply_subgroups[["errors"]]) {
+    for (error in res_apply_subgroups[["errors"]]$get_messages()) {
       shiny::showNotification(error, type = "warning")
     }
 
@@ -167,11 +167,7 @@ app_server_ <- function(input, output, session, opts) {
       unfiltered_dataset_list_r <- unfiltered_dataset_list()
       dataset_list_filter_r <- dataset_list_filter()
 
-      res <- apply_filter_to_dataset_list(
-        unfiltered_dataset_list_r,
-        dataset_list_filter_r,
-        filter_key_var
-      )
+      res <- apply_filter_to_dataset_list(unfiltered_dataset_list_r, dataset_list_filter_r, filter_key_var)
 
       error_list <- res$error_list
       fd <- res$fd
