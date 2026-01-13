@@ -96,6 +96,12 @@ specs <- list(
     "PREPROCESS_CHAR_TO_FACTOR" = "Character columns are automatically converted to factors.",
     "PREPROCESS_UNGROUP" = "Datasets are automatically ungrouped.",
     "PREPROCESS_TIBBLE_TO_DF" = "Tibbles are automatically converted to data.frames."
+  ),
+
+  # --- Subgroups ---
+  SUBGROUPS = list(
+    "SUBGROUP_CREATION" = "Subgroups can be created during app usage.",
+    "SUBGROUP_BOOKMARKABLE" = "Subgroup definitions are included in bookmarks."
   )
 )
 
