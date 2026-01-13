@@ -263,7 +263,9 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
 
     if (name %in% names(subject_dataset)) {
       error_list$push(sprintf("Skipping subgroup: `%s`. It is already a column name in the dataset `%s`.", name, subject_filter_dataset_name))
-    } else {
+    } else if (any(duplicated(cat_labels))) {
+      error_list$push(sprintf("Skipping subgroup: `%s`. Category labels are duplicated.", name))
+     } else {
       new_var <- rep_len(NA_character_, nrow(subject_dataset))
       subgroup_ok <- TRUE
 
