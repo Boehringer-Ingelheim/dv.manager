@@ -176,6 +176,7 @@ validate_subgroup_name <- function(subgroup_name, subject_dataset, subject_filte
 apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_key_var, subgroups) {
   subject_dataset <- dataset_list[[subject_filter_dataset_name]]
   error_list <- new_error_list()
+  correct_subgroups <- names(subgroups)
 
   for (subgroup_idx in seq_along(subgroups)) {
     name <- names(subgroups)[[subgroup_idx]]
@@ -205,19 +206,35 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
         log_inform(sprintf("Adding category: %s", category_label))
 
         parsed_category_filter <- deserialize_filter_state_from_client(category_filter)[["filters"]][["subject_filter"]]
-        category_subjects <- create_subject_filter_info(dataset_list, parsed_category_filter, filter_key_var)[[
-          "subjects"
-        ]]
-        category_mask <- subject_dataset[[filter_key_var]] %in% category_subjects
+
+        category_subjects <- tryCatch(
+          {
+            # This should cover the case when it is not possible to apply the filter because the variable it is not available
+            # this may happen when we switch datasets and a variable dissappears unlikely but possible, or between data updates
+            category_subjects <- create_subject_filter_info(dataset_list, parsed_category_filter, filter_key_var)
+            category_subjects <- category_subjects[["subjects"]]
+            list(category_subjects = category_subjects, error_list = error_list)
+          },
+          error = function(e) {
+            error_list$push(sprintf("Skipping subgroup: `%s`. Generic filtering error: `%s`.", name, e$message))
+            list(character(0), error_list = error_list)
+          }
+        )
+
+        category_mask <- subject_dataset[[filter_key_var]] %in% category_subjects[["category_subjects"]]
+        
 
         if (any(categorized_subject_mask & category_mask)) {
-          subgroup_ok <- FALSE
           error_list$push(sprintf("Subgroup: `%s` has at least one subject in two categories", name))
-          break
-        } else {
-          new_var[category_mask] <- category_label
-          categorized_subject_mask <- categorized_subject_mask | category_mask
         }
+
+        if (error_list$any()) {
+          subgroup_ok <- FALSE
+          break
+        }
+
+        new_var[category_mask] <- category_label
+        categorized_subject_mask <- categorized_subject_mask | category_mask
       }
 
       if (subgroup_ok) {
@@ -226,15 +243,20 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
         new_var[other_category_mask] <- other_category_label
         subject_dataset[[name]] <- factor(new_var, levels = cat_labels)
         attr(subject_dataset[[name]], "label") <- label
+      } else {
+        correct_subgroups = setdiff(correct_subgroups, name)
       }
     }
   }
 
   dataset_list[[subject_filter_dataset_name]] <- subject_dataset
+  incorrect_subgroups <- setdiff(names(subgroups), correct_subgroups)
 
   return(
     list(
       dataset_list = dataset_list,
+      correct_subgroups = correct_subgroups,
+      incorrect_subgroups = incorrect_subgroups,
       errors = error_list
     )
   )
@@ -295,6 +317,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
     label_others_id <- "label_others"
 
     subgroups <- shiny::reactiveVal(list())
+    incorrect_subgroups <- character(0)
     DEFAULT_CAT_ASSIGNMENTS <- vector(mode = "list", length = MAX_CATEGORIES + 1)
     cat_assignments <- shiny::reactiveVal(DEFAULT_CAT_ASSIGNMENTS)
 
@@ -387,7 +410,11 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
 
       for (idx in seq_along(r_subgroups)) {
         subgroup_name <- names(r_subgroups)[[idx]]
-        badge_ui[[idx]] <- tags[["span"]](subgroup_name, class = "badge w-auto bg-light text-dark")
+        if (!subgroup_name %in% incorrect_subgroups) {
+          badge_ui[[idx]] <- tags[["span"]](subgroup_name, class = "badge w-auto bg-light text-dark")
+        } else {
+          badge_ui[[idx]] <- tags[["span"]](subgroup_name, class = "badge w-auto bg-danger text-white", title = "disabled")
+        }
       }
 
       tags[["div"]](
@@ -566,10 +593,19 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       cat_assignments(DEFAULT_CAT_ASSIGNMENTS)
     })
 
+    #TODO: Export relevant values
+    shiny::exportTestValues(
+      subgroups = subgroups
+    )
+
     res <- shiny::reactive({
       r_subgroups <- subgroups()
       function(...) {
-        apply_subgroups(..., subgroups = r_subgroups)
+        x <- apply_subgroups(..., subgroups = r_subgroups)
+        # FIXME: (Or learn to live with me) When subgroups are applied we store which could not be applied so it is reflected in the UI
+        incorrect_subgroups <<- x[["incorrect_subgroups"]]
+
+        x
       }
     })
 
