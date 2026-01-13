@@ -1,44 +1,5 @@
 MAX_CATEGORIES <- 10
 
-#' Build Subgroup Category UI
-#'
-#' Constructs the complete UI for all categories in a subgroup, including
-#' appropriate controls and validation indicators based on whether it's a
-#' binary or multi-category subgroup.
-#'
-#' @param cat_num Integer. Total number of categories (including "others").
-#' @param cat_assignments List. Current filter assignments for each category.
-#' @param selected_dataset_list Named list of data frames.
-#' @param filter_key_var Character string. Name of the subject ID variable.
-#' @param ns Namespace function from the module.
-#' @param get_cat_label_id Function that returns the input ID for a category label
-#'   given its index.
-#' @param label_others_id Character string. The input ID for the "others" label.
-#' @param assign_btn_id Character string. The base input ID for assign buttons.
-#' @param clear_assign_btn_id Character string. The base input ID for clear buttons.
-#' @param current_values Character vector of current input values for preserving text
-#'   across re-renders. Should have length equal to cat_num, with values in order
-#'   (categories 1 to cat_num-1, then "others").
-#'
-#' @return A list of Shiny UI elements, one for each category. For binary subgroups
-#'   (cat_num = 2), returns simple text inputs. For multi-category subgroups
-#'   (cat_num > 2), includes assignment buttons and conflict status icons.
-#'
-#' @details
-#' The function handles three types of category UI:
-#' \itemize{
-#'   \item{Regular categories (1 to cat_num-1): }{Text input with optional
-#'     assign/clear buttons and status icons for multi-category subgroups}
-#'   \item{Others category (cat_num): }{Right-aligned text input for unassigned subjects}
-#'   \item{Status icons (multi-category only): }{Indicate pending (yellow ?),
-#'     valid (green check), or conflicting (red X) assignments}
-#' }
-#'
-#' For multi-category subgroups, the function computes conflicts by checking
-#' if subjects appear in multiple categories, displaying appropriate validation
-#' indicators.
-#'
-#' @keywords internal
 build_subgroup_category_ui <- function(cat_num, cat_assignments, selected_dataset_list, filter_key_var, ns, get_cat_label_id, label_others_id, assign_btn_id, clear_assign_btn_id, current_values) {
 
   ui <- vector(mode = "list", length = cat_num)
@@ -136,24 +97,6 @@ build_subgroup_category_ui <- function(cat_num, cat_assignments, selected_datase
   ui
 }
 
-#' Subgroup Module UI
-#'
-#' UI function for the subgroup module. Creates the interface for defining and
-#' managing subject subgroups.
-#'
-#' @param id Character string. The module namespace ID.
-#' @param subject_filter_dataset_name Character string. Name of the dataset containing
-#'   subjects to be filtered. Used to configure the filter UI.
-#'
-#' @return A list of Shiny UI elements including:
-#'   \itemize{
-#'     \item{Text inputs for subgroup name and label}
-#'     \item{Selector for number of categories (2-10)}
-#'     \item{Dynamic UI container for category labels and assignments}
-#'     \item{Button to add the defined subgroup}
-#'     \item{Display of created subgroups as badges}
-#'     \item{Filter UI for defining category criteria}
-#'   }
 mod_subgroup_ui <- function(id, subject_filter_dataset_name) {
   ns <- shiny::NS(id)
   list(
@@ -171,26 +114,6 @@ mod_subgroup_ui <- function(id, subject_filter_dataset_name) {
   )
 }
 
-#' Validate Subgroup Name
-#'
-#' Checks if a proposed subgroup name is valid and doesn't conflict with existing
-#' column names in the subject dataset.
-#'
-#' @param subgroup_name Character string. The proposed name for the subgroup.
-#' @param subject_dataset Data frame. The dataset that will receive the subgroup variable.
-#' @param subject_filter_dataset_name Character string. Name of the subject dataset
-#'   for error messages.
-#'
-#' @return An error list object. Empty if validation passes, contains error messages
-#'   if validation fails.
-#'
-#' @details
-#' Validation rules:
-#' \itemize{
-#'   \item{Name must be non-empty}
-#'   \item{Name must contain only alphanumeric characters, underscores, and periods}
-#'   \item{Name must not conflict with existing column names in the dataset}
-#' }
 validate_subgroup_name <- function(subgroup_name, subject_dataset, subject_filter_dataset_name) {
   errors <- new_error_list()
 
@@ -209,45 +132,6 @@ validate_subgroup_name <- function(subgroup_name, subject_dataset, subject_filte
   return(errors)
 }
 
-#' Apply Subgroups to Dataset List
-#'
-#' Applies subgroup definitions to a dataset list by creating new factor variables
-#' in the subject dataset. Each subgroup becomes a new column with category labels
-#' as factor levels.
-#'
-#' @param dataset_list Named list of data frames. Must include the dataset specified
-#'   by `subject_filter_dataset_name`.
-#' @param subject_filter_dataset_name Character string. Name of the dataset in
-#'   `dataset_list` that contains subjects.
-#' @param filter_key_var Character string. Name of the variable used to identify
-#'   subjects (typically a subject ID variable).
-#' @param subgroups Named list of subgroup definitions. Each element should contain:
-#'   \describe{
-#'     \item{label}{Optional character string describing the subgroup}
-#'     \item{cat_labels}{Character vector of category labels}
-#'     \item{cat_filters}{Character vector of JSON-serialized filter specifications
-#'       (length is one less than cat_labels, as the last category is "others")}
-#'   }
-#'
-#' @return A list with components:
-#'   \describe{
-#'     \item{dataset_list}{The input dataset list with new subgroup variables added
-#'       to the subject dataset}
-#'     \item{errors}{A list of error conditions encountered during application}
-#'   }
-#'
-#' @details
-#' For each subgroup:
-#' \itemize{
-#'   \item{Creates a new factor variable in the subject dataset}
-#'   \item{Assigns subjects to categories based on filter specifications}
-#'   \item{Assigns remaining subjects to the "others" category}
-#'   \item{Validates that no subject appears in multiple categories}
-#'   \item{Validates that the subgroup name doesn't conflict with existing columns}
-#'   \item{Preserves the subgroup label as an attribute}
-#' }
-#'
-#' The function is wrapped with `maskReactiveContext()` to prevent reactive dependencies.
 apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_key_var, subgroups) {
   subject_dataset <- dataset_list[[subject_filter_dataset_name]]
   error_list <- new_error_list()
@@ -351,36 +235,7 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
 #' }
 #'
 #' State persistence through bookmarking is supported for the subgroups reactive value.
-#'
-#' @seealso \code{\link{mod_subgroup_ui}}, \code{\link{apply_subgroups}},
-#'   \code{\link{create_binary_subgroup}}, \code{\link{create_multicat_subgroup}}
-#'
-#' @examples
-#' \dontrun{
-#' server <- function(input, output, session) {
-#'   dataset_list <- reactive({
-#'     list(ADSL = adsl_data, ADAE = adae_data)
-#'   })
-#'
-#'   apply_subgroups_fn <- mod_subgroup_server(
-#'     id = "subgroups",
-#'     selected_dataset_list = dataset_list,
-#'     subject_filter_dataset_name = "ADSL",
-#'     filter_key_var = "USUBJID"
-#'   )
-#'
-#'   # Later, apply the subgroups to a dataset list
-#'   dataset_with_subgroups <- reactive({
-#'     apply_fn <- apply_subgroups_fn()
-#'     result <- apply_fn(
-#'       dataset_list = dataset_list(),
-#'       subject_filter_dataset_name = "ADSL",
-#'       filter_key_var = "USUBJID"
-#'     )
-#'     result$dataset_list
-#'   })
-#' }
-#' }
+#' @keywords internal
 mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_dataset_name, filter_key_var) {
   mod <- function(input, output, session) {
     ns <- session[["ns"]]
