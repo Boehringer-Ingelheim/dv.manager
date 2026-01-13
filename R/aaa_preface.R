@@ -206,11 +206,14 @@ poc <- pack_of_constants
 new_error_list <- function() {
   errors <- list()
   push_error <- function(x) {
-    if (!is.list(x)) {
-      x <- list(message = x)
-    }
-
-    errors[[length(errors) + 1]] <<- do.call(errorCondition, x)
+    if("condition" %in% class(x)) {
+      errors[[length(errors) + 1]] <<- x
+    } else {
+      if (!is.list(x)) {
+        x <- list(message = x)
+      } 
+      errors[[length(errors) + 1]] <<- do.call(errorCondition, x)
+    }    
   }
 
   get_errors <- function() {
@@ -238,6 +241,10 @@ new_error_list <- function() {
     return(FALSE)
   }
 
+  merge_errors <- function(x) {
+    c(errors, x$get_errors())
+  }
+
   return(
     as_safe_list(
       list(
@@ -245,7 +252,8 @@ new_error_list <- function() {
         get_errors = get_errors,
         get_messages = get_messages,
         any = any_error,
-        any_has_class = any_error_has_class
+        any_has_class = any_error_has_class,
+        merge = merge_errors
         )
       )
     )
