@@ -1,5 +1,8 @@
 local({
   set_subgroup_filter <- function(app, filter_id, dataset_name, var_name, filter_values) {
+    clear_all_selector <- sprintf("#%s dv-filter-clear-all-button", filter_id)
+    app$click(selector = clear_all_selector)
+
     selector <- sprintf(
       "#%s dv-filter-dataset-filter[data-dataset-name='%s'] div.card-header button",
       filter_id,
@@ -27,123 +30,443 @@ local({
       var_name
     )
 
+    values <- paste(sprintf("'%s'", filter_values), collapse = ",")
+
     set_js <- sprintf(
       r"--{
             let select_el = document.querySelector("%s");
-            $(select_el).selectpicker('val', ['%s', '%s']);
+            $(select_el).selectpicker('val', [%s]);
             $(select_el).trigger("changed.bs.select");
             }--",
       input_selector,
-      filter_values[[1]],
-      filter_values[[2]]
+      values
     )
 
     app$run_js(set_js)
     app$wait_for_idle()
   }
 
-  test_that("User can create a binary subgroup", {
-    skip_if_not_running_shiny_tests()
+  get_unfiltered_dataset_from_afmm <- function(app) {
+    afmm <- app$get_value(export = "afmm-afmm")
+    shiny::isolate(afmm[["unfiltered_dataset_list"]]())
+  }
 
-    # Test configuration variables
-    subgroup_name <- "group1"
-    subgroup_label <- "My First Group"
-    category_included_label <- "Included"
-    category_excluded_label <- "Excluded"
-    filter_dataset <- "dataset1"
-    filter_variable <- "var1"
-    included_values <- c("a1", "b1")
-    excluded_values <- c("c1")
-
-    app <- start_app_driver(
-      {
-        datasets <- list(
-          list1 = list(
-            dataset1 = data.frame(
-              var1 = c("a1", "b1", "c1"),
-              var2 = c("d2", "e2", "f2")
-            ),
-            dataset2 = data.frame(
-              var1 = c("a2", "b2", "c2"),
-              var2 = c("d2", "e2", "f2")
-            )
-          ),
-          list2 = list(
-            dataset1 = data.frame(
-              var1 = c("a1", "b1", "c1"),
-              var2 = c("d1", "e1", "f1")
-            ),
-            dataset2 = data.frame(
-              var1 = c("a2", "b2", "c2"),
-              var2 = c("d2", "e2", "f2")
-            )
-          )
-        )
-
-        dv.manager::run_app(
-          data = datasets,
-          module_list = list(
-            afmm = mod_afmm_export("afmm")
-          ),
-          filter_type = "development",
-          enable_subgroup = TRUE,
-          filter_data = "dataset1",
-          filter_key = "var1"
-        )
-      }
-    )
-
-    if (is.null(app)) {
-      skip("App could not be initialized")
-    }
-
-    # Navigate to the Subgroup tab
+  prepare_subgroup <- function(app, subgroup) {
     app$click(selector = "[data-value='Subgroup']")
     app$wait_for_idle()
 
-    # Fill in the subgroup name
-    app$set_inputs(`subgroup-subgroup_name` = subgroup_name)
+    app$set_inputs(`subgroup-subgroup_name` = subgroup[["name"]])
+    app$set_inputs(`subgroup-subgroup_label` = subgroup[["label"]])
 
-    # Fill in the subgroup label (optional)
-    app$set_inputs(`subgroup-subgroup_label` = subgroup_label)
+    cat_num <- app$get_value(input = "subgroup-subgroup_cat_num")
+    if (cat_num != as.character(length(subgroup[["categories"]]))) {
+      app$set_inputs(`subgroup-subgroup_cat_num` = as.character(length(subgroup[["categories"]])))
+      app$wait_for_idle()
+    }
 
-    # Set category labels
-    app$set_inputs(`subgroup-label_1` = category_included_label)
-    app$set_inputs(`subgroup-label_others` = category_excluded_label)
+    cat_num <- length(subgroup[["categories"]])
 
-    # Apply a filter using the filter UI within the subgroup module
-    set_subgroup_filter(app, "subgroup-filter", filter_dataset, filter_variable, included_values)
+    get_assign_selector <- function(x) {
+      sprintf(
+        '#subgroup-subgroup_cat_container > div:nth-child(%d) > div > button[title="Assign filtered subjects"]',
+        x
+      )
+    }
 
-    # Click Add subgroup button
-    app$click(selector = "#subgroup-add_subgroup")
+    for (idx in seq_len(cat_num - 1)) {
+      curr_cat <- subgroup[["categories"]][[idx]]
+      args <- stats::setNames(
+        list(curr_cat[["label"]]),
+        c(sprintf("subgroup-label_%d", idx))
+      )
+      do.call(app$set_inputs, args)
+      app$wait_for_idle()
+      set_subgroup_filter(
+        app,
+        "subgroup-filter",
+        subgroup[["dataset"]],
+        curr_cat[["filter"]][["var"]],
+        curr_cat[["filter"]][["val"]]
+      )
+      app$wait_for_idle()
+
+      if (cat_num > 2) {
+        app$click(selector = get_assign_selector(idx))
+        app$wait_for_idle()
+      }
+    }
+
+    app$set_inputs(`subgroup-label_others` = subgroup[["categories"]][[length(subgroup[["categories"]])]][["label"]])
     app$wait_for_idle()
+  }
 
-    # Verify the subgroup was created by checking exported test values
-    subgroups <- app$get_value(export = "subgroup-subgroups")
-    subgroups_r <- shiny::isolate(subgroups())
-    expect_true(subgroup_name %in% names(subgroups_r))
-    expect_equal(subgroups_r[[subgroup_name]][["label"]], subgroup_label)
-    expect_equal(subgroups_r[[subgroup_name]][["cat_labels"]], c(category_included_label, category_excluded_label))
+  get_exported_values <- function(app, dataset_name) {
+    subgroups <- shiny::isolate(app$get_value(export = "subgroup-subgroups")())
 
     afmm <- app$get_value(export = "afmm-afmm")
     unfiltered_dataset_list <- shiny::isolate(afmm[["unfiltered_dataset_list"]]())
+    relevant_dataset <- unfiltered_dataset_list[[dataset_name]]
 
-    # Check that subgroup column exists in the dataset
-    expect_true(subgroup_name %in% names(unfiltered_dataset_list[[filter_dataset]]))
-
-    # Check that included values have the correct category label
-    dataset <- unfiltered_dataset_list[[filter_dataset]]
-    expect_true(
-      as.character(dataset[dataset[[filter_variable]] == included_values[[1]], subgroup_name]) ==
-        category_included_label ||
-        as.character(dataset[dataset[[filter_variable]] == included_values[[2]], subgroup_name]) ==
-          category_included_label
+    return(
+      list(subgroups = subgroups, dataset = relevant_dataset)
     )
+  }
 
-    # Check that excluded value has the correct category label
-    expect_equal(
-      as.character(dataset[dataset[[filter_variable]] == excluded_values[[1]], subgroup_name]),
-      category_excluded_label
-    )
-  })
+  root_app <- start_app_driver(
+    {
+      datasets <- list(
+        list1 = list(
+          dataset1 = data.frame(
+            var1 = c("a1", "b1", "c1"),
+            var2 = c("d2", "e2", "f2")
+          ),
+          dataset2 = data.frame(
+            var1 = c("a2", "b2", "c2"),
+            var2 = c("d2", "e2", "f2")
+          )
+        ),
+        list2 = list(
+          dataset1 = data.frame(
+            var1 = c("a1", "b1", "c1"),
+            var2 = c("d1", "e1", "f1")
+          ),
+          dataset2 = data.frame(
+            var1 = c("a2", "b2", "c2"),
+            var2 = c("d2", "e2", "f2")
+          )
+        )
+      )
+
+      app <- dv.manager::run_app(
+        data = datasets,
+        module_list = list(
+          afmm = mod_afmm_export("afmm")
+        ),
+        filter_type = "development",
+        enable_subgroup = TRUE,
+        filter_data = "dataset1",
+        filter_key = "var1"
+      )
+
+      app
+    }
+  )
+
+  if (is.null(app)) {
+    skip("App could not be initialized")
+  }
+
+  test_that(
+    "User can create a 2-category subgroup" |>
+      vdoc[["add_spec"]](specs$SUBGROUPS$SUBGROUP_CREATION),
+    {
+      skip_if_not_running_shiny_tests()
+
+      app <- shinytest2::AppDriver$new(
+        root_app$get_url()
+      )
+      subgroup <- list(
+        name = "group",
+        label = "label",
+        dataset = "dataset1",
+        categories = list(
+          list(
+            label = "label1",
+            filter = list(
+              var = "var1",
+              val = c("a1", "b1")
+            )
+          ),
+          list(
+            label = "excluded",
+            filter = list(
+              var = "var1",
+              val = c("c1")
+            )
+          )
+        )
+      )
+
+      prepare_subgroup(app, subgroup)
+
+      app$click(selector = "#subgroup-add_subgroup")
+      app$wait_for_idle()
+
+      exported <- get_exported_values(app, subgroup[["dataset"]])
+      dataset <- exported[["dataset"]]
+
+      expect_true(subgroup[["name"]] %in% names(dataset))
+      expect_identical(attr(dataset[[subgroup[["name"]]]], "label"), subgroup[["label"]])
+
+      subgroup_var <- dataset[[subgroup[["name"]]]]
+      expect_identical(
+        unique(as.character(subgroup_var[subgroup_var == subgroup[["categories"]][[1]][["label"]]])),
+        subgroup[["categories"]][[1]][["label"]]
+      )
+
+      expect_identical(
+        unique(as.character(subgroup_var[subgroup_var == subgroup[["categories"]][[2]][["label"]]])),
+        subgroup[["categories"]][[2]][["label"]]
+      )
+    }
+  )
+
+  test_that(
+    "User can create a 3-category subgroup with non-overlapping filters" |>
+      vdoc[["add_spec"]](specs$SUBGROUPS$SUBGROUP_CREATION),
+    {
+      skip_if_not_running_shiny_tests()
+
+      app <- shinytest2::AppDriver$new(
+        root_app$get_url()
+      )
+
+      subgroup <- list(
+        name = "group_3cat",
+        label = "Three Category Group",
+        dataset = "dataset1",
+        categories = list(
+          list(
+            label = "Category A",
+            filter = list(var = "var1", val = c("a1"))
+          ),
+          list(
+            label = "Category B",
+            filter = list(var = "var1", val = c("b1"))
+          ),
+          list(
+            label = "Others",
+            filter = list(var = "var1", val = c("c1"))
+          )
+        )
+      )
+
+      prepare_subgroup(app, subgroup)
+
+      app$click(selector = "#subgroup-add_subgroup")
+      app$wait_for_idle()
+
+      exported <- get_exported_values(app, subgroup[["dataset"]])
+      dataset <- exported[["dataset"]]
+
+      expect_true(subgroup[["name"]] %in% names(dataset))
+      expect_identical(attr(dataset[[subgroup[["name"]]]], "label"), subgroup[["label"]])
+
+      subgroup_var <- dataset[[subgroup[["name"]]]]
+      expect_identical(
+        unique(as.character(subgroup_var[subgroup_var == subgroup[["categories"]][[1]][["label"]]])),
+        subgroup[["categories"]][[1]][["label"]]
+      )
+      expect_identical(
+        unique(as.character(subgroup_var[subgroup_var == subgroup[["categories"]][[2]][["label"]]])),
+        subgroup[["categories"]][[2]][["label"]]
+      )
+      expect_identical(
+        unique(as.character(subgroup_var[subgroup_var == subgroup[["categories"]][[3]][["label"]]])),
+        subgroup[["categories"]][[3]][["label"]]
+      )
+    }
+  )
+
+  test_that(
+    "Overlapping categories show conflict indicators" |>
+      vdoc[["add_spec"]](specs$SUBGROUPS$SUBGROUP_CREATION),
+    {
+      skip_if_not_running_shiny_tests()
+
+      app <- shinytest2::AppDriver$new(
+        root_app$get_url()
+      )
+
+      subgroup <- list(
+        name = "group_conflict",
+        label = "Conflicting Group",
+        dataset = "dataset1",
+        categories = list(
+          list(
+            label = "Category A",
+            filter = list(var = "var1", val = c("a1", "b1"))
+          ),
+          list(
+            label = "Category B",
+            filter = list(var = "var1", val = c("b1", "c1"))
+          ),
+          list(
+            label = "Others"
+          )
+        )
+      )
+
+      prepare_subgroup(app, subgroup)
+
+      conflict_icon <- app$get_html(selector = "#subgroup-subgroup_cat_container .fa-circle-xmark")
+      expect_true(length(conflict_icon) > 0 && !anyNA(conflict_icon))
+    }
+  )
+
+  test_that(
+    "Subgroup with invalid name is rejected" |>
+      vdoc[["add_spec"]](specs$SUBGROUPS$SUBGROUP_CREATION),
+    {
+      skip_if_not_running_shiny_tests()
+
+      app <- shinytest2::AppDriver$new(
+        root_app$get_url()
+      )
+
+      subgroup <- list(
+        name = "invalid name!",
+        label = "Test Label",
+        dataset = "dataset1",
+        categories = list(
+          list(
+            label = "Included",
+            filter = list(var = "var1", val = c("a1", "b1"))
+          ),
+          list(
+            label = "Excluded"
+          )
+        )
+      )
+
+      prepare_subgroup(app, subgroup)
+
+      app$click(selector = "#subgroup-add_subgroup")
+      app$wait_for_idle()
+
+      exported <- get_exported_values(app, subgroup[["dataset"]])
+
+      expect_false(subgroup[["name"]] %in% names(exported[["subgroups"]]))
+      expect_false(subgroup[["name"]] %in% names(exported[["dataset"]]))
+
+      app$set_inputs(`subgroup-subgroup_name` = "")
+
+      app$click(selector = "#subgroup-add_subgroup")
+      app$wait_for_idle()
+
+      exported <- get_exported_values(app, subgroup[["dataset"]])
+      expect_equal(length(exported[["subgroups"]]), 0)
+      expect_false("" %in% names(exported[["dataset"]]))
+    }
+  )
+
+  test_that(
+    "Subgroup with duplicate labels is not applied" |>
+      vdoc[["add_spec"]](specs$SUBGROUPS$SUBGROUP_CREATION),
+    {
+      skip_if_not_running_shiny_tests()
+
+      app <- shinytest2::AppDriver$new(
+        root_app$get_url()
+      )
+
+      subgroup <- list(
+        name = "group_dup_labels",
+        label = "Duplicate Labels Test",
+        dataset = "dataset1",
+        categories = list(
+          list(
+            label = "Same Label",
+            filter = list(var = "var1", val = c("a1", "b1"))
+          ),
+          list(
+            label = "Same Label",
+            filter = list(var = "var1", val = c("c1"))
+          )
+        )
+      )
+
+      prepare_subgroup(app, subgroup)
+
+      app$click(selector = "#subgroup-add_subgroup")
+      app$wait_for_idle()
+
+      exported <- get_exported_values(app, subgroup[["dataset"]])
+
+      expect_false(subgroup[["name"]] %in% names(exported[["dataset"]]))
+    }
+  )
+
+  test_that(
+    "Subgroup name colliding with existing column is rejected" |>
+      vdoc[["add_spec"]](specs$SUBGROUPS$SUBGROUP_CREATION),
+    {
+      skip_if_not_running_shiny_tests()
+
+      app <- shinytest2::AppDriver$new(
+        root_app$get_url()
+      )
+
+      subgroup <- list(
+        name = "var1",
+        label = "Collision Test",
+        dataset = "dataset1",
+        categories = list(
+          list(
+            label = "Included",
+            filter = list(var = "var1", val = c("a1", "b1"))
+          ),
+          list(
+            label = "Excluded"
+          )
+        )
+      )
+
+      prepare_subgroup(app, subgroup)
+
+      app$click(selector = "#subgroup-add_subgroup")
+      app$wait_for_idle()
+
+      exported <- get_exported_values(app, subgroup[["dataset"]])
+
+      expect_false(subgroup[["name"]] %in% names(exported[["subgroups"]]))
+
+      expect_true(all(exported[["dataset"]][[subgroup[["name"]]]] %in% c("a1", "b1", "c1")))
+    }
+  )
+
+  test_that(
+    "subgroups can be bookmarked and restored" |>
+      vdoc[["add_spec"]](c(specs$SUBGROUPS$SUBGROUP_BOOKMARKABLE)),
+    {
+      app <- shinytest2::AppDriver$new(root_app$get_url())
+      on.exit(app$stop(), add = TRUE, after = FALSE)
+      subgroup <- list(
+        name = "group",
+        label = "label",
+        dataset = "dataset1",
+        categories = list(
+          list(
+            label = "label1",
+            filter = list(
+              var = "var1",
+              val = c("a1", "b1")
+            )
+          ),
+          list(
+            label = "excluded",
+            filter = list(
+              var = "var1",
+              val = c("c1")
+            )
+          )
+        )
+      )
+
+      prepare_subgroup(app, subgroup)
+
+      app$click(selector = "#subgroup-add_subgroup")
+      app$wait_for_idle()
+
+      app_subgroups <- get_exported_values(app, subgroup[["dataset"]])[["subgroups"]]
+
+      bmk_url <- app$get_js("window.location.href")
+      bookmark_app <- suppressWarnings(shinytest2::AppDriver$new(bmk_url))
+      on.exit(app$stop(), add = TRUE, after = FALSE)
+      bookmark_app$wait_for_idle()
+
+      bmk_subgroups <- get_exported_values(app, subgroup[["dataset"]])[["subgroups"]]
+      expect_identical(app_subgroups, bmk_subgroups)
+    }
+  )
 })
