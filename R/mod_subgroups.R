@@ -333,7 +333,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
     get_cat_label_id <- function(idx) paste0(ID_SG$LABEL_PREFIX, idx)
 
     subgroups <- shiny::reactiveVal(list())
-    incorrect_subgroups <- character(0)
+    incorrect_subgroups <- shiny::reactiveVal(character(0))
     DEFAULT_CAT_ASSIGNMENTS <- vector(mode = "list", length = MAX_CATEGORIES + 1)
     cat_assignments <- shiny::reactiveVal(DEFAULT_CAT_ASSIGNMENTS)
 
@@ -426,7 +426,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
 
       for (idx in seq_along(r_subgroups)) {
         subgroup_name <- names(r_subgroups)[[idx]]
-        if (!subgroup_name %in% incorrect_subgroups) {
+        if (!subgroup_name %in% incorrect_subgroups()) {
           badge_ui[[idx]] <- tags[["span"]](subgroup_name, class = "badge w-auto bg-light text-dark")
         } else {
           badge_ui[[idx]] <- tags[["span"]](
@@ -623,7 +623,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       function(...) {
         x <- apply_subgroups(..., subgroups = r_subgroups)
         # FIXME: (Or learn to live with me) When subgroups are applied we store which could not be applied so it is reflected in the UI
-        incorrect_subgroups <<- x[["incorrect_subgroups"]]
+        incorrect_subgroups(x[["incorrect_subgroups"]])
 
         x
       }
