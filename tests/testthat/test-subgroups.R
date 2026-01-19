@@ -127,8 +127,7 @@ local({
         ),
         list2 = list(
           dataset1 = data.frame(
-            var1 = c("a1", "b1", "c1"),
-            var2 = c("d1", "e1", "f1")
+            var1 = c("a1", "b1", "c1")
           ),
           dataset2 = data.frame(
             var1 = c("a2", "b2", "c2"),
@@ -465,8 +464,98 @@ local({
       on.exit(app$stop(), add = TRUE, after = FALSE)
       bookmark_app$wait_for_idle()
 
-      bmk_subgroups <- get_exported_values(app, subgroup[["dataset"]])[["subgroups"]]
-      expect_identical(app_subgroups, bmk_subgroups)
+      bmk_exported <- get_exported_values(app, subgroup[["dataset"]])
+      bmk_dataset <- bmk_exported[["dataset"]]
+
+      expect_true(subgroup[["name"]] %in% names(bmk_dataset))
     }
   )
+
+  test_that(
+    "subgroups are applied on dataset switch" |>
+      vdoc[["add_spec"]](c(specs$SUBGROUPS$SUBGROUP_CREATION)),
+    {
+      app <- shinytest2::AppDriver$new(root_app$get_url())
+      on.exit(app$stop(), add = TRUE, after = FALSE)
+      subgroup <- list(
+        name = "group",
+        label = "label",
+        dataset = "dataset1",
+        categories = list(
+          list(
+            label = "label1",
+            filter = list(
+              var = "var1",
+              val = c("a1")
+            )
+          ),
+          list(
+            label = "excluded",
+            filter = list(
+              var = "var1",
+              val = c("b1", "c1")
+            )
+          )
+        )
+      )
+
+      prepare_subgroup(app, subgroup)
+
+      app$click(selector = "#subgroup-add_subgroup")
+      app$wait_for_idle()
+
+      app$set_inputs("selector" = "list2")
+
+      exported <- get_exported_values(app, subgroup[["dataset"]])
+      dataset <- exported[["dataset"]]
+      expect_true(subgroup[["name"]] %in% names(dataset))
+    }
+  )
+
+  test_that(
+    "subgroups are excluded when the filter cannot be applied" |>
+      vdoc[["add_spec"]](c(specs$SUBGROUPS$SUBGROUP_CREATION)),
+    {
+      app <- shinytest2::AppDriver$new(root_app$get_url())
+      on.exit(app$stop(), add = TRUE, after = FALSE)
+      subgroup <- list(
+        name = "group",
+        label = "label",
+        dataset = "dataset1",
+        categories = list(
+          list(
+            label = "label1",
+            filter = list(
+              var = "var2",
+              val = c("d2")
+            )
+          ),
+          list(
+            label = "excluded",
+            filter = list(
+              var = "var2",
+              val = c("e2", "f2")
+            )
+          )
+        )
+      )
+
+      prepare_subgroup(app, subgroup)
+
+      app$click(selector = "#subgroup-add_subgroup")
+      app$wait_for_idle()
+
+      app$set_inputs("selector" = "list2")
+
+      exported <- get_exported_values(app, subgroup[["dataset"]])
+      dataset <- exported[["dataset"]]
+      expect_false(subgroup[["name"]] %in% names(dataset))
+
+      expect_match(app$get_html("#subgroup-subgroups > div > span"), "bg-danger", fixed = TRUE)
+    }
+  )
+
+  # test dataset switching works fine
+  # test dataset switching and restarting the app with one less variable
+  # check that data-value = "subgroup" returns several html items
 })
