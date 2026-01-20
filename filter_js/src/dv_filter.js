@@ -535,7 +535,7 @@ const get_blockly_code = function ({ workspace, generator, dataset_name }) {
 
 const init_blockly = function (el, dataset_name, filter_data, init_state, skip_dataset_filters) {
   let id = get_root_el(el).id;
-  let namespace = id + "-dataset_name";
+  let namespace = id + "-" + dataset_name;
   let ns = function(x) {return(namespace + "-" + x)};
 
   {
