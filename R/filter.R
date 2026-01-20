@@ -68,8 +68,8 @@ FC <- poc(
   ),
   ERRORS = poc(
     FILTER_IS_NA = list(
-      class = "UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH",
-      message = "Mismatch between unfiltered dataset list name and filter dataset list name"
+      class = "FILTER_IS_NA",
+      message = "Filter is not ready or has no data"
     ),
     UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH = list(
       class = "UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH",
