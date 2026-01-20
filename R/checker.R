@@ -1,5 +1,4 @@
 check_resolved_modules <- function(resolved_module_list) {
-
   if (length(resolved_module_list[["module_id"]]) == 0) {
     msg <- "module_list has length 0. No modules are included in the app."
     log_warn(msg)
@@ -86,8 +85,8 @@ check_filter_data <- function(filter_data, datasets) {
       }
       filter_data %in% names(dataset_list)
     }
-  ) %>% purrr::keep(~ !.x)
-
+  ) %>%
+    purrr::keep(~ !.x)
 
   if (length(filter_data_check) > 0) {
     purrr::iwalk(
@@ -173,19 +172,18 @@ check_meta_mtime_attribute <- function(datasets) {
 }
 
 check_azure_install_and_options <- function(azure_options) {
-
   azureauth_required_version <- "1.3.3"
-    azureuth_current_version <- as.character(utils::packageVersion("AzureAuth"))
+  azureuth_current_version <- as.character(utils::packageVersion("AzureAuth"))
 
-    if (azureuth_current_version < azureauth_required_version) {
-      stop(
-        paste(
+  if (azureuth_current_version < azureauth_required_version) {
+    stop(
+      paste(
         "",
         sprintf("AzureAuth %s or higher required", azureuth_current_version),
         sep = "\n"
-        )
       )
-    }
+    )
+  }
 
   nm_az_opt <- names(azure_options)
 
@@ -258,10 +256,12 @@ check_set_filter_info <- function(filter_type, filter_default_state) {
   list(filter_type = filter_type, filter_default_state = filter_default_state)
 }
 
-check_set_subgroup_info <-  function(enable_subgroup, filter_type) {  
-  if(filter_type != FILTER$TYPE$BLOCKLY && enable_subgroup) {
-    stop(sprintf("subgrouping is only available for `%s` filter type", FILTER$TYPE$BLOCKLY))  }
+check_set_subgroup_info <- function(enable_subgroup, filter_type) {
+  if (filter_type != FILTER$TYPE$BLOCKLY && enable_subgroup) {
+    stop(sprintf("subgrouping is only available for `%s` filter type", FILTER$TYPE$BLOCKLY))
+  }
   res <- list(enable = enable_subgroup)
+  res
 }
 
 check_parsable_json_input <- function(x) {

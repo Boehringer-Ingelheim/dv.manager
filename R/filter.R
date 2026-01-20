@@ -1,7 +1,9 @@
 toJSON <- function(x) unclass(jsonlite::toJSON(x))
 fromJSON <- function(x) jsonlite::fromJSON(x, simplifyVector = TRUE, simplifyDataFrame = FALSE)
 as_scalar <- jsonlite::unbox
-serialize_filter_data_to_client_bin64 <- function(x) jsonlite::base64_enc(binary_serialize_filter_data_C(get_filter_data(x)))
+serialize_filter_data_to_client_bin64 <- function(x) {
+  jsonlite::base64_enc(binary_serialize_filter_data_C(get_filter_data(x)))
+}
 deserialize_filter_state_from_client <- fromJSON
 
 FC <- poc(
@@ -11,7 +13,8 @@ FC <- poc(
     DATE = "date",
     UNKNOWN = "unknown"
   ),
-  FDF = poc( # Filter Data Field
+  FDF = poc(
+    # Filter Data Field
     NAME = "name",
     NROW = "nrow",
     VARIABLES = "variables",
@@ -55,11 +58,7 @@ FC <- poc(
     )
   ),
   SFE = poc(
-    F = poc(NAME = "name",
-      KIND = "kind",
-      OPERATION = "operation",
-      CHILDREN = "children"
-    ),
+    F = poc(NAME = "name", KIND = "kind", OPERATION = "operation", CHILDREN = "children"),
     COMB = poc(
       OPERATION = "set_operation",
       UNION = "union",
@@ -112,9 +111,7 @@ create_dataset_filters_ui <- function(dataset_filters_info, ns) {
         shiny::hr(style = "border-top: 2px solid gray; height: 10px;")
       )
     }
-  } else {
-
-  }
+  } else {}
   return(res)
 }
 
@@ -123,8 +120,9 @@ create_subject_level_ui <- function(id) {
 }
 
 create_subject_level_server <- function(
-    id,
-    data) {
+  id,
+  data
+) {
   if (!isTRUE(getOption("new_filter_switch"))) dv.filter::data_filter_server(id, data)
 }
 
@@ -146,9 +144,7 @@ create_dataset_filters_server <- function(datasets_filters_info, data_list) {
       }
       l
     })
-  } else {
-
-  }
+  } else {}
 
   return(res)
 }
@@ -174,7 +170,9 @@ get_single_filter_data <- function(dataset) {
     )
 
     # Logical is treated as a factor in the client
-    if (is.logical(var)) var <- factor(var)
+    if (is.logical(var)) {
+      var <- factor(var)
+    }
 
     if (is.character(var) || is.factor(var)) {
       l[[FDF$KIND]] <- K$CATEGORICAL
@@ -219,7 +217,6 @@ get_single_filter_data <- function(dataset) {
     } else {
       l[[FDF$KIND]] <- K$UNKNOWN
       l[[FDF$NA_COUNT]] <- NA_integer_
-      # log_warn(paste0("variable type unsupported:'", typeof(var), "' classes:", paste0("'", class(var), "'", collapse = ",")))
     }
 
     res[[idx]] <- l
@@ -248,14 +245,14 @@ get_filter_data <- function(dataset_lists) {
       )
     }
     res[[idx]] <- stats::setNames(
-        object = list(current_dataset_list_name, current_dataset_res),
-        nm = c(FDF$NAME, FDF$DATASET_LIST)
-      )
+      object = list(current_dataset_list_name, current_dataset_res),
+      nm = c(FDF$NAME, FDF$DATASET_LIST)
+    )
   }
   res <- stats::setNames(
-        object = list(res),
-        nm = c(FDF$DATASET_LISTS)
-      )
+    object = list(res),
+    nm = c(FDF$DATASET_LISTS)
+  )
   return(res)
 }
 
@@ -264,7 +261,12 @@ subject_filter_operations <- local({
 
   actions <- list(set_operation = list(), filter = list(), row_operation = list())
 
-  actions[[FC$SFE$COMB$OPERATION]][[FC$SFE$COMB$UNION]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+  actions[[FC$SFE$COMB$OPERATION]][[FC$SFE$COMB$UNION]] <- function(
+    dataset_list,
+    filter_element,
+    sbj_var,
+    complete_subject_list
+  ) {
     children <- filter_element[["children"]]
     subjects <- character(0)
     assert(length(children) > 0, "`union` operation requires at least one child")
@@ -289,7 +291,12 @@ subject_filter_operations <- local({
     return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
   }
 
-  actions[[FC$SFE$COMB$OPERATION]][[FC$SFE$COMB$INTERSECT]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+  actions[[FC$SFE$COMB$OPERATION]][[FC$SFE$COMB$INTERSECT]] <- function(
+    dataset_list,
+    filter_element,
+    sbj_var,
+    complete_subject_list
+  ) {
     children <- filter_element[["children"]]
     subjects <- complete_subject_list
     assert(length(children) > 0, "`intersect` operation requires at least one child")
@@ -318,7 +325,12 @@ subject_filter_operations <- local({
     return(list(subjects = subjects, dataset_list_lvls = dataset_list_lvls))
   }
 
-  actions[[FC$SFE$COMB$OPERATION]][[FC$SFE$COMB$COMPLEMENT]] <- function(dataset_list, filter_element, sbj_var, complete_subject_list) {
+  actions[[FC$SFE$COMB$OPERATION]][[FC$SFE$COMB$COMPLEMENT]] <- function(
+    dataset_list,
+    filter_element,
+    sbj_var,
+    complete_subject_list
+  ) {
     children <- filter_element[["children"]]
     assert(length(children) == 1, "`complement` operation requires exactly one child")
     processed_element <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
@@ -447,7 +459,10 @@ dataset_filter_operations <- local({
     variable <- filter_element[[FC$FE$F$VARIABLE]]
     include_NA <- filter_element[[FC$FE$F$INCLUDE_NA]]
     filter_dataset <- filter_element[[FC$FE$F$DATASET]] # TODO: Change for name table
-    assert(variable %in% names(dataset_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, if (is.null(variable)) "NULL" else variable))
+    assert(
+      variable %in% names(dataset_list[[filter_dataset]]),
+      sprintf("data[['%s']] does not contain col `%s`", filter_dataset, if (is.null(variable)) "NULL" else variable)
+    )
     variable_values <- dataset_list[[filter_dataset]][[variable]]
 
     # Logical are treated as factors
@@ -476,7 +491,10 @@ dataset_filter_operations <- local({
     operation <- filter_element[[FC$FE$F$OPERATION]]
     include_NA <- filter_element[[FC$FE$F$INCLUDE_NA]]
     filter_dataset <- filter_element[[FC$FE$F$DATASET]] # TODO: Change for name table
-    assert(variable %in% names(dataset_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, if (is.null(variable)) "NULL" else variable))
+    assert(
+      variable %in% names(dataset_list[[filter_dataset]]),
+      sprintf("data[['%s']] does not contain col `%s`", filter_dataset, if (is.null(variable)) "NULL" else variable)
+    )
     variable_values <- dataset_list[[filter_dataset]][[variable]]
 
     max <- filter_element[[FC$FE$F$MAX]]
@@ -484,7 +502,8 @@ dataset_filter_operations <- local({
     assert(is.numeric(variable_values), "Field values must be numerical")
     assert(is.numeric(min) && is.numeric(max), "Max and min must be numerical")
     assert(min <= max, "min <= max")
-    mask <- (((variable_values <= max) & (variable_values >= min)) & !is.na(variable_values)) | (is.na(variable_values) & include_NA)
+    mask <- (((variable_values <= max) & (variable_values >= min)) & !is.na(variable_values)) |
+      (is.na(variable_values) & include_NA)
     lvls <- list()
     return(list(mask = mask, dataset = filter_dataset, lvls = lvls))
   }
@@ -494,7 +513,10 @@ dataset_filter_operations <- local({
     operation <- filter_element[[FC$FE$F$OPERATION]]
     include_NA <- filter_element[[FC$FE$F$INCLUDE_NA]]
     filter_dataset <- filter_element[[FC$FE$F$DATASET]] # TODO: Change for name table
-    assert(variable %in% names(dataset_list[[filter_dataset]]), sprintf("data[['%s']] does not contain col `%s`", filter_dataset, if (is.null(variable)) "NULL" else variable))
+    assert(
+      variable %in% names(dataset_list[[filter_dataset]]),
+      sprintf("data[['%s']] does not contain col `%s`", filter_dataset, if (is.null(variable)) "NULL" else variable)
+    )
     variable_values <- dataset_list[[filter_dataset]][[variable]]
 
     if (inherits(variable_values, "POSIXct")) {
@@ -507,7 +529,8 @@ dataset_filter_operations <- local({
       stop("Field values must be POSIX.ct or Date")
     }
     assert(min <= max, "min <= max")
-    mask <- (((variable_values <= max) & (variable_values >= min)) & !is.na(variable_values)) | (is.na(variable_values) & include_NA)
+    mask <- (((variable_values <= max) & (variable_values >= min)) & !is.na(variable_values)) |
+      (is.na(variable_values) & include_NA)
     lvls <- list()
     return(list(mask = mask, dataset = filter_dataset, lvls = lvls))
   }
@@ -515,15 +538,20 @@ dataset_filter_operations <- local({
   actions
 })
 
-process_dataset_filter_element <- function(dataset_list, filter_element) { # TODO: replace dataset for dataset_name
+process_dataset_filter_element <- function(dataset_list, filter_element) {
+  # TODO: replace dataset for dataset_name
 
   filter_element <- as_safe_list(filter_element)
 
   kind <- filter_element[[FC$FE$F$KIND]]
   operation <- filter_element[[FC$FE$F$OPERATION]]
 
-  if (!kind %in% names(dataset_filter_operations)) stop(paste0("Kind unknown: `", kind, "`"))
-  if (!operation %in% names(dataset_filter_operations[[kind]])) stop(paste0("Operation unknown: `", operation, "`"))
+  if (!kind %in% names(dataset_filter_operations)) {
+    stop(paste0("Kind unknown: `", kind, "`"))
+  }
+  if (!operation %in% names(dataset_filter_operations[[kind]])) {
+    stop(paste0("Operation unknown: `", operation, "`"))
+  }
 
   res <- dataset_filter_operations[[kind]][[operation]](dataset_list, filter_element)
   return(res)
@@ -534,12 +562,21 @@ process_subject_filter_element <- function(dataset_list, filter_element, sbj_var
   kind <- filter_element[[FC$SFE$F$KIND]]
   operation <- filter_element[[FC$SFE$F$OPERATION]]
 
-  if (!kind %in% names(subject_filter_operations)) stop(paste0("Kind unknown: `", kind, "`"))
-  if (!operation %in% names(subject_filter_operations[[kind]]) && !kind %in% c("row_operation", "filter")) stop(paste0("Operation unknown: `", operation, "`"))
+  if (!kind %in% names(subject_filter_operations)) {
+    stop(paste0("Kind unknown: `", kind, "`"))
+  }
+  if (!operation %in% names(subject_filter_operations[[kind]]) && !kind %in% c("row_operation", "filter")) {
+    stop(paste0("Operation unknown: `", operation, "`"))
+  }
 
   # TODO: This if statement breaks the intention of the upper code of removing ifs. Not relevant now.
   if (!kind %in% c(FC$FE$COMB$OPERATION, FC$FE$OP$OPERATION)) {
-    subject_filter_info <- subject_filter_operations[[kind]][[operation]](dataset_list, filter_element, sbj_var, complete_subject_list)
+    subject_filter_info <- subject_filter_operations[[kind]][[operation]](
+      dataset_list,
+      filter_element,
+      sbj_var,
+      complete_subject_list
+    )
   } else {
     subject_filter_info <- subject_filter_operations[[kind]](dataset_list, filter_element, sbj_var)
   }
@@ -668,7 +705,7 @@ apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_va
   return(filtered_dataset_list)
 }
 
-apply_filter_to_dataset_list <- function(unfiltered_dataset_list, dataset_list_filter, filter_key_var) {
+apply_filter_to_dataset_list <- (function(unfiltered_dataset_list, dataset_list_filter, filter_key_var) {
   error_list <- new_error_list()
   fd <- NULL
 
@@ -681,21 +718,26 @@ apply_filter_to_dataset_list <- function(unfiltered_dataset_list, dataset_list_f
     filter_dataset_list_name <- dataset_list_filter[["parsed"]][["dataset_list_name"]]
 
     if (unfiltered_dataset_list_name != filter_dataset_list_name) {
-    error_list$push(FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH)
+      error_list$push(FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH)
     } else {
-          safe_filters <- dataset_list_filter[["parsed"]][["filters"]]
+      safe_filters <- dataset_list_filter[["parsed"]][["filters"]]
       fd <- tryCatch(
         {
           dataset_filter_info <- create_dataset_filter_info(unfiltered_dataset_list, safe_filters[["datasets_filter"]])
-          subject_filter_info <- create_subject_filter_info(unfiltered_dataset_list, safe_filters[["subject_filter"]], filter_key_var)
+          subject_filter_info <- create_subject_filter_info(
+            unfiltered_dataset_list,
+            safe_filters[["subject_filter"]],
+            filter_key_var
+          )
 
           apply_dataset_filter_info(
             unfiltered_dataset_list,
             dataset_filter_info
-          ) |> apply_subject_filter_info(
-            subject_filter_info,
-            filter_key_var
-          )
+          ) |>
+            apply_subject_filter_info(
+              subject_filter_info,
+              filter_key_var
+            )
         },
         error = function(e) {
           error <- FC$ERRORS$GENERIC_FILTER_APPLICATION
@@ -704,7 +746,6 @@ apply_filter_to_dataset_list <- function(unfiltered_dataset_list, dataset_list_f
           unfiltered_dataset_list
         }
       )
-
     }
   }
 
@@ -714,8 +755,8 @@ apply_filter_to_dataset_list <- function(unfiltered_dataset_list, dataset_list_f
   )
 
   return(res)
-
-} |> shiny::maskReactiveContext()
+}) |>
+  shiny::maskReactiveContext()
 
 to_filter_validate <- jsonvalidate::json_validator(
   system.file("to_filter_schema.json", package = "dv.manager", mustWork = TRUE),
@@ -800,7 +841,12 @@ new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states =
         # When attaching the dependencies on my own an error occurs when using multiple
         # When including an input perse the error disappears, this should be explored
         shiny::sliderInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES1"), label = NULL, min = 0, max = 0, value = 0),
-        shiny::dateRangeInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES2"), label = NULL, start = "2001-01-01", end = "2001-01-01"),
+        shiny::dateRangeInput(
+          ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES2"),
+          label = NULL,
+          start = "2001-01-01",
+          end = "2001-01-01"
+        ),
         shinyWidgets::pickerInput(ns("IGNORE_INPUT_REQUIRED_FOR_DEPENDENCIES3"), choices = c("A", "B"), multiple = TRUE)
       )
     )
@@ -819,7 +865,14 @@ new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states =
   combined_ui
 }
 
-new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_name, after_filter_dataset_list, skip_dataset_filters = FALSE, strict = FALSE) {
+new_filter_server <- function(
+  id,
+  selected_dataset_list,
+  subject_filter_dataset_name,
+  after_filter_dataset_list,
+  skip_dataset_filters = FALSE,
+  strict = FALSE
+) {
   mod <- function(input, output, session) {
     shiny::setBookmarkExclude(
       c(
@@ -900,7 +953,9 @@ new_filter_server <- function(id, selected_dataset_list, subject_filter_dataset_
       json_r <- input[[ID$FILTER_STATE_JSON_INPUT]]
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
-        if (strict) assert(from_filter_validate(json_r), "failed to validate message from filter")
+        if (strict) {
+          assert(from_filter_validate(json_r), "failed to validate message from filter")
+        }
         parsed_json <- deserialize_filter_state_from_client(json_r)
         log_inform("PROCESSING FILTER PARSED")
         list(

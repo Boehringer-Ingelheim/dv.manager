@@ -263,7 +263,7 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
         subject_dataset[[name]] <- factor(new_var, levels = cat_labels)
         attr(subject_dataset[[name]], "label") <- label
       } else {
-        correct_subgroups = setdiff(correct_subgroups, name)
+        correct_subgroups <- setdiff(correct_subgroups, name)
       }
     }
   }
