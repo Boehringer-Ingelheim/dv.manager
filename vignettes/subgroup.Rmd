@@ -16,7 +16,7 @@ The main purpose of this subgrouping feature is enabling users to quickly create
 directly in the application itself. It must be noted that it does not allow to create permanent groups and final
 or complex subgroups should be created during data preprocessing before the application starts.
 
-To active this feature you must set `enable_subgroup = TRUE` in the `run_app` call.
+To active this feature you must set and  `enable_subgroup = TRUE` in the `run_app` call.
 
 ## How to create a 2 category subgroup
 </br>
@@ -31,8 +31,7 @@ To create a subgroup follow the steps:
 
     <div class="alert alert-info">
     **Note:**  
-    Variable names that are already present in the dataset are not allowed. If a previous subgroup had the same variable name
-    it will be overwritten.
+    - Variable names that are already present in the dataset are not allowed. If a previous subgroup had the same variable name it will be overwritten.
     </div>
 
   - Choose a label for the subgroups (3). This will be a human readable label that will be included in menus, tables, etc
@@ -52,7 +51,7 @@ In the image we create a subgroup for a population with a cutoff of 70 years.
 
 ## How to create a subgroup with more than 2 categories
 
-It is possible to create a subgroup with more than categories.
+It is possible to create a subgroup with more than two categories.
 
 <div class = "row g-4">
 
@@ -89,4 +88,5 @@ as described in the [new filter](/articles/development_filter.html) article.
 - Can I remove a subgroup? No, you cannot remove a subgroup but you can overwrite it.
 - Does bookmark support subgroups? Yes, subgroups are supported by bookmarking.
 - Is there anyway of including subgroups by default? No, and it will not be implemented. The subgroup can
-be created before loading data in the application.
+be created during preprocessing before loading data in the application.
+- Can I create based on another subgroup? No, subgroups can only be created based on original variables.
