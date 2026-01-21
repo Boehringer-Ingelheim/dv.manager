@@ -1,3 +1,6 @@
+# dv.manager 2.2.0-9008
+- Completely remove Azure Authentication from the code base
+
 # dv.manager 2.2.0-9007
 - Improves subgroup creation and includes tests
 

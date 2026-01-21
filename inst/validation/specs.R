@@ -2,11 +2,10 @@
 #nolint start
 
 specs <- list(
-
   # --- Interface ---
   INTERFACE = list(
-    "INTERFACE_RUN_APP" = "Application is launched via run_app(), which returns an app object.",    
-    "INTERFACE_TITLE" = "If a title is provided, it is displayed in the browser tab/window. If no title is provided, the default app title is 'Untitled'.",    
+    "INTERFACE_RUN_APP" = "Application is launched via run_app(), which returns an app object.",
+    "INTERFACE_TITLE" = "If a title is provided, it is displayed in the browser tab/window. If no title is provided, the default app title is 'Untitled'.",
     "INTERFACE_STARTUP_MESSAGE" = "Startup message can be a shiny::modalDialog without error. NULL for no message.",
     "INTERFACE_CSS_NAMESPACE" = "By default, CSS rules from modules are namespaced.CSS namespacing can be disabled with options('dv.manager.disable_css_namespacing').",
     "INTERFACE_SIDEBAR" = "A sidebar is present in the application",
@@ -45,7 +44,7 @@ specs <- list(
         - a list of data tables, or
         - a function returning a list of data tables.  
       All datasets must contain the same data tables.",
-    "DATASET_LIST_SELECTOR_VISIBLE" = "Dataset list selector is displayed if more than one dataset is available.",    
+    "DATASET_LIST_SELECTOR_VISIBLE" = "Dataset list selector is displayed if more than one dataset is available.",
     "DATASET_LIST_SWITCHING_ALLOWED" = "Users can switch between datasets during execution.",
     "DATASET_LIST_SINGLE_ACTIVE" = "Only one dataset can be active at a time.",
     "DATASET_LIST_LABELS_DISPLAY" = "Dataset labels are displayed in the UI.",
@@ -81,14 +80,6 @@ specs <- list(
     "BOOKMARK_FILTERS" = "Bookmarks save applied filters.",
     "BOOKMARK_ACTIVE_MODULE" = "Bookmarks save the currently active module.",
     "BOOKMARK_MODULE_STATES" = "Bookmarks save the internal states of bookmarkable modules. Internal bookmarking is a module responsibility."
-  ),
-
-  # --- Authentication ---
-  AUTHENTICATION = list(
-    "SSO_ENABLED" = "Azure SSO authentication can be enabled.",
-    "SSO_DISABLED" = "Azure SSO authentication can be disabled.",
-    "AZURE_OPTIONS_REQUIRED" = "azure_options must include redirect, resource, tenant, app, version, password (error thrown if missing).",
-    "AZURE_OPTIONS_NULL" = "azure_options can be NULL."
   ),
 
   # --- Preprocessing ---
