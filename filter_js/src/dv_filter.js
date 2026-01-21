@@ -560,7 +560,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     const block_names = Object.keys(Blockly.Blocks);
     for (let idx = 0; idx < block_names.length; ++idx) {
       let current_name = block_names[idx];
-      if(current_name.startsWith(namespace)){
+      if(current_name.startsWith(ns(""))){
         __logger("Removing: " + block_names[idx]);
         Blockly.Blocks[block_names[idx]] = null;
       } else {
