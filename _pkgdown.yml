@@ -22,7 +22,6 @@ reference:
   - tab_group
   - add_date_range  
   - logging
-  - build_secure_arguments
 - title: Dummy modules
 - contents:
   - mod_simple
