@@ -2171,6 +2171,8 @@ let get_filter_property = function(el, property, clone = true) {
   
 }
 
+// TODO: Check if visibility of these functions can be restricited so limitation of calling it inside the listeners and 
+// message handlers is forced and based on discipline
 // Should be called only inside listeners/message handlers or during main init to set the state of the filter
 let set_filter_property = function(el, property, val) {
   __assert(()=>is_html_element(el))
