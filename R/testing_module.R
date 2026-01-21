@@ -25,6 +25,42 @@ mod_empty <- function(mod_id) {
   )
 }
 
+########### AFMM export module (for testing)
+
+afmm_export_UI <- function(id) { # nolint
+  shiny::tagList()
+}
+
+afmm_export_server <- function(id, afmm) {
+  shiny::moduleServer(
+    id,
+    function(input, output, session) {
+      shiny::exportTestValues(
+        afmm = afmm
+      )
+    }
+  )
+}
+
+#' A testing module that exports the whole afmm object
+#'
+#' This module is used for testing purposes to access the full afmm object
+#' via shinytest2's get_value(export = "module_id-afmm").
+#'
+#' @param mod_id shiny module ID
+#'
+#' @return A module list with ui, server, and module_id
+#' @keywords internal
+mod_afmm_export <- function(mod_id) {
+  list(
+    ui = afmm_export_UI,
+    server = function(afmm) {
+      afmm_export_server(id = mod_id, afmm = afmm)
+    },
+    module_id = mod_id
+  )
+}
+
 ########### Identity module
 
 identity_UI <- function(id) { # nolint

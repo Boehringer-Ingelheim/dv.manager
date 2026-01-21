@@ -207,7 +207,7 @@ SEXP binary_serialize_filter_data_C(SEXP x)
                     buf_append(buf, &min, sizeof(min));
                     buf_append(buf, &max, sizeof(max));
                 } else{
-                    Rf_warning("Unknown kind: %s\n", variable_kind);
+                    // Rf_warning("Unknown kind: %s\n", variable_kind);
                 }
             }
         }        
@@ -393,7 +393,7 @@ SEXP binary_deserialize_filter_data_C(SEXP x)
                     _DP("Processing Unknown");
                     variable_element = COUNTED_PROTECT(Rf_allocVector(VECSXP, 5)); 
                     variable_element_names = COUNTED_PROTECT(Rf_allocVector(STRSXP, 5));
-                    Rf_warning("Unknown kind: %s", __buf_variable_kind);
+                    // Rf_warning("Unknown kind: %s", __buf_variable_kind);
                 }
 
                 SET_VECTOR_ELT(variable_element, 0, Rf_mkString(__buf_variable_name));

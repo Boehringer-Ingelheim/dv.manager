@@ -272,8 +272,74 @@ input[type="checkbox"]#click {
   opacity: 1;
 }
 
+div.dv_subgroup_menu dv-filter-top-control-container > *:not(:first-child){   
+  display: none;
+}
+
 dv-filter-wrapper {
   display: block;
+
+
+  [data-filter-mode="blockly"] {
+    .blockly_filter.outer {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      /* First row takes remaining space, second row based on content */
+      height: 100%;
+    }
+
+    .blockly_filter.inner {
+      height: 100%;
+    }
+
+    .blockly_overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      /* Hidden by default */
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    /* Modal content style */
+    .blockly_modal {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      width: 80vw;
+      height: 80vh;
+      text-align: center;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      /* First row takes remaining space, second row based on content */
+    }
+
+    /* Close button style */
+    .blockly_close_button {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 5px 10px;
+      background-color: #ccc;
+      text-decoration: none;
+      border-radius: 3px;
+    }
+
+    .blockly_close_button:hover {
+      background-color: #aaa;
+    }
+
+    /* Show the modal when the checkbox is checked */
+    input[type="checkbox"]:checked+.blockly_overlay {
+      display: flex;
+    }
+
+  }
 
   dv-filter-dependencies {
     display: block;
@@ -484,67 +550,6 @@ dv-filter-wrapper {
 }
   //END: TO BE REMOVED ONCE THE ORIGINAL SIMPLE DV.FILTER IS REMOVED
 
-  [data-filter-mode="blockly"] {
-
-    .blockly_filter.outer {
-      display: grid;
-      grid-template-rows: 1fr auto;
-      /* First row takes remaining space, second row based on content */
-      height: 100%;
-    }
-
-    .blockly_filter.inner {
-      height: 100%;
-    }
-
-    .blockly_overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: none;
-      /* Hidden by default */
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-
-    /* Modal content style */
-    .blockly_modal {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      width: 80vw;
-      height: 80vh;
-      text-align: center;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      /* First row takes remaining space, second row based on content */
-    }
-
-    /* Close button style */
-    .blockly_close_button {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 5px 10px;
-      background-color: #ccc;
-      text-decoration: none;
-      border-radius: 3px;
-    }
-
-    .blockly_close_button:hover {
-      background-color: #aaa;
-    }
-
-    /* Show the modal when the checkbox is checked */
-    input[type="checkbox"]:checked+.blockly_overlay {
-      display: flex;
-    }
-
-  }
 
   // .c-well {
   //   min-height: 20px;

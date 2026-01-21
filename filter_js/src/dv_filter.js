@@ -134,21 +134,9 @@ let max_str_date = function(date1, date2) {
   return(res);
 }
 
-let min_str_date = function(date1, date2) {
-  let num_date1 = new Date(date1).getTime();
-  let num_date2 = new Date(date2).getTime();
-
-  let res = date1;
-  if (num_date2<num_date1) {
-    res = date2;  
-  }
-  return(res);
-}
-
 let is_numeric_finite = function (value) {
   return typeof value === "number" && Number.isFinite(value);
 }
-
 
 //#region BLOCKLY FILTER
 
@@ -186,7 +174,7 @@ const get_random_input_id = function () {
   return ("contents_" + Blockly.utils.idGenerator.genUid());
 }
 
-const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
+const filter_state_to_blockly_state = function (previous_filter, dataset_list, ns) {
 
   let filter = undefined;
   if (previous_filter) {
@@ -220,7 +208,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
         __logger(current_filter);
 
         if (current_filter.kind === "filter") {
-          current_block.type = get_block_filter_type(current_filter.dataset, current_filter.variable);
+          current_block.type = ns(get_block_filter_type(current_filter.dataset, current_filter.variable));
           current_block.id = Blockly.utils.idGenerator.genUid();
 
           /* Check if filter is applicable
@@ -285,7 +273,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
         } else if (current_filter.kind === "set_operation") {
 
           if (current_filter.operation === "intersect" || current_filter.operation === "union") {
-            current_block.type = BC.TYPE.SET_COMB_OPERATION;
+            current_block.type = ns(BC.TYPE.SET_COMB_OPERATION);
             current_block.id = Blockly.utils.idGenerator.genUid();
             current_block.extraState = {
               data: []
@@ -300,7 +288,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
             }
             current_block.extraState.data.push(get_random_input_id()); // One extra because we want a free input
           } else if (current_filter.operation === "complement") {
-            current_block.type = BC.TYPE.SET_COMPLEMENT_OPERATION;
+            current_block.type = ns(BC.TYPE.SET_COMPLEMENT_OPERATION);
             current_block.id = Blockly.utils.idGenerator.genUid();
             current_block.fields = { operation: current_filter.operation };
             current_block.inputs = {
@@ -314,7 +302,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
         } else if (current_filter.kind === "row_operation") {
 
           if (current_filter.operation === "and" || current_filter.operation === "or") {
-            current_block.type = BC.TYPE.ROW_COMB_OPERATION;
+            current_block.type = ns(BC.TYPE.ROW_COMB_OPERATION);
             current_block.id = Blockly.utils.idGenerator.genUid();
             current_block.extraState = {
               data: []
@@ -329,7 +317,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
             }
             current_block.extraState.data.push(get_random_input_id()); // One extra because we want a free input
           } else if (current_filter.operation === "not") {
-            current_block.type = BC.TYPE.ROW_NOT_OPERATION;
+            current_block.type = ns(BC.TYPE.ROW_NOT_OPERATION);
             current_block.id = Blockly.utils.idGenerator.genUid();
             current_block.fields = { operation: current_filter.operation };
             current_block.inputs = {
@@ -352,7 +340,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
       let processed_filter = process_filter(filter[BC.TYPE.SUBJECT_FILTER].children[0]);
       if (processed_filter !== null) {
         let subject_filter = {
-          type: BC.TYPE.SUBJECT_FILTER,
+          type: ns(BC.TYPE.SUBJECT_FILTER),
           id: Blockly.utils.idGenerator.genUid(),
           x: 0,
           y: 0,
@@ -368,7 +356,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list) {
         let processed_filter = process_filter(curr_dataset_filter.children[0]);
         if (processed_filter !== null) {
           let dataset_filter = {
-            type: get_block_dataset_type(curr_dataset_filter.name),
+            type: ns(get_block_dataset_type(curr_dataset_filter.name)),
             id: Blockly.utils.idGenerator.genUid(),
             x: 0,
             y: 0,
@@ -545,7 +533,11 @@ const get_blockly_code = function ({ workspace, generator, dataset_name }) {
   return (res_state)
 }
 
-const init_blockly = function (el, dataset_name, filter_data, init_state) {
+const init_blockly = function (el, dataset_name, filter_data, init_state, skip_dataset_filters) {
+  let id = get_root_el(el).id;
+  let namespace = id + "-" + dataset_name;
+  let ns = function(x) {return(namespace + "-" + x)};
+
   {
     /* Clear previous block definitions
     Otherwise block definitions are kept from one dataset to the other
@@ -564,9 +556,16 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     we leave the description as the side effects of Blockly.Blocks must be taken into account.
 
     */
+    
     const block_names = Object.keys(Blockly.Blocks);
     for (let idx = 0; idx < block_names.length; ++idx) {
-      Blockly.Blocks[block_names[idx]] = null;
+      let current_name = block_names[idx];
+      if(current_name.startsWith(ns(""))){
+        __logger("Removing: " + block_names[idx]);
+        Blockly.Blocks[block_names[idx]] = null;
+      } else {
+        __logger("Keeping: " + block_names[idx]);
+      }
     }
 
   }
@@ -588,7 +587,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     return code;
   };
 
-  json_generator.forBlock[BC.TYPE.SUBJECT_FILTER] = subject_filter_generator;
+  json_generator.forBlock[ns(BC.TYPE.SUBJECT_FILTER)] = subject_filter_generator;
 
   let toolbox = {
     kind: 'categoryToolbox',
@@ -604,7 +603,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
         contents: [
           {
             kind: 'block',
-            type: BC.TYPE.SUBJECT_FILTER
+            type: ns(BC.TYPE.SUBJECT_FILTER)
           },
         ]
       },
@@ -614,29 +613,29 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
         contents: [
           {
             kind: 'block',
-            type: BC.TYPE.ROW_COMB_OPERATION
+            type: ns(BC.TYPE.ROW_COMB_OPERATION)
           },
           {
             kind: 'block',
-            type: BC.TYPE.ROW_NOT_OPERATION
+            type: ns(BC.TYPE.ROW_NOT_OPERATION)
           },
           {
             kind: 'block',
-            type: BC.TYPE.SET_COMB_OPERATION
+            type: ns(BC.TYPE.SET_COMB_OPERATION)
           },
           {
             kind: 'block',
-            type: BC.TYPE.SET_COMPLEMENT_OPERATION
+            type: ns(BC.TYPE.SET_COMPLEMENT_OPERATION)
           }
         ]
       },
     ]
   };
 
-  json_generator.forBlock[BC.TYPE.ROW_COMB_OPERATION] = row_operation_generator;
-  json_generator.forBlock[BC.TYPE.ROW_NOT_OPERATION] = row_operation_generator;
-  json_generator.forBlock[BC.TYPE.SET_COMB_OPERATION] = set_operation_generator;
-  json_generator.forBlock[BC.TYPE.SET_COMPLEMENT_OPERATION] = set_operation_generator;
+  json_generator.forBlock[ns(BC.TYPE.ROW_COMB_OPERATION)] = row_operation_generator;
+  json_generator.forBlock[ns(BC.TYPE.ROW_NOT_OPERATION)] = row_operation_generator;
+  json_generator.forBlock[ns(BC.TYPE.SET_COMB_OPERATION)] = set_operation_generator;
+  json_generator.forBlock[ns(BC.TYPE.SET_COMPLEMENT_OPERATION)] = set_operation_generator;
 
   // Preface End
 
@@ -690,7 +689,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     remove_value_inputs(block, empty_input_names)
   };
 
-  Blockly.Blocks[BC.TYPE.ROW_COMB_OPERATION] = {
+  Blockly.Blocks[ns(BC.TYPE.ROW_COMB_OPERATION)] = {
     init: function () {
       this.appendDummyInput("header")
         .appendField(new Blockly.FieldDropdown(
@@ -717,7 +716,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     }
   };
 
-  Blockly.Blocks[BC.TYPE.ROW_NOT_OPERATION] = {
+  Blockly.Blocks[ns(BC.TYPE.ROW_NOT_OPERATION)] = {
     init: function () {
       this.appendDummyInput("header")
         .appendField(new Blockly.FieldDropdown(
@@ -730,7 +729,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     }
   };
 
-  Blockly.Blocks[BC.TYPE.SET_COMB_OPERATION] = {
+  Blockly.Blocks[ns(BC.TYPE.SET_COMB_OPERATION)] = {
     init: function () {
       this.appendDummyInput("header")
         .appendField(new Blockly.FieldDropdown(
@@ -757,7 +756,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     }
   };
 
-  Blockly.Blocks[BC.TYPE.SET_COMPLEMENT_OPERATION] = {
+  Blockly.Blocks[ns(BC.TYPE.SET_COMPLEMENT_OPERATION)] = {
     init: function () {
       this.appendDummyInput("header")
         .appendField(new Blockly.FieldDropdown(
@@ -770,7 +769,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
     }
   };
 
-  Blockly.Blocks[BC.TYPE.SUBJECT_FILTER] = {
+  Blockly.Blocks[ns(BC.TYPE.SUBJECT_FILTER)] = {
     init: function () {
       this.appendDummyInput('label')
         .appendField('Subject Filter');
@@ -794,33 +793,36 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       contents: [],
     };
 
-    Blockly.Blocks[dataset_type] = {
-      init: function () {
-        this.appendDummyInput()
-          .appendField("Dataset Filter: ")
-          .appendField(dataset_name, "dataset_name");
-        this.appendValueInput("children")
-          .setCheck(["filter", "row"]);
-        this.setColour(dataset_color);
-        this.dataset_name = dataset_name;
-        this.is_top_dataset = true;
-      }
-    };
+    if (!skip_dataset_filters) {
+      Blockly.Blocks[ns(dataset_type)] = {
+        init: function () {
+          this.appendDummyInput()
+            .appendField("Dataset Filter: ")
+            .appendField(dataset_name, "dataset_name");
+          this.appendValueInput("children")
+            .setCheck(["filter", "row"]);
+          this.setColour(dataset_color);
+          this.dataset_name = dataset_name;
+          this.is_top_dataset = true;
+        }
+      };
 
-    toolbox.contents[1].contents.push(
-      {
-        kind: 'block',
-        type: dataset_type
-      }
-    );
+      toolbox.contents[1].contents.push(
+        {
+          kind: 'block',
+          type: ns(dataset_type)
+        }
+      );
 
-    json_generator.forBlock[dataset_type] = dataset_filter_generator;
+      json_generator.forBlock[ns(dataset_type)] = dataset_filter_generator;
+    }
+    
 
     __logger(toolbox);
 
     for (let variable of dataset["variables"]) {
       const variable_name = variable["name"];
-      const variable_type = get_block_filter_type(dataset_name, variable_name);
+      const nsed_variable_type = ns(get_block_filter_type(dataset_name, variable_name));
       const variable_label = typeof (variable["label"]) === "string" ? variable["label"] : "";
       const kind = variable["kind"];
       const block_color = dataset_color; // Otherwise it takes the value of dataset_color from the outer closure
@@ -835,7 +837,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
 
         if (dd_options.length == 0) dd_options = [['_EMPTY_VEC_', '_EMPTY_VEC_']]
 
-        Blockly.Blocks[variable_type] = {
+        Blockly.Blocks[nsed_variable_type] = {
           init: function () {
             this.appendEndRowInput()
               .appendField(`[(${dataset_name}) - ${variable_name}]`)
@@ -850,13 +852,13 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
           }
         }
 
-        json_generator.forBlock[variable_type] = filter_generator_subset;
+        json_generator.forBlock[nsed_variable_type] = filter_generator_subset;
 
       } else if (kind === "numerical") {
         const min = variable["min"];
         const max = variable["max"];
 
-        Blockly.Blocks[variable_type] = {
+        Blockly.Blocks[nsed_variable_type] = {
           init: function () {
             this.appendDummyInput()
               .appendField(`[(${dataset_name}) - ${variable_name}]`)
@@ -874,12 +876,12 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
             this.dataset_name = dataset_name;
           }
         }
-        json_generator.forBlock[variable_type] = filter_generator_range;
+        json_generator.forBlock[nsed_variable_type] = filter_generator_range;
       } else if (kind === "date") {        
         const min = variable["min"];
         const max = variable["max"];
 
-        Blockly.Blocks[variable_type] = {
+        Blockly.Blocks[nsed_variable_type] = {
           init: function () {
             this.appendEndRowInput()
               .appendField(`[(${dataset_name}) - ${variable_name}]`)
@@ -896,15 +898,15 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
             this.dataset_name = dataset_name;
           }
         }
-        json_generator.forBlock[variable_type] = filter_generator_date_range;
+        json_generator.forBlock[nsed_variable_type] = filter_generator_date_range;
       } else {        
-        console.warn("Unknown kind variable: " + variable_name);
+        // console.warn("Unknown kind variable: " + variable_name);
         continue; 
       }
 
       let variable_block = {
         kind: 'block',
-        type: variable_type
+        type: nsed_variable_type
       };
       dataset_category.contents.push(variable_block);
     }
@@ -935,9 +937,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
       // Look for the highest block that is a row operation or a dataset filter
 
       while (root_block.getParent() !== null &&
-        root_block.getParent().type !== BC.TYPE.SET_COMB_OPERATION &&
-        root_block.getParent().type !== BC.TYPE.SET_COMPLEMENT_OPERATION &&
-        root_block.getParent().type !== BC.TYPE.SUBJECT_FILTER
+        root_block.getParent().type !== ns(BC.TYPE.SET_COMB_OPERATION) &&
+        root_block.getParent().type !== ns(BC.TYPE.SET_COMPLEMENT_OPERATION) &&
+        root_block.getParent().type !== ns(BC.TYPE.SUBJECT_FILTER)
       ) {
         root_block = root_block.getParent();
       }
@@ -946,8 +948,8 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
 
       if (
         root_block.is_top_dataset ||
-        root_block.type === BC.TYPE.ROW_COMB_OPERATION ||
-        root_block.type === BC.TYPE.ROW_NOT_OPERATION
+        root_block.type === ns(BC.TYPE.ROW_COMB_OPERATION) ||
+        root_block.type === ns(BC.TYPE.ROW_NOT_OPERATION)
       ) {
 
         // If a dataset filter is on the top we take set the target dataset as that one
@@ -975,17 +977,17 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
         }
       }
 
-      if (new_parent_block && new_parent_block.type === BC.TYPE.ROW_COMB_OPERATION) {
+      if (new_parent_block && new_parent_block.type === ns(BC.TYPE.ROW_COMB_OPERATION)) {
         remove_empty_inputs(new_parent_block);
         append_value_input_row_comb(new_parent_block);
       }
 
-      if (new_parent_block && new_parent_block.type === BC.TYPE.SET_COMB_OPERATION) {
+      if (new_parent_block && new_parent_block.type === ns(BC.TYPE.SET_COMB_OPERATION)) {
         remove_empty_inputs(new_parent_block);
         append_value_input_set_comb(new_parent_block);
       }
     } else if (event.reason.includes("disconnect")) {
-      if (old_parent_block && (old_parent_block.type === BC.TYPE.ROW_COMB_OPERATION || old_parent_block.type === BC.TYPE.SET_COMB_OPERATION)) {
+      if (old_parent_block && (old_parent_block.type === ns(BC.TYPE.ROW_COMB_OPERATION) || old_parent_block.type === ns(BC.TYPE.SET_COMB_OPERATION))) {
         // Remove the input that has been disconnected
         const input_for_removal = event.oldInputName;
         remove_value_inputs(old_parent_block, [input_for_removal]);
@@ -1004,7 +1006,13 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
   toolbox.contents[idx_singleton_cat].contents.map((x) => options.maxInstances[x.type] = 1)
 
   options.toolbox = toolbox;
+
+  if(global_blockly_disposal[id]){
+    global_blockly_disposal[id];
+    global_blockly_disposal[id] = undefined;
+  }  
   let ws = Blockly.inject(container_div, options);
+  global_blockly_disposal[id] = function(){ws.disposal();}
 
   ws.MAX_UNDO = 0; //Disconnect undo because of listeners
   // When removing elements using JS the undo is messed up
@@ -1015,10 +1023,10 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
   ws.addChangeListener(onChange);
 
   let filter_state, filter_state_log;
-  [filter_state, filter_state_log] = filter_state_to_blockly_state(init_state, selected_datasets);
+  [filter_state, filter_state_log] = filter_state_to_blockly_state(init_state, selected_datasets, ns);
 
   if (filter_state) {
-    try {
+    try {      
       Blockly.serialization.workspaces.load(filter_state, ws);
       ws.cleanUp(); // If overlap reorganize
     } catch (error) {
@@ -1036,11 +1044,11 @@ const init_blockly = function (el, dataset_name, filter_data, init_state) {
   return (res)
 }
 
-let blockly_disposal = function(){}; // FIXME: GLobal to all instances, if several dv.filter instances appear it won't work
+let global_blockly_disposal = {}; // FIXME: This is a very ugly way of disposing the workspace but less resistance route currently
 
-let blockly_static_init = function(blockly_root_el) {
+let blockly_static_init = function(blockly_root_el, id) {
 
-  let show_button_id = "blockly-filter-checkbox";
+  let show_button_id = id + "-blockly-filter-checkbox"; // Namespaced button
 
   let show_label = document.createElement('label');
   show_label.textContent = "Show filter";
@@ -1114,7 +1122,7 @@ let blockly_static_init = function(blockly_root_el) {
   let send_code = function () {
     const filter = $(inner_filter_el).data('filter');
     const code = get_blockly_code(filter);
-    const event = new CustomEvent(FC.EVENT.UPDATED_FILTER, {
+    const event = new CustomEvent(FC.EVENT.NEW_FILTER_VALUE, {
       detail: {filter: code, mode: FC.MODE.BLOCKLY},
       bubbles: true,
       cancelable: true
@@ -1122,11 +1130,6 @@ let blockly_static_init = function(blockly_root_el) {
     blockly_root_el.dispatchEvent(event);
   };
 
-  blockly_disposal = function(){
-    const filter = $(inner_filter_el).data("filter");
-    filter.workspace.dispose();
-    $(inner_filter_el).data("filter", undefined);        
-  }
   gen_code_button.addEventListener('click', send_code);
 
 
@@ -1335,7 +1338,13 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   select.setAttribute('data-width', '100%');
   select.setAttribute('data-style', 'btn');
   select.setAttribute('data-selected-text-format', 'static');
-  select.setAttribute('data-container', 'body .dv_main_panel');
+  let data_container;
+  if(document.querySelector(".dv_main_panel")) {
+    data_container = 'body .dv_main_panel'     
+  } else {
+    data_container = 'body'
+  }
+  select.setAttribute('data-container', data_container);
   select.setAttribute(SC.ATTRIBUTE.VARIABLE_SELECTOR, '');
 
   for(let i = 0; i < dataset.variables.length; ++i) {
@@ -1369,9 +1378,8 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   
   dataset_filter_container.appendChild(card_body);
   simple_root_el.appendChild(dataset_filter_container);
-  
+    
   $(select).selectpicker();
-
 
   create_variable_filter_controls(variable_filter_control_container, dataset, selected_variables,  dataset_filter_state);
   __time_function_end() 
@@ -1880,7 +1888,7 @@ let simple_static_init = function(simple_root_el) {
     __logger("Simple sending code");
     let dataset_list_name = get_filter_property(simple_root_el, FC.PROPERTY.DATASET_LIST_NAME);
     let code = get_filter_state(simple_root_el, dataset_list_name);
-    const new_event = new CustomEvent(FC.EVENT.UPDATED_FILTER, {
+    const new_event = new CustomEvent(FC.EVENT.NEW_FILTER_VALUE, {
       detail: {filter: code, mode: FC.MODE.SIMPLE},
       bubbles: true,
       cancelable: true
@@ -2006,17 +2014,13 @@ let get_blockly_root_el = function(el){
   return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
 }
 
-let init_filter_handler = function (dataset_list_data, dataset_list_name, root_el, static_init_ret, selected_mode) {
+let init_filter_handler = function (root_el, dataset_list_data, dataset_list_name, subject_filter_dataset_name, filter_state, static_init_ret, selected_mode, skip_dataset_filters) {
+  __logger(`init_filter_handler: ${root_el}`);
+  __logger(root_el);
+  __logger(dataset_list_data);
   __assert(()=>is_html_element(root_el));
   
-  set_filter_property(root_el, FC.PROPERTY.DATA, dataset_list_data);
-  set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, dataset_list_name);  
-
-  let filter_data = get_filter_property(root_el, FC.PROPERTY.DATA);
-  let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME);
-  let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
-
-  let dataset_list = filter_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
+  let dataset_list = dataset_list_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
   
   if(selected_mode === FC.MODE.SIMPLE) {
     get_simple_root_el(root_el).style.display = 'block';
@@ -2035,7 +2039,8 @@ let init_filter_handler = function (dataset_list_data, dataset_list_name, root_e
     blockly_dynamic_init(
       get_blockly_root_el(root_el),   
       dataset_list_name,    
-      filter_data, filter_state
+      dataset_list_data, filter_state,
+      skip_dataset_filters
     );
     static_init_ret[FC.MODE.BLOCKLY].send_code();
   } else {
@@ -2075,7 +2080,7 @@ let show_hide_dataset_filters_handler =  function(msg, root_el){
   }
 }
 
-let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state) {
+let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters) {
   __assert(()=>is_html_element(blockly_root_el))
 
   let inner_filter_el = blockly_root_el.querySelector(`[${BC.ATTRIBUTE.INNER_FILTER}]`);
@@ -2084,7 +2089,7 @@ let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_d
     filter.workspace.dispose();
     $(inner_filter_el).data("filter", undefined);
   }
-  $(inner_filter_el).data('filter', init_blockly(inner_filter_el, dataset_list_name, filter_data, filter_state));
+  $(inner_filter_el).data('filter', init_blockly(inner_filter_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters));
 }
 
 let FC = {
@@ -2104,7 +2109,8 @@ let FC = {
     BLOCKLY: "blockly"
   },
   EVENT: {
-    UPDATED_FILTER: "updated_filter"
+    NEW_FILTER_VALUE: "new_filter_value",
+    REQUESTED_REDRAW: "requested_redraw"
   },
   ATTRIBUTE: {
     ROOT: "data-root",
@@ -2113,11 +2119,15 @@ let FC = {
     SAVED_FILTER_STATE_NAME: "data-saved-filter-name"
   },
   PROPERTY: {
+    FIELD: "dv_filter_properties", // Container of all properties
     DATA: "filter_data",
     STATE: "filter_state",
     SAVED_STATES: "saved_states",
     DATASET_LIST_NAME: "dataset_list_name",
-    SUBJECT_DATASET_NAME: "subject_dataset_name"
+    SUBJECT_DATASET_NAME: "subject_dataset_name",
+    STATIC_RET: "static_ret",
+    FILTER_MODE: "filter_mode",
+    SKIP_DATASET_FILTERS: "skip_dataset_filters"
   },
   VAL: {
     EMPTY_FILTER: {
@@ -2145,32 +2155,53 @@ let get_root_el = function(el) {
   return(root_el);
 }
 
-let get_filter_property = function(el, property) {  
-  __assert(()=>is_html_element(el))
-  return(structuredClone(get_root_el(el)[property]));  
+let get_root_el_by_id = function(id) {
+  return(document.getElementById(id));  
 }
 
+// Should be called only inside listeners/message handlers to get the current state of the filter
+let get_filter_property = function(el, property, clone = true) {  
+  __assert(()=>is_html_element(el));
+  __logger("Getting property: " + property);  
+  if(clone) {
+    return(structuredClone(get_root_el(el)[FC.PROPERTY.FIELD][property]));  
+  } else {
+    return(get_root_el(el)[FC.PROPERTY.FIELD][property]);  
+  }
+  
+}
+
+// TODO: Check if visibility of these functions can be restricited so limitation of calling it inside the listeners and 
+// message handlers is forced and based on discipline
+// Should be called only inside listeners/message handlers or during main init to set the state of the filter
 let set_filter_property = function(el, property, val) {
   __assert(()=>is_html_element(el))
-  return(get_root_el(el)[property] = val);
+  return(get_root_el(el)[FC.PROPERTY.FIELD][property] = val);
+}
+
+let init_filter_property_field = function(el) {  
+  __assert(()=>is_html_element(el));
+  get_root_el(el)[FC.PROPERTY.FIELD] = {};
 }
 
 const init = function(root_id, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {  
   let filter_state = JSON.parse(filter_state_json);
   let saved_filter_states = JSON.parse(saved_filter_states_json);
 
-  __logger("Filter root id: " + root_id);
+  __logger("Filter shiny id: " + root_id);
   __logger(`Initial filter state:`);
   __logger(filter_state_json);
   __logger(`Initial saved states:`);
   __logger(saved_filter_states);
 
   let root_el = document.getElementById(root_id);
-  root_el[FC.PROPERTY.STATE] = filter_state;
-  root_el[FC.PROPERTY.SAVED_STATES] = !saved_filter_states ? [] : saved_filter_states;
-  root_el[FC.PROPERTY.SUBJECT_DATASET_NAME] = subject_dataset_name;
-
-
+  __logger("root el for " + root_id);
+  __logger(root_el);
+  init_filter_property_field(root_el);
+  set_filter_property(root_el, FC.PROPERTY.STATE, filter_state);
+  set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, !saved_filter_states ? [] : saved_filter_states);
+  set_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME, subject_dataset_name);
+  
   let top_control_container = document.createElement("dv-filter-top-control-container");
   top_control_container.className = "p-3 m-3 bg-light border rounded";
 
@@ -2227,7 +2258,6 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   let saved_states_list = document.createElement(FC.TAG.SAVED_STATES_LIST);
   saved_states_container.appendChild(saved_states_list);
 
-
   top_control_container.appendChild(select);
   top_control_container.appendChild(export_button);
   top_control_container.appendChild(clear_all_button);
@@ -2237,7 +2267,8 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   let bottom_container = document.createElement("div");
   bottom_container.className = "mb-3 p-1 border bg-light";
 
-  let static_init_ret = {};
+  
+  static_ret = {};
 
   // Simple
   let simple_option = document.createElement('option');
@@ -2249,7 +2280,9 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   simple_div.setAttribute(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.SIMPLE);
   bottom_container.appendChild(simple_div);
 
-  static_init_ret[FC.MODE.SIMPLE] = simple_static_init(simple_div);
+  static_ret[FC.MODE.SIMPLE] = simple_static_init(simple_div);
+
+  set_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME, subject_dataset_name);
 
   // Blockly
 
@@ -2263,9 +2296,11 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   bottom_container.appendChild(blockly_div);
   root_el.appendChild(bottom_container);
 
-  static_init_ret[FC.MODE.BLOCKLY] = blockly_static_init(blockly_div);
+  static_ret[FC.MODE.BLOCKLY] = blockly_static_init(blockly_div, root_id);
+  set_filter_property(root_el, FC.PROPERTY.STATIC_RET, static_ret);
   
   select.value = FC.MODE.SIMPLE;
+  set_filter_property(root_el, FC.PROPERTY.FILTER_MODE, select.value);
 
   let dev_current_filter_div;
   if(__DEV_MODE) {
@@ -2273,43 +2308,33 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
     root_el.appendChild(dev_current_filter_div);
   }
 
-  let change_filter_mode = function() {           
-    __logger(`Changing to: ${select.value}`);
-    init_filter_handler(get_filter_property(root_el, FC.PROPERTY.DATA), get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME), root_el, static_init_ret, select.value);
-  };
+  root_el.addEventListener(FC.EVENT.REQUESTED_REDRAW, function(){    
+    let dataset_list_data = get_filter_property(root_el, FC.PROPERTY.DATA);    
+    let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
+    let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME);
+    let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
+    let static_init_ret = get_filter_property(root_el, FC.PROPERTY.STATIC_RET, false);
+    let filter_mode = get_filter_property(root_el, FC.PROPERTY.FILTER_MODE);
+    let skip_dataset_filters = get_filter_property(root_el, FC.PROPERTY.SKIP_DATASET_FILTERS);
+    
+    init_filter_handler( 
+      root_el,      
+      dataset_list_data,
+      dataset_list_name,
+      subject_filter_dataset_name,
+      filter_state,
+      static_init_ret,
+      filter_mode,
+      skip_dataset_filters      
+    );
+  })
 
-  let baked_init_filter_handler = function(msg) {    
-    let dataset_lists_filter_data;    
-    dataset_lists_filter_data = deserialize_b64_filter_data(msg.dataset_lists_filter_data);    
-    init_filter_handler(dataset_lists_filter_data, msg.dataset_list_name, root_el, static_init_ret, select.value);
-  };
-  Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
+  select.addEventListener('change', function(){
+    set_filter_property(root_el, FC.PROPERTY.FILTER_MODE, select.value);
+    root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));    
+  });
 
-  let baked_update_filter_result_handler= function(msg) {
-    update_filter_result_handler(msg, root_el);
-  };
-  Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
-
-  let baked_show_hide_dataset_filters_handlers = function(msg) {
-    show_hide_dataset_filters_handler(msg, root_el);
-  };
-  Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
-
-  let update_data = function(msg) {
-    set_filter_property(root_el, FC.PROPERTY.DATA, JSON.parse(msg.data));
-    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
-  };
-  Shiny.addCustomMessageHandler("update_data", update_data);
-
-  let request_dataset_filter_state = function(msg) {
-    set_filter_property(root_el, FC.PROPERTY.STATE, msg.state);
-    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
-  };
-  Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
-
-  select.addEventListener('change', change_filter_mode);
-
-  root_el.addEventListener(FC.EVENT.UPDATED_FILTER, function(event){
+  root_el.addEventListener(FC.EVENT.NEW_FILTER_VALUE, function(event){
     __logger("Sending to Shiny " + filter_state_json_input_id);
     set_filter_property(root_el, FC.PROPERTY.STATE, event.detail.filter);
     Shiny.setInputValue(filter_state_json_input_id, JSON.stringify(event.detail.filter), { priority: 'event' });
@@ -2320,7 +2345,7 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
 
   clear_all_button.addEventListener("click", function(){
     set_filter_property(root_el, FC.PROPERTY.STATE, FC.VAL.EMPTY_FILTER);
-    select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+    root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true })); // Trigger filter redraw after cleaning filters
   });
 
   let render_saved_states = function (saved_states) {
@@ -2388,7 +2413,7 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
         throw new Error(`Could not find saved state ${state_name}`);
       }
       set_filter_property(root_el, FC.PROPERTY.STATE, new_state.state);
-      select.dispatchEvent(new Event('change', { bubbles: true })); // Trigger filter redraw after cleaning filters
+      root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true })); // Trigger filter redraw after cleaning filters
     };
 
     
@@ -2410,11 +2435,73 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
     send_saved_states(get_filter_property(root_el, FC.PROPERTY.SAVED_STATES));
   });
   
-}
+};
+
+let baked_update_filter_result_handler= function(msg) {
+  let root_el = get_root_el_by_id(msg.id)
+  if(!root_el) console.error("Root el: " + msg.id + "not found");  
+  update_filter_result_handler(msg, root_el);  
+};
+Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
+
+let update_data = function(msg) {
+  let root_el = get_root_el_by_id(msg.id)
+  if(!root_el) console.error("Root el: " + msg.id + "not found");  
+  set_filter_property(root_el, FC.PROPERTY.DATA, JSON.parse(msg.data));
+  root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));
+  //FIXME: select reference and event cannot happen here
+};
+Shiny.addCustomMessageHandler("update_data", update_data);
+
+let request_dataset_filter_state = function(msg) {
+  let root_el = get_root_el_by_id(msg.id)
+  if(!root_el) console.error("Root el: " + msg.id + "not found");
+  set_filter_property(root_el, FC.PROPERTY.STATE, JSON.parse(msg.state));
+  root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));  
+};
+Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
+
+let baked_show_hide_dataset_filters_handlers = function(msg) {
+  let root_el = get_root_el_by_id(msg.id)
+  if(!root_el) console.error("Root el: " + msg.id + "not found");  
+  show_hide_dataset_filters_handler(msg, root_el);
+};
+Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
+
+let baked_init_filter_handler = function(msg) {            
+    let root_el = get_root_el_by_id(msg.id)
+    if(!root_el) console.error("Root el: " + msg.id + "not found");
+    let dataset_lists_filter_data = deserialize_b64_filter_data(msg.dataset_lists_filter_data);
+    set_filter_property(root_el, FC.PROPERTY.DATA, dataset_lists_filter_data);
+    set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, msg.dataset_list_name);
+    set_filter_property(root_el, FC.PROPERTY.SKIP_DATASET_FILTERS, msg.skip_dataset_filters);
+    
+    let dataset_list_data = dataset_lists_filter_data;    
+    let dataset_list_name = msg.dataset_list_name;
+    let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME);
+    let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
+    let static_init_ret = get_filter_property(root_el, FC.PROPERTY.STATIC_RET, false);
+    let filter_mode = get_filter_property(root_el, FC.PROPERTY.FILTER_MODE);
+    let skip_dataset_filters = msg.skip_dataset_filters;
+    
+    init_filter_handler( 
+      root_el,      
+      dataset_list_data,
+      dataset_list_name,
+      subject_filter_dataset_name,
+      filter_state,
+      static_init_ret,
+      filter_mode,
+      skip_dataset_filters  
+    );
+};
+Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
 
 //#endregion
 
 export {init}
+
+// FIXME: move the read and set properties to top level handlers
 
 // A wall will be hit regarding who is responsible of the state managing things are getting complicated, maybe full state
 // should be passed back and forth, otherwise state gets divided.

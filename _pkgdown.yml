@@ -44,6 +44,7 @@ articles:
   - css_namespace  
   - logging
   - development_filter
+  - subgroup
 
 - title: How does it work
   navbar: How does it work

@@ -20,6 +20,7 @@ run_app(
   enableBookmarking = "server",
   filter_type = "simple",
   enable_dataset_filter = NULL,
+  enable_subgroup = FALSE,
   filter_default_state = NULL,
   .launch = TRUE
 )
@@ -64,6 +65,8 @@ for more information on bookmarking your app.}
 \item{filter_type}{Indicates which filter type, \code{simple}, \code{datasets}, \code{development}, will be used in the application.}
 
 \item{enable_dataset_filter}{\strong{DEPRECATED} A boolean flag indicating if dataset filters are enabled. The default value is FALSE.}
+
+\item{enable_subgroup}{A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.}
 
 \item{filter_default_state}{A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for \code{development} filters).}
 

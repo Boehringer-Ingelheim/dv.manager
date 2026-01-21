@@ -29,7 +29,6 @@ ID <- poc(
   FILTER_LOG_INPUT = "filter_log_input",
   SAVED_FILTER_STATE_JSON_MSG_INPUT = "saved_filter_state_json_msg_input",
   EXPORT_CODE_INPUT = "export_code_button_input",
-  FILTER_CONTAINER = "filter_container",
   BLOCKLY = poc(
     CONTAINER = "blockly_container",
     GEN_CODE = "gen_code_button",

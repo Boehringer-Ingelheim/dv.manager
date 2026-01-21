@@ -13,3 +13,8 @@
 filter_js/
 .lintr.R
 .gitempty
+auto_app/
+local_*
+node_modules*
+blockly_sandbox
+IGNORE

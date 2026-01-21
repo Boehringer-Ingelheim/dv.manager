@@ -31,6 +31,7 @@
 #' @param filter_type Indicates which filter type, `simple`, `datasets`, `development`, will be used in the application.
 #' @param filter_default_state A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for `development` filters).
 #' @param enable_dataset_filter **DEPRECATED** A boolean flag indicating if dataset filters are enabled. The default value is FALSE.
+#' @param enable_subgroup  A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.
 #' @param .launch by default it should always be TRUE. It should only be false for debugging and testing.
 #' When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.
 #' @inheritParams shiny::shinyApp
@@ -54,6 +55,7 @@ run_app <- function(data = NULL,
                     enableBookmarking = "server", # nolint
                     filter_type = "simple",
                     enable_dataset_filter = NULL,
+                    enable_subgroup = FALSE,
                     filter_default_state = NULL,
                     .launch = TRUE) {
 
@@ -90,20 +92,7 @@ run_app <- function(data = NULL,
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
   config[["filter_info"]] <- check_set_filter_info(filter_type, filter_default_state)
-
-  if (config[["filter_info"]][["filter_type"]] == FILTER$TYPE$BLOCKLY) {
-    msg <- paste(
-      "",
-      "##############################################################",
-      "# You are using using an experimental filter not ready for   #",
-      "# production.                                                #",
-      "# If this is not intended, please use 'simple' or 'datasets' #",
-      "# in `filter_type` argument.                                 #",
-      "##############################################################",
-      sep = "\n"
-    )
-    message(msg)
-  }
+  config[["subgroup"]] <- check_set_subgroup_info(enable_subgroup, filter_type)
 
   assert_not_shiny_1_11_0()
 
