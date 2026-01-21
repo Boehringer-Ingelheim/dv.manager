@@ -15,7 +15,6 @@ run_app(
      NULL
  },
   startup_msg = NULL,
-  azure_options = NULL,
   reload_period = NULL,
   enableBookmarking = "server",
   filter_type = "simple",
@@ -46,13 +45,6 @@ Default = "USUBJID" or NULL if no data = NULL}
 
 \item{startup_msg}{a message to be displayed at the start of the application. It can be either NULL or a modal
 message defined with shiny::modalDialog.}
-
-\item{azure_options}{A named vector/list containing the options for the Azure Authentication:
-Required fields: redirect, resource, tenant, app, version, password.
-See AzureAuth::build_authorization_uri for these. If NULL then application will not be secure.
-Note that azure_options is only required when the applications handles the authentication by itself. It is not
-required in other environments such as POSIT Connect or other environments where the authentication is handled
-externally.}
 
 \item{reload_period}{Either a lubridate object to specify a duration
 or a positive numeric value which is then interpreted as a lubridate duration object in days. By default NULL}
