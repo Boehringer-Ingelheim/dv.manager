@@ -1007,12 +1007,12 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
 
   options.toolbox = toolbox;
 
-  if(blockly_disposal[id]){
-    blockly_disposal[id];
-    blockly_disposal[id] = undefined;
+  if(global_blockly_disposal[id]){
+    global_blockly_disposal[id];
+    global_blockly_disposal[id] = undefined;
   }  
   let ws = Blockly.inject(container_div, options);
-  blockly_disposal[id] = function(){ws.disposal();}
+  global_blockly_disposal[id] = function(){ws.disposal();}
 
   ws.MAX_UNDO = 0; //Disconnect undo because of listeners
   // When removing elements using JS the undo is messed up
@@ -1044,7 +1044,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
   return (res)
 }
 
-let blockly_disposal = {}; // FIXME: This is a very ugly way of disposing the workspace but less resistance route currently
+let global_blockly_disposal = {}; // FIXME: This is a very ugly way of disposing the workspace but less resistance route currently
 
 let blockly_static_init = function(blockly_root_el, id) {
 
