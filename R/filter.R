@@ -882,7 +882,7 @@ new_filter_server <- function(
       )
     )
     ns <- session[["ns"]]
-    ns_id <- substr(ns(""), start = 0, stop = nchar(ns("")) - 1)
+    ns_id <- ns(character(0))
 
     log_inform(paste("Listening to:", ns(ID$FILTER_STATE_JSON_INPUT)))
     log_inform(paste("Listening to:", ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)))
