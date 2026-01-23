@@ -895,10 +895,7 @@ new_filter_server <- function(
         )
       } else {
         log_inform("PROCESSING FILTER NA")
-        list(
-          parsed = NA_character_,
-          raw = NA_character_
-        )
+        NA_character_
       }
     })
 
