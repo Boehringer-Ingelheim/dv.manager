@@ -2499,7 +2499,7 @@ Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
 
 //#endregion
 
-export {init}
+export { init, request_dataset_filter_state }
 
 // FIXME: move the read and set properties to top level handlers
 
