@@ -27,17 +27,23 @@ mod_empty <- function(mod_id) {
 
 ########### AFMM export module (for testing)
 
-afmm_export_UI <- function(id) { # nolint
-  shiny::tagList()
+afmm_export_UI <- function(id) {
+  # nolint
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    shiny::textOutput(ns("test_text"))
+  )
 }
 
 afmm_export_server <- function(id, afmm) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
+      output[["test_text"]] <- shiny::renderText("test")
       shiny::exportTestValues(
         afmm = afmm
       )
+      return(shiny::reactive(id))
     }
   )
 }
