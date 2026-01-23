@@ -27,8 +27,6 @@ app_ui <- function(request_id) {
   subject_filter_dataset_name <- get_config("filter_data")
   filter_info <- get_config("filter_info")
 
-  use_dataset_filter <- filter_info[["filter_type"]] == FILTER$TYPE$DATASETS
-  use_blockly_filter <- filter_info[["filter_type"]] == FILTER$TYPE$BLOCKLY
   filter_default_state <- filter_info[["filter_default_state"]]
   enable_subgroup <- get_config("subgroup")[["enable"]]
 
@@ -36,59 +34,23 @@ app_ui <- function(request_id) {
   log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
   log_inform(glue::glue("Dataset options (N): {length(data)}"))
 
-  subject_filter_ui <- create_subject_level_ui(ns("global_filter"))
-
-  dataset_filters_ui <- create_dataset_filters_ui(
-    get_dataset_filters_info(dataset_lists, subject_filter_dataset_name),
-    ns
-  )
-
-  if (use_blockly_filter) {
-    if (enable_subgroup) {
-      filter_ui <- shiny::tabsetPanel(
-        shiny::tabPanel(
-          title = "Filter",
-          new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
-        ),
-        shiny::tabPanel(
-          title = "Subgroup",
-          shiny::div(class = "dv_subgroup_menu", mod_subgroup_ui(ns(ID$SUBGROUP), subject_filter_dataset_name))
-        )
-      )
-    } else {
-      filter_ui <- shiny::tabsetPanel(
-        shiny::tabPanel(
-          title = "Filter",
-          new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
-        )
-      )
-    }
-    filter_ui
-  } else {
-    filter_ui <- list(
-      shiny::div(
-        class = "c-well",
-        shiny::tags$label(
-          "Subject Level Filter",
-          shiny::icon("circle-info", title = TT[["SUBJECT_LEVEL_FILTER"]]),
-          class = "text-primary"
-        ),
-        shiny::div(
-          class = "filter-control  filter-filters",
-          subject_filter_ui
-        )
+  if (enable_subgroup) {
+    filter_ui <- shiny::tabsetPanel(
+      shiny::tabPanel(
+        title = "Filter",
+        new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
       ),
-      if (use_dataset_filter) {
-        shiny::div(
-          class = "c-well shiny_filter",
-          shiny::tags$label(
-            "Dataset Filter(s)",
-            shiny::icon("circle-info", title = TT[["DATASET_FILTER"]]),
-            class = "text-primary"
-          ),
-          dataset_filters_ui
-        )
-      }
+      shiny::tabPanel(
+        title = "Subgroup",
+        shiny::div(class = "dv_subgroup_menu", mod_subgroup_ui(ns(ID$SUBGROUP), subject_filter_dataset_name))
+      )
+    )
+  } else {
+    filter_ui <- shiny::tabsetPanel(
+      shiny::tabPanel(
+        title = "Filter",
+        new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
+      )
     )
   }
 

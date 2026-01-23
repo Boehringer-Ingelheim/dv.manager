@@ -15,8 +15,8 @@ TT <- local({
 
 # nolint end
 
-
-LAYOUT <- poc( # nolint
+LAYOUT <- poc(
+  # nolint
   ATTRIBUTE = "layout",
   TAB_GROUP = "tab_group"
 )
@@ -33,13 +33,5 @@ ID <- poc(
     CONTAINER = "blockly_container",
     GEN_CODE = "gen_code_button",
     INNER_CONTAINER = "blockly_inner_filter_container"
-  )
-)
-
-FILTER <- poc(
-  TYPE = poc(
-    SIMPLE = "simple",
-    DATASETS = "datasets",
-    BLOCKLY = "development"
   )
 )

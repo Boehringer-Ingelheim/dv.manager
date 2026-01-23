@@ -97,12 +97,7 @@ app_server_ <- function(input, output, session, opts) {
   reload_period <- opts[["reload_period"]]
   filter_info <- opts[["filter_info"]]
 
-  use_dataset_filter <- filter_info[["filter_type"]] == FILTER$TYPE$DATASETS
-  use_blockly_filter <- filter_info[["filter_type"]] == FILTER$TYPE$BLOCKLY
-
   ######################################
-
-  datasets_filters_info <- get_dataset_filters_info(dataset_lists, subject_filter_dataset_name)
 
   # Check if dataset must be reloaded in the next session
   check_data_reload(reload_period)
@@ -141,10 +136,14 @@ app_server_ <- function(input, output, session, opts) {
     res
   })
 
-  apply_subgroups <- mod_subgroup_server(ID$SUBGROUP, selected_dataset_list, subject_filter_dataset_name, filter_key_var)
+  apply_subgroups <- mod_subgroup_server(
+    ID$SUBGROUP,
+    selected_dataset_list,
+    subject_filter_dataset_name,
+    filter_key_var
+  )
 
   unfiltered_dataset_list <- shiny::reactive({
-
     r_selected_dataset_list <- selected_dataset_list()
 
     r_apply_subgroups <- apply_subgroups()
@@ -159,180 +158,63 @@ app_server_ <- function(input, output, session, opts) {
     subgrouped_dataset_list
   })
 
-  if (use_blockly_filter) {
-    dataset_list_filter <- new_filter_server(ID$FILTER, unfiltered_dataset_list, subject_filter_dataset_name, filtered_dataset_list)
+  dataset_list_filter <- new_filter_server(
+    ID$FILTER,
+    unfiltered_dataset_list,
+    subject_filter_dataset_name,
+    filtered_dataset_list
+  )
 
-    filtered_dataset_list <- shiny::reactive({
+  filtered_dataset_list <- shiny::reactive({
+    unfiltered_dataset_list_r <- unfiltered_dataset_list()
+    dataset_list_filter_r <- dataset_list_filter()
 
-      unfiltered_dataset_list_r <- unfiltered_dataset_list()
-      dataset_list_filter_r <- dataset_list_filter()
+    res <- apply_filter_to_dataset_list(unfiltered_dataset_list_r, dataset_list_filter_r, filter_key_var)
 
-      res <- apply_filter_to_dataset_list(unfiltered_dataset_list_r, dataset_list_filter_r, filter_key_var)
+    error_list <- res$error_list
+    fd <- res$fd
 
-      error_list <- res$error_list
-      fd <- res$fd
+    shiny::req(
+      !error_list$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
+        !error_list$any_has_class(FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class)
+    )
 
-      shiny::req(        
-          !error_list$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
-          !error_list$any_has_class(FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class)        
-      )
+    for (error_message in error_list$get_messages()) {
+      warning(error_message)
+      shiny::showNotification(error_message, type = "error")
+    }
 
-      for(error_message in error_list$get_messages()) {
-        warning(error_message)
-        shiny::showNotification(error_message, type = "error")
+    fd
+  })
+
+  shiny::observeEvent(
+    {
+      input[[ID$NAV_HEADER]]
+      dataset_list_filter() # FIXME: We depend on this because redrawing the filter replaces the elements on the screen and removes the hidden property
+      # We don't want to redraw everytime we switch tabs an alternative to this strategy should be found (hovng)
+    },
+    {
+      all_nm <- names(selected_dataset_list())
+      current_tab <- input[[ID$NAV_HEADER]]
+
+      if (!is.null(current_tab)) {
+        used_ds <- used_datasets[[current_tab]]
+      } else {
+        used_ds <- NULL
       }
 
-      fd
-    })
+      if (!is.null(used_ds)) {
+        used_nm <- intersect(used_datasets[[current_tab]], all_nm)
+        unused_nm <- setdiff(all_nm, used_nm)
+      } else {
+        used_nm <- all_nm
+        unused_nm <- character(0)
+      }
 
-    shiny::observeEvent(
-      {
-        input[[ID$NAV_HEADER]]
-        dataset_list_filter() # FIXME: We depend on this because redrawing the filter replaces the elements on the screen and removes the hidden property
-        # We don't want to redraw everytime we switch tabs an alternative to this strategy should be found (hovng)
-      },
-      {
-        all_nm <- names(datasets_filters_info)
-        current_tab <- input[[ID$NAV_HEADER]]
-
-        if (!is.null(current_tab)) {
-          used_ds <- used_datasets[[current_tab]]
-        } else {
-          used_ds <- NULL
-        }
-
-        if (!is.null(used_ds)) {
-          used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
-          unused_nm <- setdiff(all_nm, used_nm)
-        } else {
-          used_nm <- all_nm
-          unused_nm <- character(0)
-        }
-
-        session$sendCustomMessage("show_hide_dataset_filters", list(id = ns(ID$FILTER), hidden = unused_nm))
-      },
-      ignoreNULL = FALSE
-    )
-  } else {
-    global_filtered_values <- dv.filter::data_filter_server(
-      "global_filter",
-      shiny::reactive(unfiltered_dataset_list()[[subject_filter_dataset_name]])
-    )
-
-
-    if (use_dataset_filter) {
-      log_inform("Dataset filter server")
-
-      dataset_filters <- local({
-        l <- vector(mode = "list", length = length(datasets_filters_info))
-        names(l) <- names(datasets_filters_info)
-        for (idx in seq_along(datasets_filters_info)) {
-          l[[idx]] <- local({
-            curr_dataset_filter_info <- datasets_filters_info[[idx]]
-            dv.filter::data_filter_server(
-              curr_dataset_filter_info[["id"]],
-              shiny::reactive({
-                unfiltered_dataset_list()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()
-              })
-            )
-          })
-        }
-
-        l
-      })
-
-      filtered_dataset_list <- shiny::reactive({
-        # dv.filter returns a logical vector. This contemplates the case of empty lists
-        shiny::req(is.logical(global_filtered_values()))
-
-        # Depend on all datasets
-        purrr::walk(dataset_filters, ~ .x())
-
-        # We do not react to changed in unfiltered dataset, otherwise when a dataset changes
-        # We filter the previous dataset which in the best case produces and extra reactive beat
-        # and in the worst case produces an error in (mvbc)
-        # We don't want to control the error in (mvbc) because filtered dataset only changes when filter changes
-        ufds <- shiny::isolate(unfiltered_dataset_list())
-
-        curr_dataset_filters <- dataset_filters[intersect(names(dataset_filters), names(ufds))]
-
-        # Current dataset must be logical with length above 0
-        # Check dataset filters check all datafilters are initialized
-        purrr::walk(curr_dataset_filters, ~ shiny::req(checkmate::test_logical(.x(), min.len = 0)))
-
-        filtered_key_values <- ufds[[subject_filter_dataset_name]][[filter_key_var]][global_filtered_values()]
-
-        fds <- ufds
-
-        # Single dataset filtering
-        fds[names(curr_dataset_filters)] <- purrr::imap(
-          fds[names(curr_dataset_filters)],
-          function(val, nm) {
-            # (mvbc)
-            labels <- get_lbls(fds[[nm]])
-            current_fds <- fds[[nm]][dataset_filters[[nm]](), , drop = FALSE]
-            set_lbls(current_fds, labels)
-          }
-        )
-
-        # Global dataset filtering
-        global_filtered <- purrr::map(
-          fds, function(current_ds) {
-            mask <- current_ds[[filter_key_var]] %in% filtered_key_values
-            labels <- get_lbls(current_ds)
-            current_ds <- current_ds[mask, , drop = FALSE]
-            set_lbls(current_ds, labels)
-          }
-        )
-      })
-
-      shiny::observeEvent(
-        {
-          input[[ID$NAV_HEADER]]
-        },
-        {
-          all_nm <- names(datasets_filters_info)
-          current_tab <- input[[ID$NAV_HEADER]]
-
-          if (!is.null(current_tab)) {
-            used_ds <- used_datasets[[current_tab]]
-          } else {
-            used_ds <- NULL
-          }
-
-          if (!is.null(used_ds)) {
-            used_nm <- intersect(used_datasets[[current_tab]], names(datasets_filters_info))
-            unused_nm <- setdiff(all_nm, used_nm)
-          } else {
-            used_nm <- all_nm
-            unused_nm <- character(0)
-          }
-
-          for (nm in unused_nm) {
-            shinyjs::hide(datasets_filters_info[[nm]][["id_cont"]])
-          }
-
-          for (nm in used_nm) {
-            shinyjs::show(datasets_filters_info[[nm]][["id_cont"]])
-          }
-        },
-        ignoreNULL = FALSE
-      )
-    } else {
-      log_inform("Single filter server")
-
-      filtered_dataset_list <- shiny::reactive({
-        # dv.filter returns a logical vector. This contemplates the case of empty lists
-        shiny::req(is.logical(global_filtered_values()))
-        log_inform("New filter applied")
-        filtered_key_values <- unfiltered_dataset_list()[[subject_filter_dataset_name]][[filter_key_var]][global_filtered_values()] # nolint
-        purrr::map(
-          unfiltered_dataset_list(),
-          ~ dplyr::filter(.x, .data[[filter_key_var]] %in% filtered_key_values) # nolint
-        )
-      })
-    }
-  }
+      session$sendCustomMessage("show_hide_dataset_filters", list(id = ns(ID$FILTER), hidden = unused_nm))
+    },
+    ignoreNULL = FALSE
+  )
 
   # This mimicks a reactive, by delaying the access to module_output
   # This is required for the modules to be able to read the output of other modules that are not yet declared
@@ -344,18 +226,24 @@ app_server_ <- function(input, output, session, opts) {
   afmm <- list(
     data = dataset_lists,
     unfiltered_dataset = shiny::reactive({
-      log_warn("(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]].") # nolintr
+      log_warn(
+        "(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]]."
+      ) # nolintr
       unfiltered_dataset_list()
     }),
     unfiltered_dataset_list = unfiltered_dataset_list,
     filtered_dataset = shiny::reactive({
-      log_warn("(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]].") # nolintr
+      log_warn(
+        "(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]]."
+      ) # nolintr
       filtered_dataset_list()
     }),
     filtered_dataset_list = filtered_dataset_list,
     url_parameters = url_parameters,
     dataset_name = shiny::reactive({
-      log_warn("(Message for the module developer) afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]].") # nolintr
+      log_warn(
+        "(Message for the module developer) afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]]."
+      ) # nolintr
       input$selector
     }),
     dataset_metadata = list(
@@ -406,7 +294,9 @@ app_server_ <- function(input, output, session, opts) {
     ),
     filter_metadata = list(
       output = shiny::reactive({
-        log_warn("You are using afmm[['filter_metadata']][['output']]. This is not a public element and it may disappear or be modified without notice")
+        log_warn(
+          "You are using afmm[['filter_metadata']][['output']]. This is not a public element and it may disappear or be modified without notice"
+        )
         dataset_list_filter()
       })
     )
@@ -426,14 +316,13 @@ app_server_ <- function(input, output, session, opts) {
     used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
   }
 
-
   # Dataset name and date
 
   output$dataset_name <- shiny::renderText({
     paste0("Dataset name: ", input$selector)
   })
 
-  output$dataset_date <- shiny::renderText({
+  output[["dataset_date"]] <- shiny::renderText({
     date_range <- attr(unfiltered_dataset_list(), "date_range")
 
     if (!any(is.na(date_range))) {
@@ -476,5 +365,3 @@ app_server_test <- function(opts) {
   f <- rlang::new_function(rlang::exprs(input = , output = , session = ), rlang::fn_body(app_server_))
   f
 }
-
-
