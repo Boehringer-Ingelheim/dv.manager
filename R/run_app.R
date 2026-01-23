@@ -22,7 +22,7 @@
 #' message defined with shiny::modalDialog.
 #' @param reload_period Either a lubridate object to specify a duration
 #' or a positive numeric value which is then interpreted as a lubridate duration object in days. By default NULL
-#' @param filter_type Indicates which filter type, `simple`, `datasets`, `development`, will be used in the application.
+#' @param filter_type **DEPRECATED** Indicates which filter type, `simple`, `datasets`, `development`, will be used in the application.
 #' @param filter_default_state A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for `development` filters).
 #' @param enable_dataset_filter **DEPRECATED** A boolean flag indicating if dataset filters are enabled. The default value is FALSE.
 #' @param enable_subgroup  A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.
@@ -56,7 +56,13 @@ run_app <- function(
   dataset_lists <- data
 
   if (!missing(enable_dataset_filter)) {
-    stop("`enable_dataset_filter` argument has been removed. Please, use `filter_type = 'datasets'` argument instead.")
+    stop("`enable_dataset_filter` argument has been removed. This error will disappear in future releases")
+  }
+
+  if (!missing(filter_type)) {
+    stop(
+      "`filter_type` argument has been removed. Filter types cannot be selected any more. This error will disappear in future releases"
+    )
   }
 
   app_args <- list(
@@ -81,8 +87,8 @@ run_app <- function(
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
-  config[["filter_info"]] <- check_set_filter_info(filter_type, filter_default_state)
-  config[["subgroup"]] <- check_set_subgroup_info(enable_subgroup, filter_type)
+  config[["filter_info"]] <- check_set_filter_info(filter_default_state)
+  config[["subgroup"]] <- check_set_subgroup_info(enable_subgroup)
 
   assert_not_shiny_1_11_0()
 
