@@ -1,3 +1,6 @@
+# dv.manager 2.2.0-9009
+- Completely remove dv.filter from the code base
+
 # dv.manager 2.2.0-9008
 - Completely remove Azure Authentication from the code base
 
