@@ -1245,21 +1245,28 @@ let simplify_filter_state = function(state, subject_dataset_name) {
 
   if (state !==null) {
 
-    let dataset_filters_to_be_checked = structuredClone(state.filters.datasets_filter.children);
+    let dataset_filter_dataset_names = state.filters.datasets_filter.children.map((x) => x.name);
 
-    let sbj_filter = {
-      name: subject_dataset_name,
-      children: structuredClone(state.filters.subject_filter.children)
-    };
+    if (dataset_filter_dataset_names.includes(subject_dataset_name)) {
+      // Cannot be at the same time dataset and subject filter in simple
+      compatible = false;
+    } else {
+      let dataset_filters_to_be_checked = structuredClone(state.filters.datasets_filter.children);
 
-    dataset_filters_to_be_checked.push(sbj_filter);
+      let sbj_filter = {
+        name: subject_dataset_name,
+        children: structuredClone(state.filters.subject_filter.children)
+      };
 
-    for(let i = 0; i < dataset_filters_to_be_checked.length; ++i) {
-      let current_check = check_single_dataset(dataset_filters_to_be_checked[i]);
-      compatible = compatible && current_check.compatible;
-      states[dataset_filters_to_be_checked[i].name] = current_check.state;
+      dataset_filters_to_be_checked.push(sbj_filter);
+
+      for (let i = 0; i < dataset_filters_to_be_checked.length; ++i) {
+        let current_check = check_single_dataset(dataset_filters_to_be_checked[i]);
+        compatible = compatible && current_check.compatible;
+        states[dataset_filters_to_be_checked[i].name] = current_check.state;
+      }
+
     }
-
   }
 
   return({state:states, compatible: compatible})
@@ -1959,6 +1966,7 @@ let simple_static_init = function(simple_root_el) {
 
 // Handles the changes of datasets
 let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_name, filter_state) {
+
   __assert(()=>is_html_element(simple_root_el))
   __time_function_start();
   // Subject filter
