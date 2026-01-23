@@ -6,7 +6,10 @@ domain_list <- list(
   c = mtcars
 )
 test_that(
-  vdoc[["add_spec"]]("app_server_ should set as output the selected dataset name", c(specs$MODULES$MODULE_ACCESS_DATASET_LIST_NAME)),
+  vdoc[["add_spec"]](
+    "app_server_ should set as output the selected dataset name",
+    c(specs$MODULES$MODULE_ACCESS_DATASET_LIST_NAME)
+  ),
   {
     datasets <- list(
       DS1 = domain_list,
@@ -17,9 +20,8 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL)
     )
-
 
     shiny::testServer(app_server_test(testing_options), {
       session$setInputs(selector = "DS1")
@@ -32,7 +34,10 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("app_server_ should work with a functions that return datasets", c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)),
+  vdoc[["add_spec"]](
+    "app_server_ should work with a functions that return datasets",
+    c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)
+  ),
   {
     datasets <- list(
       DS1 = function() {
@@ -47,7 +52,7 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL)
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -61,12 +66,22 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("app_server_ should accept a list of modules and display them in the application", c(specs$MODULES$MODULE_CONTENT_DISPLAY, specs$MODULES$MODULE_DEFINITION_STRUCTURE, specs$MODULES$MODULE_DEFINITION_UI_NAME)),
+  vdoc[["add_spec"]](
+    "app_server_ should accept a list of modules and display them in the application",
+    c(
+      specs$MODULES$MODULE_CONTENT_DISPLAY,
+      specs$MODULES$MODULE_DEFINITION_STRUCTURE,
+      specs$MODULES$MODULE_DEFINITION_UI_NAME
+    )
+  ),
   {
     testing_options <- list(
       data = list(),
-      module_info = resolve_module_list(list("mod_1" = mod_identity(1, from = NULL, "mod_1"), "mod_2" = mod_identity(2, from = NULL, "mod_2"))),
-      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
+      module_info = resolve_module_list(list(
+        "mod_1" = mod_identity(1, from = NULL, "mod_1"),
+        "mod_2" = mod_identity(2, from = NULL, "mod_2")
+      )),
+      filter_info = list(filter_default_state = NULL)
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -88,7 +103,7 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL)
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -102,14 +117,17 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("app_server_ should accept an empty list of datasets", c(specs$DATASETS$DATASET_ENTRY_STRUCTURE, specs$DATASETS$DATASET_LIST_EMPTY_ALLOWED)),
+  vdoc[["add_spec"]](
+    "app_server_ should accept an empty list of datasets",
+    c(specs$DATASETS$DATASET_ENTRY_STRUCTURE, specs$DATASETS$DATASET_LIST_EMPTY_ALLOWED)
+  ),
   {
     testing_options <- list(
       data = list(),
       filter_data = NULL,
       module_info = resolve_module_list(list("mod_1" = mod_identity(1, mod_id = "mod_1"))),
       filter_key = NULL,
-      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL)
     )
 
     testServer(app_server_test(testing_options), {
@@ -119,16 +137,22 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("app_server_ should accept an empty list of datasets and an empty list of modules", c(specs$DATASETS$DATASET_ENTRY_STRUCTURE, specs$MODULES$MODULE_LIST_EMPTY_ALLOWED, specs$DATASETS$DATASET_LIST_EMPTY_ALLOWED)),
+  vdoc[["add_spec"]](
+    "app_server_ should accept an empty list of datasets and an empty list of modules",
+    c(
+      specs$DATASETS$DATASET_ENTRY_STRUCTURE,
+      specs$MODULES$MODULE_LIST_EMPTY_ALLOWED,
+      specs$DATASETS$DATASET_LIST_EMPTY_ALLOWED
+    )
+  ),
   {
     testing_options <- list(
       data = list(),
       module_info = resolve_module_list(list()),
       filter_key = NULL,
-      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL)
     )
-    shiny::testServer(app_server_test(testing_options), {
-    }) %>%
+    shiny::testServer(app_server_test(testing_options), {}) %>%
       expect_error(regexp = NA)
   }
 )
@@ -138,7 +162,10 @@ test_that(
 component <- "date output"
 
 test_that(
-  vdoc[["add_spec"]]("date output should output the earliest and latest date of the selected dataset if not all are equal", c(specs$DATASETS$DATASET_LIST_MOD_DATE_RANGE)),
+  vdoc[["add_spec"]](
+    "date output should output the earliest and latest date of the selected dataset if not all are equal",
+    c(specs$DATASETS$DATASET_LIST_MOD_DATE_RANGE)
+  ),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -164,7 +191,7 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL)
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -177,7 +204,10 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("date output should output only one date of the selected dataset if all are equal", c(specs$DATASETS$DATASET_LIST_MOD_DATE_SINGLE)),
+  vdoc[["add_spec"]](
+    "date output should output only one date of the selected dataset if all are equal",
+    c(specs$DATASETS$DATASET_LIST_MOD_DATE_SINGLE)
+  ),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -203,7 +233,7 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL)
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -216,7 +246,10 @@ test_that(
 )
 
 test_that(
-  vdoc[["add_spec"]]("date output should output 'date unavailable' when at least one date is not available", c(specs$DATASETS$DATASET_LIST_MOD_DATE_UNAVAILABLE_UI)),
+  vdoc[["add_spec"]](
+    "date output should output 'date unavailable' when at least one date is not available",
+    c(specs$DATASETS$DATASET_LIST_MOD_DATE_UNAVAILABLE_UI)
+  ),
   {
     date_list <- list(
       a = lubridate::ymd_hms("2021-01-13 00:00:00"),
@@ -245,7 +278,7 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL)
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -263,7 +296,10 @@ test_that(
 # Testing reload_period ----
 
 test_that(
-  vdoc[["add_spec"]]("date output restart.txt time is altered when being touched", c(specs$DATASETS$DATASET_LISTS_RELOAD_DURATION)),
+  vdoc[["add_spec"]](
+    "date output restart.txt time is altered when being touched",
+    c(specs$DATASETS$DATASET_LISTS_RELOAD_DURATION)
+  ),
   {
     datasets <- list(
       DS1 = function() {
@@ -279,7 +315,7 @@ test_that(
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
       reload_period = lubridate::duration(1, "seconds"),
-      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL)
     )
     withr::with_dir(tempdir(), {
       system2(command = "touch", args = c("restart.txt"), stdout = TRUE)
