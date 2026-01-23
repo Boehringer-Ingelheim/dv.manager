@@ -78,7 +78,6 @@ is_tab_group <- function(x) {
 }
 
 resolve_module_list <- function(module_list) {
-
   res <- list(
     server = list(),
     ui = list(),
@@ -124,7 +123,10 @@ resolve_module_list <- function(module_list) {
         names(hierarchy_entry) <- tab_group_id
         res[["hierarchy"]] <- c(res[["hierarchy"]], hierarchy_entry)
 
-        res[["hierarchy"]][[curr_parent_id]][["children"]] <- c(res[["hierarchy"]][[curr_parent_id]][["children"]], tab_group_id)
+        res[["hierarchy"]][[curr_parent_id]][["children"]] <- c(
+          res[["hierarchy"]][[curr_parent_id]][["children"]],
+          tab_group_id
+        )
 
         tab_name_entry <- curr_name
         names(tab_name_entry) <- tab_group_id
@@ -160,7 +162,10 @@ resolve_module_list <- function(module_list) {
         names(hierarchy_entry) <- module_id
         res[["hierarchy"]] <- c(res[["hierarchy"]], hierarchy_entry)
 
-        res[["hierarchy"]][[curr_parent_id]][["children"]] <- c(res[["hierarchy"]][[curr_parent_id]][["children"]], module_id)
+        res[["hierarchy"]][[curr_parent_id]][["children"]] <- c(
+          res[["hierarchy"]][[curr_parent_id]][["children"]],
+          module_id
+        )
       }
     }
   }
@@ -184,13 +189,16 @@ process_module_list <- function(module_list) {
 }
 
 compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
-
   mod_ui_containers <- vector(mode = "list", length = length(ui_fn_list))
   mod_ids <- names(ui_fn_list)
 
   for (idx in seq_along(mod_ui_containers)) {
     curr_mod_id <- mod_ids[[idx]]
-    mod_ui_containers[[idx]] <- shiny::div(value = curr_mod_id, ns_css(ui_fn_list[[curr_mod_id]](ns(curr_mod_id))), class = "dv_tab_content")
+    mod_ui_containers[[idx]] <- shiny::div(
+      value = curr_mod_id,
+      ns_css(ui_fn_list[[curr_mod_id]](ns(curr_mod_id))),
+      class = "dv_tab_content"
+    )
   }
 
   buttons_hierarchy <- list()
@@ -211,9 +219,21 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
         is_child_tab_group <- identical(curr_child[["kind"]], "tab_group")
         is_child_module <- identical(curr_child[["kind"]], "module")
         if (is_child_tab_group) {
-          curr_level[[jdx]] <- shiny::tags[["button"]]("data-value" = curr_child_id, "data-type" = "hier-button", curr_child_name, type = "button", class = "dv_tab_activate_button btn btn-primary")
+          curr_level[[jdx]] <- shiny::tags[["button"]](
+            "data-value" = curr_child_id,
+            "data-type" = "hier-button",
+            curr_child_name,
+            type = "button",
+            class = "dv_tab_activate_button btn btn-primary"
+          )
         } else if (is_child_module) {
-          curr_level[[jdx]] <- shiny::tags[["button"]]("data-value" = ns(curr_child_id), "data-type" = "tab-button", curr_child_name, type = "button", class = "dv_tab_activate_button btn btn-primary")
+          curr_level[[jdx]] <- shiny::tags[["button"]](
+            "data-value" = ns(curr_child_id),
+            "data-type" = "tab-button",
+            curr_child_name,
+            type = "button",
+            class = "dv_tab_activate_button btn btn-primary"
+          )
         } else {
           stop(paste("Unknown kind", idx, jdx))
         }
@@ -221,19 +241,23 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
         if (jdx == 1) {
           curr_level[[jdx]] <- htmltools::tagAppendAttributes(curr_level[[jdx]], class = "clicked")
         }
-
       }
 
       buttons_hierarchy[[curr_el_id]] <- shiny::div("value" = curr_el_id, curr_level, class = "dv_button_level")
 
       if (is_el_root) {
-        buttons_hierarchy[[curr_el_id]] <- htmltools::tagAppendAttributes(buttons_hierarchy[[curr_el_id]], class = "dv_root_button_level")
+        buttons_hierarchy[[curr_el_id]] <- htmltools::tagAppendAttributes(
+          buttons_hierarchy[[curr_el_id]],
+          class = "dv_root_button_level"
+        )
       } else if (is_el_tab_group) {
-        buttons_hierarchy[[curr_el_id]] <- htmltools::tagAppendAttributes(buttons_hierarchy[[curr_el_id]], class = "dv_child_button_level")
+        buttons_hierarchy[[curr_el_id]] <- htmltools::tagAppendAttributes(
+          buttons_hierarchy[[curr_el_id]],
+          class = "dv_child_button_level"
+        )
       } else {
         stop(paste("Unknown kind", idx, jdx))
       }
-
     } else if (is_el_module) {
       next
     } else {
@@ -248,8 +272,15 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
     class = "dv_button_container",
     id = ns(ID$NAV_HEADER)
   )
+
   default_tab <- shiny::restoreInput(ns(ID$NAV_HEADER), NA)
-  if (!is.na(default_tab))  buttons_hierarchy_container <- htmltools::tagAppendAttributes(buttons_hierarchy_container, "default-tab" = default_tab)
+  default_tab <- if (!default_tab %in% names(ui_fn_list)) NA else default_tab
+  if (!is.na(default_tab)) {
+    buttons_hierarchy_container <- htmltools::tagAppendAttributes(
+      buttons_hierarchy_container,
+      "default-tab" = default_tab
+    )
+  }
 
   header <- shiny::div(
     buttons_hierarchy_container,
