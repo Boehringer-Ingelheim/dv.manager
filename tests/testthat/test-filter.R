@@ -2279,9 +2279,39 @@ local({
       )
     }))
 
-    tmp_file <- tempfile()
-    app$get_download("filter-export_code", tmp_file)
-    expect_equal(readLines(tmp_file), readLines(absolute_state_file))
+    # We use a manual download because the button imitates but it is not really a shiny button
+
+    download_dir <- tempfile()
+    dir.create(download_dir)
+
+    chromote_session <- app$get_chromote_session()
+    chromote_session$Browser$setDownloadBehavior(
+      behavior = "allowAndName",
+      downloadPath = download_dir,
+      eventsEnabled = TRUE
+    )
+
+    download_done <- FALSE
+    chromote_session$Browser$downloadProgress(callback = function(params) {
+      if (params$state == "completed") {
+        download_done <<- TRUE
+      }
+    })
+
+    app$click(selector = "#filter-export_code_button_input")
+    app$wait_for_idle()
+
+    max_tries <- 10
+    try <- 0
+    start <- Sys.time()
+    while (!download_done && try < max_tries) {
+      try <- try + 1
+      Sys.sleep(1)
+    }
+    stopifnot(download_done)
+    downloaded_file <- list.files(download_dir, full.names = TRUE)[1]
+
+    expect_equal(readLines(downloaded_file), readLines(absolute_state_file))
   })
 
   test_that(
@@ -2295,7 +2325,7 @@ local({
           data = dataset_lists,
           module_list = list(
             Simple3 = dv.manager:::mod_simple(
-              dataset = "ds1",
+              dataset = "ds2",
               module_id = "mod",
               from = "filtered_dataset"
             )
@@ -2307,12 +2337,12 @@ local({
         "datasets_filter": {
             "children": [
                 {
-                    "name": "ds1",
+                    "name": "ds2",
                     "kind": "dataset",
                     "children": [
                         {
                             "kind": "filter",
-                            "dataset": "ds1",
+                            "dataset": "ds2",
                             "operation": "select_subset",
                             "variable": "sbj_var",
                             "values" : ["SBJ-1"],
@@ -2350,7 +2380,7 @@ local({
           data = dataset_lists,
           module_list = list(
             Simple3 = dv.manager:::mod_simple(
-              dataset = "ds1",
+              dataset = "ds2",
               module_id = "mod",
               from = "filtered_dataset"
             )
@@ -2363,7 +2393,7 @@ local({
             "children": [
                    {
                             "kind": "filter",
-                            "dataset": "ds2",
+                            "dataset": "ds1",
                             "operation": "select_subset",
                             "variable": "sbj_var",
                             "values" : ["SBJ-1"],
@@ -2371,7 +2401,7 @@ local({
                         }
             ]
         },
-        "dataset_filter": {
+        "datasets_filter": {
             "children": []
         }
     },
@@ -2402,7 +2432,7 @@ local({
       )
     }))
 
-    url <- "?_inputs_&filter-IGNORE_INPUT=null&__tabset_0__=%22mod%22&open_options_modal=0&selector=%22dl1%22&click=true&filter-checkbox=false&filter-log=null&filter-json=%22%7B%5C%22filters%5C%22%3A%7B%5C%22datasets_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%5D%7D%2C%5C%22subject_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%7B%5C%22kind%5C%22%3A%5C%22filter%5C%22%2C%5C%22dataset%5C%22%3A%5C%22ds1%5C%22%2C%5C%22operation%5C%22%3A%5C%22select_subset%5C%22%2C%5C%22variable%5C%22%3A%5C%22sbj_var%5C%22%2C%5C%22values%5C%22%3A%5B%5C%22SBJ-1%5C%22%5D%2C%5C%22include_NA%5C%22%3Afalse%7D%5D%7D%7D%2C%5C%22dataset_list_name%5C%22%3A%5C%22dl1%5C%22%7D%22"
+    url <- "?_inputs_&filter-IGNORE_INPUT=null&__tabset_0__=%22mod%22&open_options_modal=0&selector=%22dl1%22&click=true&filter-checkbox=false&filter-log=null&filter-filter_state_json_input=%22%7B%5C%22filters%5C%22%3A%7B%5C%22datasets_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%5D%7D%2C%5C%22subject_filter%5C%22%3A%7B%5C%22children%5C%22%3A%5B%7B%5C%22kind%5C%22%3A%5C%22filter%5C%22%2C%5C%22dataset%5C%22%3A%5C%22ds1%5C%22%2C%5C%22operation%5C%22%3A%5C%22select_subset%5C%22%2C%5C%22variable%5C%22%3A%5C%22sbj_var%5C%22%2C%5C%22values%5C%22%3A%5B%5C%22SBJ-1%5C%22%5D%2C%5C%22include_NA%5C%22%3Afalse%7D%5D%7D%7D%2C%5C%22dataset_list_name%5C%22%3A%5C%22dl1%5C%22%7D%22"
 
     test_that(
       "Bookmark can be restored | Bookmark overrides state" |>
@@ -2412,6 +2442,7 @@ local({
       {
         full_url <- paste0(root_app$get_url(), url)
         app <- shinytest2::AppDriver$new(full_url)
+
         expect_identical(app$get_value(output = "mod-text"), "1")
       }
     )
@@ -2434,8 +2465,7 @@ local({
             ),
             filter_data = "ds1",
             filter_key = "sbj_var",
-            enableBookmarking = "url",
-            filter = "development"
+            enableBookmarking = "url"
           )
         }))
 
@@ -2448,39 +2478,205 @@ local({
   })
 })
 
-test_that(
-  "filter only sends one value when it is updated" |>
-    vdoc[["add_spec"]](c(
-      specs$FILTERING$FILTER_ACTIVE_DATASET_LIST
-    )),
-  {
-    # Related to every time we change the filter, including first beat
+local({
+  # Related to the first beat of the app and subsequent updates
+  # Mainly related to the above, the main requisite is that when starting the app on a bookmarked state
+  # a single filtered dataset_list is sent to the modules, otherwise bookmark state is spent on the first filtered
+  # dataset_list and in the next one they go to empty/default
 
-    skip("skipped until we can set a state programatically")
-  }
-)
+  dataset_lists <- list(
+    dl1 = list(
+      ds1 = data.frame(
+        row.names = 1:6,
+        range_var = c(1.0:5.0, NA),
+        sbj_var = paste0("SBJ-", 1:6)
+      )
+    )
+  )
 
-test_that(
-  "modules bookmark state works with filter" |>
-    vdoc[["add_spec"]](c(
-      specs$FILTERING$FILTER_BOOKMARKABLE
-    )),
-  {
-    # Related to the first beat of the app
-    # Mainly related to the above, the main requisite is that when starting the app on a bookmarked state
-    # a single filtered dataset_list is sent to the modules, otherwise bookmark state is spent on the first filtered
-    # dataset_list and in the next one they go to empty/default
+  test_that(
+    "filter only sends one value when it starts with no state" |>
+      vdoc[["add_spec"]](c(
+        specs$FILTERING$FILTER_ACTIVE_DATASET_LIST
+      )),
+    {
+      app <- start_app_driver(rlang::quo({
+        dv.manager:::run_app(
+          data = !!dataset_lists,
+          module_list = list(
+            AFMM = dv.manager:::mod_afmm_export("afmm")
+          ),
+          filter_data = "ds1",
+          filter_key = "sbj_var",
+          enableBookmarking = "url"
+        )
+      }))
 
-    skip("skipped until we can set a state programatically")
-  }
-)
+      app$wait_for_idle()
 
-test_that(
-  "filter labels are preserved" |>
-    vdoc[["add_spec"]](c(
-      specs$FILTERING$FILTER_ACTIVE_DATASET_LIST
-    )),
-  {
-    expect_true(FALSE)
-  }
-)
+      counter <- app$get_values(export = TRUE)[["export"]][["afmm-filter_counter"]]
+      expect_identical(counter, 1)
+    }
+  )
+
+  test_that(
+    "filter only sends one value when it starts with a state" |>
+      vdoc[["add_spec"]](c(
+        specs$FILTERING$FILTER_ACTIVE_DATASET_LIST
+      )),
+    {
+      app <- start_app_driver(rlang::quo({
+        dv.manager:::run_app(
+          data = !!dataset_lists,
+          module_list = list(
+            AFMM = dv.manager:::mod_afmm_export("afmm")
+          ),
+          filter_data = "ds1",
+          filter_key = "sbj_var",
+          enableBookmarking = "url",
+          filter_default_state = '{
+    "filters": {
+        "datasets_filter": {
+            "children": [
+
+            ]
+        },
+        "subject_filter": {
+            "children": [
+                {
+                    "kind": "row_operation",
+                    "operation": "and",
+                    "children": [
+                        {
+                            "kind": "filter",
+                            "dataset": "ds1",
+                            "operation": "select_subset",
+                            "variable": "sbj_var",
+                            "values": [
+                                "SBJ-1"
+                            ],
+                            "include_NA": true
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "dataset_list_name": "dl1"
+}
+
+'
+        )
+      }))
+
+      app$wait_for_idle()
+
+      counter <- app$get_values(export = TRUE)[["export"]][["afmm-filter_counter"]]
+      expect_identical(counter, 1)
+    }
+  )
+
+  test_that(
+    "filter only sends one value when it is updated" |>
+      vdoc[["add_spec"]](c(
+        specs$FILTERING$FILTER_ACTIVE_DATASET_LIST
+      )),
+    {
+      set_filter <- function(app) {
+        json <- r"--({
+    "filters": {
+        "datasets_filter": {
+            "children": [
+
+            ]
+        },
+        "subject_filter": {
+            "children": [
+                {
+                    "kind": "row_operation",
+                    "operation": "and",
+                    "children": [
+                        {
+                            "kind": "filter",
+                            "dataset": "ds1",
+                            "operation": "select_subset",
+                            "variable": "sbj_var",
+                            "values": [
+                                "SBJ-1"
+                            ],
+                            "include_NA": true
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "dataset_list_name": "dl1"
+})--"
+        js_fmt <- r"--(dv_filter.request_dataset_filter_state({id:"filter", state:`%s`}))--"
+
+        js <- sprintf(js_fmt, json)
+
+        app$run_js(js)
+      }
+
+      app <- start_app_driver(rlang::quo({
+        dv.manager:::run_app(
+          data = !!dataset_lists,
+          module_list = list(
+            AFMM = dv.manager:::mod_afmm_export("afmm")
+          ),
+          filter_data = "ds1",
+          filter_key = "sbj_var",
+          enableBookmarking = "url"
+        )
+      }))
+
+      app$wait_for_idle()
+      set_filter(app)
+      app$wait_for_idle
+
+      counter <- app$get_values(export = TRUE)[["export"]][["afmm-filter_counter"]]
+      expect_identical(counter, 2) # One on the start and the second one on the update
+    }
+  )
+
+  test_that(
+    "filter only sends one value when it starts with a bookmark" |>
+      vdoc[["add_spec"]](c(
+        specs$FILTERING$FILTER_BOOKMARKABLE
+      )),
+    {
+      url <- '?_inputs_&open_options_modal=0&selector="dl1"&click=true&filter-blockly-filter-checkbox=false&nav_header="afmm"&filter-saved_filter_state_json_msg_input="%5B%5D"&filter-filter_state_json_input="%7B%5C"filters%5C"%3A%7B%5C"datasets_filter%5C"%3A%7B%5C"children%5C"%3A%5B%5D%7D%2C%5C"subject_filter%5C"%3A%7B%5C"children%5C"%3A%5B%7B%5C"kind%5C"%3A%5C"row_operation%5C"%2C%5C"operation%5C"%3A%5C"and%5C"%2C%5C"children%5C"%3A%5B%7B%5C"kind%5C"%3A%5C"filter%5C"%2C%5C"dataset%5C"%3A%5C"ds1%5C"%2C%5C"operation%5C"%3A%5C"select_subset%5C"%2C%5C"variable%5C"%3A%5C"sbj_var%5C"%2C%5C"values%5C"%3A%5B%5C"SBJ-1%5C"%5D%2C%5C"include_NA%5C"%3Atrue%7D%5D%7D%5D%7D%7D%2C%5C"dataset_list_name%5C"%3A%5C"dl1%5C"%7D"&_values_&subgroup-subgroups=%5B%5D'
+
+      root_app <- start_app_driver(rlang::quo({
+        dv.manager:::run_app(
+          data = !!dataset_lists,
+          module_list = list(
+            AFMM = dv.manager:::mod_afmm_export("afmm")
+          ),
+          filter_data = "ds1",
+          filter_key = "sbj_var",
+          enableBookmarking = "url"
+        )
+      }))
+
+      full_url <- paste0(root_app$get_url(), url)
+      app <- shinytest2::AppDriver$new(full_url)
+      app$wait_for_idle()
+
+      counter <- app$get_values(export = TRUE)[["export"]][["afmm-filter_counter"]]
+      expect_identical(counter, 1)
+    }
+  )
+
+  test_that(
+    "filter labels are preserved" |>
+      vdoc[["add_spec"]](c(
+        specs$FILTERING$FILTER_ACTIVE_DATASET_LIST
+      )),
+    {
+      expect_true(FALSE)
+    }
+  )
+})
