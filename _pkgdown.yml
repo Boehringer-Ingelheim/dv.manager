@@ -41,8 +41,7 @@ articles:
   - developing_module
   - passing_data
   - css_namespace  
-  - logging
-  - development_filter
+  - logging  
   - subgroup
 
 - title: How does it work
@@ -50,7 +49,7 @@ articles:
   desc: How does dv.manager work inside
   contents:
   - how_does_work
-  - data_filtering
+  - filter
   - arguments_from_module_manager
   - data_reloading
 

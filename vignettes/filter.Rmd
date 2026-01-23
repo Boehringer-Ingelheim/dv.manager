@@ -1,5 +1,5 @@
 ---
-title: "(DEVELOPMENT) New Filter"
+title: "Filtering"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{(DEVELOPMENT) Blockly Filter}
@@ -15,14 +15,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Using the Development Filter
-
-**Note that this filter is still in development stage and should not be used in production apps.**
-
-This filter will replace the previous filter system in the DaVinci apps. This filtering is more performant and has
-extended capabilities to cover a wider range of use cases.
-
-To activate this functionality, you only have to set the `filter_type` argument to `development`.
 
 ![](images/filter_overview.png){width=100%}
 
@@ -95,7 +87,6 @@ The exported file can then be reused in the application as a preset filter.
 
 dv.manager::run_app(
   ...,
-  filter_type = "development",
   filter_default_state = "path/to/filter/file.json"
 )
 ```
@@ -232,8 +223,7 @@ dv.manager::run_app(
     "Listing" = dv.listings::mod_listings("mod_listing", c("adsl", "adae"))
   ),
   filter_data = "adsl",
-  filter_key = "USUBJID",
-  filter_type = "development"
+  filter_key = "USUBJID"
 )
 ```
 
