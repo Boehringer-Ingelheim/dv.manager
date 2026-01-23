@@ -2173,7 +2173,7 @@ local({
   test_that(
     "A file state can be loaded in the app|all block types can be included in the application" |>
       vdoc[["add_spec"]](c(
-        specs$DATASETS$DATASET_ENTRY_STRUCTURE
+        specs$FILTERING$FILTER_INITIAL_STATE
       )),
     {
       # The filter includes all possible blocks which effectively test that all can be included
@@ -2205,7 +2205,7 @@ local({
   test_that(
     "A string state can be loaded in the app" |>
       vdoc[["add_spec"]](c(
-        c
+        specs$FILTERING$FILTER_INITIAL_STATE
       )),
     {
       string_state <- paste(readLines(absolute_state_file), collapse = "\n")
