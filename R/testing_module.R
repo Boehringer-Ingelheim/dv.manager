@@ -30,7 +30,8 @@ afmm_export_UI <- function(id) {
   # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
-    shiny::textOutput(ns("test_text"))
+    shiny::textOutput(ns("test_text")),
+    shiny::textOutput(ns("test_counter"))
   )
 }
 
@@ -38,9 +39,17 @@ afmm_export_server <- function(id, afmm) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
+      filter_counter <- shiny::reactiveVal(0)
+      shiny::observeEvent(afmm[["filtered_dataset_list"]](), {
+        current_counter <- filter_counter()
+        filter_counter(current_counter + 1)
+      })
+
       output[["test_text"]] <- shiny::renderText("test")
+      output[["test_counter"]] <- shiny::renderText(filter_counter())
       shiny::exportTestValues(
-        afmm = afmm
+        afmm = afmm,
+        filter_counter = filter_counter()
       )
       return(shiny::reactive(id))
     }
