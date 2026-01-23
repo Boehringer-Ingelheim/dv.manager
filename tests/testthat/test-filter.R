@@ -2195,7 +2195,7 @@ local({
         )
       }))
 
-      state_from_app <- jsonlite::prettify(app$get_value(input = "filter-json"))
+      state_from_app <- jsonlite::prettify(app$get_value(input = "filter-filter_state_json_input"))
       state_from_file <- jsonlite::prettify(paste0(readLines(absolute_state_file), collapse = "\n"))
 
       expect_identical(state_from_app, state_from_file)
@@ -2226,7 +2226,7 @@ local({
         )
       }))
 
-      state_from_app <- jsonlite::prettify(app$get_value(input = "filter-json"))
+      state_from_app <- jsonlite::prettify(app$get_value(input = "filter-filter_state_json_input"))
       state_from_file <- jsonlite::prettify(string_state)
 
       expect_identical(state_from_app, state_from_file)
@@ -2254,7 +2254,7 @@ local({
         )
       }))
 
-      app_state <- app$get_value(input = "filter-json")
+      app_state <- app$get_value(input = "filter-filter_state_json_input")
       expect_identical(
         app_state,
         '{"filters":{"datasets_filter":{"children":[]},"subject_filter":{"children":[]}},"dataset_list_name":"dl1"}'
