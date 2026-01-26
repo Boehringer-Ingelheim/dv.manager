@@ -2676,7 +2676,63 @@ local({
         specs$FILTERING$FILTER_ACTIVE_DATASET_LIST
       )),
     {
-      expect_true(FALSE)
+      labelled_dataset_lists <- dataset_lists
+      labelled_dataset_lists[["dl1"]][["ds1"]] <- dv.manager:::set_lbls(
+        labelled_dataset_lists[["dl1"]][["ds1"]],
+        list(sbj_var = "Subject Variable", range_var = "Range Variable")
+      )
+
+      app <- start_app_driver(rlang::quo({
+        dv.manager:::run_app(
+          data = !!labelled_dataset_lists,
+          module_list = list(
+            Labels = dv.manager:::mod_dataset_labels("ds1", "labels")
+          ),
+          filter_data = "ds1",
+          filter_key = "sbj_var",
+          enableBookmarking = "url"
+        )
+      }))
+
+      app$wait_for_idle()
+      labels_before <- dv.manager:::get_lbls(
+        app$get_values(export = TRUE)[["export"]][["labels-data"]][["ds1"]]
+      )
+
+      set_filter <- function(app) {
+        json <- r"--({
+    "filters": {
+        "datasets_filter": {
+            "children": []
+        },
+        "subject_filter": {
+            "children": [
+                {
+                    "kind": "filter",
+                    "dataset": "ds1",
+                    "operation": "select_subset",
+                    "variable": "sbj_var",
+                    "values": ["SBJ-1"],
+                    "include_NA": false
+                }
+            ]
+        }
+    },
+    "dataset_list_name": "dl1"
+})--"
+        js_fmt <- r"--(dv_filter.request_dataset_filter_state({id:"filter", state:`%s`}))--"
+        js <- sprintf(js_fmt, json)
+        app$run_js(js)
+      }
+
+      set_filter(app)
+      app$wait_for_idle()
+
+      labels_after <- dv.manager:::get_lbls(
+        app$get_values(export = TRUE)[["export"]][["labels-data"]][["ds1"]]
+      )
+
+      expect_identical(labels_before, labels_after)
     }
   )
 })
