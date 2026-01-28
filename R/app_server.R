@@ -52,7 +52,8 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
-    "filter_info" = get_config("filter_info")
+    "filter_info" = get_config("filter_info"),
+    "enable_subgroup" = get_config("subgroup")[["enable"]]
   )
 
   app_server_(input, output, session, opts)
@@ -66,7 +67,8 @@ app_server_module <- function(id) {
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
-    "filter_info" = get_config("filter_info")
+    "filter_info" = get_config("filter_info"),
+    "enable_subgroup" = get_config("subgroup")[["enable"]]
   )
   shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
 }
@@ -96,6 +98,7 @@ app_server_ <- function(input, output, session, opts) {
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
   filter_info <- opts[["filter_info"]]
+  enable_subgroup <- opts[["enable_subgroup"]]
 
   ######################################
 
@@ -136,24 +139,30 @@ app_server_ <- function(input, output, session, opts) {
     res
   })
 
-  apply_subgroups <- mod_subgroup_server(
-    ID$SUBGROUP,
-    selected_dataset_list,
-    subject_filter_dataset_name,
-    filter_key_var
-  )
+  if (enable_subgroup) {
+    apply_subgroups <- mod_subgroup_server(
+      ID$SUBGROUP,
+      selected_dataset_list,
+      subject_filter_dataset_name,
+      filter_key_var
+    )
+  }
 
   unfiltered_dataset_list <- shiny::reactive({
     r_selected_dataset_list <- selected_dataset_list()
 
-    r_apply_subgroups <- apply_subgroups()
-    res_apply_subgroups <- r_apply_subgroups(r_selected_dataset_list, subject_filter_dataset_name, filter_key_var)
+    if (enable_subgroup) {
+      r_apply_subgroups <- apply_subgroups()
+      res_apply_subgroups <- r_apply_subgroups(r_selected_dataset_list, subject_filter_dataset_name, filter_key_var)
 
-    for (error in res_apply_subgroups[["errors"]]$get_messages()) {
-      shiny::showNotification(error, type = "warning")
+      for (error in res_apply_subgroups[["errors"]]$get_messages()) {
+        shiny::showNotification(error, type = "warning")
+      }
+
+      subgrouped_dataset_list <- res_apply_subgroups[["dataset_list"]]
+    } else {
+      subgrouped_dataset_list <- r_selected_dataset_list
     }
-
-    subgrouped_dataset_list <- res_apply_subgroups[["dataset_list"]]
     attr(subgrouped_dataset_list, "dataset_list_name") <- attr(r_selected_dataset_list, "dataset_list_name")
     subgrouped_dataset_list
   })
