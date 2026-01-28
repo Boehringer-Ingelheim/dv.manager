@@ -1286,19 +1286,18 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   __logger("Creating UI for " + dataset.name);  
   
   let dataset_filter_container = document.createElement(SC.TAG.DATASET_FILTER);
-  dataset_filter_container.className = "card border-primary mb-2";
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.DATASET_NAME, dataset.name);
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
 
   let card_heading = document.createElement("div");
-  card_heading.className = "card-header bg-primary text-white dv-data-filter-header"; 
+  card_heading.className = "dv-dataset-filter-header"; 
   
   let title_tag_container = document.createElement("h6");  
-  title_tag_container.className = "card-title mb-0 dv-title-tag ";  
+  title_tag_container.className = "dv-title-tag";  
 
   let card_collapse_link = document.createElement("a");
   card_collapse_link.textContent = dataset.name;
-  card_collapse_link.className = "text-white text-decoration-none";
+  card_collapse_link.className = "dv-dataset-filter-collapse-link";
   card_collapse_link.setAttribute("data-bs-toggle", "collapse");  
   card_collapse_link.setAttribute("data-bs-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .card-body`);
   card_collapse_link.href = "#"; // Recommended to make it keyboard-accessible
@@ -1306,10 +1305,11 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   title_tag_container.appendChild(card_collapse_link);  
 
   let filter_count_tag = document.createElement(SC.TAG.FILTER_COUNT_TAG);
+  filter_count_tag.className = "dv-filter-row-count-badge";
   title_tag_container.appendChild(filter_count_tag);
 
   let row_count_tag = document.createElement(SC.TAG.ROW_COUNT_TAG);
-  row_count_tag.className = "badge bg-light";
+  row_count_tag.className = "dv-filter-row-count-badge";
   title_tag_container.appendChild(row_count_tag);
 
   card_heading.appendChild(title_tag_container);
@@ -1317,20 +1317,19 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   if (is_subject_filter) {
     let icon = document.createElement("span");
     icon.className = "glyphicon glyphicon-user";  
+    icon.title = "Subject Filter";
     card_heading.appendChild(document.createTextNode(" "));
     card_heading.appendChild(icon);
   }
 
   let add_button = document.createElement("button");
-  add_button.className = "btn btn-outline-light btn-sm";
-  add_button.className = "btn btn-outline-light btn-sm";
+  add_button.className = "add-button";  
 
   let add_icon = document.createElement("i");
   add_icon.className = "glyphicon glyphicon-plus";
   add_button.appendChild(add_icon);
 
   card_heading.appendChild(add_button);
-
   
   dataset_filter_container.appendChild(card_heading);
 
@@ -1376,7 +1375,6 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
     }
     select.appendChild(option);
   }
- 
   
   card_body.appendChild(select);
   
@@ -1456,10 +1454,10 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
   if(selected_variables.length > 0) {
     count_tag.textContent = selected_variables.length;
-    count_tag.className = "badge bg-light";
+    count_tag.classList.remove("dv-hide");
   } else {
     count_tag.textContent = "";
-    count_tag.className = "dv-hide";
+    count_tag.classList.add("dv-hide");
   }
 
   for(let i = 0; i < selected_variables.length; ++i) {      
@@ -1920,7 +1918,7 @@ let simple_static_init = function(simple_root_el) {
   }
 );
 
-  $(simple_root_el).on('click', `${SC.TAG.DATASET_FILTER} .dv-data-filter-header button`, function(event) {
+  $(simple_root_el).on('click', `${SC.TAG.DATASET_FILTER} .dv-dataset-filter-header button`, function(event) {
     let select = event.target.closest(SC.TAG.DATASET_FILTER).querySelector("select");
     let filter_body_el = event.target.closest(`${SC.TAG.DATASET_FILTER}`).querySelector(".card-body");
     let filter_body_collapse_instance = bootstrap.Collapse.getInstance(filter_body_el);

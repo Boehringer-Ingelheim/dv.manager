@@ -49,7 +49,7 @@ body {
 }
 
 .dv_manager_top_bar {
-  display:grid;
+  display: grid;
   grid-template-columns: auto 170px;
 }
 
@@ -129,6 +129,7 @@ body {
   grid-row: 1 / 2;
   width: $sidebar-width-open;
   transition: width 0.3s ease-in-out 0.1s;
+
   .sidebar {
     width: $sidebar-width-open;
     height: 100vh;
@@ -272,7 +273,7 @@ input[type="checkbox"]#click {
   opacity: 1;
 }
 
-div.dv_subgroup_menu dv-filter-top-control-container > *:not(:first-child){   
+div.dv_subgroup_menu dv-filter-top-control-container>*:not(:first-child) {
   display: none;
 }
 
@@ -348,7 +349,7 @@ dv-filter-wrapper {
   dv-filter-root {
     display: block;
 
-    .dv-hide{
+    .dv-hide {
       display: none;
     }
 
@@ -368,16 +369,17 @@ dv-filter-wrapper {
       flex-wrap: wrap;
       align-content: flex-start;
       gap: .25rem;
-      > * {
+
+      >* {
         flex-grow: 1;
       }
 
-      dv-filter-saved-states-list{
-        display:flex;
+      dv-filter-saved-states-list {
+        display: flex;
         flex-wrap: wrap;
-        gap: .25rem;        
+        gap: .25rem;
       }
-      
+
     }
 
     dv-incompatible-warning {
@@ -386,22 +388,83 @@ dv-filter-wrapper {
 
     dv-filter-dataset-filter {
       display: block;
+      @extend .card;      
+      @extend .mb-2;
 
       .dv-title-tag {
+        @extend .card-title;
+        @extend .mb-0;
         display: flex;
         justify-content: flex-start;
         column-gap: 5px;
       }
 
-      .dv-data-filter-header {
-        display: flex;
-        justify-content: flex-start;
-        justify-content:space-between; 
-        align-items: center;
-        column-gap: 5px;
+      &[data-subject-filter="true"] {
+        @extend .border-primary;
+        .dv-dataset-filter-header {
+          @extend .card-header;
+          display: flex;
+          justify-content: flex-start;
+          justify-content: space-between;
+          align-items: center;
+          column-gap: 5px;
+
+          @extend .bg-primary;
+          @extend .card-header;
+          @extend .text-white;
+
+          .dv-dataset-filter-collapse-link {
+            @extend .text-white;
+            @extend .text-decoration-none;
+          }
+
+          .add-button {
+            @extend .btn;
+            @extend .btn-sm;
+            @extend .btn-outline-light;
+          }
+
+          .dv-filter-row-count-badge {
+            @extend .badge;
+            @extend .bg-light;
+          }
+
+        }
       }
 
-      div.dropdown.bootstrap-select.show-tick.dv-hide{
+      &[data-subject-filter="false"] {
+        @extend .border-secondary;
+        .dv-dataset-filter-header {
+            @extend .card-header;
+            display: flex;
+            justify-content: flex-start;
+            justify-content: space-between;
+            align-items: center;
+            column-gap: 5px;
+        
+            @extend .card-header;
+            @extend .text-black;
+        
+            .dv-dataset-filter-collapse-link {
+              @extend .text-black;
+              @extend .text-decoration-none;
+            }
+        
+            .add-button {
+              @extend .btn;
+              @extend .btn-sm;
+              @extend .btn-outline-secondary;
+            }
+        
+            .dv-filter-row-count-badge {
+              @extend .badge;
+              @extend .bg-secondary;
+            }
+        
+          }
+      }
+
+      div.dropdown.bootstrap-select.show-tick.dv-hide {
         visibility: hidden;
         display: block;
         height: 0;
@@ -427,16 +490,20 @@ dv-filter-wrapper {
             justify-content: space-between;
             align-items: center;
             padding: 2px 2px;
-            margin-bottom: 2px;    
-            flex-wrap: wrap;      
-            row-gap: 2px;  
+            margin-bottom: 2px;
+            flex-wrap: wrap;
+            row-gap: 2px;
           }
 
           .na_warning {
-            background-color: #fcf8e3;       /* Bootstrap warning bg */
-            color: #8a6d3b;                  /* Bootstrap warning text */
-            border: 1px solid #faebcc;       /* warning border */
-            border-radius: 4px;              /* rounded corners */            
+            background-color: #fcf8e3;
+            /* Bootstrap warning bg */
+            color: #8a6d3b;
+            /* Bootstrap warning text */
+            border: 1px solid #faebcc;
+            /* warning border */
+            border-radius: 4px;
+            /* rounded corners */
           }
 
           .variable-header .label {
@@ -486,26 +553,26 @@ dv-filter-wrapper {
       }
     }
 
-  //   .dropdown-menu{      
-  //     &.show {
-  //     min-width: min-content;
-  //     position: fixed;
-  //     left: $sidebar-width-open;
-  //     top: 25vh;
-  //     max-height: 70vh !important;
-  //     min-height: 0px !important;
-  //     height: 70vh !important;
-  //     overflow-y: hidden;
+    //   .dropdown-menu{      
+    //     &.show {
+    //     min-width: min-content;
+    //     position: fixed;
+    //     left: $sidebar-width-open;
+    //     top: 25vh;
+    //     max-height: 70vh !important;
+    //     min-height: 0px !important;
+    //     height: 70vh !important;
+    //     overflow-y: hidden;
 
-  //     .inner.open {
-  //       max-height: 70vh !important;
-  //       min-height: 0px !important;
-  //       height: calc(100% - 75px); // Hardcoded heigth of top search buttons
-  //       overflow-y: auto;
-  //     }
-  //   }
-  // }
-}
+    //     .inner.open {
+    //       max-height: 70vh !important;
+    //       min-height: 0px !important;
+    //       height: calc(100% - 75px); // Hardcoded heigth of top search buttons
+    //       overflow-y: auto;
+    //     }
+    //   }
+    // }
+  }
 }
 
 #shiny_filter_panel {
@@ -528,26 +595,28 @@ dv-filter-wrapper {
   }
 
   //TODO: START: TO BE REMOVED ONCE THE ORIGINAL SIMPLE DV.FILTER IS REMOVED
-  .dropdown-menu{
-  &.open,
-  &.show {
-    min-width: min-content;
-    position: fixed;
-    left: $sidebar-width-open;
-    top: 25vh;
-    max-height: 70vh !important;
-    min-height: 0px !important;
-    height: 70vh !important;
-    overflow-y: hidden;
+  .dropdown-menu {
 
-    .inner.open {
+    &.open,
+    &.show {
+      min-width: min-content;
+      position: fixed;
+      left: $sidebar-width-open;
+      top: 25vh;
       max-height: 70vh !important;
       min-height: 0px !important;
-      height: calc(100% - 75px); // Hardcoded heigth of top search buttons
-      overflow-y: auto;
+      height: 70vh !important;
+      overflow-y: hidden;
+
+      .inner.open {
+        max-height: 70vh !important;
+        min-height: 0px !important;
+        height: calc(100% - 75px); // Hardcoded heigth of top search buttons
+        overflow-y: auto;
+      }
     }
   }
-}
+
   //END: TO BE REMOVED ONCE THE ORIGINAL SIMPLE DV.FILTER IS REMOVED
 
 
