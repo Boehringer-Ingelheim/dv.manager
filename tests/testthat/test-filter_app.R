@@ -83,14 +83,21 @@ local({
               )
             }
 
-            filter_metadata_ui <- shiny::div(
-              id = "filter_metadata",
-              shiny::h3("filter_metadata"),
-              shiny::h4("json"),
-              shiny::tags[["pre"]](id = "raw", filter_metadata$output()$raw),
-              shiny::h4("parsed"),
-              shiny::verbatimTextOutput(outputId = session$ns("parsed"))
-            )
+            if (!is.na(filter_metadata$output())) {
+              filter_metadata_ui <- shiny::div(
+                id = "filter_metadata",
+                shiny::h3("filter_metadata"),
+                shiny::h4("json"),
+                shiny::tags[["pre"]](id = "raw", filter_metadata$output()$raw),
+                shiny::h4("parsed"),
+                shiny::verbatimTextOutput(outputId = session$ns("parsed"))
+              )
+            } else {
+              filter_metadata_ui <- shiny::div(
+                id = "filter_metadata",
+                shiny::h3("NA filter")
+              )
+            }
 
             output[["parsed"]] <- shiny::renderPrint(filter_metadata$output()$parsed)
 
@@ -271,7 +278,7 @@ local({
         }
         on.exit(app$stop(), add = TRUE, after = FALSE)
 
-        fs <- get_filter_state(app)
+        fs <- shiny::isolate(app$get_value(export = "filter_test-filter_metadata")$output())
 
         expect_true(is.na(fs))
       }
