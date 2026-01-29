@@ -154,7 +154,7 @@ body>.container-fluid>.dv_main_panel {
   grid-row: 1 / 3;
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: max-content 1fr 25px;
+  grid-template-rows: max-content 1fr max-content;
   overflow: hidden;
 }
 
@@ -209,7 +209,7 @@ body>.container-fluid>.dv_main_panel {
   border-top-left-radius: $border-radius;
   display: flex;
   align-items: center;
-
+  font-size: 1rem;
   span {
     margin-left: 1.2rem;
   }
@@ -690,11 +690,6 @@ dv-filter-wrapper {
 }
 
 /* end sidebar */
-
-#dataset_date,
-#dataset_name {
-  font-size: 1.3rem;
-}
 
 ::-webkit-scrollbar {
   width: 9px;
