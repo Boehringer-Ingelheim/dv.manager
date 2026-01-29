@@ -2229,17 +2229,18 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
 
 
   let clear_all_button = document.createElement(FC.TAG.CLEAR_ALL_BUTTON);
-  clear_all_button.className = "btn btn-primary btn-sm";  
+  clear_all_button.className = "btn btn-primary btn-sm mt-2";  
   clear_all_button.setAttribute("title", "Clear current filter");
-
+  
+  
   let clear_all_icon = document.createElement("span");
-  clear_all_icon.className = "glyphicon glyphicon-trash";
+  clear_all_icon.className = "glyphicon glyphicon-trash";  
   clear_all_button.appendChild(clear_all_icon);
-
+  clear_all_button.append(" Clear current filter");
+  clear_all_button.style.width = "100%";
 
   let select = document.createElement('select');
   select.className = "form-select form-select-sm w-auto d-inline-block";
-
   
   let saved_states_container = document.createElement(FC.TAG.SAVED_STATES_CONTAINER);
 
@@ -2267,9 +2268,10 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
 
   top_control_container.appendChild(select);
   top_control_container.appendChild(export_button);
-  top_control_container.appendChild(clear_all_button);
   top_control_container.appendChild(save_controls);
   top_control_container.appendChild(saved_states_container);
+
+  top_control_container.appendChild(clear_all_button);
 
   let bottom_container = document.createElement("div");
   bottom_container.className = "mb-3 p-1";
