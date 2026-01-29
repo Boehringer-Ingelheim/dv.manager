@@ -2360,21 +2360,29 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
     for (let i = 0; i < saved_states.length; ++i) {
       let group = document.createElement("div");
       group.className = "input-group input-group-sm w-auto";
+      group.style.flexWrap = "nowrap";
 
       // the "main action" button
       let button = document.createElement(FC.TAG.SAVED_STATE_BUTTON);
-      button.className = "btn btn-primary";
-      button.textContent = saved_states[i].name;
+      button.className = "btn btn-primary";      
       button.setAttribute(
         FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME,
         saved_states[i].name
       );
+      button.style.whiteSpace = "normal";
+      button.style.minWidth = "0";
+
+      let button_span = document.createElement("span");
+      button_span.textContent = saved_states[i].name;
+      button_span.style.wordBreak = "break-word";
+      button.appendChild(button_span);
 
       // the remove button as an input-group-append
       let remove_button = document.createElement(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
       remove_button.type = "button";
       remove_button.className = "btn btn-primary";
       remove_button.innerHTML = "&times;";
+      remove_button.style.flexShrink = "0";
       remove_button.setAttribute(
         FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME,
         saved_states[i].name
