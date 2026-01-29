@@ -2108,6 +2108,8 @@ let FC = {
     SAVED_STATES_CONTAINER: "dv-filter-saved-states-container",
     SAVED_STATE_BUTTON: "dv-filter-saved-state-button",
     REMOVED_SAVED_STATE_BUTTON: "dv-filter-removed-saved-state-button",
+    TOP_CONTROL_CONTAINER: "dv-filter-top-control-container"
+
   },
   MODE: {
     SIMPLE: "Basic",
@@ -2207,7 +2209,7 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, !saved_filter_states ? [] : saved_filter_states);
   set_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME, subject_dataset_name);
   
-  let top_control_container = document.createElement("dv-filter-top-control-container");
+  let top_control_container = document.createElement(FC.TAG.TOP_CONTROL_CONTAINER);
   top_control_container.className = "p-3 m-3 bg-light border rounded";
 
   root_el.appendChild(top_control_container);
