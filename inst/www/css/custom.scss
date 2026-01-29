@@ -50,7 +50,7 @@ body {
 
 .dv_manager_top_bar {
   display: grid;
-  grid-template-columns: auto 170px;
+  grid-template-columns: auto max-content;
 }
 
 .dv_button_level {
