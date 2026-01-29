@@ -2253,10 +2253,10 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
 
   let save_button = document.createElement(FC.TAG.SAVE_BUTTON);
   save_button.className = "btn btn-primary btn-sm";  
-  save_button.setAttribute("title", "Save current filter");
+  save_button.setAttribute("title", "Pin current filter");
 
   let save_icon = document.createElement("span");
-  save_icon.className = "glyphicon glyphicon-floppy-disk";
+  save_icon.className = "glyphicon glyphicon-pushpin";
   save_button.appendChild(save_icon);
   save_controls.appendChild(save_button);
 
