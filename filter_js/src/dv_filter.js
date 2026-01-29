@@ -1042,7 +1042,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     log: filter_state_log
   }
   return (res)
-}
+} 
 
 let global_blockly_disposal = {}; // FIXME: This is a very ugly way of disposing the workspace but less resistance route currently
 
@@ -1053,7 +1053,7 @@ let blockly_static_init = function(blockly_root_el, id) {
   let show_label = document.createElement('label');
   show_label.textContent = "Edit Filter";
   show_label.setAttribute("for", show_button_id);
-  show_label.className = "btn btn-primary";
+  show_label.className = "btn btn-primary btn-lg";
 
   let show_checkbox = document.createElement("input");
   show_checkbox.type = "checkbox";

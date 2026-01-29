@@ -349,7 +349,7 @@ local({
       on.exit(app$stop(), add = TRUE, after = FALSE)
 
       expect_true(app$get_js(
-        r"--(document.querySelector('dv-filter-filter[data-filter-mode="simple"].dv-disabled-controls').classList.contains('dv-disabled-controls'))--"
+        r"--(document.querySelector('dv-filter-filter[data-filter-mode="Basic"].dv-disabled-controls').classList.contains('dv-disabled-controls'))--"
       ))
     })
 
