@@ -241,20 +241,6 @@ body>.container-fluid>.dv_main_panel {
   display: block
 }
 
-
-
-.tab-content {
-  grid-column: 1 / -1;
-  grid-row: 2 / 3;
-  overflow-y: auto;
-  overflow-x: auto;
-  padding-bottom: 2rem;
-  max-width: 96vw;
-  margin-top: 0;
-  padding-top: 2rem;
-  padding-right: 1.6rem;
-}
-
 #__tabset_0__ {
   grid-column: 1 / -1;
   grid-row: 1 / 2;
