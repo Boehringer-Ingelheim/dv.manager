@@ -2110,9 +2110,8 @@ let FC = {
     REMOVED_SAVED_STATE_BUTTON: "dv-filter-removed-saved-state-button",
   },
   MODE: {
-    SIMPLE: "simple",
-    DATASETS: "datasets",
-    BLOCKLY: "blockly"
+    SIMPLE: "Basic",
+    BLOCKLY: "Advanced"
   },
   EVENT: {
     NEW_FILTER_VALUE: "new_filter_value",
