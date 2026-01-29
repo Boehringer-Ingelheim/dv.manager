@@ -1041,7 +1041,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     dataset_name: dataset_name,
     log: filter_state_log
   }
-  return (res)
+  return (res) 
 } 
 
 let global_blockly_disposal = {}; // FIXME: This is a very ugly way of disposing the workspace but less resistance route currently
@@ -2270,7 +2270,7 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   top_control_container.appendChild(saved_states_container);
 
   let bottom_container = document.createElement("div");
-  bottom_container.className = "mb-3 p-1 border bg-light";
+  bottom_container.className = "mb-3 p-1";
 
   
   static_ret = {};
