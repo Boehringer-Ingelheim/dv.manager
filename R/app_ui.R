@@ -46,12 +46,7 @@ app_ui <- function(request_id) {
       )
     )
   } else {
-    filter_ui <- shiny::tabsetPanel(
-      shiny::tabPanel(
-        title = "Filter",
-        new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
-      )
-    )
+    filter_ui <- new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
   }
 
   collapsable_ui <-
