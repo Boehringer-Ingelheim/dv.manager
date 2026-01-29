@@ -1533,7 +1533,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
       let value = current_variable.value;
-      let count = current_variable.value;
+      let count = current_variable.count;
       __assert(()=>count.every((v, i, a) => i === 0 || a[i-1] >= v)) // Check is sorted
       __assert(()=>value.length === count.length) // Check is sorted
 
