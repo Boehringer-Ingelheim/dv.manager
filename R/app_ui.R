@@ -95,13 +95,15 @@ app_ui <- function(request_id) {
     ),
     shiny::div(
       class = "sidebar",
-      shiny::tags$span(class = "logo-text", "DaVinci"),
-      shiny::tags$label(
-        `for` = "click",
-        class = "menu-icon",
-        shiny::div(class = "line line-1"),
-        shiny::div(class = "line line-2"),
-        shiny::div(class = "line line-3")
+      shiny::div(
+        shiny::tags$span(class = "logo-text", "DaVinci"),
+        shiny::tags$label(
+          `for` = "click",
+          shiny::icon("times", class = "icon-close"),
+          shiny::icon("chevron-right", class = "icon-open"),
+          class = "logo-control"
+        ),
+        class = "logo-container"
       ),
       collapsable_ui
     )
