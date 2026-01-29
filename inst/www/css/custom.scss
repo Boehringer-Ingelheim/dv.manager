@@ -123,6 +123,23 @@ body {
   overflow: hidden;
 }
 
+.dv_main_panel > .bs-container .dropdown-menu{  
+  min-width: 100% !important;
+  max-width: 50vw !important; // Linked to the max-width below
+  word-break: break-word;
+
+  li a span.text {
+      white-space: wrap;
+      width: max-content !important;
+      max-width: calc(100% - 1rem) !important;
+      small{
+        white-space: nowrap;
+      }    
+    }
+}
+
+
+
 /* sidebar */
 .dv-sidebar-container {
   grid-column: 1 / 2;
@@ -469,6 +486,7 @@ dv-filter-wrapper {
         margin-bottom: 10px;
 
         dv-filter-variable-filter {
+
           display: block;
           margin-bottom: 20px;
           background: #f7f7f7;
@@ -546,26 +564,6 @@ dv-filter-wrapper {
         }
       }
     }
-
-    //   .dropdown-menu{      
-    //     &.show {
-    //     min-width: min-content;
-    //     position: fixed;
-    //     left: $sidebar-width-open;
-    //     top: 25vh;
-    //     max-height: 70vh !important;
-    //     min-height: 0px !important;
-    //     height: 70vh !important;
-    //     overflow-y: hidden;
-
-    //     .inner.open {
-    //       max-height: 70vh !important;
-    //       min-height: 0px !important;
-    //       height: calc(100% - 75px); // Hardcoded heigth of top search buttons
-    //       overflow-y: auto;
-    //     }
-    //   }
-    // }
   }
 }
 
@@ -587,39 +585,6 @@ dv-filter-wrapper {
     margin-bottom: 15px;
     background-color: $body-bg;
   }
-
-  //TODO: START: TO BE REMOVED ONCE THE ORIGINAL SIMPLE DV.FILTER IS REMOVED
-  .dropdown-menu {
-
-    &.open,
-    &.show {
-      min-width: min-content;
-      position: fixed;
-      left: $sidebar-width-open;
-      top: 25vh;
-      max-height: 70vh !important;
-      min-height: 0px !important;
-      height: 70vh !important;
-      overflow-y: hidden;
-
-      .inner.open {
-        max-height: 70vh !important;
-        min-height: 0px !important;
-        height: calc(100% - 75px); // Hardcoded heigth of top search buttons
-        overflow-y: auto;
-      }
-    }
-  }
-
-  //END: TO BE REMOVED ONCE THE ORIGINAL SIMPLE DV.FILTER IS REMOVED
-
-
-  // .c-well {
-  //   min-height: 20px;
-  //   padding: 15px;
-  //   margin-bottom: 15px;
-  //   background-color: $body-bg;
-  // }
 
   #dataset_selector {
     flex: 0 0 auto;
