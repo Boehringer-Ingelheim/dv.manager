@@ -1051,7 +1051,7 @@ let blockly_static_init = function(blockly_root_el, id) {
   let show_button_id = id + "-blockly-filter-checkbox"; // Namespaced button
 
   let show_label = document.createElement('label');
-  show_label.textContent = "Show filter";
+  show_label.textContent = "Edit Filter";
   show_label.setAttribute("for", show_button_id);
   show_label.className = "btn btn-primary";
 
