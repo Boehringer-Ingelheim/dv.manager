@@ -2228,7 +2228,7 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
 
   let clear_all_button = document.createElement(FC.TAG.CLEAR_ALL_BUTTON);
   clear_all_button.className = "btn btn-primary btn-sm";  
-  clear_all_button.setAttribute("title", "Clear all filters");
+  clear_all_button.setAttribute("title", "Clear current filter");
 
   let clear_all_icon = document.createElement("span");
   clear_all_icon.className = "glyphicon glyphicon-trash";
