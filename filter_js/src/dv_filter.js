@@ -1609,7 +1609,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       let numeric_finite_max_and_min = is_numeric_finite(current_variable.min) && is_numeric_finite(current_variable.max);
       
       if(numeric_finite_max_and_min) {
-        const MAGIC_NEGATIVE_MARGIN = -25;  // This is the distance between of the ion.range.slider top and the slider line
+      const MAGIC_NEGATIVE_MARGIN = -25;  // This is the distance between of the ion.range.slider top and the slider line
       const histogram_container = document.createElement("div");
       histogram_container.className = "histogram";
       histogram_container.style = `display:flex; align-items:flex-end; margin-bottom: ${MAGIC_NEGATIVE_MARGIN}px;`
@@ -1651,6 +1651,9 @@ let create_variable_filter_controls = function(variable_filter_control_container
           to: to,
           skin: "shiny",
           grid: "true",
+          prettify: function(num) {
+            return +num.toPrecision(4); // limit to 4 significant figures
+          },
           onFinish: function () {$(numerical_input).trigger("finished.ion.range.slider");}
       });
       } else {
