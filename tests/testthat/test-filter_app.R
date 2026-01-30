@@ -632,7 +632,8 @@ local({
             specs$FILTERING$FILTER_SUPPORTED_TYPES,
             specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
             specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
-            specs$FILTERING$FILTER_INDEPENDENT_TABLES
+            specs$FILTERING$FILTER_INDEPENDENT_TABLES,
+            specs$FILTERING$FILTER_MENU_SIDEBAR
           )),
         {
           # Return a list instead of a character vector, probably something to do between yyjson and json lite, likely an unboxing issue
@@ -651,7 +652,8 @@ local({
             specs$FILTERING$FILTER_ADD_REMOVE,
             specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
             specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
-            specs$FILTERING$FILTER_INDEPENDENT_TABLES
+            specs$FILTERING$FILTER_INDEPENDENT_TABLES,
+            specs$FILTERING$FILTER_MENU_SIDEBAR
           )),
         {
           app$run_js(set_NA_include_js_code(dataset_name, vn, FALSE))
@@ -666,7 +668,8 @@ local({
           vdoc[["add_spec"]](c(
             specs$FILTERING$FILTER_ADD_REMOVE,
             specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
-            specs$FILTERING$FILTER_INDEPENDENT_TABLES
+            specs$FILTERING$FILTER_INDEPENDENT_TABLES,
+            specs$FILTERING$FILTER_MENU_SIDEBAR
           )),
         {
           toggle_filter(app, dataset_name, vn)
@@ -680,7 +683,8 @@ local({
           vdoc[["add_spec"]](c(
             specs$FILTERING$FILTER_ADD_REMOVE,
             specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
-            specs$FILTERING$FILTER_INDEPENDENT_TABLES
+            specs$FILTERING$FILTER_INDEPENDENT_TABLES,
+            specs$FILTERING$FILTER_MENU_SIDEBAR
           )),
         {
           toggle_filter(app, dataset_name, vn)
