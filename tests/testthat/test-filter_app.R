@@ -83,7 +83,7 @@ local({
               )
             }
 
-            if (!is.na(filter_metadata$output())) {
+            if (isTRUE(!is.na(filter_metadata$output()))) {
               filter_metadata_ui <- shiny::div(
                 id = "filter_metadata",
                 shiny::h3("filter_metadata"),
@@ -180,7 +180,10 @@ local({
 
   # Tide to internal representations but it does not matter, when it breaks we
   toggle_filter <- timed(function(app, dataset_name, var_name) {
-    selector <- sprintf("dv-filter-dataset-filter[data-dataset-name='%s'] div.card-header button", dataset_name)
+    selector <- sprintf(
+      "dv-filter-dataset-filter[data-dataset-name='%s'] div.dv-dataset-filter-header button",
+      dataset_name
+    )
     app$click(selector = selector)
 
     click_js <- sprintf(
