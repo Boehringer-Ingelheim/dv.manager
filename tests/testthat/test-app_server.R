@@ -20,7 +20,8 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -52,7 +53,8 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -81,7 +83,8 @@ test_that(
         "mod_1" = mod_identity(1, from = NULL, "mod_1"),
         "mod_2" = mod_identity(2, from = NULL, "mod_2")
       )),
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -103,7 +106,8 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -127,7 +131,8 @@ test_that(
       filter_data = NULL,
       module_info = resolve_module_list(list("mod_1" = mod_identity(1, mod_id = "mod_1"))),
       filter_key = NULL,
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     testServer(app_server_test(testing_options), {
@@ -150,7 +155,8 @@ test_that(
       data = list(),
       module_info = resolve_module_list(list()),
       filter_key = NULL,
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
     shiny::testServer(app_server_test(testing_options), {}) %>%
       expect_error(regexp = NA)
@@ -191,7 +197,8 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -233,7 +240,8 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -278,7 +286,8 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -315,7 +324,8 @@ test_that(
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
       reload_period = lubridate::duration(1, "seconds"),
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
     withr::with_dir(tempdir(), {
       system2(command = "touch", args = c("restart.txt"), stdout = TRUE)

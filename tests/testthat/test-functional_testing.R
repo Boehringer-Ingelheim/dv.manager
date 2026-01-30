@@ -84,7 +84,8 @@ local({
       )
     )),
     filter_key = "car",
-    filter_info = list(filter_default_state = NULL)
+    filter_info = list(filter_default_state = NULL),
+    enable_subgroup = FALSE
   )
 
   # Tests ----
@@ -246,7 +247,8 @@ local({
           )
         ),
         filter_key = "car",
-        filter_info = list(filter_default_state = NULL)
+        filter_info = list(filter_default_state = NULL),
+        enable_subgroup = FALSE
       )
 
       testServer(app_server_test(testing_options), {

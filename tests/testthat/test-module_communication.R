@@ -50,7 +50,8 @@ test_that(
           mod_id = "mod_2"
         )
       )),
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(
@@ -107,7 +108,8 @@ test_that(
           mod_id = "mod_2"
         )
       )),
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(
@@ -206,7 +208,8 @@ test_that(
         "id 3" = mod_return_static("mod_3"),
         "id 2" = mod_return_output("mod_2")
       )),
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(
