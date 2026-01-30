@@ -2424,10 +2424,11 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   });
 
   saved_states_list.addEventListener("click", function(event) {
-    if(event.target.tagName.toLowerCase() === FC.TAG.SAVED_STATE_BUTTON) {
+    let load_saved_button = event.target.closest(FC.TAG.SAVED_STATE_BUTTON);
+    if (load_saved_button) {
       __logger("Loading filter");
       let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);
-      let state_name = event.target.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
+      let state_name = load_saved_button.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
       let new_state = saved_states.find((obj)=> obj.name===state_name);
       if(!new_state) {
         throw new Error(`Could not find saved state ${state_name}`);
@@ -2436,11 +2437,11 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
       root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true })); // Trigger filter redraw after cleaning filters
     };
 
-    
-    if(event.target.tagName.toLowerCase() === FC.TAG.REMOVED_SAVED_STATE_BUTTON) {
+    let remove_saved_button = event.target.closest(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
+    if (remove_saved_button) {
       __logger("Removing filter");
       let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);      
-      let to_be_removed_state_name = event.target.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
+      let to_be_removed_state_name = remove_saved_button.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
       saved_states = saved_states.filter(obj => obj.name !== to_be_removed_state_name);
       set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, saved_states);
       render_saved_states(saved_states);
