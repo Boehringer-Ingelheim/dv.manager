@@ -15,8 +15,8 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
 
-    check_filter_key("A", data) %>%
-      expect_error(regexp = NA) %>%
+    check_filter_key("A", data) |>
+      expect_error(regexp = NA) |>
       expect_equal("A")
   }
 )
@@ -32,7 +32,7 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, D = 2))
     )
 
-    check_filter_key("C", data) %>%
+    check_filter_key("C", data) |>
       expect_error(regexp = "Selected filtering key is not present in all datasets")
   }
 )
@@ -48,7 +48,7 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
 
-    check_filter_key("C", data) %>%
+    check_filter_key("C", data) |>
       expect_error(regexp = "Selected filtering key is not present in all datasets")
   }
 )
@@ -64,8 +64,8 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
 
-    check_filter_key("A", data) %>%
-      expect_error(regexp = NA) %>%
+    check_filter_key("A", data) |>
+      expect_error(regexp = NA) |>
       expect_equal("A")
   }
 )
@@ -76,8 +76,8 @@ test_that(
     c(specs$FILTERING$FILTER_GLOBAL_KEY)
   ),
   {
-    check_filter_key("A", list()) %>%
-      expect_error(regexp = NA) %>%
+    check_filter_key("A", list()) |>
+      expect_error(regexp = NA) |>
       expect_equal("A")
   }
 )
@@ -93,7 +93,7 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
 
-    check_filter_key(NULL, data) %>%
+    check_filter_key(NULL, data) |>
       expect_error(regexp = "filter_key is not specified")
   }
 )
@@ -109,7 +109,7 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
 
-    check_filter_key(1, data) %>%
+    check_filter_key(1, data) |>
       expect_error(regexp = "Selected filtering key is not present in all datasets")
   }
 )
@@ -134,7 +134,7 @@ test_that(
       a = mtcars,
       b = mtcars,
       c = mtcars
-    ) %>%
+    ) |>
       purrr::map2(
         date_list,
         ~ {
@@ -148,7 +148,7 @@ test_that(
       DS2 = domain_list
     )
 
-    check_meta_mtime_attribute(data) %>%
+    check_meta_mtime_attribute(data) |>
       expect_true()
   }
 )
@@ -169,7 +169,7 @@ test_that(
       a = mtcars,
       b = mtcars,
       c = mtcars
-    ) %>%
+    ) |>
       purrr::map2(
         date_list,
         ~ {
@@ -185,9 +185,9 @@ test_that(
 
     attr(data[["DS1"]][["a"]], "meta") <- list()
 
-    check_meta_mtime_attribute(data) %>%
-      expect_false() %>%
-      expect_warning("Check date: Not passed. One or more datasets are not dated.", fixed = TRUE) %>%
+    check_meta_mtime_attribute(data) |>
+      expect_false() |>
+      expect_warning("Check date: Not passed. One or more datasets are not dated.", fixed = TRUE) |>
       expect_warning("DS1 -> a has no date. no meta attribute or no mtime entry", fixed = TRUE)
   }
 )
@@ -206,8 +206,8 @@ test_that(
       D3 = list(a = 1, b = 2)
     )
 
-    check_filter_data("a", data) %>%
-      expect_error(regexp = NA) %>%
+    check_filter_data("a", data) |>
+      expect_error(regexp = NA) |>
       expect_equal("a")
   }
 )
@@ -215,8 +215,8 @@ test_that(
 test_that(
   vdoc[["add_spec"]]("check_filter_data should pass when data is empty", c(specs$FILTERING$FILTER_GLOBAL_TABLE)),
   {
-    check_filter_data("A", list()) %>%
-      expect_error(regexp = NA) %>%
+    check_filter_data("A", list()) |>
+      expect_error(regexp = NA) |>
       expect_equal("A")
   }
 )
@@ -232,7 +232,7 @@ test_that(
       D2 = list(a = 1, b = 2),
       D3 = list(c = 1, b = 2)
     )
-    check_filter_data("a", data) %>%
+    check_filter_data("a", data) |>
       expect_error(regexp = "D3 has no 'a' table", fixed = TRUE)
   }
 )
@@ -245,7 +245,7 @@ test_that(
       D2 = list(a = 1, b = 2),
       D3 = list(c = 1, b = 2)
     )
-    check_filter_data(NULL, data) %>%
+    check_filter_data(NULL, data) |>
       expect_error(regexp = "No filter_data specified!")
   }
 )
@@ -255,7 +255,7 @@ test_that(
 test_that(
   vdoc[["add_spec"]]("check_data should error when the data is NULL", c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)),
   {
-    check_data(NULL) %>%
+    check_data(NULL) |>
       expect_error(
         regexp = "data argument is NULL\\. If you are trying to run an application without data, use an empty list 'dv\\.manager::run_app\\(data = list\\(\\), \\.\\.\\.\\)'" # nolint
       )
@@ -268,7 +268,7 @@ test_that(
     c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)
   ),
   {
-    check_data(list(A = 1)) %>% # A list that is not a list of dataframes or a list of functions
+    check_data(list(A = 1)) |> # A list that is not a list of dataframes or a list of functions
       expect_error("data must be list of lists of dataframes, or a list of functions that returns a list of dataframes")
   }
 )
@@ -279,7 +279,7 @@ test_that(
     c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)
   ),
   {
-    check_data(list(list(data.frame(a = 1)))) %>%
+    check_data(list(list(data.frame(a = 1)))) |>
       expect_error("All entries in data must be named")
   }
 )
@@ -292,16 +292,16 @@ test_that(
   {
     # List of lists of dataframes
     data <- list(a = list(a = data.frame(a = 1)))
-    check_data(data) %>%
-      expect_error(NA) %>%
+    check_data(data) |>
+      expect_error(NA) |>
       expect_equal(data)
 
     # List of functions
     data <- list(a = function(x) {
       x
     })
-    check_data(data) %>%
-      expect_error(NA) %>%
+    check_data(data) |>
+      expect_error(NA) |>
       expect_equal(data)
   }
 )
@@ -314,7 +314,7 @@ test_that(
     c(specs$MODULES$MODULE_LIST_EMPTY_ALLOWED)
   ),
   {
-    check_resolved_modules(resolve_module_list(list())) %>%
+    check_resolved_modules(resolve_module_list(list())) |>
       expect_warning(regexp = "module_list has length 0\\. No modules are included in the app\\.") # nolint
   }
 )
@@ -328,7 +328,7 @@ test_that(
     check_resolved_modules(resolve_module_list(list(
       a = list(ui = 1, server = function(x) x, module_id = "a"),
       b = list(ui = 1, server = function(x) x, module_id = "a")
-    ))) %>%
+    ))) |>
       expect_error(regexp = "module_list has repeated module_ids") # nolint
   }
 )
@@ -341,7 +341,7 @@ test_that(
   {
     check_resolved_modules(resolve_module_list(list(
       a = list(ui = 1, server = function(x) x, module_id = "")
-    ))) %>%
+    ))) |>
       expect_error(regexp = "module ids must have at least one character") # nolint
   }
 )

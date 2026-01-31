@@ -61,8 +61,8 @@ test_that(
         session$setInputs(selector = "DS1")
         expect_equal(module_output[["mod_2"]]()(), "1")
       }
-    ) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    ) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )
@@ -119,8 +119,8 @@ test_that(
         session$setInputs(selector = "DS1")
         expect_equal(module_output[["mod_2"]](), "1")
       }
-    ) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    ) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )
@@ -220,8 +220,8 @@ test_that(
         expect_equal(module_output[["mod_2"]]()[["mod_3"]], "1")
         expect_equal(module_output[["mod_2"]]()[["mod_1"]](), "1")
       }
-    ) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    ) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )

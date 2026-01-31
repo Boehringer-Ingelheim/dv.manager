@@ -254,8 +254,8 @@ local({
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb")
         expect_equal(output$dataset_date, "Dataset date: Date unavailable")
-      }) %>%
-        expect_warning(regexp = "(?:mpg|carb|wt) has no date. no meta attribute or no mtime entry") %>%
+      }) |>
+        expect_warning(regexp = "(?:mpg|carb|wt) has no date. no meta attribute or no mtime entry") |>
         expect_warning(regexp = "(?:mpg|carb|wt) has no date. no meta attribute or no mtime entry")
     }
   )

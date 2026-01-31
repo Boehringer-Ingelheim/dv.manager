@@ -205,8 +205,8 @@ data <- list(
 library(dplyr)
 
 # Create a new filtering dataset
-data[["adsl_filter"]] <- data[["adsl"]] %>%
-  select(USUBJID, SEX, AGE) %>%
+data[["adsl_filter"]] <- data[["adsl"]] |>
+  select(USUBJID, SEX, AGE) |>
   mutate(SEX = as.factor(SEX))
 
 # Place new labels
@@ -251,8 +251,8 @@ data <- list(
 library(dplyr)
 
 # Create a new filtering dataset
-data[["adsl_mod"]] <- data[["adsl"]] %>%
-  select(USUBJID, SEX, AGE) %>%
+data[["adsl_mod"]] <- data[["adsl"]] |>
+  select(USUBJID, SEX, AGE) |>
   mutate(
     SEX = as.factor(SEX),
     AGE_M = AGE * 12

@@ -27,9 +27,9 @@ test_that(
     shiny::testServer(app_server_test(testing_options), {
       session$setInputs(selector = "DS1")
       expect_equal(output$dataset_name, "Dataset name: DS1")
-    }) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    }) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )
@@ -60,9 +60,9 @@ test_that(
     shiny::testServer(app_server_test(testing_options), {
       session$setInputs(selector = "DS1")
       expect_equal(output$dataset_name, "Dataset name: DS1")
-    }) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    }) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )
@@ -113,9 +113,9 @@ test_that(
     shiny::testServer(app_server_test(testing_options), {
       session$setInputs(selector = "DS1")
       expect_equal(output$dataset_name, "Dataset name: DS1")
-    }) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    }) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )
@@ -158,7 +158,7 @@ test_that(
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
     )
-    shiny::testServer(app_server_test(testing_options), {}) %>%
+    shiny::testServer(app_server_test(testing_options), {}) |>
       expect_error(regexp = NA)
   }
 )
@@ -179,7 +179,7 @@ test_that(
       c = lubridate::ymd_hms("2021-01-16 00:00:00")
     )
 
-    domain_list <- domain_list %>%
+    domain_list <- domain_list |>
       purrr::map2(
         date_list,
         ~ {
@@ -222,7 +222,7 @@ test_that(
       c = lubridate::ymd_hms("2021-01-13 00:00:00")
     )
 
-    domain_list <- domain_list %>%
+    domain_list <- domain_list |>
       purrr::map2(
         date_list,
         ~ {
@@ -265,7 +265,7 @@ test_that(
       c = lubridate::ymd_hms("2021-01-13 00:00:00")
     )
 
-    domain_list <- domain_list %>%
+    domain_list <- domain_list |>
       purrr::map2(
         date_list,
         ~ {
@@ -297,7 +297,7 @@ test_that(
       expect_equal(output$dataset_date, "Dataset date: 2021-Jan-13 (UTC)")
       session$setInputs(selector = "DS2")
       expect_equal(output$dataset_date, "Dataset date: Date unavailable")
-    }) %>%
+    }) |>
       expect_warning(regexp = "a has no date. no meta attribute or no mtime entry")
   }
 )

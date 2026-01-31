@@ -15,7 +15,7 @@ test_that(
       filter_data = "DD1",
       filter_key = "C",
       .launch = FALSE
-    ) %>%
+    ) |>
       expect_error(regexp = "D2 has no 'DD1' table")
   }
 )
@@ -36,12 +36,12 @@ test_that(
       filter_data = "DD1",
       filter_key = "A",
       .launch = FALSE
-    ) %>%
-      expect_warning(regexp = "Check date: Not passed", fixed = TRUE) %>%
-      expect_warning(regexp = "D1 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) %>%
-      expect_warning(regexp = "D1 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) %>%
-      expect_warning(regexp = "D2 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) %>%
-      expect_warning(regexp = "D2 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) %>%
+    ) |>
+      expect_warning(regexp = "Check date: Not passed", fixed = TRUE) |>
+      expect_warning(regexp = "D1 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
+      expect_warning(regexp = "D1 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
+      expect_warning(regexp = "D2 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
+      expect_warning(regexp = "D2 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
       expect_error(regexp = NA)
   }
 )
@@ -60,7 +60,7 @@ test_that(
       module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
       filter_key = "C",
       .launch = FALSE
-    ) %>%
+    ) |>
       expect_error(regexp = "No filter_data specified!")
   }
 )
@@ -80,7 +80,7 @@ test_that(
       filter_data = "DD1",
       filter_key = "C",
       .launch = FALSE
-    ) %>%
+    ) |>
       expect_error(regexp = "Selected filtering key is not present in all datasets")
   }
 )
@@ -100,12 +100,12 @@ test_that(
       filter_data = "DD1",
       filter_key = "A",
       .launch = FALSE
-    ) %>%
-      expect_error(regexp = NA) %>%
-      expect_warning(regexp = "Check date: Not passed") %>%
-      expect_warning(regexp = "D1 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) %>%
-      expect_warning(regexp = "D1 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) %>%
-      expect_warning(regexp = "D2 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) %>%
+    ) |>
+      expect_error(regexp = NA) |>
+      expect_warning(regexp = "Check date: Not passed") |>
+      expect_warning(regexp = "D1 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
+      expect_warning(regexp = "D1 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
+      expect_warning(regexp = "D2 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
       expect_warning(regexp = "D2 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE)
   }
 )
@@ -121,12 +121,12 @@ test_that(
       module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
       filter_data = "DD1",
       .launch = FALSE
-    )[["config"]][["filter_key"]] %>%
-      expect_equal("USUBJID") %>%
-      expect_warning(regexp = "Check date: Not passed") %>%
-      expect_warning(regexp = "D1 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) %>%
-      expect_warning(regexp = "D1 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) %>%
-      expect_warning(regexp = "D2 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) %>%
+    )[["config"]][["filter_key"]] |>
+      expect_equal("USUBJID") |>
+      expect_warning(regexp = "Check date: Not passed") |>
+      expect_warning(regexp = "D1 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
+      expect_warning(regexp = "D1 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
+      expect_warning(regexp = "D2 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
       expect_warning(regexp = "D2 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE)
   }
 )
@@ -147,7 +147,7 @@ test_that(
       a = mtcars,
       b = mtcars,
       c = mtcars
-    ) %>%
+    ) |>
       purrr::map2(
         date_list,
         ~ {
@@ -189,7 +189,7 @@ test_that(
       a = mtcars,
       b = mtcars,
       c = iris
-    ) %>%
+    ) |>
       purrr::map2(
         date_list,
         ~ {
@@ -208,7 +208,7 @@ test_that(
       filter_data = "a",
       filter_key = "mpg",
       .launch = FALSE
-    ) %>%
+    ) |>
       expect_error(regexp = "Selected filtering key is not present in all datasets")
   }
 )
@@ -229,7 +229,7 @@ test_that(
       a = mtcars,
       b = mtcars,
       c = mtcars
-    ) %>%
+    ) |>
       purrr::map2(
         date_list,
         ~ {
@@ -250,8 +250,8 @@ test_that(
       filter_data = "a",
       filter_key = "mpg",
       .launch = FALSE
-    ) %>%
-      expect_warning("Check date: Not passed", fixed = TRUE) %>%
+    ) |>
+      expect_warning("Check date: Not passed", fixed = TRUE) |>
       expect_warning("DS1 -> a has no date. no meta attribute or no mtime entry", fixed = TRUE)
   }
 )
@@ -264,10 +264,10 @@ test_that(
       module_list = list(),
       filter_data = "",
       filter_key = ""
-    ) %>%
+    ) |>
       expect_error(
         regexp = "data argument is NULL\\. If you are trying to run an application without data, use an empty list 'dv\\.manager::run_app\\(data = list\\(\\), \\.\\.\\.\\)'"
-      ) %>% # nolint
+      ) |> # nolint
       expect_warning(regexp = "module_list has length 0\\. No modules are included in the app\\.") # nolint
   }
 )
@@ -284,7 +284,7 @@ test_that(
       startup_msg = shiny::h1("Sample startup message"),
       filter_data = "",
       filter_key = "USUBJID"
-    ) %>%
+    ) |>
       expect_error(regexp = "Startup msg is not a shiny.tag or a shiny modal element")
 
     run_app(
@@ -293,7 +293,7 @@ test_that(
       startup_msg = "Sample startup message",
       filter_data = "",
       filter_key = "USUBJID"
-    ) %>%
+    ) |>
       expect_error(regexp = "Startup msg is not a shiny.tag or a shiny modal element")
   }
 )
@@ -310,7 +310,7 @@ test_that(
       startup_msg = shiny::modalDialog("Sample startup message"),
       filter_data = "",
       filter_key = "USUBJID"
-    ) %>%
+    ) |>
       expect_error(regexp = NA)
   }
 )

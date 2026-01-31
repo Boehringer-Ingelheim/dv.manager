@@ -85,7 +85,7 @@ check_filter_data <- function(filter_data, datasets) {
       }
       filter_data %in% names(dataset_list)
     }
-  ) %>%
+  ) |>
     purrr::keep(~ !.x)
 
   if (length(filter_data_check) > 0) {
