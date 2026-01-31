@@ -79,7 +79,7 @@ mutually exclusive, we select **81 to 89** and **70 to 80** in the filter contro
 
 </div>
 
-In both cases more advanced subgroups can be created by using more filters or by switching to the `blockly` filter
+In both cases more advanced subgroups can be created by using more filters or by switching to the `Advanced` filter
 as described in the [new filter](/articles/development_filter.html) article.
 
 
