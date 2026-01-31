@@ -4,7 +4,7 @@ local({
     app$click(selector = clear_all_selector)
 
     selector <- sprintf(
-      "#%s dv-filter-dataset-filter[data-dataset-name='%s'] div.card-header button",
+      "#%s dv-filter-dataset-filter[data-dataset-name='%s'] div.dv-dataset-filter-header button",
       filter_id,
       dataset_name
     )
@@ -52,7 +52,7 @@ local({
   }
 
   prepare_subgroup <- function(app, subgroup) {
-    app$click(selector = "[data-value='Subgroup']")
+    app$click(selector = "a[data-value='Subgroup']")
     app$wait_for_idle()
 
     app$set_inputs(`subgroup-subgroup_name` = subgroup[["name"]])
