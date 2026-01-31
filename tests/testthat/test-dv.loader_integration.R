@@ -58,7 +58,7 @@ test_that("integration with dv.loader;
     filter_data = "mpg",
     module_list = list(
       "identity" = mod_identity(
-        "unfiltered_dataset",
+        "unfiltered_dataset_list",
         "id_1"
       )
     ),

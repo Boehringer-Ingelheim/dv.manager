@@ -173,8 +173,8 @@ run_mock_app <- function() {
   run_app(
     data = list("D1" = list(adsl = get_pharmaverse_data("adsl"), adae = get_pharmaverse_data("adae"))),
     module_list = list(
-      "Simple" = mod_simple("adsl", "filtered_dataset", "mod1"),
-      "Simple2" = mod_simple("adsl", "unfiltered_dataset", "mod2")
+      "Simple" = mod_simple("adsl", "filtered_dataset_list", "mod1"),
+      "Simple2" = mod_simple("adsl", "unfiltered_dataset_list", "mod2")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
@@ -195,9 +195,9 @@ run_mock_app_two_datasets <- function() {
       )
     ),
     module_list = list(
-      "Simple" = mod_simple("adsl", "filtered_dataset", "mod1"),
-      "Simple2" = mod_simple("adsl", "unfiltered_dataset", "mod2"),
-      "Simple3" = mod_simple("adae", "filtered_dataset", "mod3")
+      "Simple" = mod_simple("adsl", "filtered_dataset_list", "mod1"),
+      "Simple2" = mod_simple("adsl", "unfiltered_dataset_list", "mod2"),
+      "Simple3" = mod_simple("adae", "filtered_dataset_list", "mod3")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
@@ -261,7 +261,7 @@ run_mock_com_app <- function() {
         module_from_id = "mod_1",
         mod_id = "mod_2"
       ),
-      "Simple" = mod_simple("adsl", "unfiltered_dataset", "modSimp")
+      "Simple" = mod_simple("adsl", "unfiltered_dataset_list", "modSimp")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
@@ -325,7 +325,7 @@ run_mock_combined_app <- function() {
     module_list = list(
       "AE Table" = mod_table(
         mod_id = "mod_1",
-        from = "filtered_dataset",
+        from = "filtered_dataset_list",
         dataset = "adae"
       )
     ),
@@ -502,7 +502,7 @@ run_mock_print_afmm <- function() {
         value = "mod_1",
         mod_id = "mod_2"
       ),
-      "Simple" = mod_simple("adsl", "unfiltered_dataset", "modSimp"),
+      "Simple" = mod_simple("adsl", "unfiltered_dataset_list", "modSimp"),
       "afmm" = mod_print_afmm("mod_afmm")
     ),
     filter_data = "adsl",

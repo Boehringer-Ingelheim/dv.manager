@@ -25,7 +25,7 @@ local({
           "No meta" = dv.manager:::mod_simple(
             module_id = "use_d_3_with_no_meta",
             dataset = "d3",
-            from = "unfiltered_dataset"
+            from = "unfiltered_dataset_list"
           )
         )
       ),

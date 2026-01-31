@@ -26,7 +26,7 @@ The filter is located in the sidebar, and it is divided in three main zones:
 
   3. filter body and selectors
 
-This new filter has two different interfaces a *Basic* one and a *Advanced* one. Both have the same mission, but the 
+This filter has two different interfaces a *Basic* one and a *Advanced* one. Both have the same mission, but the 
 latter has a *block* interface that allows expressing richer filters when required.
 
 Before describing each filter (*Basic* or *Advanced*), it is important to understand the two levels at which filters can be applied.

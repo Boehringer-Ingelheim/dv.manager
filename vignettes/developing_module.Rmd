@@ -221,7 +221,7 @@ Next, we modify the wrapper that allows our example module to be used by **dv.ma
 
 First, we remove the extra parameter from the UI function. Notice that this allows us to directly pass the function name instead of wrapping it in a anonymous function (see previous example).
 
-Then, we pass the whole `filtered_dataset` list to the `dataset` parameter in the server function because we are no longer specifying just one data set - in this way, we can allow the user to select the data set inside the application at run-time.
+Then, we pass the whole `filtered_dataset_list` list to the `dataset` parameter in the server function because we are no longer specifying just one data set - in this way, we can allow the user to select the data set inside the application at run-time.
 
 This allows us to remove all parameters from the `mod_uniq_values()` function definition with the exception of `module_id`.
 

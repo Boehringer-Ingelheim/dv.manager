@@ -79,7 +79,7 @@ local({
     filter_data = "mpg",
     module_info = resolve_module_list(list(
       "identity" = mod_identity(
-        "unfiltered_dataset",
+        "unfiltered_dataset_list",
         "id_1"
       )
     )),
@@ -242,7 +242,7 @@ local({
         filter_data = "mpg",
         module_list = list(
           "identity" = mod_identity(
-            "unfiltered_dataset",
+            "unfiltered_dataset_list",
             "id_1"
           )
         ),
