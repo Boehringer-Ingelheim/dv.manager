@@ -37,12 +37,9 @@ Before describing each filter (*Basic* or *Advanced*), it is important to unders
 
 These filters apply to a single dataset. They are used to select specific rows within that dataset.
 
-::: {style="padding: 1em 1em 1em 1em;  margin-bottom: 5px;  border: 1px solid #64a1ce;  border-radius: 5px;  background:#f5f5f5 5px center/3em no-repeat;"}
-**Level dropping**
-
+<div class="alert alert-info" role="alert">
 This filter will drop filtered levels from the factor variables.
-
-:::
+</div>
 
 ### Subject or subpopulation filters
 
