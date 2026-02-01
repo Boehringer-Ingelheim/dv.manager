@@ -124,7 +124,7 @@ get_single_filter_data <- function(dataset) {
       l[[FDF$MAX]] <- max(-Inf, na_clean_var, na.rm = TRUE)
 
       if (length(na_clean_var) > 0 && !all(is.infinite(na_clean_var))) {
-        hist_info <- hist(na_clean_var, plot = FALSE)
+        hist_info <- graphics::hist(na_clean_var, plot = FALSE)
       } else {
         hist_info <- list(density = numeric(0))
       }

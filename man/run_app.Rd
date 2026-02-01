@@ -54,7 +54,7 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
 any previous calls to  \code{\link[shiny:enableBookmarking]{enableBookmarking()}}. See \code{\link[shiny:enableBookmarking]{enableBookmarking()}}
 for more information on bookmarking your app.}
 
-\item{filter_type}{Indicates which filter type, \code{simple}, \code{datasets}, \code{development}, will be used in the application.}
+\item{filter_type}{\strong{DEPRECATED} Indicates which filter type, \code{simple}, \code{datasets}, \code{development}, will be used in the application.}
 
 \item{enable_dataset_filter}{\strong{DEPRECATED} A boolean flag indicating if dataset filters are enabled. The default value is FALSE.}
 

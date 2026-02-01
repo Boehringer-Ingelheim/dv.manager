@@ -1952,7 +1952,7 @@ local({
           NA_count = 1L,
           min = 1,
           max = 2,
-          density = hist(d[["var"]], plot = FALSE)[["density"]]
+          density = graphics::hist(d[["var"]], plot = FALSE)[["density"]]
         )
       )
     }
