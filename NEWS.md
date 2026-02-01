@@ -1,3 +1,10 @@
+# dv.manager 2.2.0-9010
+- Update documentation
+- Remove magrittr pipe
+- Improved clicked on saved states
+- Aesthetic changes in filter menus and dv.manager menus
+- Remove dv.filter and work only with the new filter
+
 # dv.manager 2.2.0-9009
 - Completely remove dv.filter from the code base
 
