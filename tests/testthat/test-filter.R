@@ -2119,7 +2119,6 @@ local({
 # E2E testing
 
 local({
-  # skip("REMOVE SKIP AFTER FIXING")
   skip_if_not_running_shiny_tests()
   skip_if_suspect_check()
 
