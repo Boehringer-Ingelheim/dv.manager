@@ -786,6 +786,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     current_color = current_color + color_step;
     const dataset_color = current_color;
     const dataset_name = dataset["name"];
+    const dataset_label = dataset["label"];
     const dataset_type = get_block_dataset_type(dataset_name);
     const dataset_category = {
       kind: 'category',
@@ -797,7 +798,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
       Blockly.Blocks[ns(dataset_type)] = {
         init: function () {
           this.appendDummyInput()
-            .appendField("Dataset Filter: ")
+            .appendField(`Dataset Filter - ${dataset_label}:`)
             .appendField(dataset_name, "dataset_name");
           this.appendValueInput("children")
             .setCheck(["filter", "row"]);
@@ -840,7 +841,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
         Blockly.Blocks[nsed_variable_type] = {
           init: function () {
             this.appendEndRowInput()
-              .appendField(`[(${dataset_name}) - ${variable_name}]`)
+              .appendField(`[(${dataset_label}) - ${variable_name}]`)
               .appendField(new Blockly.FieldLabel(variable_label, "blockly_filter_bold"))
               .appendField(new multiPickerField(dd_options), "value")
               .appendField(variable_na_label)
