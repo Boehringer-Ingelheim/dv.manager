@@ -62,6 +62,8 @@ basic_dataset_lists_mixed_NA_INF <- local({
   dataset_list_2$dataset_1$sbj_var <- paste0("SBJ-", c(1:6, Inf, -Inf) * 2)
   dataset_list_2$dataset_2$sbj_var <- paste0("SBJ-", c(1:6) * 2)
 
+  attr(dataset_list_1[["dataset_1"]], "label") <- "dsl1_ds1"
+
   dataset_lists <- list(dataset_list_1 = dataset_list_1, dataset_list_2 = dataset_list_2)
 })
 

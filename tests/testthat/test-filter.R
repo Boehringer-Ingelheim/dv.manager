@@ -2089,6 +2089,7 @@ local({
 
       expect_identical(r[["dataset_lists"]][[1]][["name"]], "dl1")
       expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["name"]], "ds1")
+      expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["label"]], "ds1")
       expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["variables"]][[1]][["name"]], "var1")
     }
   )

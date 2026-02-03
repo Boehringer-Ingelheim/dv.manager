@@ -170,9 +170,15 @@ get_filter_data <- function(dataset_lists) {
     for (jdx in seq_len(n_datasets)) {
       current_dataset <- current_dataset_list[[jdx]]
       current_dataset_name <- nm_datasets[[jdx]]
+      current_dataset_label <- attr(current_dataset_list[[jdx]], "label") %||% current_dataset_name
       current_dataset_res[[jdx]] <- stats::setNames(
-        object = list(current_dataset_name, nrow(current_dataset), get_single_filter_data(current_dataset)),
-        nm = c(FDF$NAME, FDF$NROW, FDF$VARIABLES)
+        object = list(
+          current_dataset_name,
+          current_dataset_label,
+          nrow(current_dataset),
+          get_single_filter_data(current_dataset)
+        ),
+        nm = c(FDF$NAME, FDF$LABEL, FDF$NROW, FDF$VARIABLES)
       )
     }
     res[[idx]] <- stats::setNames(
@@ -995,10 +1001,12 @@ binary_serialize_filter_data <- function(x) {
 
     for (dataset_idx in seq_len(dataset_list_len)) {
       dataset_name <- dataset_list[[dataset_idx]][["name"]]
+      dataset_label <- dataset_list[[dataset_idx]][["label"]]
       dataset_var <- dataset_list[[dataset_idx]][["variables"]]
       dataset_nrow <- dataset_list[[dataset_idx]][["nrow"]]
       dataset_nvar <- length(dataset_var)
       w_string(dataset_name)
+      w_string(dataset_label)
       w_int(dataset_nrow)
       w_int(dataset_nvar)
 
@@ -1105,6 +1113,7 @@ binary_deserialize_filter_data <- function(x) {
     for (dataset_idx in seq_len(dataset_list_len)) {
       dataset <- list()
       dataset[["name"]] <- r_string()
+      dataset[["label"]] <- r_string()
       dataset[["nrow"]] <- r_int()
       dataset_nvar <- r_int()
       dataset_var <- list()
