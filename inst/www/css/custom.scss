@@ -32,6 +32,20 @@ body {
   font-size: $font-size-base;
 }
 
+#__manager_overlay__ {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: block;
+  /* Hidden by default */
+  justify-content: center;
+  align-items: center;
+  z-index: 999;  
+}
+
 /* navigation */
 
 .dv_button_container {
@@ -123,19 +137,20 @@ body {
   overflow: hidden;
 }
 
-.dv_main_panel > .bs-container .dropdown-menu{  
+.dv_main_panel>.bs-container .dropdown-menu {
   min-width: 100% !important;
   max-width: 50vw !important; // Linked to the max-width below
   word-break: break-word;
 
   li a span.text {
-      white-space: wrap;
-      width: max-content !important;
-      max-width: calc(100% - 1rem) !important;
-      small{
-        white-space: nowrap;
-      }    
+    white-space: wrap;
+    width: max-content !important;
+    max-width: calc(100% - 1rem) !important;
+
+    small {
+      white-space: nowrap;
     }
+  }
 }
 
 
@@ -148,29 +163,29 @@ body {
   transition: width 0.3s ease-in-out 0.1s;
 
   .checkbox {
-      &:not(:checked)~.sidebar {
-        left: $sidebar-width-collapsed - $sidebar-width-open;
+    &:not(:checked)~.sidebar {
+      left: $sidebar-width-collapsed - $sidebar-width-open;
 
-        .menu-contents,
-        .logo-text {
-          opacity: 0;
-        }
-
-        .icon-close {
-          display: none;
-        }
+      .menu-contents,
+      .logo-text {
+        opacity: 0;
       }
 
-      &:checked~.sidebar {
-        left: 0;
-
-        .icon-open {
-          display: none;
-        }
+      .icon-close {
+        display: none;
       }
     }
-  
-    
+
+    &:checked~.sidebar {
+      left: 0;
+
+      .icon-open {
+        display: none;
+      }
+    }
+  }
+
+
 
   .sidebar {
     width: $sidebar-width-open;
@@ -196,30 +211,30 @@ body {
       height: 53px;
       flex-shrink: 0;
 
-        .logo-text {
-          transition: opacity 0.2s ease-out 0.1s;
-          font-size: 1.5em;
-          letter-spacing: .5em;
-        }
+      .logo-text {
+        transition: opacity 0.2s ease-out 0.1s;
+        font-size: 1.5em;
+        letter-spacing: .5em;
+      }
 
-        .logo-control {
-          transition: opacity 0.2s ease-out 0.1s;
-          font-size: 1rem;
-          color: $color-text;
-          position: absolute;
-          font-size: 1.8em;
-          right: 0.5em;          
-          cursor: pointer;
-        }
+      .logo-control {
+        transition: opacity 0.2s ease-out 0.1s;
+        font-size: 1rem;
+        color: $color-text;
+        position: absolute;
+        font-size: 1.8em;
+        right: 0.5em;
+        cursor: pointer;
+      }
     }
 
-        .menu-contents {
-          transition: opacity 0.2s ease-out;
-          align-self: stretch;
-          margin-bottom: 30px;
-          flex-grow: 1;
-          opacity: 1;
-        }
+    .menu-contents {
+      transition: opacity 0.2s ease-out;
+      align-self: stretch;
+      margin-bottom: 30px;
+      flex-grow: 1;
+      opacity: 1;
+    }
   }
 }
 
@@ -274,6 +289,7 @@ body>.container-fluid>.dv_main_panel {
   display: flex;
   align-items: center;
   font-size: 1rem;
+
   span {
     margin-left: 1.2rem;
   }
@@ -400,7 +416,7 @@ dv-filter-wrapper {
 
     dv-filter-dataset-filter {
       display: block;
-      @extend .card;      
+      @extend .card;
       @extend .mb-2;
 
       .dv-title-tag {
@@ -413,6 +429,7 @@ dv-filter-wrapper {
 
       &[data-subject-filter="true"] {
         @extend .border-primary;
+
         .dv-dataset-filter-header {
           @extend .card-header;
           display: flex;
@@ -446,34 +463,35 @@ dv-filter-wrapper {
 
       &[data-subject-filter="false"] {
         @extend .border-secondary;
+
         .dv-dataset-filter-header {
-            @extend .card-header;
-            display: flex;
-            justify-content: flex-start;
-            justify-content: space-between;
-            align-items: center;
-            column-gap: 5px;
-        
-            @extend .card-header;
+          @extend .card-header;
+          display: flex;
+          justify-content: flex-start;
+          justify-content: space-between;
+          align-items: center;
+          column-gap: 5px;
+
+          @extend .card-header;
+          @extend .text-black;
+
+          .dv-dataset-filter-collapse-link {
             @extend .text-black;
-        
-            .dv-dataset-filter-collapse-link {
-              @extend .text-black;
-              @extend .text-decoration-none;
-            }
-        
-            .add-button {
-              @extend .btn;
-              @extend .btn-sm;
-              @extend .btn-outline-secondary;
-            }
-        
-            .dv-filter-row-count-badge {
-              @extend .badge;
-              @extend .bg-secondary;
-            }
-        
+            @extend .text-decoration-none;
           }
+
+          .add-button {
+            @extend .btn;
+            @extend .btn-sm;
+            @extend .btn-outline-secondary;
+          }
+
+          .dv-filter-row-count-badge {
+            @extend .badge;
+            @extend .bg-secondary;
+          }
+
+        }
       }
 
       div.dropdown.bootstrap-select.show-tick.dv-hide {
@@ -600,9 +618,7 @@ dv-filter-wrapper {
   }
 }
 
-.sidebar {
-
-}
+.sidebar {}
 
 /* end sidebar */
 
