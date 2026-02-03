@@ -1292,35 +1292,43 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   let card_heading = document.createElement("div");
   card_heading.className = "dv-dataset-filter-header"; 
   
-  let title_tag_container = document.createElement("h6");  
-  title_tag_container.className = "dv-title-tag";  
+  let left_container = document.createElement("div");  
+  left_container.className = "dv-dataset-filter-header-left"; 
+  let right_container = document.createElement("div");
+  right_container.className = "dv-dataset-filter-header-right"; 
 
+  card_heading.appendChild(left_container);
+  card_heading.appendChild(right_container);
+
+  let counts_container = document.createElement("div");
+  counts_container.className = "dv-filter-counts";
+  
   let card_collapse_link = document.createElement("a");
-  card_collapse_link.textContent = dataset.name;
-  card_collapse_link.className = "dv-dataset-filter-collapse-link";
+  card_collapse_link.textContent = dataset.label;
+  card_collapse_link.className = "dv-dataset-filter-collapse-link h6";
   card_collapse_link.setAttribute("data-bs-toggle", "collapse");  
   card_collapse_link.setAttribute("data-bs-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .card-body`);
   card_collapse_link.href = "#"; // Recommended to make it keyboard-accessible
 
-  title_tag_container.appendChild(card_collapse_link);  
-
   let filter_count_tag = document.createElement(SC.TAG.FILTER_COUNT_TAG);
   filter_count_tag.className = "dv-filter-row-count-badge";
-  title_tag_container.appendChild(filter_count_tag);
 
   let row_count_tag = document.createElement(SC.TAG.ROW_COUNT_TAG);
   row_count_tag.className = "dv-filter-row-count-badge";
-  title_tag_container.appendChild(row_count_tag);
 
-  card_heading.appendChild(title_tag_container);
+  left_container.appendChild(card_collapse_link);  
+  counts_container.appendChild(filter_count_tag);
+  counts_container.appendChild(row_count_tag);
+  left_container.appendChild(counts_container);
 
   if (is_subject_filter) {
     let icon = document.createElement("span");
     icon.className = "glyphicon glyphicon-user";  
     icon.title = "Subject Filter";
-    card_heading.appendChild(document.createTextNode(" "));
-    card_heading.appendChild(icon);
-  }
+    right_container.appendChild(document.createTextNode(" "));
+    right_container.appendChild(icon);
+  } 
+  
 
   let add_button = document.createElement("button");
   add_button.className = "add-button";  
@@ -1328,8 +1336,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   let add_icon = document.createElement("i");
   add_icon.className = "glyphicon glyphicon-plus";
   add_button.appendChild(add_icon);
-
-  card_heading.appendChild(add_button);
+  right_container.appendChild(add_button);
   
   dataset_filter_container.appendChild(card_heading);
 
@@ -2028,7 +2035,7 @@ let init_filter_handler = function (root_el, dataset_list_data, dataset_list_nam
   __logger(root_el);
   __logger(dataset_list_data);
   __assert(()=>is_html_element(root_el));
-  
+
   let dataset_list = dataset_list_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
   
   if(selected_mode === FC.MODE.SIMPLE) {

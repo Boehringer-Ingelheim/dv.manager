@@ -43,7 +43,7 @@ body {
   /* Hidden by default */
   justify-content: center;
   align-items: center;
-  z-index: 999;  
+  z-index: 999;
 }
 
 /* navigation */
@@ -421,43 +421,75 @@ dv-filter-wrapper {
 
       .dv-title-tag {
         @extend .card-title;
-        @extend .mb-0;
+        @extend .mb-0;        
+      }
+
+      .dv-dataset-filter-header {
+        @extend .card-header;
         display: flex;
-        justify-content: flex-start;
+        justify-content: space-between;
+        align-items: baseline;
         column-gap: 5px;
+
+        .dv-dataset-filter-header-left {
+          display: flex;
+          justify-content: flex-start;          
+          align-items: baseline;          
+          column-gap: 1em;
+          flex: 1;
+
+          .dv-dataset-filter-collapse-link {
+            word-break: break-word;
+            justify-self: flex-start;
+            flex: 1;
+          }
+
+          .dv-filter-counts {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
+            justify-self: flex-end;
+            gap: .25rem;
+            flex: 0 1 auto;
+          }
+        }
+
+        .dv-dataset-filter-header-right {
+          @extend .ps-1;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          column-gap: 1em;
+          flex: none;
+        }
+
+
       }
 
       &[data-subject-filter="true"] {
         @extend .border-primary;
 
         .dv-dataset-filter-header {
-          @extend .card-header;
-          display: flex;
-          justify-content: flex-start;
-          justify-content: space-between;
-          align-items: center;
-          column-gap: 5px;
-
           @extend .bg-primary;
           @extend .card-header;
           @extend .text-white;
+        }
 
-          .dv-dataset-filter-collapse-link {
-            @extend .text-white;
-            @extend .text-decoration-none;
-          }
+        .add-button {
+          @extend .btn;
+          @extend .btn-sm;
+          @extend .btn-outline-light;
+        }
 
-          .add-button {
-            @extend .btn;
-            @extend .btn-sm;
-            @extend .btn-outline-light;
-          }
+        .dv-filter-row-count-badge {
+          @extend .badge;
+          @extend .bg-light;
+        }
 
-          .dv-filter-row-count-badge {
-            @extend .badge;
-            @extend .bg-light;
-          }
-
+        .dv-dataset-filter-collapse-link {
+          @extend .text-white;
+          @extend .text-decoration-none;
         }
       }
 
@@ -465,13 +497,6 @@ dv-filter-wrapper {
         @extend .border-secondary;
 
         .dv-dataset-filter-header {
-          @extend .card-header;
-          display: flex;
-          justify-content: flex-start;
-          justify-content: space-between;
-          align-items: center;
-          column-gap: 5px;
-
           @extend .card-header;
           @extend .text-black;
 
