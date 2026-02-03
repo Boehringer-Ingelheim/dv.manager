@@ -1,3 +1,7 @@
+# dv.manager 2.2.0-9011
+- Adds the possibility of adding labels to datasets
+- Adds an overlay to indicate filter loading times
+
 # dv.manager 2.2.0-9010
 - Update documentation
 - Remove magrittr pipe
