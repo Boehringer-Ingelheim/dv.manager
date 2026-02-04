@@ -493,13 +493,13 @@ run_mock_print_afmm <- function() {
       "Send and Receive 1" = mod_com_test(
         choices = 1:3,
         message = "The other module has selected",
-        value = "mod_2",
+        module_from_id = "mod_2",
         mod_id = "mod_1"
       ),
       "Send and Receive 2" = mod_com_test(
         choices = c("a", "b", "c"),
         message = "The other module has selected",
-        value = "mod_1",
+        module_from_id = "mod_1",
         mod_id = "mod_2"
       ),
       "Simple" = mod_simple("adsl", "unfiltered_dataset_list", "modSimp"),
