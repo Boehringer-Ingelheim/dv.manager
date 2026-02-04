@@ -235,24 +235,18 @@ app_server_ <- function(input, output, session, opts) {
   afmm <- list(
     data = dataset_lists,
     unfiltered_dataset = shiny::reactive({
-      log_warn(
-        "(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]]."
-      ) # nolintr
+      # log_warn("(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]].") # nolintr
       unfiltered_dataset_list()
     }),
     unfiltered_dataset_list = unfiltered_dataset_list,
     filtered_dataset = shiny::reactive({
-      log_warn(
-        "(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]]."
-      ) # nolintr
+      #log_warn("(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]].") # nolintr
       filtered_dataset_list()
     }),
     filtered_dataset_list = filtered_dataset_list,
     url_parameters = url_parameters,
     dataset_name = shiny::reactive({
-      log_warn(
-        "(Message for the module developer) afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]]."
-      ) # nolintr
+      # log_warn("(Message for the module developer) afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]].") # nolintr
       input$selector
     }),
     dataset_metadata = list(
