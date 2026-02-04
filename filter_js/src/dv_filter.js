@@ -1041,8 +1041,8 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     dataset_name: dataset_name,
     log: filter_state_log
   }
-  return (res)
-}
+  return (res) 
+} 
 
 let global_blockly_disposal = {}; // FIXME: This is a very ugly way of disposing the workspace but less resistance route currently
 
@@ -1051,9 +1051,9 @@ let blockly_static_init = function(blockly_root_el, id) {
   let show_button_id = id + "-blockly-filter-checkbox"; // Namespaced button
 
   let show_label = document.createElement('label');
-  show_label.textContent = "Show filter";
+  show_label.textContent = "Edit Filter";
   show_label.setAttribute("for", show_button_id);
-  show_label.className = "btn btn-primary";
+  show_label.className = "btn btn-primary btn-lg";
 
   let show_checkbox = document.createElement("input");
   show_checkbox.type = "checkbox";
@@ -1286,19 +1286,18 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   __logger("Creating UI for " + dataset.name);  
   
   let dataset_filter_container = document.createElement(SC.TAG.DATASET_FILTER);
-  dataset_filter_container.className = "card border-primary mb-2";
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.DATASET_NAME, dataset.name);
   dataset_filter_container.setAttribute(SC.ATTRIBUTE.SUBJECT_FILTER, is_subject_filter);
 
   let card_heading = document.createElement("div");
-  card_heading.className = "card-header bg-primary text-white dv-data-filter-header"; 
+  card_heading.className = "dv-dataset-filter-header"; 
   
   let title_tag_container = document.createElement("h6");  
-  title_tag_container.className = "card-title mb-0 dv-title-tag ";  
+  title_tag_container.className = "dv-title-tag";  
 
   let card_collapse_link = document.createElement("a");
   card_collapse_link.textContent = dataset.name;
-  card_collapse_link.className = "text-white text-decoration-none";
+  card_collapse_link.className = "dv-dataset-filter-collapse-link";
   card_collapse_link.setAttribute("data-bs-toggle", "collapse");  
   card_collapse_link.setAttribute("data-bs-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .card-body`);
   card_collapse_link.href = "#"; // Recommended to make it keyboard-accessible
@@ -1306,10 +1305,11 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   title_tag_container.appendChild(card_collapse_link);  
 
   let filter_count_tag = document.createElement(SC.TAG.FILTER_COUNT_TAG);
+  filter_count_tag.className = "dv-filter-row-count-badge";
   title_tag_container.appendChild(filter_count_tag);
 
   let row_count_tag = document.createElement(SC.TAG.ROW_COUNT_TAG);
-  row_count_tag.className = "badge bg-light";
+  row_count_tag.className = "dv-filter-row-count-badge";
   title_tag_container.appendChild(row_count_tag);
 
   card_heading.appendChild(title_tag_container);
@@ -1317,20 +1317,19 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   if (is_subject_filter) {
     let icon = document.createElement("span");
     icon.className = "glyphicon glyphicon-user";  
+    icon.title = "Subject Filter";
     card_heading.appendChild(document.createTextNode(" "));
     card_heading.appendChild(icon);
   }
 
   let add_button = document.createElement("button");
-  add_button.className = "btn btn-outline-light btn-sm";
-  add_button.className = "btn btn-outline-light btn-sm";
+  add_button.className = "add-button";  
 
   let add_icon = document.createElement("i");
   add_icon.className = "glyphicon glyphicon-plus";
   add_button.appendChild(add_icon);
 
   card_heading.appendChild(add_button);
-
   
   dataset_filter_container.appendChild(card_heading);
 
@@ -1376,7 +1375,6 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
     }
     select.appendChild(option);
   }
- 
   
   card_body.appendChild(select);
   
@@ -1456,10 +1454,10 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
   if(selected_variables.length > 0) {
     count_tag.textContent = selected_variables.length;
-    count_tag.className = "badge bg-light";
+    count_tag.classList.remove("dv-hide");
   } else {
     count_tag.textContent = "";
-    count_tag.className = "dv-hide";
+    count_tag.classList.add("dv-hide");
   }
 
   for(let i = 0; i < selected_variables.length; ++i) {      
@@ -1535,7 +1533,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
       let value = current_variable.value;
-      let count = current_variable.value;
+      let count = current_variable.count;
       __assert(()=>count.every((v, i, a) => i === 0 || a[i-1] >= v)) // Check is sorted
       __assert(()=>value.length === count.length) // Check is sorted
 
@@ -1611,7 +1609,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       let numeric_finite_max_and_min = is_numeric_finite(current_variable.min) && is_numeric_finite(current_variable.max);
       
       if(numeric_finite_max_and_min) {
-        const MAGIC_NEGATIVE_MARGIN = -25;  // This is the distance between of the ion.range.slider top and the slider line
+      const MAGIC_NEGATIVE_MARGIN = -25;  // This is the distance between of the ion.range.slider top and the slider line
       const histogram_container = document.createElement("div");
       histogram_container.className = "histogram";
       histogram_container.style = `display:flex; align-items:flex-end; margin-bottom: ${MAGIC_NEGATIVE_MARGIN}px;`
@@ -1653,6 +1651,9 @@ let create_variable_filter_controls = function(variable_filter_control_container
           to: to,
           skin: "shiny",
           grid: "true",
+          prettify: function(num) {
+            return +num.toPrecision(4); // limit to 4 significant figures
+          },
           onFinish: function () {$(numerical_input).trigger("finished.ion.range.slider");}
       });
       } else {
@@ -1920,7 +1921,7 @@ let simple_static_init = function(simple_root_el) {
   }
 );
 
-  $(simple_root_el).on('click', `${SC.TAG.DATASET_FILTER} .dv-data-filter-header button`, function(event) {
+  $(simple_root_el).on('click', `${SC.TAG.DATASET_FILTER} .dv-dataset-filter-header button`, function(event) {
     let select = event.target.closest(SC.TAG.DATASET_FILTER).querySelector("select");
     let filter_body_el = event.target.closest(`${SC.TAG.DATASET_FILTER}`).querySelector(".card-body");
     let filter_body_collapse_instance = bootstrap.Collapse.getInstance(filter_body_el);
@@ -2110,11 +2111,12 @@ let FC = {
     SAVED_STATES_CONTAINER: "dv-filter-saved-states-container",
     SAVED_STATE_BUTTON: "dv-filter-saved-state-button",
     REMOVED_SAVED_STATE_BUTTON: "dv-filter-removed-saved-state-button",
+    TOP_CONTROL_CONTAINER: "dv-filter-top-control-container"
+
   },
   MODE: {
-    SIMPLE: "simple",
-    DATASETS: "datasets",
-    BLOCKLY: "blockly"
+    SIMPLE: "Basic",
+    BLOCKLY: "Advanced"
   },
   EVENT: {
     NEW_FILTER_VALUE: "new_filter_value",
@@ -2210,7 +2212,7 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, !saved_filter_states ? [] : saved_filter_states);
   set_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME, subject_dataset_name);
   
-  let top_control_container = document.createElement("dv-filter-top-control-container");
+  let top_control_container = document.createElement(FC.TAG.TOP_CONTROL_CONTAINER);
   top_control_container.className = "p-3 m-3 bg-light border rounded";
 
   root_el.appendChild(top_control_container);
@@ -2230,17 +2232,18 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
 
 
   let clear_all_button = document.createElement(FC.TAG.CLEAR_ALL_BUTTON);
-  clear_all_button.className = "btn btn-primary btn-sm";  
-  clear_all_button.setAttribute("title", "Clear all filters");
-
+  clear_all_button.className = "btn btn-primary btn-sm mt-2";  
+  clear_all_button.setAttribute("title", "Clear current filter");
+  
+  
   let clear_all_icon = document.createElement("span");
-  clear_all_icon.className = "glyphicon glyphicon-trash";
+  clear_all_icon.className = "glyphicon glyphicon-trash";  
   clear_all_button.appendChild(clear_all_icon);
-
+  clear_all_button.append(" Clear current filter");
+  clear_all_button.style.width = "100%";
 
   let select = document.createElement('select');
   select.className = "form-select form-select-sm w-auto d-inline-block";
-
   
   let saved_states_container = document.createElement(FC.TAG.SAVED_STATES_CONTAINER);
 
@@ -2256,10 +2259,10 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
 
   let save_button = document.createElement(FC.TAG.SAVE_BUTTON);
   save_button.className = "btn btn-primary btn-sm";  
-  save_button.setAttribute("title", "Save current filter");
+  save_button.setAttribute("title", "Pin current filter");
 
   let save_icon = document.createElement("span");
-  save_icon.className = "glyphicon glyphicon-floppy-disk";
+  save_icon.className = "glyphicon glyphicon-pushpin";
   save_button.appendChild(save_icon);
   save_controls.appendChild(save_button);
 
@@ -2268,12 +2271,13 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
 
   top_control_container.appendChild(select);
   top_control_container.appendChild(export_button);
-  top_control_container.appendChild(clear_all_button);
   top_control_container.appendChild(save_controls);
   top_control_container.appendChild(saved_states_container);
 
+  top_control_container.appendChild(clear_all_button);
+
   let bottom_container = document.createElement("div");
-  bottom_container.className = "mb-3 p-1 border bg-light";
+  bottom_container.className = "mb-3 p-1";
 
   
   static_ret = {};
@@ -2361,21 +2365,29 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
     for (let i = 0; i < saved_states.length; ++i) {
       let group = document.createElement("div");
       group.className = "input-group input-group-sm w-auto";
+      group.style.flexWrap = "nowrap";
 
       // the "main action" button
       let button = document.createElement(FC.TAG.SAVED_STATE_BUTTON);
-      button.className = "btn btn-primary";
-      button.textContent = saved_states[i].name;
+      button.className = "btn btn-primary";      
       button.setAttribute(
         FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME,
         saved_states[i].name
       );
+      button.style.whiteSpace = "normal";
+      button.style.minWidth = "0";
+
+      let button_span = document.createElement("span");
+      button_span.textContent = saved_states[i].name;
+      button_span.style.wordBreak = "break-word";
+      button.appendChild(button_span);
 
       // the remove button as an input-group-append
       let remove_button = document.createElement(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
       remove_button.type = "button";
       remove_button.className = "btn btn-primary";
       remove_button.innerHTML = "&times;";
+      remove_button.style.flexShrink = "0";
       remove_button.setAttribute(
         FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME,
         saved_states[i].name
@@ -2412,10 +2424,11 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   });
 
   saved_states_list.addEventListener("click", function(event) {
-    if(event.target.tagName.toLowerCase() === FC.TAG.SAVED_STATE_BUTTON) {
+    let load_saved_button = event.target.closest(FC.TAG.SAVED_STATE_BUTTON);
+    if (load_saved_button) {
       __logger("Loading filter");
       let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);
-      let state_name = event.target.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
+      let state_name = load_saved_button.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
       let new_state = saved_states.find((obj)=> obj.name===state_name);
       if(!new_state) {
         throw new Error(`Could not find saved state ${state_name}`);
@@ -2424,11 +2437,11 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
       root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true })); // Trigger filter redraw after cleaning filters
     };
 
-    
-    if(event.target.tagName.toLowerCase() === FC.TAG.REMOVED_SAVED_STATE_BUTTON) {
+    let remove_saved_button = event.target.closest(FC.TAG.REMOVED_SAVED_STATE_BUTTON);
+    if (remove_saved_button) {
       __logger("Removing filter");
       let saved_states = get_filter_property(root_el, FC.PROPERTY.SAVED_STATES);      
-      let to_be_removed_state_name = event.target.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
+      let to_be_removed_state_name = remove_saved_button.getAttribute(FC.ATTRIBUTE.SAVED_FILTER_STATE_NAME);
       saved_states = saved_states.filter(obj => obj.name !== to_be_removed_state_name);
       set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, saved_states);
       render_saved_states(saved_states);

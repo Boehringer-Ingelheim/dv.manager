@@ -85,7 +85,7 @@ check_filter_data <- function(filter_data, datasets) {
       }
       filter_data %in% names(dataset_list)
     }
-  ) %>%
+  ) |>
     purrr::keep(~ !.x)
 
   if (length(filter_data_check) > 0) {
@@ -200,7 +200,7 @@ check_set_filter_info <- function(filter_default_state) {
       log_inform(msg)
       filter_default_state <- paste0(readLines(filter_default_state), collapse = "\n")
     }
-    capture.output(x <- try(deserialize_filter_state_from_client(filter_default_state), silent = TRUE))
+    utils::capture.output(x <- try(deserialize_filter_state_from_client(filter_default_state), silent = TRUE))
     if (inherits(x, "try-error")) {
       # We only parse to check JSON is correctly set, it will be used further down the code
       stop("`filter_default_state` cannot be parsed as JSON")
@@ -217,7 +217,7 @@ check_set_subgroup_info <- function(enable_subgroup) {
 }
 
 check_parsable_json_input <- function(x) {
-  capture.output(p <- try(deserialize_filter_state_from_client(x), silent = TRUE))
+  utils::capture.output(p <- try(deserialize_filter_state_from_client(x), silent = TRUE))
   if (inherits(p, "try-error")) {
     msg <- paste("Error parsing JSON:", substitute(x))
     stop(msg)

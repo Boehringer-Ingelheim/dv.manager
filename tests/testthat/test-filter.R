@@ -1952,7 +1952,7 @@ local({
           NA_count = 1L,
           min = 1,
           max = 2,
-          density = hist(d[["var"]], plot = FALSE)[["density"]]
+          density = graphics::hist(d[["var"]], plot = FALSE)[["density"]]
         )
       )
     }
@@ -2185,7 +2185,7 @@ local({
             Simple3 = dv.manager:::mod_simple(
               module_id = "mod13",
               dataset = "ds1",
-              from = "filtered_dataset"
+              from = "filtered_dataset_list"
             )
           ),
           filter_data = "ds1",
@@ -2216,7 +2216,7 @@ local({
             Simple3 = dv.manager:::mod_simple(
               module_id = "mod13",
               dataset = "ds1",
-              from = "filtered_dataset"
+              from = "filtered_dataset_list"
             )
           ),
           filter_data = "ds1",
@@ -2245,7 +2245,7 @@ local({
             Simple3 = dv.manager:::mod_simple(
               module_id = "mod13",
               dataset = "ds1",
-              from = "filtered_dataset"
+              from = "filtered_dataset_list"
             )
           ),
           filter_data = "ds1",
@@ -2269,7 +2269,7 @@ local({
           Simple3 = dv.manager:::mod_simple(
             module_id = "mod13",
             dataset = "ds1",
-            from = "filtered_dataset"
+            from = "filtered_dataset_list"
           )
         ),
         filter_data = "ds1",
@@ -2326,7 +2326,7 @@ local({
             Simple3 = dv.manager:::mod_simple(
               dataset = "ds2",
               module_id = "mod",
-              from = "filtered_dataset"
+              from = "filtered_dataset_list"
             )
           ),
           filter_data = "ds1",
@@ -2381,7 +2381,7 @@ local({
             Simple3 = dv.manager:::mod_simple(
               dataset = "ds2",
               module_id = "mod",
-              from = "filtered_dataset"
+              from = "filtered_dataset_list"
             )
           ),
           filter_data = "ds1",
@@ -2421,7 +2421,7 @@ local({
           Simple3 = dv.manager:::mod_simple(
             dataset = "ds1",
             module_id = "mod",
-            from = "filtered_dataset"
+            from = "filtered_dataset_list"
           )
         ),
         filter_data = "ds1",
@@ -2459,7 +2459,7 @@ local({
               Simple3 = dv.manager:::mod_simple(
                 dataset = "ds1",
                 module_id = "mod",
-                from = "filtered_dataset"
+                from = "filtered_dataset_list"
               )
             ),
             filter_data = "ds1",

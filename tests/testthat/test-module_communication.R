@@ -50,7 +50,8 @@ test_that(
           mod_id = "mod_2"
         )
       )),
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(
@@ -60,8 +61,8 @@ test_that(
         session$setInputs(selector = "DS1")
         expect_equal(module_output[["mod_2"]]()(), "1")
       }
-    ) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    ) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )
@@ -107,7 +108,8 @@ test_that(
           mod_id = "mod_2"
         )
       )),
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(
@@ -117,8 +119,8 @@ test_that(
         session$setInputs(selector = "DS1")
         expect_equal(module_output[["mod_2"]](), "1")
       }
-    ) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    ) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )
@@ -206,7 +208,8 @@ test_that(
         "id 3" = mod_return_static("mod_3"),
         "id 2" = mod_return_output("mod_2")
       )),
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(
@@ -217,8 +220,8 @@ test_that(
         expect_equal(module_output[["mod_2"]]()[["mod_3"]], "1")
         expect_equal(module_output[["mod_2"]]()[["mod_1"]](), "1")
       }
-    ) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    ) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )

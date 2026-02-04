@@ -46,12 +46,7 @@ app_ui <- function(request_id) {
       )
     )
   } else {
-    filter_ui <- shiny::tabsetPanel(
-      shiny::tabPanel(
-        title = "Filter",
-        new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
-      )
-    )
+    filter_ui <- new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
   }
 
   collapsable_ui <-
@@ -72,7 +67,7 @@ app_ui <- function(request_id) {
     shiny::bookmarkButton("", class = "navbar-btn"),
     # Remove export functionality until new order
     # shiny::actionButton(ns("open_report_modal"), shiny::span(shiny::icon("download")), class = "navbar-btn"), # nolint
-    shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("question")), class = "navbar-btn"),
+    # shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("question")), class = "navbar-btn"), # nolint
     class = "dv_top_button_group"
   )
 
@@ -95,13 +90,15 @@ app_ui <- function(request_id) {
     ),
     shiny::div(
       class = "sidebar",
-      shiny::tags$span(class = "logo-text", "DaVinci"),
-      shiny::tags$label(
-        `for` = "click",
-        class = "menu-icon",
-        shiny::div(class = "line line-1"),
-        shiny::div(class = "line line-2"),
-        shiny::div(class = "line line-3")
+      shiny::div(
+        shiny::tags$span(class = "logo-text", "DaVinci"),
+        shiny::tags$label(
+          `for` = "click",
+          shiny::icon("times", class = "icon-close"),
+          shiny::icon("chevron-right", class = "icon-open"),
+          class = "logo-control"
+        ),
+        class = "logo-container"
       ),
       collapsable_ui
     )

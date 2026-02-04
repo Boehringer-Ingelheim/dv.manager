@@ -19,8 +19,7 @@
 #' @param module `{shiny}` module
 #' @param disable_css_namespacing disables css namespacing and returns the input module unmodified
 #' @keywords internal
-ns_css <- function(module = NULL,
-                   disable_css_namespacing = isTRUE(getOption("dv.manager.disable_css_namespacing"))) {
+ns_css <- function(module = NULL, disable_css_namespacing = isTRUE(getOption("dv.manager.disable_css_namespacing"))) {
   if (disable_css_namespacing) {
     warning("Skipping css namespacing")
     return(module)
@@ -91,18 +90,18 @@ ns_css <- function(module = NULL,
 get_app_theme <- function(custom = FALSE, version = 5) {
   if (!isTRUE(getOption("dv_manager_ignore_css"))) {
     if (isFALSE(custom)) {
-      theme <- bslib::bs_theme(version = version) %>%
-        bslib::bs_add_variables("primary" = "#002f62") %>%
+      theme <- bslib::bs_theme(version = version) |>
+        bslib::bs_add_variables("primary" = "#002f62") |>
         bslib::bs_add_rules(sass::sass_file(app_sys("www/css/custom.scss")))
     } else {
-      theme <- bslib::bs_theme(version = version) %>%
+      theme <- bslib::bs_theme(version = version) |>
         sass::sass_bundle(sass::sass_layer(
           defaults = list(sass::sass_file(app_sys("www/themes/_variables.scss"))),
           rules = list(
             sass::sass_file(app_sys("www/themes/_dark.scss")),
             sass::sass_file(app_sys("www/css/custom.scss"))
           )
-        )) %>%
+        )) |>
         structure(class = class(bslib::bs_theme(version = version)))
     }
   } else {

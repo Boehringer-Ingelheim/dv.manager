@@ -12,15 +12,15 @@ run_mock_app_tab_group <- function() {
       )
     ),
     module_list = list(
-      "Separate tab" = mod_simple("adsl", "unfiltered_dataset", "mod1"),
+      "Separate tab" = mod_simple("adsl", "unfiltered_dataset_list", "mod1"),
       "Switch to nest" = mod_switch(
         "Mod 5",
         selected = c("mod5"),
         "mod_switch1"
       ),
       "Module Tab" = tab_group(
-        "Simple2" = mod_simple("adsl", "unfiltered_dataset", "mod2"),
-        "Simple3" = mod_simple("adae", "filtered_dataset", "mod3"),
+        "Simple2" = mod_simple("adsl", "unfiltered_dataset_list", "mod2"),
+        "Simple3" = mod_simple("adae", "filtered_dataset_list", "mod3"),
         "Send and Receive 2" = mod_com_test(
           choices = c("a", "b", "c"),
           message = "The other module has selected",
@@ -28,8 +28,8 @@ run_mock_app_tab_group <- function() {
           mod_id = "mod_rec_2"
         ),
         "Nested modules" = tab_group(
-          "Simple4" = mod_simple("adsl", "unfiltered_dataset", "mod4"),
-          "Simple5" = mod_simple("adae", "filtered_dataset", "mod5"),
+          "Simple4" = mod_simple("adsl", "unfiltered_dataset_list", "mod4"),
+          "Simple5" = mod_simple("adae", "filtered_dataset_list", "mod5"),
           "Send and Receive 1" = mod_com_test(
             choices = 1:3,
             message = "The other module has selected",

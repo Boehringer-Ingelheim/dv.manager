@@ -58,12 +58,13 @@ test_that("integration with dv.loader;
     filter_data = "mpg",
     module_list = list(
       "identity" = mod_identity(
-        "unfiltered_dataset",
+        "unfiltered_dataset_list",
         "id_1"
       )
     ),
     filter_key = "car",
-    filter_info = list(filter_default_state = NULL)
+    filter_info = list(filter_default_state = NULL),
+    enable_subgroup = FALSE
   )
 
   dated_dataset <- dv.manager:::add_date_range(datasets[["mpg_carb"]])

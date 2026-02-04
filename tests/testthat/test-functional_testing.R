@@ -79,12 +79,13 @@ local({
     filter_data = "mpg",
     module_info = resolve_module_list(list(
       "identity" = mod_identity(
-        "unfiltered_dataset",
+        "unfiltered_dataset_list",
         "id_1"
       )
     )),
     filter_key = "car",
-    filter_info = list(filter_default_state = NULL)
+    filter_info = list(filter_default_state = NULL),
+    enable_subgroup = FALSE
   )
 
   # Tests ----
@@ -241,19 +242,20 @@ local({
         filter_data = "mpg",
         module_list = list(
           "identity" = mod_identity(
-            "unfiltered_dataset",
+            "unfiltered_dataset_list",
             "id_1"
           )
         ),
         filter_key = "car",
-        filter_info = list(filter_default_state = NULL)
+        filter_info = list(filter_default_state = NULL),
+        enable_subgroup = FALSE
       )
 
       testServer(app_server_test(testing_options), {
         session$setInputs(selector = "mpg_carb")
         expect_equal(output$dataset_date, "Dataset date: Date unavailable")
-      }) %>%
-        expect_warning(regexp = "(?:mpg|carb|wt) has no date. no meta attribute or no mtime entry") %>%
+      }) |>
+        expect_warning(regexp = "(?:mpg|carb|wt) has no date. no meta attribute or no mtime entry") |>
         expect_warning(regexp = "(?:mpg|carb|wt) has no date. no meta attribute or no mtime entry")
     }
   )

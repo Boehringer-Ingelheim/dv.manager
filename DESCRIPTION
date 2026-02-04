@@ -1,7 +1,7 @@
 Package: dv.manager
 Type: Package
 Title: DaVinci Module Manager
-Version: 2.2.0-9009
+Version: 2.2.0-9010
 Authors@R: c(person("Boehringer-Ingelheim Pharma GmbH & Co.KG", role = c("cph", "fnd")),
     person('Luis', 'Morís Fernández', email = 'luis.moris.fernandez@gmail.com', role = c('cre', 'aut')),
     person('Sorin', 'Voicu', email = 'sorin.voicu.ext@boehringer-ingelheim.com', role = c('aut')))
@@ -17,14 +17,12 @@ Imports:
     purrr (>= 0.3.4),
     dplyr (>= 1.0.3),
     lubridate (>= 1.7.9.2),    
-    shinyjs (>= 2.0.0),    
-    httr (>= 1.4.2),
+    shinyjs (>= 2.0.0),
     checkmate (>= 2.1.0),
     cli (>= 3.3.0),
     jsonlite,
     jsonvalidate,
-    shinyWidgets,
-    digest
+    shinyWidgets
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.3

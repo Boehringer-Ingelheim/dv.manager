@@ -20,15 +20,16 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(app_server_test(testing_options), {
       session$setInputs(selector = "DS1")
       expect_equal(output$dataset_name, "Dataset name: DS1")
-    }) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    }) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )
@@ -52,15 +53,16 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(app_server_test(testing_options), {
       session$setInputs(selector = "DS1")
       expect_equal(output$dataset_name, "Dataset name: DS1")
-    }) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    }) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )
@@ -81,7 +83,8 @@ test_that(
         "mod_1" = mod_identity(1, from = NULL, "mod_1"),
         "mod_2" = mod_identity(2, from = NULL, "mod_2")
       )),
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(app_server_test(testing_options), {
@@ -103,15 +106,16 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     shiny::testServer(app_server_test(testing_options), {
       session$setInputs(selector = "DS1")
       expect_equal(output$dataset_name, "Dataset name: DS1")
-    }) %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
-      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") %>%
+    }) |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
+      expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry") |>
       expect_warning(regexp = "[abc]{1} has no date. no meta attribute or no mtime entry")
   }
 )
@@ -127,7 +131,8 @@ test_that(
       filter_data = NULL,
       module_info = resolve_module_list(list("mod_1" = mod_identity(1, mod_id = "mod_1"))),
       filter_key = NULL,
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     testServer(app_server_test(testing_options), {
@@ -150,9 +155,10 @@ test_that(
       data = list(),
       module_info = resolve_module_list(list()),
       filter_key = NULL,
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
-    shiny::testServer(app_server_test(testing_options), {}) %>%
+    shiny::testServer(app_server_test(testing_options), {}) |>
       expect_error(regexp = NA)
   }
 )
@@ -173,7 +179,7 @@ test_that(
       c = lubridate::ymd_hms("2021-01-16 00:00:00")
     )
 
-    domain_list <- domain_list %>%
+    domain_list <- domain_list |>
       purrr::map2(
         date_list,
         ~ {
@@ -191,7 +197,8 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -215,7 +222,7 @@ test_that(
       c = lubridate::ymd_hms("2021-01-13 00:00:00")
     )
 
-    domain_list <- domain_list %>%
+    domain_list <- domain_list |>
       purrr::map2(
         date_list,
         ~ {
@@ -233,7 +240,8 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -257,7 +265,7 @@ test_that(
       c = lubridate::ymd_hms("2021-01-13 00:00:00")
     )
 
-    domain_list <- domain_list %>%
+    domain_list <- domain_list |>
       purrr::map2(
         date_list,
         ~ {
@@ -278,7 +286,8 @@ test_that(
       filter_data = "a",
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
 
     withr::local_locale(.new = list("LC_TIME" = "en_US.UTF-8"))
@@ -288,7 +297,7 @@ test_that(
       expect_equal(output$dataset_date, "Dataset date: 2021-Jan-13 (UTC)")
       session$setInputs(selector = "DS2")
       expect_equal(output$dataset_date, "Dataset date: Date unavailable")
-    }) %>%
+    }) |>
       expect_warning(regexp = "a has no date. no meta attribute or no mtime entry")
   }
 )
@@ -315,7 +324,8 @@ test_that(
       module_info = resolve_module_list(list()),
       filter_key = "mpg",
       reload_period = lubridate::duration(1, "seconds"),
-      filter_info = list(filter_default_state = NULL)
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE
     )
     withr::with_dir(tempdir(), {
       system2(command = "touch", args = c("restart.txt"), stdout = TRUE)

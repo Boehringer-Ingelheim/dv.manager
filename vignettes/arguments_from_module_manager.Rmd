@@ -24,14 +24,12 @@ the server function is called. This parameter by convention usually called `afmm
 
 1. **data**: a list of lists of data frames (or of functions that return data frames). Pass-through of the `run_app` argument by the same name.
 
-1. **unfiltered_dataset**: a reactive list containing the tables inside the selected dataset before filtering them.
+1. **unfiltered_dataset_list**: a reactive list containing the tables inside the selected dataset before filtering them.
   
-1. **filtered_dataset**: a reactive list containing the tables inside the selected dataset after filtering them.
+1. **filtered_dataset_list**: a reactive list containing the tables inside the selected dataset after filtering them.
   
 1. **url_parameters**: a reactive list of the parameters passed in the url.
   
-1. **dataset_name**: a reactive string containing the name of the selected dataset. (Deprecated)
-
 1. **dataset_metadata**: a list with the following entries:
    a. **name**: a reactive string with the name of the selected dataset
    a. **date_range**: a reactive character vector with two entries earliest and latest modification date in the dataset.
@@ -118,9 +116,9 @@ mod_table <- function(table_name, filtered = FALSE, mod_id) {
     ui = table_ui,
     server = function(afmm) {
       if (filtered) {
-        source <- "filtered_dataset"
+        source <- "filtered_dataset_list"
       } else {
-        source <- "unfiltered_dataset"
+        source <- "unfiltered_dataset_list"
       }
       table_server(id = mod_id, dataset = shiny::reactive(afmm[[source]]()[[table_name]]))
     },
@@ -146,14 +144,15 @@ run_app(
 
 **A note on reactives**
 
-The call to afmm is included in a reactive, because `afmm[["unfiltered_dataset]]` and `afmm[["filtered_dataset]]` are reactives, therefore, they can only be accessed inside a reactive environment. Also note the parenthesis resolving the reactive before doing the subsetting. This does not differ from usual reactive programming.
+The call to afmm is included in a reactive, because `afmm[["unfiltered_dataset_list"]]` and `afmm[["filtered_dataset_list"]]` are reactives, therefore, they can only be accessed inside a reactive environment. Also note the parenthesis resolving the reactive before doing the subsetting. This does not differ from usual reactive programming.
 
 ## Accessing dataset_name
 
 Find below an example on how to access the dataset_name
 
 ```{r, eval=FALSE}
-dataset_name_UI <- function(id) { # nolint
+dataset_name_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::textOutput(ns("text"))
@@ -203,7 +202,8 @@ This also forces us to wrap all `afmm[["module_output"]]` calls in a reactive ca
 Lets see an example of this. In this case we have created a module that receives a value and displays it. In this case we will receive that value from another module.
 
 ```{r eval = FALSE}
-com_UI <- function(id, choices = c(1, 2, 3), message) { # nolint
+com_UI <- function(id, choices = c(1, 2, 3), message) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::selectizeInput(ns("select"), label = "Select a number", choices = choices),
@@ -276,7 +276,8 @@ The `utils` field contains a list of utility functions for actions that need mod
 ```{r, eval = FALSE}
 ########### Switch module
 
-switch_UI <- function(id, name) { # nolint
+switch_UI <- function(id, name) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::h1(name),
