@@ -7,33 +7,45 @@ local({
   })
 
   test_that("fails when accesing a missing element using [[]]", {
-    expect_error(
+    expect_warning(
       dv_mosl[["c"]],
-      regexp = "Element 'c' not found in module output",
-      class = "shiny.silent.error"
-    )
+      regexp = "Element 'c' not found in module output"
+    ) |>
+      expect_error(
+        regexp = "Element 'c' not found in module output",
+        class = "shiny.silent.error"
+      )
   })
 
   test_that("fails when accesing a missing element using $", {
-    expect_error(
+    expect_warning(
       dv_mosl$c,
-      regexp = "Element 'c' not found in module output",
-      class = "shiny.silent.error"
-    )
+      regexp = "Element 'c' not found in module output"
+    ) |>
+      expect_error(
+        regexp = "Element 'c' not found in module output",
+        class = "shiny.silent.error"
+      )
   })
 
   test_that("fails when accesing missing elements using []", {
-    expect_error(
+    expect_warning(
       dv_mosl[c("c", "d")],
-      regexp = "Elements 'c', 'd' not found in module_output",
-      class = "shiny.silent.error"
-    )
+      regexp = "Elements 'c', 'd' not found in module_output"
+    ) |>
+      expect_error(
+        regexp = "Elements 'c', 'd' not found in module_output",
+        class = "shiny.silent.error"
+      )
 
-    expect_error(
+    expect_warning(
       dv_mosl[c("a", "d")],
-      regexp = "Elements 'd' not found in module_output",
-      class = "shiny.silent.error"
-    )
+      regexp = "Elements 'd' not found in module_output"
+    ) |>
+      expect_error(
+        regexp = "Elements 'd' not found in module_output",
+        class = "shiny.silent.error"
+      )
   })
 
   test_that("returns element when accesing a present element using [[]]", {

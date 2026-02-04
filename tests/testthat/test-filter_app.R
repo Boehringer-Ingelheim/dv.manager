@@ -766,7 +766,7 @@ local({
       bmk_url <- app$get_js("window.location.href")
       bookmark_app <- suppressWarnings(shinytest2::AppDriver$new(bmk_url))
       on.exit(app$stop(), add = TRUE, after = FALSE)
-      bookmark_app$wait_for_idle()
+      suppressWarnings(bookmark_app$wait_for_idle())
       app_input_values <- app$get_values()[["input"]]
       bmk_input_values <- bookmark_app$get_values()[["input"]]
       expect_identical(app_input_values, bmk_input_values)

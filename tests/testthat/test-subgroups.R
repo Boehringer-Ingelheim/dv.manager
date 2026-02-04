@@ -114,6 +114,20 @@ local({
 
   root_app <- start_app_driver(
     {
+      date13 <- lubridate::ymd_hms("2021-01-13 00:00:00")
+      date14 <- lubridate::ymd_hms("2021-01-14 00:00:00")
+
+      add_date <- function(dataset_list, date) {
+        purrr::map2(
+          dataset_list,
+          date,
+          function(.x, .y) {
+            attr(.x, "meta") <- list(mtime = .y)
+            .x
+          }
+        )
+      }
+
       datasets <- list(
         list1 = list(
           dataset1 = data.frame(
@@ -124,7 +138,8 @@ local({
             var1 = c("a2", "b2", "c2"),
             var2 = c("d2", "e2", "f2")
           )
-        ),
+        ) |>
+          add_date(date13),
         list2 = list(
           dataset1 = data.frame(
             var1 = c("a1", "b1", "c1")
@@ -133,7 +148,8 @@ local({
             var1 = c("a2", "b2", "c2"),
             var2 = c("d2", "e2", "f2")
           )
-        )
+        ) |>
+          add_date(date13)
       )
 
       app <- dv.manager::run_app(
