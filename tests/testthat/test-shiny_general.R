@@ -168,7 +168,6 @@ local({
       vdoc[["add_spec"]]("app should show an startup message", c(specs$INTERFACE$INTERFACE_STARTUP_MESSAGE)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
         expect_equal(app$get_html(".modal-body"), "<div class=\"modal-body\">Sample startup message</div>")
       }
     )
@@ -178,7 +177,6 @@ local({
         vdoc[["add_spec"]](c(specs$INTERFACE$INTERFACE_TITLE)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
         expect_identical(app$get_js("document.title"), args[["title"]])
       }
     )
@@ -378,7 +376,6 @@ local({
     ),
     {
       skip_if_not_running_shiny_tests()
-      skip_if_suspect_check()
 
       app <- shinytest2::AppDriver$new(root_app$get_url())
 
@@ -406,7 +403,6 @@ local({
     ),
     {
       skip_if_not_running_shiny_tests()
-      skip_if_suspect_check()
 
       app <- shinytest2::AppDriver$new((root_app$get_url()))
 
