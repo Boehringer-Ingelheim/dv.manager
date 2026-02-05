@@ -842,8 +842,8 @@ run_mock_app_labels <- function(data) {
     }
     data <- list(
       "D1" = list(
-        mtcars = add_dummy_labels(mtcars),
-        mtcars2 = add_dummy_labels(mtcars)
+        mtcars = add_dummy_labels(datasets::mtcars),
+        mtcars2 = add_dummy_labels(datasets::mtcars)
       )
     )
   }

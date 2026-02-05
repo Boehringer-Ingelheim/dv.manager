@@ -1,9 +1,9 @@
 # nolint start
 # Testing app_server ----
 domain_list <- list(
-  a = mtcars,
-  b = mtcars,
-  c = mtcars
+  a = datasets::mtcars,
+  b = datasets::mtcars,
+  c = datasets::mtcars
 )
 test_that(
   vdoc[["add_spec"]](

@@ -49,7 +49,7 @@ test_that(
     c(specs$DATASETS$DATASET_LIST_MOD_DATE_RANGE)
   ),
   {
-    domain_list <- setNames(rep(list(mtcars), 3), c("a", "b", "c")) |>
+    domain_list <- setNames(rep(list(datasets::mtcars), 3), c("a", "b", "c")) |>
       purrr::map2(
         list(
           a = lubridate::ymd_hms("2021-01-13 00:00:00"),

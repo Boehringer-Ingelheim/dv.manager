@@ -5,24 +5,24 @@ local({
   datasets <- list(
     mpg_carb = list(
       mpg = dplyr::select(
-        tibble::as_tibble(mtcars, rownames = "car"),
+        tibble::as_tibble(datasets::mtcars, rownames = "car"),
         car,
         mpg
       ),
       carb = dplyr::select(
-        tibble::as_tibble(mtcars, rownames = "car"),
+        tibble::as_tibble(datasets::mtcars, rownames = "car"),
         car,
         carb
       )
     ),
     mpg_wt = list(
       mpg = dplyr::select(
-        tibble::as_tibble(mtcars, rownames = "car"),
+        tibble::as_tibble(datasets::mtcars, rownames = "car"),
         car,
         mpg
       ),
       wt = dplyr::select(
-        tibble::as_tibble(mtcars, rownames = "car"),
+        tibble::as_tibble(datasets::mtcars, rownames = "car"),
         car,
         wt
       )
