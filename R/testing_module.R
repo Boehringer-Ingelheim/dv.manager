@@ -31,7 +31,9 @@ afmm_export_UI <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::textOutput(ns("test_text")),
-    shiny::textOutput(ns("test_counter"))
+    shiny::textOutput(ns("test_counter")),
+    shiny::textInput(ns("target_id"), label = "Target Module"),
+    shiny::actionButton(ns("switch_to_target"), label = "Switch")
   )
 }
 
@@ -39,10 +41,15 @@ afmm_export_server <- function(id, afmm) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
+      shiny::setBookmarkExclude(c("target_id", "switch_to_target"))
       filter_counter <- shiny::reactiveVal(0)
       shiny::observeEvent(afmm[["filtered_dataset_list"]](), {
         current_counter <- filter_counter()
         filter_counter(current_counter + 1)
+      })
+
+      shiny::observeEvent(input[["switch_to_target"]], {
+        afmm[["utils"]][["switch2mod"]](input[["target_id"]])
       })
 
       output[["test_text"]] <- shiny::renderText("test")
@@ -171,7 +178,12 @@ mod_simple <- function(dataset, from, module_id) {
 
 run_mock_app <- function() {
   run_app(
-    data = list("D1" = list(adsl = get_pharmaverse_data("adsl"), adae = get_pharmaverse_data("adae"))),
+    data = list(
+      "D1" = list(
+        adsl = get_pharmaverse_data("adsl"),
+        adae = get_pharmaverse_data("adae")
+      )
+    ),
     module_list = list(
       "Simple" = mod_simple("adsl", "filtered_dataset_list", "mod1"),
       "Simple2" = mod_simple("adsl", "unfiltered_dataset_list", "mod2")
@@ -209,7 +221,11 @@ com_test_UI <- function(id, choices = c(1, 2, 3), message) {
   # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
-    shiny::selectizeInput(ns("select"), label = "Select a number", choices = choices),
+    shiny::selectizeInput(
+      ns("select"),
+      label = "Select a number",
+      choices = choices
+    ),
     shiny::p(message),
     shiny::textOutput(ns("output"))
   )
@@ -238,7 +254,10 @@ mod_com_test <- function(choices, message, module_from_id, mod_id) {
       com_test_UI(id, choices, message)
     },
     server = function(afmm) {
-      com_test_server(id = mod_id, value = afmm[["module_output"]]()[[module_from_id]])
+      com_test_server(
+        id = mod_id,
+        value = afmm[["module_output"]]()[[module_from_id]]
+      )
     },
     module_id = mod_id
   )
@@ -303,7 +322,10 @@ mod_table <- function(dataset, from, mod_id) {
       table_UI(id)
     },
     server = function(afmm) {
-      table_server(id = mod_id, dataset = shiny::reactive(afmm[[from]]()[[dataset]]))
+      table_server(
+        id = mod_id,
+        dataset = shiny::reactive(afmm[[from]]()[[dataset]])
+      )
     },
     module_id = mod_id
   )
@@ -733,7 +755,10 @@ mod_simple2 <- function(dataset_name, module_id) {
   mod <- list(
     ui = simple_UI,
     server = function(afmm) {
-      simple_server(module_id, shiny::reactive(afmm[["filtered_dataset_list"]]()[[dataset_name]]))
+      simple_server(
+        module_id,
+        shiny::reactive(afmm[["filtered_dataset_list"]]()[[dataset_name]])
+      )
     },
     module_id = module_id,
     meta = list(dataset_info = list(all = dataset_name))
@@ -755,7 +780,10 @@ mod_dataset_labels <- function(dataset_names, module_id) {
   mod <- list(
     ui = dataset_labels_UI,
     server = function(afmm) {
-      dataset_labels_server(module_id, shiny::reactive(afmm[["filtered_dataset_list"]]()[dataset_names]))
+      dataset_labels_server(
+        module_id,
+        shiny::reactive(afmm[["filtered_dataset_list"]]()[dataset_names])
+      )
     },
     module_id = module_id,
     meta = list(dataset_info = list(all = dataset_names))
@@ -782,7 +810,11 @@ dataset_labels_server <- function(id, data) {
         nm_col <- names(ds)
         label_li <- list()
         for (col_idx in seq_along(ds)) {
-          label_li[[col_idx]] <- shiny::tags[["li"]](shiny::p(nm_col[[col_idx]], ": ", attr(ds[[col_idx]], "label")))
+          label_li[[col_idx]] <- shiny::tags[["li"]](shiny::p(
+            nm_col[[col_idx]],
+            ": ",
+            attr(ds[[col_idx]], "label")
+          ))
         }
         ds_li[[(ds_idx * 2) - 1]] <- shiny::tags[["li"]](nm_ds[[ds_idx]])
         ds_li[[(ds_idx * 2)]] <- do.call(shiny::tags[["ul"]], label_li)
@@ -808,7 +840,12 @@ run_mock_app_labels <- function(data) {
       }
       ds
     }
-    data <- list("D1" = list(mtcars = add_dummy_labels(mtcars), mtcars2 = add_dummy_labels(mtcars)))
+    data <- list(
+      "D1" = list(
+        mtcars = add_dummy_labels(mtcars),
+        mtcars2 = add_dummy_labels(mtcars)
+      )
+    )
   }
 
   run_app(
