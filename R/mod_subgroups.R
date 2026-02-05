@@ -301,28 +301,22 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
 #' @return A reactive function that when called applies the created subgroups to a
 #'   dataset list. The returned function takes the same arguments as `apply_subgroups()`
 #'   and returns a list with components:
-#'   \describe{
-#'     \item{dataset_list}{The input dataset list with subgroup variables added}
-#'     \item{errors}{A list of error conditions encountered during application}
-#'   }
+#'   * `dataset_list` The input dataset list with subgroup variables added
+#'   * `errors` A list of error conditions encountered during application
 #'
 #' @details
 #' The module manages the following key reactive values:
-#' \itemize{
-#'   \item{subgroups: }{A list of subgroup definitions, each containing category
-#'     labels and filter specifications}
-#'   \item{cat_assignments: }{Current filter assignments for each category while
-#'     building a subgroup}
-#' }
+#'   * `subgroups` A list of subgroup definitions, each containing category
+#'     labels and filter specifications
+#'   * `cat_assignments` Current filter assignments for each category while
+#'     building a subgroup
 #'
 #' The module supports:
-#' \itemize{
-#'   \item{Binary subgroups (2 categories): }{One category defined by a filter,
-#'     the other contains all remaining subjects}
-#'   \item{Multi-category subgroups (3-10 categories): }{Multiple categories each
+#'   * Binary subgroups: One category defined by a filter,
+#'     the other contains all remaining subjects
+#'   * Multi-category subgroups (3-10 categories): Multiple categories each
 #'     defined by filters, plus an "others" category for unassigned subjects.
-#'     Includes validation to prevent subjects from appearing in multiple categories}
-#' }
+#'     Includes validation to prevent subjects from appearing in multiple categories
 #'
 #' State persistence through bookmarking is supported for the subgroups reactive value.
 #' @keywords internal
