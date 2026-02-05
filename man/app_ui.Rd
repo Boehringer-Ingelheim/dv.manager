@@ -7,7 +7,7 @@
 app_ui(request_id)
 }
 \arguments{
-\item{id}{This parameter can be either an string id if the app_ui is being used as a module or
+\item{request_id}{This parameter can be either an string id if the app_ui is being used as a module or
 a request if the app_ui is being used as an standalone application then it becomes
 a Internal parameter for \code{{shiny}}
 DO NOT REMOVE.}
