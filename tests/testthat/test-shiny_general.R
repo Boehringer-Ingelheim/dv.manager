@@ -82,50 +82,6 @@ local({
     no_date = add_date(dsl1, list(NULL))
   )
 
-  create_dummy <- function(dataset) {
-    list(
-      ds1 = data.frame(a = c(1, 2, 3)),
-      ds2 = data.frame(a = c(4, 5, 6))
-    )
-  }
-
-  add_date <- function(dataset, date) {
-    purrr::map2(
-      dataset,
-      date,
-      function(.x, .y) {
-        attr(.x, "meta") <- list(mtime = .y)
-        .x
-      }
-    )
-  }
-
-  create_dataset <- function(dataset, date) {
-    add_date(
-      create_dummy(dataset),
-      date
-    )
-  }
-
-  mpg_two_date_expr <- create_dataset(
-    mtcars[1:4, ],
-    list(
-      lubridate::ymd_hms("2021-01-13 00:00:00"),
-      lubridate::ymd_hms("2021-01-14 00:00:00")
-    )
-  )
-  mpg_one_date_expr <- create_dataset(
-    mtcars[5:10, ],
-    list(
-      lubridate::ymd_hms("2021-01-13 00:00:00"),
-      lubridate::ymd_hms("2021-01-13 00:00:00")
-    )
-  )
-  mpg_no_date_expr <- create_dataset(
-    mtcars[5:10, ],
-    list(NULL)
-  )
-
   module_list <- list(
     "AFMM" = dv.manager:::mod_afmm_export("afmm"),
     "AFMM2" = dv.manager:::mod_afmm_export("afmm2")
