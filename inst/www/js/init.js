@@ -190,7 +190,7 @@ const dv_overlay = (function () {
       hide_overlay();
     }
     if(!overlay){
-      console.log("Showing overlay"); 
+      log("Showing overlay"); 
       overlay = document.createElement('div');      
       overlay.id = C.ID;
       overlay.className = "d-flex justify-content-center";
@@ -209,7 +209,7 @@ const dv_overlay = (function () {
 
   let hide_overlay = function (_) {
     if (overlay) {      
-      console.log("Hiding overlay");    
+      log("Hiding overlay");    
 
       const elapsed = Date.now() - show_time;
       const remaining = C.MIN_VISIBLE_MS - elapsed;
