@@ -279,7 +279,7 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
       dataset_list = dataset_list,
       correct_subgroups = correct_subgroups,
       incorrect_subgroups = incorrect_subgroups,
-      errors = error_list
+      error_list = error_list
     )
   )
 }) |>
@@ -305,7 +305,7 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
 #'   dataset list. The returned function takes the same arguments as `apply_subgroups()`
 #'   and returns a list with components:
 #'   * `dataset_list` The input dataset list with subgroup variables added
-#'   * `errors` A list of error conditions encountered during application
+#'   * `error_list` A list of error conditions encountered during application
 #'
 #' @details
 #' The module manages the following key reactive values:
@@ -596,7 +596,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
         new_subgroups
       )
 
-      notify_conditions_and_early_out(apply_check[["errors"]]$get_errors())
+      notify_conditions_and_early_out(apply_check[["error_list"]]$get_errors())
 
       subgroups(new_subgroups)
 

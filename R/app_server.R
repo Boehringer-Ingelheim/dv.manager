@@ -102,7 +102,7 @@ app_server_ <- function(input, output, session, opts) {
     )
   } else {
     apply_subgroups <- shiny::reactive(function(d, ...) {
-      list(errors = new_error_list(), dataset_list = d)
+      list(error_list = new_error_list(), dataset_list = d)
     })
   }
 
@@ -111,7 +111,7 @@ app_server_ <- function(input, output, session, opts) {
     r_apply_subgroups <- apply_subgroups()
     res_apply_subgroups <- r_apply_subgroups(r_selected_dataset_list, subject_filter_dataset_name, filter_key_var)
 
-    for (error in res_apply_subgroups[["errors"]]$get_messages()) {
+    for (error in res_apply_subgroups[["error_list"]]$get_messages()) {
       shiny::showNotification(error, type = "warning")
     }
 
