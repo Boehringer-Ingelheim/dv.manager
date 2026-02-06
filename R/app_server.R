@@ -150,6 +150,38 @@ app_server_ <- function(input, output, session, opts) {
     fd
   })
 
+  shiny::observeEvent(filtered_dataset_list(), {
+    # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
+    session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
+  })
+
+  static_dataset_list <- shiny::reactive({
+    r_selected_dataset_list <- selected_dataset_list()
+    r_apply_subgroups <- apply_subgroups()
+    filter_info <- get_filter_info(r_selected_dataset_list, dataset_list_filter, filter_key_var)
+
+    res <- list(
+      dataset_list = r_selected_dataset_list,
+      subgroup = list(
+        apply_fn = r_apply_subgroups
+      ),
+      filter = list(
+        info = get_filter_info(r_selected_dataset_list, dataset_list_filter, filter_key_var),
+        apply_fn =
+      ),
+      apply = list(
+        subgroups = function(res) {
+          r_apply_subgroups(res[["dataset_list"]])
+        },
+        filter = function(res) {
+          apply_filter_info_to_dataset_list(res[["dataset_list"]])
+        }
+      )
+    )
+
+    res
+  })
+
   shiny::observeEvent(
     {
       input[[ID$NAV_HEADER]]
