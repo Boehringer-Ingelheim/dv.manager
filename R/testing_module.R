@@ -33,7 +33,8 @@ afmm_export_UI <- function(id) {
     shiny::textOutput(ns("test_text")),
     shiny::textOutput(ns("test_counter")),
     shiny::textInput(ns("target_id"), label = "Target Module"),
-    shiny::actionButton(ns("switch_to_target"), label = "Switch")
+    shiny::actionButton(ns("switch_to_target"), label = "Switch"),
+    shiny::actionButton(ns("browse"), label = "Browse")
   )
 }
 
@@ -41,7 +42,7 @@ afmm_export_server <- function(id, afmm) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
-      shiny::setBookmarkExclude(c("target_id", "switch_to_target"))
+      shiny::setBookmarkExclude(c("target_id", "switch_to_target", "browse"))
       filter_counter <- shiny::reactiveVal(0)
       shiny::observeEvent(afmm[["filtered_dataset_list"]](), {
         current_counter <- filter_counter()
@@ -50,6 +51,10 @@ afmm_export_server <- function(id, afmm) {
 
       shiny::observeEvent(input[["switch_to_target"]], {
         afmm[["utils"]][["switch2mod"]](input[["target_id"]])
+      })
+
+      shiny::observeEvent(input[["browse"]], {
+        browser()
       })
 
       output[["test_text"]] <- shiny::renderText("test")
