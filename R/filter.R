@@ -565,6 +565,8 @@ create_subject_filter_info <- function(dataset_list, subject_filter, sbj_var) {
     subject_filter_info <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
   }
 
+  subject_filter_info[["key_var"]] <- sbj_var
+
   return(subject_filter_info)
 }
 
@@ -607,11 +609,12 @@ apply_dataset_filter_info <- function(dataset_list, dataset_filter_info) {
   return(filtered_dataset_list)
 }
 
-apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_var) {
+apply_subject_filter_info <- function(dataset_list, subject_filter_info) {
   # Code partially matches  (EO9M)
   filtered_dataset_list <- dataset_list
   subject_set <- subject_filter_info[["subjects"]]
   subject_filter_info <- as_safe_list(subject_filter_info)
+  subj_var <- subject_filter_info[["key_var"]]
 
   for (current_dataset_name in names(dataset_list)) {
     current_mask <- dataset_list[[current_dataset_name]][[subj_var]] %in% subject_set
@@ -643,8 +646,56 @@ apply_subject_filter_info <- function(dataset_list, subject_filter_info, subj_va
 }
 
 apply_filter_to_dataset_list <- (function(unfiltered_dataset_list, dataset_list_filter, filter_key_var) {
+  filter_info <- get_filter_info(unfiltered_dataset_list, dataset_list_filter, filter_key_var)
+  filtered_dataset <- apply_filter_info_to_dataset_list(unfiltered_dataset_list, filter_info)
+  filtered_dataset
+}) |>
+  shiny::maskReactiveContext()
+
+apply_filter_info_to_dataset_list <- (function(unfiltered_dataset_list, filter_info, filter_key_var) {
+  res <- list(fd = NULL, error_list = NULL)
+
+  if (filter_info[["error_list"]]$any()) {
+    return(
+      list(fd = unfiltered_dataset_list, error_list = filter_info[["error_list"]])
+    )
+  } else {
+    error_list <- new_error_list()
+    fd <- unfiltered_dataset_list
+
+    fd <- tryCatch(
+      {
+        dataset_filter_info <- filter_info[["filter_info"]][["dataset_filter_info"]]
+        subject_filter_info <- filter_info[["filter_info"]][["subject_filter_info"]]
+
+        apply_dataset_filter_info(
+          unfiltered_dataset_list,
+          dataset_filter_info
+        ) |>
+          apply_subject_filter_info(
+            subject_filter_info
+          )
+      },
+      error = function(e) {
+        error <- FC$ERRORS$GENERIC_FILTER_APPLICATION
+        error$message <- paste("Filter not applied. Error found:\n", e[["message"]])
+        error_list$push(error)
+        unfiltered_dataset_list
+      }
+    )
+    res <- list(
+      fd = fd,
+      error_list = error_list
+    )
+
+    return(res)
+  }
+}) |>
+  shiny::maskReactiveContext()
+
+get_filter_info <- (function(unfiltered_dataset_list, dataset_list_filter, filter_key_var) {
   error_list <- new_error_list()
-  fd <- NULL
+  fi <- NULL
 
   if (identical(as.character(dataset_list_filter), NA_character_)) {
     error_list$push(FC$ERRORS$FILTER_IS_NA)
@@ -658,7 +709,7 @@ apply_filter_to_dataset_list <- (function(unfiltered_dataset_list, dataset_list_
       error_list$push(FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH)
     } else {
       safe_filters <- dataset_list_filter[["parsed"]][["filters"]]
-      fd <- tryCatch(
+      fi <- tryCatch(
         {
           dataset_filter_info <- create_dataset_filter_info(unfiltered_dataset_list, safe_filters[["datasets_filter"]])
           subject_filter_info <- create_subject_filter_info(
@@ -672,22 +723,26 @@ apply_filter_to_dataset_list <- (function(unfiltered_dataset_list, dataset_list_
             dataset_filter_info
           ) |>
             apply_subject_filter_info(
-              subject_filter_info,
-              filter_key_var
+              subject_filter_info
             )
+
+          list(
+            subject_filter_info = subject_filter_info,
+            dataset_filter_info = dataset_filter_info
+          )
         },
         error = function(e) {
           error <- FC$ERRORS$GENERIC_FILTER_APPLICATION
           error$message <- paste("Filter not applied. Error found:\n", e[["message"]])
           error_list$push(error)
-          unfiltered_dataset_list
+          NA
         }
       )
     }
   }
 
   res <- list(
-    fd = fd,
+    filter_info = fi,
     error_list = error_list
   )
 
