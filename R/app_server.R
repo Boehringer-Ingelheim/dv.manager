@@ -100,23 +100,23 @@ app_server_ <- function(input, output, session, opts) {
       subject_filter_dataset_name,
       filter_key_var
     )
+  } else {
+    apply_subgroups <- shiny::reactive(function(d, ...) {
+      list(errors = new_error_list(), dataset_list = d)
+    })
   }
 
   unfiltered_dataset_list <- shiny::reactive({
     r_selected_dataset_list <- selected_dataset_list()
+    r_apply_subgroups <- apply_subgroups()
+    res_apply_subgroups <- r_apply_subgroups(r_selected_dataset_list, subject_filter_dataset_name, filter_key_var)
 
-    if (enable_subgroup) {
-      r_apply_subgroups <- apply_subgroups()
-      res_apply_subgroups <- r_apply_subgroups(r_selected_dataset_list, subject_filter_dataset_name, filter_key_var)
-
-      for (error in res_apply_subgroups[["errors"]]$get_messages()) {
-        shiny::showNotification(error, type = "warning")
-      }
-
-      subgrouped_dataset_list <- res_apply_subgroups[["dataset_list"]]
-    } else {
-      subgrouped_dataset_list <- r_selected_dataset_list
+    for (error in res_apply_subgroups[["errors"]]$get_messages()) {
+      shiny::showNotification(error, type = "warning")
     }
+
+    subgrouped_dataset_list <- res_apply_subgroups[["dataset_list"]]
+
     attr(subgrouped_dataset_list, "dataset_list_name") <- attr(r_selected_dataset_list, "dataset_list_name")
     subgrouped_dataset_list
   })
