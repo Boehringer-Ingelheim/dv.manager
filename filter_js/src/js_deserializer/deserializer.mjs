@@ -83,6 +83,9 @@ let deserialize_binary_filter_data = function(buf) {
       let dataset_name = buf_read_str(b_struct);
       log("DS_NAME:", dataset_name);
 
+      let dataset_label = buf_read_str(b_struct);
+      log("DS_LABEL:", dataset_label);
+
       let dataset_nrow = buf_read_int32(b_struct);
       log("DS_NROW:", dataset_name);
 
@@ -91,6 +94,7 @@ let deserialize_binary_filter_data = function(buf) {
 
       let dataset = {
         name: dataset_name,
+        label: dataset_label,
         nrow: dataset_nrow,
         variables: []
       }

@@ -74,6 +74,14 @@ See below an example of the usage of the filter:
 
 Notice filters can be collapsed by clicking the dataset name.
 
+<div class="alert alert-info">
+  **Note:**  
+  Datasets can be assigned a human readable label by adding an attribute `label` to the datasets inside a dataset_list.
+</div>
+
+```{r}
+
+```
 ## Saving/Restoring states, clearing all filters and exporting the current state to a file
 
 As shown in the example, you can save a filter state and restore it later.

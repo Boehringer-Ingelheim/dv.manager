@@ -173,6 +173,75 @@ const dv_tab = (function () {
   return (res)
 })()
 
+
+
+const dv_overlay = (function () {
+
+  let C  = {
+    ID: "__manager_overlay__",
+    MIN_VISIBLE_MS: 500
+  }
+
+  let overlay = undefined;
+  let show_time = undefined;
+
+  let show_overlay = function(msg) {
+    if(overlay) {
+      hide_overlay();
+    }
+    if(!overlay){
+      log("Showing overlay"); 
+      overlay = document.createElement('div');      
+      overlay.id = C.ID;
+      overlay.className = "d-flex justify-content-center";
+      document.body.appendChild(overlay);
+      show_time = Date.now();
+
+      let message = document.createElement("span");
+      message.className = "text-white h1";
+      message.textContent= msg;
+      overlay.appendChild(message);
+      let spinner = document.createElement("div");
+      spinner.className = "spinner-border text-white m-5";            
+      overlay.appendChild(spinner);
+    }
+  };
+
+  let hide_overlay = function (_) {
+    if (overlay) {      
+      log("Hiding overlay");    
+
+      const elapsed = Date.now() - show_time;
+      const remaining = C.MIN_VISIBLE_MS - elapsed;
+
+      if (remaining > 0) {
+        setTimeout(hide_overlay, remaining);
+      } else {
+        overlay.remove();      
+        overlay = undefined;
+      }
+
+    } else {
+      console.warn(`#${C.ID} not found`)
+    }
+  };
+
+  Shiny.addCustomMessageHandler("dv_manager_show_overlay", function (message) {
+    show_overlay(message.message)
+  });
+
+  Shiny.addCustomMessageHandler("dv_manager_hide_overlay", function (_) {
+    hide_overlay()
+  });
+
+  const res = {
+    show: show_overlay,
+    hide: hide_overlay
+  }
+
+  return (res)
+})()
+
 $(document).ready(function () {  
   $("div.dv-sidebar-container input[type=checkbox][id=click]").change(function (event) {
     if ($(event.target).is(":checked")) {
