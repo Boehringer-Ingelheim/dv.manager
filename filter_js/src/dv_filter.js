@@ -862,7 +862,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
         Blockly.Blocks[nsed_variable_type] = {
           init: function () {
             this.appendDummyInput()
-              .appendField(`[(${dataset_name}) - ${variable_name}]`)
+              .appendField(`[(${dataset_label}) - ${variable_name}]`)
               .appendField(new Blockly.FieldLabel(variable_label, "blockly_filter_bold"))
               .appendField("Min:")
               .appendField(new rangeSliderField(min, min, max), "min")
@@ -885,7 +885,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
         Blockly.Blocks[nsed_variable_type] = {
           init: function () {
             this.appendEndRowInput()
-              .appendField(`[(${dataset_name}) - ${variable_name}]`)
+              .appendField(`[(${dataset_label}) - ${variable_name}]`)
               .appendField(new Blockly.FieldLabel(variable_label, "blockly_filter_bold"))
               .appendField("From:")
               .appendField(new datePickerField(min, min, max), "min")
