@@ -1,49 +1,3 @@
-#' Server side of the dv.manager
-#'
-#' @section data:
-#' *data* is the fundamental data source for the application launched by the dv.manager
-#'   - This data source is a named list of:
-#'      - lists of data.frames as loaded by dv.loader
-#'      - of functions that when called return a list of data.frames
-#'   - Entries of the list will selected and then each of the data.frames will be dispatched to each module according to
-#'    the code that defines the application
-#'   - The data dispatched to the modules will be filtered according to a global *dv.filter* (see filter_data section)
-#'   - The name of the selected dataset will appear in the sidebar, according to the name provided the list
-#'   - The date of the dataset will be automatically displayed by selecting the earliest and the latest date of the
-#'    composing data.frames.
-#'     - *dv.manager* assumes that all data.frames within a dataset have an attribute *meta*, and within it,
-#'      it will look for the entry *mtime*
-#'     - This assumption is met when the dataset is loaded directly with dv.loader, nonetheless, this attributes may
-#'      need to be created for new derived data.frames during preprocessing
-#'     It is the programmer obligation to check that all datasets have this attribute and that is correct.
-#'
-#' @section filter_data:
-#' The datasets in *data* will be filtered in the following way:
-#'   1. A dataset for global filtering is defined by *filter_data*
-#'   1. This dataset is filtered by *dv.filter* and the user input
-#'   1. The remaining USUBJIDs (by default, see *filter_key* field in run_app) are used to filter the rest of the
-#'    datasets
-#'
-#' @section module_list:
-#' *module_list* will contain a list of the modules to be used in the application. Each entry in the list will contain
-#'  the following fields:
-#' - The name of each entry of the list (unique), will be used in the selection menus, therefore must be meaningful and
-#'  intended for human use.
-#' - **ui**: A UI function that will need a single parameter, id. Almost always it will be the other entry module_id
-#' - **server**: A function that will receive a single parameter. See `vignette("arguments_from_module_manager")`
-#' - **module_id**: A unique alphanumeric string that will identify the module, it will be used internally therefore it
-#'  is intended for machine use.
-#' Additionally, it will expect a value **input$mod_select** to identify which module is currently selected. Here it is
-#'  only used to produce a log with the selection
-#' but it will be used for selecting in the UI conditional panels.
-#'
-#' @param id id when app_server is used as a module
-#' @param input,output,session Internal parameters for {shiny}.
-#'     DO NOT REMOVE.
-#'
-#'
-#' @keywords internal
-
 app_server <- function(input = NULL, output = NULL, session = NULL) {
   opts <- list(
     "module_info" = get_config("module_info"),
@@ -235,24 +189,18 @@ app_server_ <- function(input, output, session, opts) {
   afmm <- list(
     data = dataset_lists,
     unfiltered_dataset = shiny::reactive({
-      log_warn(
-        "(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]]."
-      ) # nolintr
+      # log_warn("(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]].") # nolintr
       unfiltered_dataset_list()
     }),
     unfiltered_dataset_list = unfiltered_dataset_list,
     filtered_dataset = shiny::reactive({
-      log_warn(
-        "(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]]."
-      ) # nolintr
+      #log_warn("(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]].") # nolintr
       filtered_dataset_list()
     }),
     filtered_dataset_list = filtered_dataset_list,
     url_parameters = url_parameters,
     dataset_name = shiny::reactive({
-      log_warn(
-        "(Message for the module developer) afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]]."
-      ) # nolintr
+      # log_warn("(Message for the module developer) afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]].") # nolintr
       input$selector
     }),
     dataset_metadata = list(

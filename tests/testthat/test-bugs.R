@@ -5,7 +5,6 @@ test_that(
   ),
   {
     skip_if_not_running_shiny_tests()
-    skip_if_suspect_check()
 
     app <- start_app_driver({
       dv.manager::run_app(
@@ -22,8 +21,7 @@ test_that(
 )
 
 test_that("labels are preserved when the datasets are data.frames", {
-  skip_if_not_running_shiny_tests()
-  skip_if_suspect_check()
+  skip_if_not_running_shiny_tests()  
 
   app <- start_app_driver({
     data <- list(

@@ -3,13 +3,13 @@ test_that("integration with dv.loader;
   the date is correctly interpreted and the dataset
   is available inside module manager.", {
   mpg <- dplyr::select(
-    tibble::as_tibble(mtcars, rownames = "car"),
+    tibble::as_tibble(datasets::mtcars, rownames = "car"),
     car,
     mpg
   )
 
   carb <- dplyr::select(
-    tibble::as_tibble(mtcars, rownames = "car"),
+    tibble::as_tibble(datasets::mtcars, rownames = "car"),
     car,
     carb
   )

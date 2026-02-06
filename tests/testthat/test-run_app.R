@@ -144,9 +144,9 @@ test_that(
     )
 
     domain_list <- list(
-      a = mtcars,
-      b = mtcars,
-      c = mtcars
+      a = datasets::mtcars,
+      b = datasets::mtcars,
+      c = datasets::mtcars
     ) |>
       purrr::map2(
         date_list,
@@ -186,8 +186,8 @@ test_that(
     )
 
     domain_list <- list(
-      a = mtcars,
-      b = mtcars,
+      a = datasets::mtcars,
+      b = datasets::mtcars,
       c = iris
     ) |>
       purrr::map2(
@@ -226,9 +226,9 @@ test_that(
     )
 
     domain_list <- list(
-      a = mtcars,
-      b = mtcars,
-      c = mtcars
+      a = datasets::mtcars,
+      b = datasets::mtcars,
+      c = datasets::mtcars
     ) |>
       purrr::map2(
         date_list,

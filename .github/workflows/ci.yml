@@ -7,11 +7,7 @@ on:
       - opened
       - synchronize
       - reopened
-      - ready_for_review
-    branches:
-      - main
-      - dev
-      - test
+      - ready_for_review    
   push:
     branches:
       - main

@@ -82,50 +82,6 @@ local({
     no_date = add_date(dsl1, list(NULL))
   )
 
-  create_dummy <- function(dataset) {
-    list(
-      ds1 = data.frame(a = c(1, 2, 3)),
-      ds2 = data.frame(a = c(4, 5, 6))
-    )
-  }
-
-  add_date <- function(dataset, date) {
-    purrr::map2(
-      dataset,
-      date,
-      function(.x, .y) {
-        attr(.x, "meta") <- list(mtime = .y)
-        .x
-      }
-    )
-  }
-
-  create_dataset <- function(dataset, date) {
-    add_date(
-      create_dummy(dataset),
-      date
-    )
-  }
-
-  mpg_two_date_expr <- create_dataset(
-    mtcars[1:4, ],
-    list(
-      lubridate::ymd_hms("2021-01-13 00:00:00"),
-      lubridate::ymd_hms("2021-01-14 00:00:00")
-    )
-  )
-  mpg_one_date_expr <- create_dataset(
-    mtcars[5:10, ],
-    list(
-      lubridate::ymd_hms("2021-01-13 00:00:00"),
-      lubridate::ymd_hms("2021-01-13 00:00:00")
-    )
-  )
-  mpg_no_date_expr <- create_dataset(
-    mtcars[5:10, ],
-    list(NULL)
-  )
-
   module_list <- list(
     "AFMM" = dv.manager:::mod_afmm_export("afmm"),
     "AFMM2" = dv.manager:::mod_afmm_export("afmm2")
@@ -168,7 +124,6 @@ local({
       vdoc[["add_spec"]]("app should show an startup message", c(specs$INTERFACE$INTERFACE_STARTUP_MESSAGE)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
         expect_equal(app$get_html(".modal-body"), "<div class=\"modal-body\">Sample startup message</div>")
       }
     )
@@ -178,7 +133,6 @@ local({
         vdoc[["add_spec"]](c(specs$INTERFACE$INTERFACE_TITLE)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
         expect_identical(app$get_js("document.title"), args[["title"]])
       }
     )
@@ -188,7 +142,6 @@ local({
         vdoc[["add_spec"]](c(specs$INTERFACE$INTERFACE_SIDEBAR)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
 
         expect_gt(nchar(app$get_html("div.sidebar")), 1)
       }
@@ -199,7 +152,6 @@ local({
         vdoc[["add_spec"]](c(specs$MODULES$MODULE_TABS_TOPNAV, specs$MODULES$UI_TAB_SELECTOR)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
 
         # Get all navbar elements elements
         tabs <- app$get_js(
@@ -224,7 +176,6 @@ local({
         vdoc[["add_spec"]](c(specs$MODULES$MODULE_CONTENT_DISPLAY)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
         output_values <- app$get_values(output = TRUE)[["output"]]
         expect_identical(output_values[["afmm-test_text"]], "test")
       }
@@ -236,8 +187,6 @@ local({
       vdoc[["add_spec"]](c(specs$DATASETS$DATASET_LIST_SWITCHING_ALLOWED)),
     {
       skip_if_not_running_shiny_tests()
-
-      skip_if_suspect_check()
 
       app <- shinytest2::AppDriver$new(root_app$get_url())
       unfiltered_dataset_list <- shiny::isolate(app$get_values(export = "afmm-afmm")[["export"]][["afmm-afmm"]][[
@@ -268,7 +217,6 @@ local({
       )),
     {
       skip_if_not_running_shiny_tests()
-      skip_if_suspect_check()
 
       # TODO: brittle too coupled with dv.filters
 
@@ -324,7 +272,6 @@ local({
         vdoc[["add_spec"]](c(specs$MODULES$MODULE_ACCESS_FILTERED_DATASET_LIST)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
 
         set_filter(app, c(2, 3))
         app$wait_for_idle()
@@ -343,7 +290,6 @@ local({
         vdoc[["add_spec"]](c(specs$MODULES$MODULE_ACCESS_OTHER_OUTPUTS)),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
         afmm_output <- shiny::isolate(exported_values[["module_output"]]()[["afmm"]]())
         expect_identical("afmm", afmm_output)
       }
@@ -362,7 +308,6 @@ local({
         )),
       {
         skip_if_not_running_shiny_tests()
-        skip_if_suspect_check()
 
         unfiltered_dataset_list <- shiny::isolate(exported_values[["unfiltered_dataset_list"]]())
         current_name <- attr(unfiltered_dataset_list, "dataset_list_name")
@@ -387,7 +332,6 @@ local({
     ),
     {
       skip_if_not_running_shiny_tests()
-      skip_if_suspect_check()
 
       app <- shinytest2::AppDriver$new(root_app$get_url())
 
@@ -415,7 +359,6 @@ local({
     ),
     {
       skip_if_not_running_shiny_tests()
-      skip_if_suspect_check()
 
       app <- shinytest2::AppDriver$new((root_app$get_url()))
 

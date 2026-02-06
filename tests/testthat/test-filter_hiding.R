@@ -1,11 +1,10 @@
 # app ----
 local({
   skip_if_not_running_shiny_tests()
-  skip_if_suspect_check()
 
   app_expr <- rlang::quo({
     dv.manager::run_app(
-      data = list(dummy = list(d1 = mtcars, d2 = mtcars, d3 = mtcars)),
+      data = list(dummy = list(d1 = datasets::mtcars, d2 = datasets::mtcars, d3 = datasets::mtcars)),
       module_list = list(
         "Uses d1 which is filter data therefore no filters" = dv.manager:::mod_simple2(
           module_id = "use_d_1",

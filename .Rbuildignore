@@ -18,3 +18,4 @@ local_*
 node_modules*
 blockly_sandbox
 IGNORE
+makefile

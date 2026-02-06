@@ -2121,7 +2121,6 @@ local({
 
 local({
   skip_if_not_running_shiny_tests()
-  skip_if_suspect_check()
 
   date_var <- as.Date("2024-01-01") + c(0L:4L, NA)
 
