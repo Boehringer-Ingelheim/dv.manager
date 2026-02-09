@@ -621,18 +621,24 @@ combine_filter_info <- function(filter_info) {
     subject_lvls <- subject_filter_info[["filter_info"]][[dataset_name]][["lvls"]]
     dataset_lvls <- dataset_filter_info[["filter_info"]][[dataset_name]][["lvls"]]
     res_lvls <- list()
-    for (variable in union(subject_lvls, dataset_lvls)) {
-      if (variable %in% names(subject_lvls) && variable %in% names(dataset_lvls)) {
-        res_lvls[[variable]] <- intersect(subject_lvls[[variable]], dataset_lvls[[variable]])
-      } else if (variable %in% names(subject_lvls)) {
-        res_lvls[[variable]] <- subject_lvls[[variable]]
-      } else if (variable %in% names(dataset_lvls)) {
-        res_lvls[[variable]] <- dataset_lvls[[variable]]
+    for (variable in union(names(subject_lvls), names(dataset_lvls))) {
+      if (length(names(subject_lvls)) > 0 && variable %in% names(subject_lvls)) {
+        var_subject_lvls <- subject_lvls[[variable]]
+      } else {
+        var_subject_lvls <- dataset_lvls[[variable]]
       }
-    }
 
-    res[["filter_info"]][[dataset_name]][["lvls"]] <- res_lvls
+      if (length(names(dataset_lvls)) > 0 && variable %in% names(dataset_lvls)) {
+        var_dataset_lvls <- dataset_lvls[[variable]]
+      } else {
+        var_dataset_lvls <- subject_lvls[[variable]]
+      }
+
+      res_lvls[[variable]] <- intersect(subject_lvls[[variable]], dataset_lvls[[variable]])
+    }
   }
+
+  res[["filter_info"]][[dataset_name]][["lvls"]] <- res_lvls
 
   return(
     list(filter_info = res[["filter_info"]], error_list = new_error_list())
