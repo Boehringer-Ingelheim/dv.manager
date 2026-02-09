@@ -1,34 +1,33 @@
-test_that(
-  "integration with dv.loader;
+test_that("integration with dv.loader;
   checks that we can load a dataset with dv.loader,
   the date is correctly interpreted and the dataset
-  is available inside module manager.",
-  {
-    mpg <- dplyr::select(
-      tibble::as_tibble(mtcars, rownames = "car"),
-      car, mpg
-    )
+  is available inside module manager.", {
+  mpg <- dplyr::select(
+    tibble::as_tibble(datasets::mtcars, rownames = "car"),
+    car,
+    mpg
+  )
 
-    carb <- dplyr::select(
-      tibble::as_tibble(mtcars, rownames = "car"),
-      car, carb
-    )
+  carb <- dplyr::select(
+    tibble::as_tibble(datasets::mtcars, rownames = "car"),
+    car,
+    carb
+  )
 
-    local_dataset_dir <- withr::local_tempdir(
-      pattern = "dataset",
-      tmpdir = tempdir(),
-      clean = TRUE
-    )
+  local_dataset_dir <- withr::local_tempdir(
+    pattern = "dataset",
+    tmpdir = tempdir(),
+    clean = TRUE
+  )
 
-    saveRDS(mpg, file = file.path(local_dataset_dir, "mpg.rds"))
-    Sys.sleep(2) # Wait two seconds so timestamps differ between both
-    saveRDS(carb, file = file.path(local_dataset_dir, "carb.rds"))
+  saveRDS(mpg, file = file.path(local_dataset_dir, "mpg.rds"))
+  Sys.sleep(2) # Wait two seconds so timestamps differ between both
+  saveRDS(carb, file = file.path(local_dataset_dir, "carb.rds"))
 
-    withr::local_dir(local_dataset_dir)
-    datasets <- list(mpg_carb = dv.loader::load_data(sub_dir = ".", use_wd = TRUE, file_names = c("mpg", "carb")))
+  withr::local_dir(local_dataset_dir)
+  datasets <- list(mpg_carb = dv.loader::load_data(sub_dir = ".", use_wd = TRUE, file_names = c("mpg", "carb")))
 
-    mod_identity <- function(dataset_list_name, mod_id) {
-
+  mod_identity <- function(dataset_list_name, mod_id) {
     identity_server <- function(id, value) {
       shiny::moduleServer(
         id,
@@ -38,44 +37,45 @@ test_that(
       )
     }
 
-      list(
-        ui = function(id) {shiny::h1("")},
-        server = function(afmm) {
-          identity_server(
-            id = mod_id,
-            shiny::reactive({              
-                afmm[[dataset_list_name]]()              
-            })
-          )
-        },
-        module_id = mod_id
-      )
-    }
-
-    testing_options <- list(
-      data = datasets,
-      filter_data = "mpg",
-      module_list = list(
-        "identity" = mod_identity(          
-          "unfiltered_dataset",
-          "id_1"
+    list(
+      ui = function(id) {
+        shiny::h1("")
+      },
+      server = function(afmm) {
+        identity_server(
+          id = mod_id,
+          shiny::reactive({
+            afmm[[dataset_list_name]]()
+          })
         )
-      ),
-      filter_key = "car",
-      filter_info = list(filter_type = "datasets", filter_default_state = NULL)
+      },
+      module_id = mod_id
     )
-
-
-    dated_dataset <- dv.manager:::add_date_range(datasets[["mpg_carb"]])
-    attr(dated_dataset, "dataset_list_name") <- "mpg_carb"
-    date_range <- attr(dated_dataset, "date_range")
-    date_range <- format(date_range, "%Y-%b-%d (%Z)")
-    expected_date_string <- as.character(glue::glue("Dataset date: {date_range[1]}"))
-
-    testServer(app_server_test(testing_options), {
-      session$setInputs(selector = "mpg_carb")
-      expect_equal(unfiltered_dataset_list(), dated_dataset)
-      expect_equal(output$dataset_date, expected_date_string)
-    })
   }
-)
+
+  testing_options <- list(
+    data = datasets,
+    filter_data = "mpg",
+    module_list = list(
+      "identity" = mod_identity(
+        "unfiltered_dataset_list",
+        "id_1"
+      )
+    ),
+    filter_key = "car",
+    filter_info = list(filter_default_state = NULL),
+    enable_subgroup = FALSE
+  )
+
+  dated_dataset <- dv.manager:::add_date_range(datasets[["mpg_carb"]])
+  attr(dated_dataset, "dataset_list_name") <- "mpg_carb"
+  date_range <- attr(dated_dataset, "date_range")
+  date_range <- format(date_range, "%Y-%b-%d (%Z)")
+  expected_date_string <- as.character(glue::glue("Dataset date: {date_range[1]}"))
+
+  testServer(app_server_test(testing_options), {
+    session$setInputs(selector = "mpg_carb")
+    expect_equal(unfiltered_dataset_list(), dated_dataset)
+    expect_equal(output$dataset_date, expected_date_string)
+  })
+})

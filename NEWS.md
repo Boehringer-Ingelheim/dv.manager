@@ -1,3 +1,21 @@
+# dv.manager 2.2.0-9012
+- Adapt tests for devtools::check
+- Introduce binary64 to Uint8Array function in Javascript for Chromium version <140
+
+# dv.manager 2.2.0-9011
+- Adds the possibility of adding labels to datasets
+- Adds an overlay to indicate filter loading times
+
+# dv.manager 2.2.0-9010
+- Update documentation
+- Remove magrittr pipe
+- Improved clicked on saved states
+- Aesthetic changes in filter menus and dv.manager menus
+- Remove dv.filter and work only with the new filter
+
+# dv.manager 2.2.0-9009
+- Completely remove dv.filter from the code base
+
 # dv.manager 2.2.0-9008
 - Completely remove Azure Authentication from the code base
 
@@ -9,7 +27,7 @@
 
 # dv.manager 2.2.0-9005
 - Filter: Includes fast routine for binary serialization for filter_data
-- Subgroup: Includes initial POC for subgroup creation in app runtime
+- Subgroup: Includes initial POC for subgroup creation in app runtime 
 
 
 # dv.manager 2.2.0-9004

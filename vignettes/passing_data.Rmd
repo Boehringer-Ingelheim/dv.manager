@@ -20,7 +20,8 @@ You can use the output of one module as the input of another module.
 In the following app you can select a value in one the modules and use its value in another module.
 
 ```{r, eval=FALSE}
-com_test_UI <- function(id, choices = c(1, 2, 3), message) { # nolint
+com_test_UI <- function(id, choices = c(1, 2, 3), message) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::selectizeInput(ns("select"), label = "Select a number", choices = choices),
@@ -74,7 +75,7 @@ dv.manager::run_app(
       value = "mod_1",
       mod_id = "mod_2"
     ),
-    "Simple" = dv.manager::mod_simple("adsl", "filtered_dataset",  "modSimp")
+    "Simple" = dv.manager::mod_simple("adsl", "filtered_dataset_list", "modSimp")
   ),
   filter_data = "adsl",
   filter_key = "USUBJID"

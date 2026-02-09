@@ -2,16 +2,15 @@
 ## or to have quick mock apps to test functionality, they are not in their own file as
 ## they do not have sufficient entity to be included in the modulegallery or to be exported
 
-
-empty_UI <- function(id) { # nolint
+empty_UI <- function(id) {
+  # nolint
   shiny::tagList()
 }
 
 empty_server <- function(id) {
   shiny::moduleServer(
     id,
-    function(input, output, session) {
-    }
+    function(input, output, session) {}
   )
 }
 
@@ -27,17 +26,39 @@ mod_empty <- function(mod_id) {
 
 ########### AFMM export module (for testing)
 
-afmm_export_UI <- function(id) { # nolint
-  shiny::tagList()
+afmm_export_UI <- function(id) {
+  # nolint
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    shiny::textOutput(ns("test_text")),
+    shiny::textOutput(ns("test_counter")),
+    shiny::textInput(ns("target_id"), label = "Target Module"),
+    shiny::actionButton(ns("switch_to_target"), label = "Switch")
+  )
 }
 
 afmm_export_server <- function(id, afmm) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
+      shiny::setBookmarkExclude(c("target_id", "switch_to_target"))
+      filter_counter <- shiny::reactiveVal(0)
+      shiny::observeEvent(afmm[["filtered_dataset_list"]](), {
+        current_counter <- filter_counter()
+        filter_counter(current_counter + 1)
+      })
+
+      shiny::observeEvent(input[["switch_to_target"]], {
+        afmm[["utils"]][["switch2mod"]](input[["target_id"]])
+      })
+
+      output[["test_text"]] <- shiny::renderText("test")
+      output[["test_counter"]] <- shiny::renderText(filter_counter())
       shiny::exportTestValues(
-        afmm = afmm
+        afmm = afmm,
+        filter_counter = filter_counter()
       )
+      return(shiny::reactive(id))
     }
   )
 }
@@ -63,7 +84,8 @@ mod_afmm_export <- function(mod_id) {
 
 ########### Identity module
 
-identity_UI <- function(id) { # nolint
+identity_UI <- function(id) {
+  # nolint
   shiny::h1("")
 }
 
@@ -82,11 +104,11 @@ mod_identity <- function(value, from = NULL, mod_id) {
     server = function(afmm) {
       identity_server(
         id = mod_id,
-          if (!is.null(from)) {
-            shiny::reactive(afmm[[from]]()[[value]])
-          } else {
-            value
-          }
+        if (!is.null(from)) {
+          shiny::reactive(afmm[[from]]()[[value]])
+        } else {
+          value
+        }
       )
     },
     module_id = mod_id
@@ -101,7 +123,8 @@ mod_identity <- function(value, from = NULL, mod_id) {
 #' @param id shiny id
 #'
 #' @export
-simple_UI <- function(id) { # nolint
+simple_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::textOutput(ns("text")),
@@ -155,10 +178,15 @@ mod_simple <- function(dataset, from, module_id) {
 
 run_mock_app <- function() {
   run_app(
-    data = list("D1" = list(adsl = get_pharmaverse_data("adsl"), adae = get_pharmaverse_data("adae"))),
+    data = list(
+      "D1" = list(
+        adsl = get_pharmaverse_data("adsl"),
+        adae = get_pharmaverse_data("adae")
+      )
+    ),
     module_list = list(
-      "Simple" = mod_simple("adsl", "filtered_dataset", "mod1"),
-      "Simple2" = mod_simple("adsl", "unfiltered_dataset", "mod2")
+      "Simple" = mod_simple("adsl", "filtered_dataset_list", "mod1"),
+      "Simple2" = mod_simple("adsl", "unfiltered_dataset_list", "mod2")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
@@ -179,9 +207,9 @@ run_mock_app_two_datasets <- function() {
       )
     ),
     module_list = list(
-      "Simple" = mod_simple("adsl", "filtered_dataset", "mod1"),
-      "Simple2" = mod_simple("adsl", "unfiltered_dataset", "mod2"),
-      "Simple3" = mod_simple("adae", "filtered_dataset", "mod3")
+      "Simple" = mod_simple("adsl", "filtered_dataset_list", "mod1"),
+      "Simple2" = mod_simple("adsl", "unfiltered_dataset_list", "mod2"),
+      "Simple3" = mod_simple("adae", "filtered_dataset_list", "mod3")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
@@ -189,10 +217,15 @@ run_mock_app_two_datasets <- function() {
 }
 
 ###### Module communication testing
-com_test_UI <- function(id, choices = c(1, 2, 3), message) { # nolint
+com_test_UI <- function(id, choices = c(1, 2, 3), message) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
-    shiny::selectizeInput(ns("select"), label = "Select a number", choices = choices),
+    shiny::selectizeInput(
+      ns("select"),
+      label = "Select a number",
+      choices = choices
+    ),
     shiny::p(message),
     shiny::textOutput(ns("output"))
   )
@@ -221,7 +254,10 @@ mod_com_test <- function(choices, message, module_from_id, mod_id) {
       com_test_UI(id, choices, message)
     },
     server = function(afmm) {
-      com_test_server(id = mod_id, value = afmm[["module_output"]]()[[module_from_id]])
+      com_test_server(
+        id = mod_id,
+        value = afmm[["module_output"]]()[[module_from_id]]
+      )
     },
     module_id = mod_id
   )
@@ -244,7 +280,7 @@ run_mock_com_app <- function() {
         module_from_id = "mod_1",
         mod_id = "mod_2"
       ),
-      "Simple" = mod_simple("adsl", "unfiltered_dataset", "modSimp")
+      "Simple" = mod_simple("adsl", "unfiltered_dataset_list", "modSimp")
     ),
     filter_data = "adsl",
     filter_key = "USUBJID"
@@ -253,7 +289,8 @@ run_mock_com_app <- function() {
 
 
 ####### Mixing communication and url
-table_UI <- function(id) { # nolint
+table_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     DT::DTOutput(ns("table"))
@@ -285,7 +322,10 @@ mod_table <- function(dataset, from, mod_id) {
       table_UI(id)
     },
     server = function(afmm) {
-      table_server(id = mod_id, dataset = shiny::reactive(afmm[[from]]()[[dataset]]))
+      table_server(
+        id = mod_id,
+        dataset = shiny::reactive(afmm[[from]]()[[dataset]])
+      )
     },
     module_id = mod_id
   )
@@ -307,7 +347,7 @@ run_mock_combined_app <- function() {
     module_list = list(
       "AE Table" = mod_table(
         mod_id = "mod_1",
-        from = "filtered_dataset",
+        from = "filtered_dataset_list",
         dataset = "adae"
       )
     ),
@@ -318,7 +358,8 @@ run_mock_combined_app <- function() {
 
 ########### Accessing dataset name
 
-dataset_name_UI <- function(id) { # nolint
+dataset_name_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::textOutput(ns("text"))
@@ -375,7 +416,8 @@ run_mock_dataset_name_app <- function() {
 #'
 #' @keywords internal
 
-switch_UI <- function(id, name) { # nolint
+switch_UI <- function(id, name) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::h1(name),
@@ -438,7 +480,8 @@ run_mock_switch_app <- function() {
 
 ##### Module testing afmm
 
-printer_UI <- function(id) { # nolint
+printer_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::verbatimTextOutput(ns("printer"))
 }
@@ -472,16 +515,16 @@ run_mock_print_afmm <- function() {
       "Send and Receive 1" = mod_com_test(
         choices = 1:3,
         message = "The other module has selected",
-        value = "mod_2",
+        module_from_id = "mod_2",
         mod_id = "mod_1"
       ),
       "Send and Receive 2" = mod_com_test(
         choices = c("a", "b", "c"),
         message = "The other module has selected",
-        value = "mod_1",
+        module_from_id = "mod_1",
         mod_id = "mod_2"
       ),
-      "Simple" = mod_simple("adsl", "unfiltered_dataset", "modSimp"),
+      "Simple" = mod_simple("adsl", "unfiltered_dataset_list", "modSimp"),
       "afmm" = mod_print_afmm("mod_afmm")
     ),
     filter_data = "adsl",
@@ -491,7 +534,8 @@ run_mock_print_afmm <- function() {
 
 #### MESSAGE WITH IMPLICIT FUNCTION
 
-msg_impl_UI <- function(id) { # nolint
+msg_impl_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::textInput(ns("msg"), label = NULL),
@@ -566,7 +610,8 @@ run_mock_startup_msg <- function() {
 
 ########### Accessing dataset name
 
-mod_dataset_name_date_UI <- function(id) { # nolint
+mod_dataset_name_date_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::textOutput(ns("text"))
@@ -579,8 +624,11 @@ mod_dataset_name_date_server <- function(id, val) {
     function(input, output, session) {
       output$text <- shiny::renderText({
         paste(
-          "dataset_name:", val[[1]](),
-          "; dataset_date_range:", val[[2]]()[[1]], val[[2]]()[[2]],
+          "dataset_name:",
+          val[[1]](),
+          "; dataset_date_range:",
+          val[[2]]()[[1]],
+          val[[2]]()[[2]],
           "; module_name:",
           paste(val[[3]], collapse = ",")
         )
@@ -627,7 +675,8 @@ printer_app <- function() {
 # test.css contains a rule for the mybutton class
 # Because the dependency is inside a module and starts with custom- it should only apply to css module
 
-button_UI_css <- function(id) { # nolint
+button_UI_css <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
 
   dep <- htmltools::htmlDependency(
@@ -644,7 +693,8 @@ button_UI_css <- function(id) { # nolint
   )
 }
 
-button_UI_no_css <- function(id) { # nolint
+button_UI_no_css <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::actionButton(ns("button"), "I should be black", class = "mybutton")
@@ -652,9 +702,7 @@ button_UI_no_css <- function(id) { # nolint
 }
 
 empty_server <- function(id) {
-  mod <- function(input, output, session) {
-
-  }
+  mod <- function(input, output, session) {}
   shiny::moduleServer(id, mod)
 }
 
@@ -707,7 +755,10 @@ mod_simple2 <- function(dataset_name, module_id) {
   mod <- list(
     ui = simple_UI,
     server = function(afmm) {
-      simple_server(module_id, shiny::reactive(afmm[["filtered_dataset_list"]]()[[dataset_name]]))
+      simple_server(
+        module_id,
+        shiny::reactive(afmm[["filtered_dataset_list"]]()[[dataset_name]])
+      )
     },
     module_id = module_id,
     meta = list(dataset_info = list(all = dataset_name))
@@ -729,7 +780,10 @@ mod_dataset_labels <- function(dataset_names, module_id) {
   mod <- list(
     ui = dataset_labels_UI,
     server = function(afmm) {
-      dataset_labels_server(module_id, shiny::reactive(afmm[["filtered_dataset_list"]]()[dataset_names]))
+      dataset_labels_server(
+        module_id,
+        shiny::reactive(afmm[["filtered_dataset_list"]]()[dataset_names])
+      )
     },
     module_id = module_id,
     meta = list(dataset_info = list(all = dataset_names))
@@ -737,7 +791,8 @@ mod_dataset_labels <- function(dataset_names, module_id) {
   mod
 }
 
-dataset_labels_UI <- function(id) { # nolintr
+dataset_labels_UI <- function(id) {
+  # nolintr
   ns <- shiny::NS(id)
   list(
     shiny::h1("labels"),
@@ -755,7 +810,11 @@ dataset_labels_server <- function(id, data) {
         nm_col <- names(ds)
         label_li <- list()
         for (col_idx in seq_along(ds)) {
-          label_li[[col_idx]] <- shiny::tags[["li"]](shiny::p(nm_col[[col_idx]], ": ", attr(ds[[col_idx]], "label")))
+          label_li[[col_idx]] <- shiny::tags[["li"]](shiny::p(
+            nm_col[[col_idx]],
+            ": ",
+            attr(ds[[col_idx]], "label")
+          ))
         }
         ds_li[[(ds_idx * 2) - 1]] <- shiny::tags[["li"]](nm_ds[[ds_idx]])
         ds_li[[(ds_idx * 2)]] <- do.call(shiny::tags[["ul"]], label_li)
@@ -781,9 +840,13 @@ run_mock_app_labels <- function(data) {
       }
       ds
     }
-    data <- list("D1" = list(mtcars = add_dummy_labels(mtcars), mtcars2 = add_dummy_labels(mtcars)))
+    data <- list(
+      "D1" = list(
+        mtcars = add_dummy_labels(datasets::mtcars),
+        mtcars2 = add_dummy_labels(datasets::mtcars)
+      )
+    )
   }
-
 
   run_app(
     data = data,
@@ -791,8 +854,7 @@ run_mock_app_labels <- function(data) {
       "Labels" = mod_dataset_labels(names(data[[1]]), "mod1")
     ),
     filter_data = names(data[[1]])[[1]],
-    filter_key = names(data[[1]][[1]])[[1]],
-    filter_type = "datasets"
+    filter_key = names(data[[1]][[1]])[[1]]
   )
 }
 
@@ -805,7 +867,8 @@ run_mock_app_labels <- function(data) {
 #'
 #' @export
 #' @keywords internal
-multi_simple_UI <- function(id) { # nolint
+multi_simple_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::uiOutput(ns("out"))
 }
@@ -845,7 +908,7 @@ mod_multi_simple <- function(module_id) {
   mod <- list(
     ui = multi_simple_UI,
     server = function(afmm) {
-        multi_simple_server(module_id, afmm[["filtered_dataset_list"]])
+      multi_simple_server(module_id, afmm[["filtered_dataset_list"]])
     },
     module_id = module_id
   )

@@ -47,7 +47,8 @@ local({
   })
 
   mod_filter_test <- local({
-    filter_test_UI <- function(id) { # nolint
+    filter_test_UI <- function(id) {
+      # nolint
       ns <- shiny::NS(id)
       shiny::tagList(
         shiny::uiOutput(ns("out"))
@@ -72,19 +73,31 @@ local({
                 shiny::h3(substitute(dsl)),
                 local({
                   r_dataset <- dsl()
-                  shiny::tags[["pre"]](paste("{", paste("{", names(r_dataset), ":", purrr::map_dbl(r_dataset, nrow), "}"), collapse = ",", "}"))
+                  shiny::tags[["pre"]](paste(
+                    "{",
+                    paste("{", names(r_dataset), ":", purrr::map_dbl(r_dataset, nrow), "}"),
+                    collapse = ",",
+                    "}"
+                  ))
                 })
               )
             }
 
-            filter_metadata_ui <- shiny::div(
-              id = "filter_metadata",
-              shiny::h3("filter_metadata"),
-              shiny::h4("json"),
-              shiny::tags[["pre"]](id = "raw", filter_metadata$output()$raw),
-              shiny::h4("parsed"),
-              shiny::verbatimTextOutput(outputId = session$ns("parsed"))
-            )
+            if (isTRUE(!is.na(filter_metadata$output()))) {
+              filter_metadata_ui <- shiny::div(
+                id = "filter_metadata",
+                shiny::h3("filter_metadata"),
+                shiny::h4("json"),
+                shiny::tags[["pre"]](id = "raw", filter_metadata$output()$raw),
+                shiny::h4("parsed"),
+                shiny::verbatimTextOutput(outputId = session$ns("parsed"))
+              )
+            } else {
+              filter_metadata_ui <- shiny::div(
+                id = "filter_metadata",
+                shiny::h3("NA filter")
+              )
+            }
 
             output[["parsed"]] <- shiny::renderPrint(filter_metadata$output()$parsed)
 
@@ -121,7 +134,6 @@ local({
     }
   })
 
-
   get_app_expr <- function(fd = NULL) {
     rlang::quo({
       app <- dv.manager::run_app(
@@ -134,7 +146,6 @@ local({
         filter_data = "dataset_1",
         filter_key = "sbj_var",
         enableBookmarking = "url",
-        filter_type = "development",
         filter_default = !!fd
       )
 
@@ -169,7 +180,10 @@ local({
 
   # Tide to internal representations but it does not matter, when it breaks we
   toggle_filter <- timed(function(app, dataset_name, var_name) {
-    selector <- sprintf("dv-filter-dataset-filter[data-dataset-name='%s'] div.card-header button", dataset_name)
+    selector <- sprintf(
+      "dv-filter-dataset-filter[data-dataset-name='%s'] div.dv-dataset-filter-header button",
+      dataset_name
+    )
     app$click(selector = selector)
 
     click_js <- sprintf(
@@ -200,7 +214,6 @@ local({
       if (checked) "true" else "false"
     )
   })
-  
 
   add_saved_filter <- timed(function(app, filter_name) {
     app$run_js(
@@ -216,17 +229,21 @@ local({
   })
 
   restore_saved_filter <- timed(function(app, filter_name) {
-    app$click(selector = sprintf(
-      r"--(dv-filter-saved-state-button[data-saved-filter-name="%s"])--",
-      filter_name
-    ))
+    app$click(
+      selector = sprintf(
+        r"--(dv-filter-saved-state-button[data-saved-filter-name="%s"])--",
+        filter_name
+      )
+    )
   })
 
   remove_saved_filter <- timed(function(app, filter_name) {
-    app$click(selector = sprintf(
-      r"--(dv-filter-removed-saved-state-button[data-saved-filter-name="%s"])--",
-      filter_name
-    ))
+    app$click(
+      selector = sprintf(
+        r"--(dv-filter-removed-saved-state-button[data-saved-filter-name="%s"])--",
+        filter_name
+      )
+    )
   })
 
   empty_filter <- list(
@@ -241,58 +258,64 @@ local({
     dataset_list_name = "dataset_list_1"
   )
 
-
   local({
-
     # For an undefined reason these two tests must run before the rest otherwise the application refuses to start
     # Assumed a weird shinytest2
 
-    test_that("Filter accepts empty dataset_list in dataset_lists. An NA filter state is returned."|>
-      vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ACTIVE_DATASET_LIST)), {
-
-        app <- start_app_driver(rlang::quo({                    
+    test_that(
+      "Filter accepts empty dataset_list in dataset_lists. An NA filter state is returned." |>
+        vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ACTIVE_DATASET_LIST)),
+      {
+        app <- start_app_driver(rlang::quo({
           dv.manager::run_app(
             data = list(),
             module_list = list("filter_test" = mod_filter_test(module_id = "filter_test")),
-            filter_type = "development",
             filter_data = "adsl",
             filter_key = "USUBJID",
             enableBookmarking = "url"
           )
-        })) |> suppressWarnings()
-        if (is.null(app)) stop("App could not be initialized")
+        })) |>
+          suppressWarnings()
+        if (is.null(app)) {
+          stop("App could not be initialized")
+        }
         on.exit(app$stop(), add = TRUE, after = FALSE)
 
-        fs <- get_filter_state(app)
+        fs <- shiny::isolate(app$get_value(export = "filter_test-filter_metadata")$output())
 
         expect_true(is.na(fs))
-    })
+      }
+    )
 
-    test_that("Filter accepts empty 0 rows in a dataset. A filter state is returned"|>
-      vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ACTIVE_DATASET_LIST)), {
-
-        app <- start_app_driver(rlang::quo({                    
+    test_that(
+      "Filter accepts empty 0 rows in a dataset. A filter state is returned" |>
+        vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ACTIVE_DATASET_LIST)),
+      {
+        app <- start_app_driver(rlang::quo({
           dv.manager::run_app(
-            data = list(dummy = list(adsl = data.frame(USUBJID=character(0)))),
+            data = list(dummy = list(adsl = data.frame(USUBJID = character(0)))),
             module_list = list("filter_test" = mod_filter_test(module_id = "filter_test")),
-            filter_type = "development",
             filter_data = "adsl",
             filter_key = "USUBJID",
             enableBookmarking = "url"
           )
-        })) |> suppressWarnings()
-        if (is.null(app)) stop("App could not be initialized")
+        })) |>
+          suppressWarnings()
+        if (is.null(app)) {
+          stop("App could not be initialized")
+        }
         on.exit(app$stop(), add = TRUE, after = FALSE)
 
         fs <- get_filter_state(app)
 
         expect_true(is.list(fs))
         expect_true("filters" %in% names(fs))
-    })
+      }
+    )
 
-
-  test_that("incompatible filters appear as such in the UI", {
-    app <- start_app_driver(get_app_expr(fd = r"--(
+    test_that("incompatible filters appear as such in the UI", {
+      app <- start_app_driver(get_app_expr(
+        fd = r"--(
       {
       "filters": {
         "datasets_filter": {
@@ -320,16 +343,24 @@ local({
       },
       "dataset_list_name": "dataset_list_1"
     }
-      )--")) |> suppressWarnings()
-    if (is.null(app)) stop("App could not be initialized")
-    on.exit(app$stop(), add = TRUE, after = FALSE)
+      )--"
+      )) |>
+        suppressWarnings()
+      if (is.null(app)) {
+        stop("App could not be initialized")
+      }
+      on.exit(app$stop(), add = TRUE, after = FALSE)
 
-    expect_true(app$get_js(r"--(document.querySelector('dv-filter-filter[data-filter-mode="simple"].dv-disabled-controls').classList.contains('dv-disabled-controls'))--"))
-  })
+      expect_true(app$get_js(
+        r"--(document.querySelector('dv-filter-filter[data-filter-mode="Basic"].dv-disabled-controls').classList.contains('dv-disabled-controls'))--"
+      ))
+    })
 
-  test_that("an can start with an specified filter"|>
-    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_INITIAL_STATE)), {
-    fd <- r"--(
+    test_that(
+      "an can start with an specified filter" |>
+        vdoc[["add_spec"]](c(specs$FILTERING$FILTER_INITIAL_STATE)),
+      {
+        fd <- r"--(
       {
       "filters": {
         "datasets_filter": {
@@ -359,18 +390,22 @@ local({
     }
       )--"
 
-    parsed_fd <- deserialize_filter_state_from_client(fd)
+        parsed_fd <- deserialize_filter_state_from_client(fd)
 
-    app <- start_app_driver(get_app_expr(fd = fd)) |> suppressWarnings()
-    if (is.null(app)) stop("App could not be initialized")
-    on.exit(app$stop(), add = TRUE, after = FALSE)
-    expect_identical(get_filter_state(app), parsed_fd)
-  })
-
+        app <- start_app_driver(get_app_expr(fd = fd)) |> suppressWarnings()
+        if (is.null(app)) {
+          stop("App could not be initialized")
+        }
+        on.exit(app$stop(), add = TRUE, after = FALSE)
+        expect_identical(get_filter_state(app), parsed_fd)
+      }
+    )
   })
 
   root_app <- start_app_driver(get_app_expr()) |> suppressWarnings()
-  if (is.null(root_app)) stop("App could not be initialized")
+  if (is.null(root_app)) {
+    stop("App could not be initialized")
+  }
 
   test_that("clear filter button removes all filters", {
     app <- shinytest2::AppDriver$new(root_app$get_url())
@@ -536,14 +571,14 @@ local({
             filter_values[[2]]
           )
         },
-        get_modified_variable_filter_state = function(dataset_name,  filter_values, include_NA) {
+        get_modified_variable_filter_state = function(dataset_name, filter_values, include_NA) {
           build_modified_state(
             list(
               kind = "filter",
               dataset = dataset_name,
               operation = "select_subset",
               variable = "subset_var",
-              values = unique(as.character(filter_values)),              
+              values = unique(as.character(filter_values)),
               include_NA = include_NA
             )
           )
@@ -568,7 +603,7 @@ local({
             filter_values[[2]]
           )
         },
-        get_modified_variable_filter_state = function(dataset_name,  filter_values, include_NA) {
+        get_modified_variable_filter_state = function(dataset_name, filter_values, include_NA) {
           build_modified_state(
             list(
               kind = "filter",
@@ -593,40 +628,75 @@ local({
 
       stopifnot(identical(get_filter_state(app), empty_filter))
 
-      test_that(sprintf("a `%s` filter can be added and modified", vn)|>
-    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ADD_REMOVE, specs$FILTERING$FILTER_SUPPORTED_TYPES, specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA)), {
-        # Return a list instead of a character vector, probably something to do between yyjson and json lite, likely an unboxing issue
-        toggle_filter(app, dataset_name, vn)
-        app$wait_for_idle()
-        app$run_js(gjsc(dataset_name, vn, fv))
-        app$wait_for_idle()
-        expect_identical(gmdfv(dataset_name, fv, TRUE), get_filter_state(app))
-        expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 3L)
-      })
+      test_that(
+        sprintf("a `%s` filter can be added and modified", vn) |>
+          vdoc[["add_spec"]](c(
+            specs$FILTERING$FILTER_ADD_REMOVE,
+            specs$FILTERING$FILTER_SUPPORTED_TYPES,
+            specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+            specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+            specs$FILTERING$FILTER_INDEPENDENT_TABLES,
+            specs$FILTERING$FILTER_MENU_SIDEBAR
+          )),
+        {
+          # Return a list instead of a character vector, probably something to do between yyjson and json lite, likely an unboxing issue
+          toggle_filter(app, dataset_name, vn)
+          app$wait_for_idle()
+          app$run_js(gjsc(dataset_name, vn, fv))
+          app$wait_for_idle()
+          expect_identical(gmdfv(dataset_name, fv, TRUE), get_filter_state(app))
+          expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 3L)
+        }
+      )
 
-      test_that(sprintf("a `%s` NAs can be removed", vn)|>
-    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ADD_REMOVE, specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA)), {
-        app$run_js(set_NA_include_js_code(dataset_name, vn, FALSE))
-        app$wait_for_idle()        
-        expect_identical(gmdfv(dataset_name, fv, FALSE), get_filter_state(app))
-        expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 2L)
-      })
+      test_that(
+        sprintf("a `%s` NAs can be removed", vn) |>
+          vdoc[["add_spec"]](c(
+            specs$FILTERING$FILTER_ADD_REMOVE,
+            specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
+            specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+            specs$FILTERING$FILTER_INDEPENDENT_TABLES,
+            specs$FILTERING$FILTER_MENU_SIDEBAR
+          )),
+        {
+          app$run_js(set_NA_include_js_code(dataset_name, vn, FALSE))
+          app$wait_for_idle()
+          expect_identical(gmdfv(dataset_name, fv, FALSE), get_filter_state(app))
+          expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 2L)
+        }
+      )
 
-      test_that(sprintf("a `%s` filter can be removed via menu", vn)|>
-    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ADD_REMOVE)), {
-        toggle_filter(app, dataset_name, vn)
-        app$wait_for_idle()        
-        expect_identical(get_filter_state(app), empty_filter)
-      })
+      test_that(
+        sprintf("a `%s` filter can be removed via menu", vn) |>
+          vdoc[["add_spec"]](c(
+            specs$FILTERING$FILTER_ADD_REMOVE,
+            specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+            specs$FILTERING$FILTER_INDEPENDENT_TABLES,
+            specs$FILTERING$FILTER_MENU_SIDEBAR
+          )),
+        {
+          toggle_filter(app, dataset_name, vn)
+          app$wait_for_idle()
+          expect_identical(get_filter_state(app), empty_filter)
+        }
+      )
 
-      test_that(sprintf("a `%s` filter can be added via menu and removed via x button", vn)|>
-    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ADD_REMOVE)), {
-        toggle_filter(app, dataset_name, vn)
-        app$wait_for_idle()
-        click_remove_filter_x_button(app, dataset_name, vn)
-        app$wait_for_idle()
-        expect_identical(get_filter_state(app), empty_filter)
-      })
+      test_that(
+        sprintf("a `%s` filter can be added via menu and removed via x button", vn) |>
+          vdoc[["add_spec"]](c(
+            specs$FILTERING$FILTER_ADD_REMOVE,
+            specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+            specs$FILTERING$FILTER_INDEPENDENT_TABLES,
+            specs$FILTERING$FILTER_MENU_SIDEBAR
+          )),
+        {
+          toggle_filter(app, dataset_name, vn)
+          app$wait_for_idle()
+          click_remove_filter_x_button(app, dataset_name, vn)
+          app$wait_for_idle()
+          expect_identical(get_filter_state(app), empty_filter)
+        }
+      )
       app$click(selector = "dv-filter-clear-all-button")
       app$wait_for_idle()
     }
@@ -635,7 +705,7 @@ local({
 
   test_that("filters can be exported", {
     app <- shinytest2::AppDriver$new(root_app$get_url())
-    on.exit(app$stop(), add = TRUE, after = FALSE)    
+    on.exit(app$stop(), add = TRUE, after = FALSE)
     file_dwnld <- paste(readLines(app$get_download("filter-export_code_button_input")), collapse = "\n")
     empty_filter_json <- r"--({"filters":{"datasets_filter":{"children":[]},"subject_filter":{"children":[]}},"dataset_list_name":"dataset_list_1"})--"
     expect_identical(gsub("[[:space:]]", "", file_dwnld), empty_filter_json)
@@ -644,61 +714,67 @@ local({
     app$wait_for_idle()
   })
 
-  test_that("filters can be saved/restored/removed"|>
-    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_SAVE_RESTORE)), {
-    app <- shinytest2::AppDriver$new(root_app$get_url())
-    on.exit(app$stop(), add = TRUE, after = FALSE)
-    filter_name <- "A"
+  test_that(
+    "filters can be saved/restored/removed" |>
+      vdoc[["add_spec"]](c(specs$FILTERING$FILTER_SAVE_RESTORE)),
+    {
+      app <- shinytest2::AppDriver$new(root_app$get_url())
+      on.exit(app$stop(), add = TRUE, after = FALSE)
+      filter_name <- "A"
 
-    toggle_filter(app, dataset_name = "dataset_1", "range_var")
-    add_saved_filter(app, filter_name)
-    app$wait_for_idle()
-    expected <- get_filter_state(app)
+      toggle_filter(app, dataset_name = "dataset_1", "range_var")
+      add_saved_filter(app, filter_name)
+      app$wait_for_idle()
+      expected <- get_filter_state(app)
 
-    app$click(selector = "dv-filter-clear-all-button")
-    app$wait_for_idle()
+      app$click(selector = "dv-filter-clear-all-button")
+      app$wait_for_idle()
 
-    restore_saved_filter(app, filter_name)
-    app$wait_for_idle()
+      restore_saved_filter(app, filter_name)
+      app$wait_for_idle()
 
-    expect_identical(expected, get_filter_state(app))
+      expect_identical(expected, get_filter_state(app))
 
-    remove_saved_filter(app, filter_name)
-    app$wait_for_idle()
+      remove_saved_filter(app, filter_name)
+      app$wait_for_idle()
 
-    after_removal <- app$get_html(selector = sprintf(
-      r"--(dv-filter-saved-state-button[data-saved-filter-name="%s"])--",
-      filter_name
-    ))
-    expect_length(after_removal, 0)
+      after_removal <- app$get_html(
+        selector = sprintf(
+          r"--(dv-filter-saved-state-button[data-saved-filter-name="%s"])--",
+          filter_name
+        )
+      )
+      expect_length(after_removal, 0)
 
-    app$click(selector = "dv-filter-clear-all-button")
-    app$wait_for_idle()
-  })
+      app$click(selector = "dv-filter-clear-all-button")
+      app$wait_for_idle()
+    }
+  )
 
+  test_that(
+    "filters can be bookmarked and restored" |>
+      vdoc[["add_spec"]](c(specs$FILTERING$FILTER_BOOKMARKABLE, specs$BOOKMARKING$BOOKMARK_FILTERS)),
+    {
+      app <- shinytest2::AppDriver$new(root_app$get_url())
+      on.exit(app$stop(), add = TRUE, after = FALSE)
+      toggle_filter(app, "dataset_1", "range_var")
+      app$wait_for_idle()
+      add_saved_filter(app, "A")
+      toggle_filter(app, "dataset_1", "subset_var")
+      app$wait_for_idle()
 
-  test_that("filters can be bookmarked and restored"|>
-    vdoc[["add_spec"]](c(specs$FILTERING$FILTER_BOOKMARKABLE)), {
-    app <- shinytest2::AppDriver$new(root_app$get_url())
-    on.exit(app$stop(), add = TRUE, after = FALSE)
-    toggle_filter(app, "dataset_1", "range_var")
-    app$wait_for_idle()
-    add_saved_filter(app, "A")
-    toggle_filter(app, "dataset_1", "subset_var")
-    app$wait_for_idle()
-
-    bmk_url <- app$get_js("window.location.href")
-    bookmark_app <- suppressWarnings(shinytest2::AppDriver$new(bmk_url))
-    on.exit(app$stop(), add = TRUE, after = FALSE)
-    bookmark_app$wait_for_idle()
-    app_input_values <- app$get_values()[["input"]]
-    bmk_input_values <- bookmark_app$get_values()[["input"]]
-    expect_identical(app_input_values, bmk_input_values)
-  })
+      bmk_url <- app$get_js("window.location.href")
+      bookmark_app <- suppressWarnings(shinytest2::AppDriver$new(bmk_url))
+      on.exit(app$stop(), add = TRUE, after = FALSE)
+      suppressWarnings(bookmark_app$wait_for_idle())
+      app_input_values <- app$get_values()[["input"]]
+      bmk_input_values <- bookmark_app$get_values()[["input"]]
+      expect_identical(app_input_values, bmk_input_values)
+    }
+  )
 
   # dataset_list switching. What to test? More undefined cases than anything else...
   # Missing variables,
-
 
   ## OUT OF SCOPE THIS IS FILTERING AND IS COVERED IN OTHER TESTS CONSIDER IF WE WANT TO MOVE THEM HERE
   # Check the effect of subject filter in datasets

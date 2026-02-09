@@ -35,7 +35,8 @@ include_js <- function(pattern = "*") {
 create_info_modal <- function(session, input, ns) {
   shiny::modalDialog(
     title = "dv.manager info",
-    shiny::tags$a(shiny::icon("question-circle", class = "fa-lg"),
+    shiny::tags$a(
+      shiny::icon("question-circle", class = "fa-lg"),
       "Package documentation",
       href = "", # nolint
       target = "_blank"
@@ -47,10 +48,10 @@ create_info_modal <- function(session, input, ns) {
   )
 }
 
-get_data_tables_names <- function(data) {
+get_dataset_list_names <- function(dataset_list) {
   nm <- character(0)
-  for (idx in seq_along(data)) {
-    curr_data <- if (is.function(data[[idx]])) data[[idx]]() else data[[idx]]
+  for (idx in seq_along(dataset_list)) {
+    curr_data <- if (is.function(dataset_list[[idx]])) dataset_list[[idx]]() else dataset_list[[idx]]
     nm <- union(nm, names(curr_data))
   }
   return(nm)

@@ -16,7 +16,7 @@ The main purpose of this subgrouping feature is enabling users to quickly create
 directly in the application itself. It must be noted that it does not allow to create permanent groups and final
 or complex subgroups should be created during data preprocessing before the application starts.
 
-To active this feature you must set and  `enable_subgroup = TRUE` as well as activating the development filter `filter_type="development"` in the `run_app` call.
+To active this feature you must set and  `enable_subgroup = TRUE` in the `run_app` call.
 
 ## How to create a 2 category subgroup
 </br>
@@ -79,7 +79,7 @@ mutually exclusive, we select **81 to 89** and **70 to 80** in the filter contro
 
 </div>
 
-In both cases more advanced subgroups can be created by using more filters or by switching to the `blockly` filter
+In both cases more advanced subgroups can be created by using more filters or by switching to the `Advanced` filter
 as described in the [new filter](/articles/development_filter.html) article.
 
 

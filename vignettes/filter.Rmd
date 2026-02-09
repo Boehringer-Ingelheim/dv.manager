@@ -1,8 +1,8 @@
 ---
-title: "(DEVELOPMENT) New Filter"
+title: "Filtering"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{(DEVELOPMENT) Blockly Filter}
+  %\VignetteIndexEntry{Filter}
   %\VignetteEngine{knitr::rmarkdown}14:55
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,14 +15,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Using the Development Filter
-
-**Note that this filter is still in development stage and should not be used in production apps.**
-
-This filter will replace the previous filter system in the DaVinci apps. This filtering is more performant and has
-extended capabilities to cover a wider range of use cases.
-
-To activate this functionality, you only have to set the `filter_type` argument to `development`.
 
 ![](images/filter_overview.png){width=100%}
 
@@ -34,10 +26,10 @@ The filter is located in the sidebar, and it is divided in three main zones:
 
   3. filter body and selectors
 
-This new filter has two different interfaces a *simple* one and a *blockly* one. Both have the same mission, but the 
+This filter has two different interfaces a *Basic* one and a *Advanced* one. Both have the same mission, but the 
 latter has a *block* interface that allows expressing richer filters when required.
 
-Before describing each filter (*simple* or *blockly*), it is important to understand the two levels at which filters can be applied.
+Before describing each filter (*Basic* or *Advanced*), it is important to understand the two levels at which filters can be applied.
 
 ## Filtering levels
 
@@ -45,18 +37,15 @@ Before describing each filter (*simple* or *blockly*), it is important to unders
 
 These filters apply to a single dataset. They are used to select specific rows within that dataset.
 
-::: {style="padding: 1em 1em 1em 1em;  margin-bottom: 5px;  border: 1px solid #64a1ce;  border-radius: 5px;  background:#f5f5f5 5px center/3em no-repeat;"}
-**Level dropping**
-
+<div class="alert alert-info" role="alert">
 This filter will drop filtered levels from the factor variables.
-
-:::
+</div>
 
 ### Subject or subpopulation filters
 
 These filters apply across all datasets in the application. They are used to select a subpopulation that spans all datasets.
 
-## Simple filter
+## Basic filter
 
 The interface displays one filter box per dataset. Inside each box, you can add filters for the variables available in that dataset.
 
@@ -85,6 +74,14 @@ See below an example of the usage of the filter:
 
 Notice filters can be collapsed by clicking the dataset name.
 
+<div class="alert alert-info">
+  **Note:**  
+  Datasets can be assigned a human readable label by adding an attribute `label` to the datasets inside a dataset_list.
+</div>
+
+```{r}
+
+```
 ## Saving/Restoring states, clearing all filters and exporting the current state to a file
 
 As shown in the example, you can save a filter state and restore it later.
@@ -95,16 +92,15 @@ The exported file can then be reused in the application as a preset filter.
 
 dv.manager::run_app(
   ...,
-  filter_type = "development",
   filter_default_state = "path/to/filter/file.json"
 )
 ```
 
 
-Now let's switch to the **Blockly Filter** . To switch between filter types, use the dropdown menu in the top section (marked as 1).
+Now let's switch to the **Advanced** filter. To switch between filter types, use the dropdown menu in the top section (marked as 1).
 When you change the filter type, the current state of the filter is preserved.
 
-## Blockly Filter
+## Advanced Filter
 
 ![](images/blockly_overview.png){width=100%}
 
@@ -112,14 +108,14 @@ In this interface, you will notice there are no filters on the left side. Instea
 
 Clicking this button opens the filter modal, where you can design your filter.
 
-The Blockly filter works as follows:
+The Advanced filter works as follows:
 
   - Select blocks from the categories (2), or search for them using the search box (3).
 
   - Drag the blocks into the canvas (4) and connect them to build your filter.
 
 <div class="alert alert-info" role="alert">
-  Once your filter is created, click **Apply filter** (5). Unlike the simple filter, Blockly filters are **not applied automatically** — you must apply them explicitly.
+  Once your filter is created, click **Apply filter** (5). Unlike the basic filter, advanced filters are **not applied automatically** — you must apply them explicitly.
 </div>
 
 ### Description of pieces
@@ -145,7 +141,7 @@ Drag these pieces into the canvas to create filters.
 
 ![](images/dataset_pieces.gif){width=100%}
 
-In the animation above, a simple filter is created for the `adae` dataset to include only rows where the *Lowest Level Term* is *ABDOMINAL CRAMPS*.
+In the animation above, a basic filter is created for the `adae` dataset to include only rows where the *Lowest Level Term* is *ABDOMINAL CRAMPS*.
 
 To build more complex filters, you can use the combination operations available in the **Operations** toolbox section.
 
@@ -211,7 +207,7 @@ You must enter at least three characters before the search will begin.
 
 ## Example application
 
-Below is an example application that allows testing the Blockly filter:
+Below is an example application that allows testing the Advanced filter:
 
 ``` {r, eval=FALSE}
 # Note ::: is used as several of the functions are not exported yet
@@ -232,8 +228,7 @@ dv.manager::run_app(
     "Listing" = dv.listings::mod_listings("mod_listing", c("adsl", "adae"))
   ),
   filter_data = "adsl",
-  filter_key = "USUBJID",
-  filter_type = "development"
+  filter_key = "USUBJID"
 )
 ```
 

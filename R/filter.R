@@ -82,75 +82,6 @@ FC <- poc(
   )
 )
 
-get_dataset_filters_info <- function(data, filter_data) {
-  dataset_filter_names <- setdiff(get_data_tables_names(data), filter_data)
-  res <- vector(mode = "list", length = length(dataset_filter_names))
-  names(res) <- dataset_filter_names
-
-  for (idx in seq_along(dataset_filter_names)) {
-    name <- dataset_filter_names[[idx]]
-    hash <- digest::digest(name, "murmur32")
-    id <- sprintf("dataset_filter_%s", hash)
-    cont_id <- paste0(id, "_cont")
-    res[[idx]] <- list(name = name, id = id, hash = hash, id_cont = cont_id)
-  }
-
-  return(res)
-}
-
-create_dataset_filters_ui <- function(dataset_filters_info, ns) {
-  if (!isTRUE(getOption("new_filter_switch"))) {
-    res <- vector(mode = "list", length = length(dataset_filters_info))
-    for (idx in seq_along(dataset_filters_info)) {
-      entry <- dataset_filters_info[[idx]]
-      res[[idx]] <- shiny::div(
-        id = entry[["id_cont"]],
-        class = "filter-control  filter-filters",
-        shiny::tags[["label"]](entry[["name"]]),
-        dv.filter::data_filter_ui(ns(entry[["id"]])),
-        shiny::hr(style = "border-top: 2px solid gray; height: 10px;")
-      )
-    }
-  } else {}
-  return(res)
-}
-
-create_subject_level_ui <- function(id) {
-  dv.filter::data_filter_ui(id)
-}
-
-create_subject_level_server <- function(
-  id,
-  data
-) {
-  if (!isTRUE(getOption("new_filter_switch"))) dv.filter::data_filter_server(id, data)
-}
-
-create_dataset_filters_server <- function(datasets_filters_info, data_list) {
-  if (!isTRUE(getOption("new_filter_switch"))) {
-    res <- local({
-      l <- vector(mode = "list", length = length(datasets_filters_info))
-      names(l) <- names(datasets_filters_info)
-      for (idx in seq_along(datasets_filters_info)) {
-        l[[idx]] <- local({
-          curr_dataset_filter_info <- datasets_filters_info[[idx]]
-          dv.filter::data_filter_server(
-            curr_dataset_filter_info[["id"]],
-            shiny::reactive({
-              data_list()[[curr_dataset_filter_info[["name"]]]] %||% data.frame()
-            })
-          )
-        })
-      }
-      l
-    })
-  } else {}
-
-  return(res)
-}
-
-# NEW FILTER ----
-
 get_single_filter_data <- function(dataset) {
   nm_var <- names(dataset)
   n_var <- length(nm_var)
@@ -193,7 +124,7 @@ get_single_filter_data <- function(dataset) {
       l[[FDF$MAX]] <- max(-Inf, na_clean_var, na.rm = TRUE)
 
       if (length(na_clean_var) > 0 && !all(is.infinite(na_clean_var))) {
-        hist_info <- hist(na_clean_var, plot = FALSE)
+        hist_info <- graphics::hist(na_clean_var, plot = FALSE)
       } else {
         hist_info <- list(density = numeric(0))
       }
@@ -239,9 +170,15 @@ get_filter_data <- function(dataset_lists) {
     for (jdx in seq_len(n_datasets)) {
       current_dataset <- current_dataset_list[[jdx]]
       current_dataset_name <- nm_datasets[[jdx]]
+      current_dataset_label <- attr(current_dataset_list[[jdx]], "label") %||% current_dataset_name
       current_dataset_res[[jdx]] <- stats::setNames(
-        object = list(current_dataset_name, nrow(current_dataset), get_single_filter_data(current_dataset)),
-        nm = c(FDF$NAME, FDF$NROW, FDF$VARIABLES)
+        object = list(
+          current_dataset_name,
+          current_dataset_label,
+          nrow(current_dataset),
+          get_single_filter_data(current_dataset)
+        ),
+        nm = c(FDF$NAME, FDF$LABEL, FDF$NROW, FDF$VARIABLES)
       )
     }
     res[[idx]] <- stats::setNames(
@@ -887,7 +824,14 @@ new_filter_server <- function(
     log_inform(paste("Listening to:", ns(ID$FILTER_STATE_JSON_INPUT)))
     log_inform(paste("Listening to:", ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)))
 
+    overlay_present <- FALSE
     shiny::observeEvent(selected_dataset_list(), {
+      overlay_present <<- TRUE
+      session[["sendCustomMessage"]](
+        "dv_manager_show_overlay",
+        list(message = "Loading...")
+      )
+
       log_inform(paste0("Send init message to ", ns_id))
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
       current_dataset_lists <- stats::setNames(list(selected_dataset_list()), dataset_list_name)
@@ -906,6 +850,13 @@ new_filter_server <- function(
     })
 
     shiny::observeEvent(input[[ID$SAVED_FILTER_STATE_JSON_MSG_INPUT]], {
+      if (overlay_present) {
+        session[["sendCustomMessage"]](
+          "dv_manager_hide_overlay",
+          list()
+        )
+        overlay_present <<- FALSE
+      }
       log_inform(
         paste("Received saved states:", input[[ID$SAVED_FILTER_STATE_JSON_MSG_INPUT]])
       )
@@ -964,10 +915,7 @@ new_filter_server <- function(
         )
       } else {
         log_inform("PROCESSING FILTER NA")
-        list(
-          parsed = NA_character_,
-          raw = NA_character_
-        )
+        NA_character_
       }
     })
 
@@ -1053,10 +1001,12 @@ binary_serialize_filter_data <- function(x) {
 
     for (dataset_idx in seq_len(dataset_list_len)) {
       dataset_name <- dataset_list[[dataset_idx]][["name"]]
+      dataset_label <- dataset_list[[dataset_idx]][["label"]]
       dataset_var <- dataset_list[[dataset_idx]][["variables"]]
       dataset_nrow <- dataset_list[[dataset_idx]][["nrow"]]
       dataset_nvar <- length(dataset_var)
       w_string(dataset_name)
+      w_string(dataset_label)
       w_int(dataset_nrow)
       w_int(dataset_nvar)
 
@@ -1163,6 +1113,7 @@ binary_deserialize_filter_data <- function(x) {
     for (dataset_idx in seq_len(dataset_list_len)) {
       dataset <- list()
       dataset[["name"]] <- r_string()
+      dataset[["label"]] <- r_string()
       dataset[["nrow"]] <- r_int()
       dataset_nvar <- r_int()
       dataset_var <- list()
