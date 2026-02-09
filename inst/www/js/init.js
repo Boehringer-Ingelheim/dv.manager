@@ -177,6 +177,9 @@ const dv_tab = (function () {
 
 const dv_overlay = (function () {
 
+  // let log = console.log;
+  let log = function () { return; };
+
   let C  = {
     ID: "__manager_overlay__",
     MIN_VISIBLE_MS: 500
