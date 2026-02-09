@@ -207,7 +207,7 @@ subject_filter_operations <- local({
     children <- filter_element[["children"]]
     subjects <- character(0)
     assert(length(children) > 0, "`union` operation requires at least one child")
-    dataset_list_lvls <- rep_len(list(list()), length = length(dataset_list))
+    dataset_list_lvls <- rep_len(list(list(lvls = list())), length = length(dataset_list))
     names(dataset_list_lvls) <- names(dataset_list)
 
     for (child in children) {
@@ -237,7 +237,7 @@ subject_filter_operations <- local({
     children <- filter_element[["children"]]
     subjects <- complete_subject_list
     assert(length(children) > 0, "`intersect` operation requires at least one child")
-    dataset_list_lvls <- rep_len(list(list()), length = length(dataset_list))
+    dataset_list_lvls <- rep_len(list(list(lvls = list())), length = length(dataset_list))
     names(dataset_list_lvls) <- names(dataset_list)
 
     for (child in children) {
@@ -272,7 +272,7 @@ subject_filter_operations <- local({
     assert(length(children) == 1, "`complement` operation requires exactly one child")
     processed_element <- process_subject_filter_element(dataset_list, children[[1]], sbj_var, complete_subject_list)
     subjects <- setdiff(complete_subject_list, processed_element[["subjects"]])
-    dataset_list_lvls <- rep_len(list(list()), length = length(dataset_list))
+    dataset_list_lvls <- rep_len(list(list(lvls = list())), length = length(dataset_list))
     names(dataset_list_lvls) <- names(dataset_list)
 
     child_dataset_list_lvls <- processed_element[["dataset_list_lvls"]]
@@ -298,7 +298,7 @@ subject_filter_operations <- local({
     dataset <- processed_element[["dataset"]]
     subjects <- as.character(dataset_list[[dataset]][[sbj_var]][mask])
 
-    dataset_list_lvls <- rep_len(list(list()), length = length(dataset_list))
+    dataset_list_lvls <- rep_len(list(list(lvls = list())), length = length(dataset_list))
     names(dataset_list_lvls) <- names(dataset_list)
     dataset_lvls <- processed_element[["lvls"]]
     dataset_name <- processed_element[["dataset"]]
@@ -603,20 +603,16 @@ combine_filter_info <- function(filter_info) {
     names(subject_filter_info[["filter_info"]]),
     names(dataset_filter_info[["filter_info"]])
   )) {
-    if (
-      dataset_name %in%
-        names(subject_filter_info[["filter_info"]]) &&
-        dataset_name %in% names(dataset_filter_info[["filter_info"]])
-    ) {
+    if (dataset_name %in% names(subject_filter_info[["filter_info"]])) {
       subject_mask <- subject_filter_info[["filter_info"]][[dataset_name]][["mask"]]
-      dataset_mask <- dataset_filter_info[["filter_info"]][[dataset_name]][["mask"]]
-      res_mask <- subject_mask & dataset_mask
-    } else if (dataset_name %in% names(subject_filter_info[["filter_info"]])) {
-      subject_mask <- subject_filter_info[["filter_info"]][[dataset_name]][["mask"]]
-      dataset_mask <- TRUE
-    } else if (dataset_name %in% names(dataset_filter_info[["filter_info"]])) {
+    } else {
       subject_mask <- TRUE
+    }
+
+    if (dataset_name %in% names(dataset_filter_info[["filter_info"]])) {
       dataset_mask <- dataset_filter_info[["filter_info"]][[dataset_name]][["mask"]]
+    } else {
+      dataset_mask <- TRUE
     }
 
     res_mask <- subject_mask & dataset_mask
