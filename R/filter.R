@@ -634,20 +634,17 @@ combine_filter_info <- function(filter_info) {
         var_dataset_lvls <- subject_lvls[[variable]]
       }
 
-      res_lvls[[variable]] <- intersect(subject_lvls[[variable]], dataset_lvls[[variable]])
+      res_lvls[[variable]] <- intersect(var_subject_lvls, var_dataset_lvls)
     }
+    res[["filter_info"]][[dataset_name]][["lvls"]] <- res_lvls
   }
 
-  res[["filter_info"]][[dataset_name]][["lvls"]] <- res_lvls
-
   return(
-    list(filter_info = res[["filter_info"]], error_list = new_error_list())
+    list(res = res, error_list = new_error_list())
   )
 }
 
 apply_filter_info <- function(dataset_list, dataset_filter_info) {
-  # Code partially matches  (EO9M)
-
   filtered_dataset_list <- dataset_list
   filter_info <- as_safe_list(dataset_filter_info[["filter_info"]])
   for (current_dataset_name in names(filter_info)) {
@@ -706,7 +703,7 @@ apply_filter_info_to_dataset_list <- (function(unfiltered_dataset_list, filter_i
 
     fd <- tryCatch(
       {
-        apply_filter_info(unfiltered_dataset_list, filter_info)
+        apply_filter_info(unfiltered_dataset_list, filter_info[["res"]])
       },
       error = function(e) {
         error <- FC$ERRORS$GENERIC_FILTER_APPLICATION

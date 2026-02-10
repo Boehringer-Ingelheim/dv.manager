@@ -2118,6 +2118,81 @@ local({
       expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["variables"]][[1]][["name"]], "var1")
     }
   )
+
+  test_that("combine_filter_info returns combined filter info", {
+    # Both in subject and in dataset
+    # Subject is copied
+    # Datasets are combined (Both and 1 in one and not in the other)
+    # Masks are combined (Both and 1 in one and not in the other)
+    # vars are combined (Both and 1 in one and not in the other)
+
+    filter_info <- list(
+      error_list = new_error_list(),
+      "filter_info" = list(
+        subject = list(
+          subjects = c("sbj1", "sbj2"),
+          "filter_info" = list(
+            d_both1 = list(
+              mask = c(TRUE, TRUE),
+              lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "b"), var_only_subject = c("a", "b"))
+            ),
+            d_both2 = list(
+              mask = c(TRUE, TRUE),
+              lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "b"), var_only_subject = c("a", "b"))
+            ),
+            d_only_subject = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b")))
+          )
+        ),
+        dataset = list(
+          "filter_info" = list(
+            d_both1 = list(
+              mask = c(TRUE, FALSE),
+              lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "c"), var_only_dataset = c("a", "b"))
+            ),
+            d_both2 = list(
+              mask = c(TRUE, FALSE),
+              lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "c"), var_only_dataset = c("a", "b"))
+            ),
+            d_only_dataset = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b")))
+          )
+        )
+      )
+    )
+
+    expected_filter_info <- list(
+      "res" = list(
+        subjects = c("sbj1", "sbj2"),
+        "filter_info" = list(
+          d_both1 = list(
+            mask = c(TRUE, FALSE),
+            lvls = list(
+              var_both1 = c("a", "b"),
+              var_both2 = c("a"),
+              var_only_subject = c("a", "b"),
+              var_only_dataset = c("a", "b")
+            )
+          ),
+          d_both2 = list(
+            mask = c(TRUE, FALSE),
+            lvls = list(
+              var_both1 = c("a", "b"),
+              var_both2 = c("a"),
+              var_only_subject = c("a", "b"),
+              var_only_dataset = c("a", "b")
+            )
+          ),
+          d_only_subject = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b"))),
+          d_only_dataset = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b")))
+        )
+      ),
+      error_list = new_error_list()
+    )
+
+    expect_identical(
+      combine_filter_info(filter_info),
+      expected_filter_info
+    )
+  })
 })
 
 local({
