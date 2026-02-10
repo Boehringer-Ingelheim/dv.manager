@@ -5,8 +5,6 @@ vignette: >
   %\VignetteIndexEntry{Developing a new module}
   %\VignetteEngine{knitr::rmarkdown}14:55
   %\VignetteEncoding{UTF-8}
-resource_files:
-  - ../man/figures/dev_1.gif
 ---
 
 ```{r, include = FALSE}
@@ -108,7 +106,6 @@ We name the function `mod_uniq_values` to indicate that it is a module and what 
 ```{r, eval=FALSE}
 mod_uniq_values <- function(table_name, column_names, module_id) {
   mod <- list(
-
     # UI function
     ui = function(mod_id) {
       module_ui(mod_id, column_names)
@@ -132,11 +129,13 @@ The function defined in the server element will be later evaluated by module man
 
 ```{r, eval=FALSE}
 dataset <- list(adsl = pharmaverseadam::adsl)
-module_list <- list("First module" = mod_uniq_values(
-  "adsl",
-  c("USUBJID", "AGE"),
-  module_id = "mod1"
-))
+module_list <- list(
+  "First module" = mod_uniq_values(
+    "adsl",
+    c("USUBJID", "AGE"),
+    module_id = "mod1"
+  )
+)
 dv.manager::run_app(
   data = list("DS" = dataset),
   module_list = module_list,
@@ -177,7 +176,8 @@ Here two `observeEvent` has been added that will update the choices in the input
 ```{r, eval=FALSE}
 module_server <- function(id, dataset_list) {
   module <- function(input, output, session) {
-    observeEvent(dataset_list(),
+    observeEvent(
+      dataset_list(),
       {
         updateSelectInput(
           inputId = "data_select",
