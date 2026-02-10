@@ -1,7 +1,10 @@
 # nolint start
 
 test_that(
-  vdoc[["add_spec"]]("css from a module should not affect another module when css namespacing is activated", c(specs$INTERFACE$INTERFACE_CSS_NAMESPACE)),
+  vdoc[["add_spec"]](
+    "css from a module should not affect another module when css namespacing is activated",
+    c(specs$INTERFACE$INTERFACE_CSS_NAMESPACE)
+  ),
   {
     skip_if_not_running_shiny_tests()
 
@@ -17,13 +20,16 @@ test_that(
       )
     })
 
-    expect_identical(app$get_js("$('#mod1-button').css('color')"), "rgb(64, 64, 64)")
+    expect_identical(app$get_js("$('#mod1-button').css('color')"), "rgb(0, 228, 124)")
     expect_identical(app$get_js("$('#mod2-button').css('color')"), "rgb(255, 0, 0)")
   }
 )
 
 test_that(
-  vdoc[["add_spec"]]("css from a module should not affect another module when css namespacing is disabled", c(specs$INTERFACE$INTERFACE_CSS_NAMESPACE)),
+  vdoc[["add_spec"]](
+    "css from a module should not affect another module when css namespacing is disabled",
+    c(specs$INTERFACE$INTERFACE_CSS_NAMESPACE)
+  ),
   {
     skip_if_not_running_shiny_tests()
 

@@ -154,23 +154,26 @@ build_subgroup_category_ui <- function(
 mod_subgroup_ui <- function(id, subject_filter_dataset_name) {
   ns <- shiny::NS(id)
   list(
-    shiny::textInput(ns(ID_SG$SUBGROUP_NAME), label = NULL, placeholder = "Enter subgroup name"),
-    shiny::textInput(ns(ID_SG$SUBGROUP_LABEL), label = NULL, placeholder = "Enter subgroup label"),
     shiny::div(
-      style = "display: flex; align-items:baseline",
-      shiny::span("Categories in subgroup", class = "mb-3 pe-1"),
-      shiny::selectInput(
-        ns(ID_SG$SUBGROUP_CAT_NUM),
-        NULL,
-        choices = 2:MAX_CATEGORIES,
-        selected = 2,
-        width = "auto",
-        selectize = FALSE
-      )
+      class = "p-1",
+      shiny::textInput(ns(ID_SG$SUBGROUP_NAME), label = NULL, placeholder = "Enter subgroup name"),
+      shiny::textInput(ns(ID_SG$SUBGROUP_LABEL), label = NULL, placeholder = "Enter subgroup label"),
+      shiny::div(
+        style = "display: flex; align-items:baseline",
+        shiny::span("Categories in subgroup", class = "mb-3 pe-1"),
+        shiny::selectInput(
+          ns(ID_SG$SUBGROUP_CAT_NUM),
+          NULL,
+          choices = 2:MAX_CATEGORIES,
+          selected = 2,
+          width = "auto",
+          selectize = FALSE
+        )
+      ),
+      shiny::uiOutput(ns(ID_SG$SUBGROUP_CAT_CONTAINER)),
+      shiny::actionButton(ns(ID_SG$ADD_SUBGROUP), label = "Add subgroup", class = "btn-sm", style = "flex: 2;"),
+      shiny::uiOutput(ns(ID_SG$SUBGROUPS))
     ),
-    shiny::uiOutput(ns(ID_SG$SUBGROUP_CAT_CONTAINER)),
-    shiny::actionButton(ns(ID_SG$ADD_SUBGROUP), label = "Add subgroup", class = "btn-sm", style = "flex: 2;"),
-    shiny::uiOutput(ns(ID_SG$SUBGROUPS)),
     new_filter_ui(ns(ID_SG$FILTER), subject_filter_dataset_name, state = NULL)
   )
 }
@@ -421,7 +424,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       for (idx in seq_along(r_subgroups)) {
         subgroup_name <- names(r_subgroups)[[idx]]
         if (!subgroup_name %in% incorrect_subgroups()) {
-          badge_ui[[idx]] <- tags[["span"]](subgroup_name, class = "badge w-auto bg-light text-dark")
+          badge_ui[[idx]] <- tags[["span"]](subgroup_name, class = "badge text-bg-secondary w-auto")
         } else {
           badge_ui[[idx]] <- tags[["span"]](
             subgroup_name,
