@@ -147,18 +147,23 @@ body {
     &:not(:checked)~.sidebar {
       left: $sidebar-width-collapsed - $sidebar-width-open;
 
-      .menu-contents,
-      .logo-text {
+      .menu-fade,
+      .icon-text {
         opacity: 0;
       }
 
       .icon-close {
         display: none;
       }
+
+      .icon-control {
+        height: 100%;
+      }
     }
 
     &:checked~.sidebar {
       left: 0;
+
 
       .icon-open {
         display: none;
@@ -181,36 +186,42 @@ body {
       left 0.3s ease-in-out 0.1s;
     box-shadow: $color-shadow;
 
-    .logo-container {
+    .icon-container {
       display: flex;
       flex-direction: row;
       color: $color-text;
       align-items: center;
-      justify-content: center;
+      justify-content: space-around;
       position: relative;
       width: 100%;
       height: 53px;
       flex-shrink: 0;
 
-      .logo-text {
+      .icon-text {
+        @extend .text-secondary;
         transition: opacity 0.2s ease-out 0.1s;
         font-size: 1.5em;
         letter-spacing: .5em;
       }
 
-      .logo-control {
+      .icon-control {
+        // @extend .text-secondary;
+        height: auto;
         transition: opacity 0.2s ease-out 0.1s;
-        font-size: 1rem;
+        font-size: 1.2em;
         color: $color-text;
-        position: absolute;
-        font-size: 1.8em;
-        right: 0.5em;
+        // position: absolute;
+        // right: 0.5em;
         cursor: pointer;
       }
     }
 
-    .menu-contents {
+    .menu-fade {
       transition: opacity 0.2s ease-out;
+    }
+
+    .menu-contents {
+      @extend .menu-fade;
       align-self: stretch;
       margin-bottom: 30px;
       flex-grow: 1;
@@ -388,7 +399,7 @@ dv-filter-wrapper {
 
       .dv-title-tag {
         @extend .card-title;
-        @extend .mb-0;        
+        @extend .mb-0;
       }
 
       .dv-dataset-filter-header {
@@ -400,8 +411,8 @@ dv-filter-wrapper {
 
         .dv-dataset-filter-header-left {
           display: flex;
-          justify-content: flex-start;          
-          align-items: baseline;          
+          justify-content: flex-start;
+          align-items: baseline;
           column-gap: 1em;
           flex: 1;
 

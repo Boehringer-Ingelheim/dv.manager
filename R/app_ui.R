@@ -91,14 +91,15 @@ app_ui <- function(request_id) {
     shiny::div(
       class = "sidebar",
       shiny::div(
-        shiny::tags$span(class = "logo-text", "DaVinci"),
+        shiny::img(src = "icons/dv_icon.svg", class = "p-2 menu-fade", style = "height: 100%; width: auto"),
+        shiny::tags$span(class = "icon-text menu-fade", "DaVinci"),
         shiny::tags$label(
           `for` = "click",
           shiny::icon("times", class = "icon-close"),
-          shiny::icon("chevron-right", class = "icon-open"),
-          class = "logo-control"
+          shiny::img(src = "icons/dv_icon.svg", style = "height: 100%; width: auto", class = "icon-open"),
+          class = "icon-control"
         ),
-        class = "logo-container"
+        class = "icon-container"
       ),
       collapsable_ui
     )

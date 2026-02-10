@@ -101,7 +101,9 @@ get_app_theme <- function(custom = FALSE, version = 5) {
         secondary = "#00E47C",
         info = "#a3e5ee",
         warning = "#ffe667",
-        danger = "#f58a68"
+        danger = "#f58a68",
+        light = "#F6F5F3",
+        dark = "#E5E3DE"
         # base_font = c("Grandstander", "sans-serif"),
         # code_font = c("Courier", "monospace"),
         # heading_font = "'Helvetica Neue', Helvetica, sans-serif",
