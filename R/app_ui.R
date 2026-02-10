@@ -105,12 +105,18 @@ app_ui <- function(request_id) {
     )
   )
 
+  # Not convinced as it is removed somewhere else (app_server) (gvbu)
+  overlay_script <- shiny::tags[["script"]]("dv_overlay.show('Loading')")
+
   shiny::fluidPage(
     class = "dv_main",
     insert_header_add_resources(app_title = get_config("title")),
     theme = get_app_theme(),
     class = "display-grid",
     sidebar,
-    module_info[["ui_fn"]](ns, dataset_name, top_buttons),
+    list(
+      overlay_script,
+      module_info[["ui_fn"]](ns, dataset_name, top_buttons)
+    )
   )
 }

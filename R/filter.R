@@ -823,13 +823,9 @@ new_filter_server <- function(
     log_inform(paste("Listening to:", ns(ID$FILTER_STATE_JSON_INPUT)))
     log_inform(paste("Listening to:", ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)))
 
-    overlay_present <- FALSE
     shiny::observeEvent(selected_dataset_list(), {
-      overlay_present <<- TRUE
-      session[["sendCustomMessage"]](
-        "dv_manager_show_overlay",
-        list(message = "Loading...")
-      )
+      # Not convinced as it is removed somewhere else (app_server) (gvbu)
+      session[["sendCustomMessage"]]("dv_manager_show_overlay", list(message = "Filtering"))
 
       log_inform(paste0("Send init message to ", ns_id))
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
@@ -849,13 +845,6 @@ new_filter_server <- function(
     })
 
     shiny::observeEvent(input[[ID$SAVED_FILTER_STATE_JSON_MSG_INPUT]], {
-      if (overlay_present) {
-        session[["sendCustomMessage"]](
-          "dv_manager_hide_overlay",
-          list()
-        )
-        overlay_present <<- FALSE
-      }
       log_inform(
         paste("Received saved states:", input[[ID$SAVED_FILTER_STATE_JSON_MSG_INPUT]])
       )
