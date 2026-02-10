@@ -1628,9 +1628,9 @@ let create_variable_filter_controls = function(variable_filter_control_container
       density.forEach(d => {
         const bar = document.createElement("div");
         bar.style.flex = "1";               // equal width
-        bar.style.marginRight = "2px";      // spacing between bars
-        bar.style.backgroundColor = "DodgerBlue";        
+        bar.style.marginRight = "2px";      // spacing between bars        
         bar.style.height = (d / max_density) * 25 + "px"; // scale height
+        bar.className = "bg-secondary";
         histogram_container.appendChild(bar);
       });
       container.appendChild(histogram_container);      

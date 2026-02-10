@@ -461,7 +461,7 @@ dv-filter-wrapper {
       }
 
       &[data-subject-filter="false"] {
-        @extend .border-secondary;
+        @extend .border-primary;
 
         .dv-dataset-filter-header {
           @extend .card-header;
@@ -475,7 +475,7 @@ dv-filter-wrapper {
           .add-button {
             @extend .btn;
             @extend .btn-sm;
-            @extend .btn-outline-secondary;
+            @extend .btn-outline-primary;
           }
 
           .dv-filter-row-count-badge {
@@ -498,9 +498,10 @@ dv-filter-wrapper {
 
         dv-filter-variable-filter {
 
+          @extend .bg-light;
+
           display: block;
           margin-bottom: 20px;
-          background: #f7f7f7;
           border: 1px solid #ddd;
           border-radius: 4px;
           margin-bottom: 6px;
