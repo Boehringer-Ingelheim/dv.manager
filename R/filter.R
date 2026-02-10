@@ -712,8 +712,7 @@ add_blockly_dependency <- function() {
     name = "filter_blockly",
     version = utils::packageVersion("dv.manager"),
     src = app_sys("filter/"),
-    script = c("dv_filter_minified.js"),
-    style = c("dv_filter.css"),
+    script = c("dv_filter_minified.js")
   )
 }
 
