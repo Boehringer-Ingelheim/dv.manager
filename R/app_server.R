@@ -129,7 +129,7 @@ app_server_ <- function(input, output, session, opts) {
   )
 
   filtered_dataset_list <- shiny::reactive({
-    unfiltered_dataset_list_r <- unfiltered_dataset_list()
+    unfiltered_dataset_list_r <- shiny::isolate(unfiltered_dataset_list())
     dataset_list_filter_r <- dataset_list_filter()
 
     res <- apply_filter_to_dataset_list(unfiltered_dataset_list_r, dataset_list_filter_r, filter_key_var)
@@ -148,6 +148,11 @@ app_server_ <- function(input, output, session, opts) {
     }
 
     fd
+  })
+
+  shiny::observeEvent(filtered_dataset_list(), {
+    # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
+    session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
   })
 
   shiny::observeEvent(
@@ -173,6 +178,8 @@ app_server_ <- function(input, output, session, opts) {
         used_nm <- all_nm
         unused_nm <- character(0)
       }
+
+      unused_nm <- setdiff(unused_nm, subject_filter_dataset_name) # Subject filter is never hid
 
       session$sendCustomMessage("show_hide_dataset_filters", list(id = ns(ID$FILTER), hidden = unused_nm))
     },

@@ -125,8 +125,6 @@ The Advanced filter works as follows:
 All filters start with one of the pieces under the **Filter Types** section, placed at the root of the filter.
 Only one of each type can be present in the canvas at any given time — for example, one describing the filtering for the `adae` dataset, another for the `adlb` dataset, and so on.
 
-![](images/filter_types.gif){width=100%}
-
 The same concepts of *Subject filter* and *Dataset filter* applies in this filter. Each filtering concept corresponds to a specific piece type:
 
   - The **Subject filter piece**, which applies across all datasets
@@ -158,15 +156,18 @@ Operation pieces are divided into two groups:
 The **and**, **or**, and **not** operations combine variable pieces from the same dataset.
 These are purple-colored and located in the **Operations** section of the toolbox.
 
-![](images/variable_operations.gif){width=100%}
-
 For example, you can create filters on the `adae` dataset such as:
 
   - *Lowest Level Term* is *ABDOMINAL CRAMPS* **and** *Severity* is *SEVERE*
-  - *Lowest Level Term* is *ABDOMINAL CRAMPS* **or** the *Severity* is *SEVERE*
-  - *Lowest Level Term* is *ABDOMINAL CRAMPS* **or** the *Severity* is **not** *SEVERE*
+  ![](images/variable_operations_and.png){width=100%}
 
-There is no single way to express a filter — the same logic may be built with different variable selections or operation combinations.
+  - *Lowest Level Term* is *ABDOMINAL CRAMPS* **or** the *Severity* is *SEVERE*
+  ![](images/variable_operations_or.png){width=100%}
+
+  - *Lowest Level Term* is *ABDOMINAL CRAMPS* **or** the *Severity* is **not** *SEVERE*
+  ![](images/variable_operations_or_not.png){width=100%}
+
+There is no single way to express a filter — the same logic may be built with different variable selections or combinations of operations.
 
 #### Combining Sets 
 
@@ -176,10 +177,14 @@ combine sets to select a subpopulation across the entire application. These are 
 For example:
 
   - All *Female* subjects aged between *60* and *70* **intersect** with all subjects who experienced any adverse event with *Severity* *SEVERE*.
-  - All *Female* subjects aged between *60* and *70* **union** all subjects who experienced any adverse event with *Severity* *SEVERE*.
-  - All *Female* subjects aged between *60* and *70* **union** with the **complement** of all subjects who experienced any adverse event with *Severity* *SEVERE*.
+  ![](images/set_operations_intersect.png){width=100%}
 
-![](images/set_operations.gif){width=100%}
+  - All *Female* subjects aged between *60* and *70* **union** all subjects who experienced any adverse event with *Severity* *SEVERE*.
+  ![](images/set_operations_union.png){width=100%}
+
+  - All *Female* subjects aged between *60* and *70* **union** with the **complement** of all subjects who experienced any adverse event with *Severity* *SEVERE*.
+  ![](images/set_operations_union_complement.png){width=100%}
+
 
 #### Piece Restrictions
 
@@ -193,13 +198,11 @@ Several restrictions prevent incorrect configurations of the filter:
 
 The application enforces these rules and prevents invalid configurations.
 
-![](images/pieces_restriction.gif){width=100%}
-
 ### Searching for Pieces
 
 The toolbox includes a search box at the top that lets you search for pieces across all sections.
 
-![](images/searching.gif){width=100%}
+![](images/searching.png){width=100%}
 
 <div class="alert alert-info" role="alert">
 You must enter at least three characters before the search will begin.

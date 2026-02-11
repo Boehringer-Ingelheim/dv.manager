@@ -86,12 +86,23 @@ ns_css <- function(module = NULL, disable_css_namespacing = isTRUE(getOption("dv
   }
 }
 
+
 # Helper function for theme management
 get_app_theme <- function(custom = FALSE, version = 5) {
   if (!isTRUE(getOption("dv_manager_ignore_css"))) {
     if (isFALSE(custom)) {
-      theme <- bslib::bs_theme(version = version) |>
-        bslib::bs_add_variables("primary" = "#002f62") |>
+      theme <- bslib::bs_theme(
+        version = version,
+        bg = "#FFFFFF",
+        fg = "#08312A",
+        primary = "#08312A",
+        secondary = "#00E47C",
+        info = "#a3e5ee",
+        warning = "#ffe667",
+        danger = "#f58a68",
+        light = "#F6F5F3",
+        dark = "#E5E3DE"
+      ) |>
         bslib::bs_add_rules(sass::sass_file(app_sys("www/css/custom.scss")))
     } else {
       theme <- bslib::bs_theme(version = version) |>

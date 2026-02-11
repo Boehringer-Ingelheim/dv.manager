@@ -91,18 +91,22 @@ app_ui <- function(request_id) {
     shiny::div(
       class = "sidebar",
       shiny::div(
-        shiny::tags$span(class = "logo-text", "DaVinci"),
+        shiny::img(src = "icons/dv_icon.svg", class = "p-2 menu-fade", style = "height: 100%; width: auto"),
+        shiny::tags$span(class = "icon-text menu-fade", "DaVinci"),
         shiny::tags$label(
           `for` = "click",
           shiny::icon("times", class = "icon-close"),
-          shiny::icon("chevron-right", class = "icon-open"),
-          class = "logo-control"
+          shiny::img(src = "icons/dv_icon.svg", style = "height: 100%; width: auto", class = "icon-open"),
+          class = "icon-control"
         ),
-        class = "logo-container"
+        class = "icon-container"
       ),
       collapsable_ui
     )
   )
+
+  # Not convinced as it is removed somewhere else (app_server) (gvbu)
+  overlay_script <- shiny::tags[["script"]]("dv_overlay.show('Loading')")
 
   shiny::fluidPage(
     class = "dv_main",
@@ -110,6 +114,9 @@ app_ui <- function(request_id) {
     theme = get_app_theme(),
     class = "display-grid",
     sidebar,
-    module_info[["ui_fn"]](ns, dataset_name, top_buttons),
+    list(
+      overlay_script,
+      module_info[["ui_fn"]](ns, dataset_name, top_buttons)
+    )
   )
 }
