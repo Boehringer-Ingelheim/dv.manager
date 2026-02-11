@@ -198,8 +198,6 @@ Several restrictions prevent incorrect configurations of the filter:
 
 The application enforces these rules and prevents invalid configurations.
 
-![](images/pieces_restriction.gif){width=100%}
-
 ### Searching for Pieces
 
 The toolbox includes a search box at the top that lets you search for pieces across all sections.
