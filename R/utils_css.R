@@ -93,10 +93,8 @@ get_app_theme <- function(custom = FALSE, version = 5) {
     if (isFALSE(custom)) {
       theme <- bslib::bs_theme(
         version = version,
-        # Controls the default grayscale palette
         bg = "#FFFFFF",
         fg = "#08312A",
-        # Controls the accent (e.g., hyperlink, button, etc) colors
         primary = "#08312A",
         secondary = "#00E47C",
         info = "#a3e5ee",
@@ -104,10 +102,6 @@ get_app_theme <- function(custom = FALSE, version = 5) {
         danger = "#f58a68",
         light = "#F6F5F3",
         dark = "#E5E3DE"
-        # base_font = c("Grandstander", "sans-serif"),
-        # code_font = c("Courier", "monospace"),
-        # heading_font = "'Helvetica Neue', Helvetica, sans-serif",
-        # Can also add lower-level customization
       ) |>
         bslib::bs_add_rules(sass::sass_file(app_sys("www/css/custom.scss")))
     } else {
