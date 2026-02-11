@@ -1,3 +1,6 @@
+# dv.manager 2.2.0-9013
+- Switches to green palette
+
 # dv.manager 2.2.0-9012
 - Adapt tests for devtools::check
 - Introduce binary64 to Uint8Array function in Javascript for Chromium version <140
