@@ -16,7 +16,7 @@ get_raw_config <- function(app) {
 }
 
 insert_header_add_resources <- function(app_title = NULL, ...) {
-  shiny::addResourcePath('icons', app_sys("www/icons"))
+  shiny::addResourcePath("icons", app_sys("www/icons"))
 
   shiny::tags$head(
     shiny::tags$title(app_title),
