@@ -825,7 +825,7 @@ new_filter_server <- function(
 
     shiny::observeEvent(selected_dataset_list(), {
       # Not convinced as it is removed somewhere else (app_server) (gvbu)
-      session[["sendCustomMessage"]]("dv_manager_show_overlay", list(message = "Filtering"))
+      session[["sendCustomMessage"]]("dv_manager_show_overlay", list(message = "Setting up filter"))
 
       log_inform(paste0("Send init message to ", ns_id))
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
