@@ -358,25 +358,29 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
     ) # FIXME: Pass filtered one
 
     filtered_subgroup_dataset_list <- shiny::reactive({
-      unfiltered_dataset_list_r <- selected_dataset_list()
-      dataset_list_filter_r <- subgroup_filter()
-
-      res <- apply_filter_to_dataset_list(unfiltered_dataset_list_r, dataset_list_filter_r, filter_key_var)
-
-      error_list <- res$error_list
-      fd <- res$fd
+      # Place reqs here so all elements are synchronized before going forward
+      # Consider generation counters (Check current approach)
+      r_unfiltered_dataset_list <- shiny::isolate(selected_dataset_list())
+      r_dataset_list_filter <- subgroup_filter()
+      filter_info <- combine_filter_info(get_filter_info(
+        r_unfiltered_dataset_list,
+        r_dataset_list_filter,
+        filter_key_var
+      ))
 
       shiny::req(
-        !error_list$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
-          !error_list$any_has_class(FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class)
+        # Wait until filter info is ready
+        !filter_info[["error_list"]]$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
+          !filter_info[["error_list"]]$any_has_class(
+            FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class
+          )
       )
 
-      for (error_message in error_list$get_messages()) {
-        warning(error_message)
-        shiny::showNotification(error_message, type = "error")
-      }
+      res <- list(
+        filter_info = filter_info
+      )
 
-      fd
+      res
     })
 
     shiny::onBookmark(function(state) {
@@ -622,7 +626,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       function(...) {
         x <- apply_subgroups(..., subgroups = r_subgroups)
         # FIXME: (Or learn to live with me) When subgroups are applied we store which could not be applied so it is reflected in the UI
-        incorrect_subgroups(x[["incorrect_subgroups"]])
+        incorrect_subgroups(x[["result"]][["incorrect_subgroups"]])
 
         x
       }

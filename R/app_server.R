@@ -79,7 +79,7 @@ app_server_ <- function(input, output, session, opts) {
   })
 
   selected_dataset_list <- shiny::reactive({
-    dataset_list_name <- input$selector
+    dataset_list_name <- input[["selector"]]
     shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
     assert(dataset_list_name %in% names(dataset_lists))
 
@@ -121,11 +121,38 @@ app_server_ <- function(input, output, session, opts) {
     subgrouped_dataset_list
   })
 
+  unfiltered_plus_filter_info <- shiny::reactive({
+    # Place reqs here so all elements are synchronized before going forward
+    # Consider generation counters (Check current approach)
+    r_unfiltered_dataset_list <- shiny::isolate(unfiltered_dataset_list())
+    r_dataset_list_filter <- dataset_list_filter()
+    filter_info <- combine_filter_info(get_filter_info(
+      r_unfiltered_dataset_list,
+      r_dataset_list_filter,
+      filter_key_var
+    ))
+
+    shiny::req(
+      # Wait until filter info is ready
+      !filter_info[["error_list"]]$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
+        !filter_info[["error_list"]]$any_has_class(
+          FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class
+        )
+    )
+
+    res <- list(
+      unfiltered_dataset_list = r_unfiltered_dataset_list,
+      filter_info = filter_info
+    )
+
+    res
+  })
+
   dataset_list_filter <- new_filter_server(
     ID$FILTER,
     unfiltered_dataset_list,
     subject_filter_dataset_name,
-    filtered_dataset_list
+    unfiltered_plus_filter_info
   )
 
   filtered_dataset_list <- shiny::reactive({
@@ -150,36 +177,9 @@ app_server_ <- function(input, output, session, opts) {
     fd
   })
 
-  shiny::observeEvent(filtered_dataset_list(), {
+  shiny::observeEvent(unfiltered_plus_filter_info(), {
     # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
     session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
-  })
-
-  static_dataset_list <- shiny::reactive({
-    r_selected_dataset_list <- selected_dataset_list()
-    r_apply_subgroups <- apply_subgroups()
-    filter_info <- get_filter_info(r_selected_dataset_list, dataset_list_filter, filter_key_var)
-
-    res <- list(
-      dataset_list = r_selected_dataset_list,
-      subgroup = list(
-        apply_fn = r_apply_subgroups
-      ),
-      filter = list(
-        info = get_filter_info(r_selected_dataset_list, dataset_list_filter, filter_key_var),
-        apply_fn =
-      ),
-      apply = list(
-        subgroups = function(res) {
-          r_apply_subgroups(res[["dataset_list"]])
-        },
-        filter = function(res) {
-          apply_filter_info_to_dataset_list(res[["dataset_list"]])
-        }
-      )
-    )
-
-    res
   })
 
   shiny::observeEvent(
@@ -227,6 +227,7 @@ app_server_ <- function(input, output, session, opts) {
       unfiltered_dataset_list()
     }),
     unfiltered_dataset_list = unfiltered_dataset_list,
+    unfiltered_plus_filter_info = unfiltered_plus_filter_info,
     filtered_dataset = shiny::reactive({
       #log_warn("(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]].") # nolintr
       filtered_dataset_list()

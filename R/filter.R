@@ -885,7 +885,7 @@ new_filter_server <- function(
   id,
   selected_dataset_list,
   subject_filter_dataset_name,
-  after_filter_dataset_list,
+  after_filter_info,
   skip_dataset_filters = FALSE,
   strict = FALSE
 ) {
@@ -930,17 +930,18 @@ new_filter_server <- function(
       )
     })
 
-    shiny::observeEvent(after_filter_dataset_list(), {
-      shiny::req(!is.null(after_filter_dataset_list()))
+    shiny::observeEvent(after_filter_info(), {
+      shiny::req(!is.null(after_filter_info()))
 
-      fd <- after_filter_dataset_list()
-      fd_names <- names(fd)
-      row_count <- vector("list", length = length(fd))
+      r_after_filter_info <- after_filter_info()[["filter_info"]][["result"]][["filter_info"]]
+      r_after_filter_info_names <- names(r_after_filter_info)
 
-      for (idx in seq_along(fd)) {
+      row_count <- vector("list", length = length(r_after_filter_info))
+
+      for (idx in seq_along(r_after_filter_info)) {
         row_count[[idx]] <- list(
-          count = as_scalar(nrow(fd[[idx]])),
-          name = as_scalar(fd_names[[idx]])
+          count = as_scalar(sum(r_after_filter_info[[idx]][["mask"]])),
+          name = as_scalar(r_after_filter_info_names[[idx]])
         )
       }
 
