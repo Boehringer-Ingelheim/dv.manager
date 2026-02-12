@@ -276,9 +276,11 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
 
   return(
     list(
-      dataset_list = dataset_list,
-      correct_subgroups = correct_subgroups,
-      incorrect_subgroups = incorrect_subgroups,
+      result = list(
+        dataset_list = dataset_list,
+        correct_subgroups = correct_subgroups,
+        incorrect_subgroups = incorrect_subgroups
+      ),
       error_list = error_list
     )
   )

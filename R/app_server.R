@@ -102,7 +102,7 @@ app_server_ <- function(input, output, session, opts) {
     )
   } else {
     apply_subgroups <- shiny::reactive(function(d, ...) {
-      list(error_list = new_error_list(), dataset_list = d)
+      list(result = list(dataset_list = d), error_list = new_error_list())
     })
   }
 
@@ -115,7 +115,7 @@ app_server_ <- function(input, output, session, opts) {
       shiny::showNotification(error, type = "warning")
     }
 
-    subgrouped_dataset_list <- res_apply_subgroups[["dataset_list"]]
+    subgrouped_dataset_list <- res_apply_subgroups[["result"]][["dataset_list"]]
 
     attr(subgrouped_dataset_list, "dataset_list_name") <- attr(r_selected_dataset_list, "dataset_list_name")
     subgrouped_dataset_list
@@ -135,7 +135,7 @@ app_server_ <- function(input, output, session, opts) {
     res <- apply_filter_to_dataset_list(unfiltered_dataset_list_r, dataset_list_filter_r, filter_key_var)
 
     error_list <- res$error_list
-    fd <- res$fd
+    fd <- res[["result"]]
 
     shiny::req(
       !error_list$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&

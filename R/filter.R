@@ -586,14 +586,14 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
 combine_filter_info <- function(filter_info) {
   if (filter_info[["error_list"]]$any()) {
     return(
-      list(filter_info = NULL, error_list = filter_info[["error_list"]])
+      list(result = NULL, error_list = filter_info[["error_list"]])
     )
   }
 
   #TODO: Review filter_info subtrees mess
 
-  subject_filter_info <- filter_info[["filter_info"]][["subject"]]
-  dataset_filter_info <- filter_info[["filter_info"]][["dataset"]]
+  subject_filter_info <- filter_info[["result"]][["subject"]]
+  dataset_filter_info <- filter_info[["result"]][["dataset"]]
 
   res <- list()
   res[["subjects"]] <- subject_filter_info[["subjects"]]
@@ -640,7 +640,7 @@ combine_filter_info <- function(filter_info) {
   }
 
   return(
-    list(res = res, error_list = new_error_list())
+    list(result = res, error_list = new_error_list())
   )
 }
 
@@ -690,32 +690,34 @@ apply_filter_to_dataset_list <- (function(unfiltered_dataset_list, dataset_list_
 }) |>
   shiny::maskReactiveContext()
 
-apply_filter_info_to_dataset_list <- (function(unfiltered_dataset_list, filter_info, filter_key_var) {
-  res <- list(fd = NULL, error_list = NULL)
+apply_filter_info_to_dataset_list <- (function(
+  dataset_list,
+  filter_info,
+  dataset_names = names(dataset_list)
+) {
+  res <- list(result = NULL, error_list = NULL)
+  dataset_list_subset <- as_safe_list(dataset_list)[dataset_names]
+  filter_info_subset <- as_safe_list(filter_info)
+  filter_info_subset[["result"]][["filter_info"]] <- filter_info_subset[["result"]][["filter_info"]][dataset_names]
 
-  if (filter_info[["error_list"]]$any()) {
-    return(
-      list(fd = unfiltered_dataset_list, error_list = filter_info[["error_list"]])
-    )
+  if (filter_info_subset[["error_list"]]$any()) {
+    return(list(result = dataset_list_subset, error_list = filter_info_subset[["error_list"]]))
   } else {
     error_list <- new_error_list()
-    fd <- unfiltered_dataset_list
+    fd <- dataset_list_subset
 
     fd <- tryCatch(
       {
-        apply_filter_info(unfiltered_dataset_list, filter_info[["res"]])
+        apply_filter_info(dataset_list_subset, filter_info_subset[["result"]])
       },
       error = function(e) {
         error <- FC$ERRORS$GENERIC_FILTER_APPLICATION
         error$message <- paste("Filter not applied. Error found:\n", e[["message"]])
         error_list$push(error)
-        unfiltered_dataset_list
+        dataset_list_subset
       }
     )
-    res <- list(
-      fd = fd,
-      error_list = error_list
-    )
+    res <- list(result = fd, error_list = error_list)
 
     return(res)
   }
@@ -729,7 +731,7 @@ get_filter_info <- (function(unfiltered_dataset_list, dataset_list_filter, filte
   if (identical(as.character(dataset_list_filter), NA_character_)) {
     error_list$push(FC$ERRORS$FILTER_IS_NA)
   } else if (isTRUE(is.na(dataset_list_filter[["parsed"]]))) {
-    fd <- unfiltered_dataset_list
+    fi <- NULL
   } else {
     unfiltered_dataset_list_name <- attr(unfiltered_dataset_list, "dataset_list_name")
     filter_dataset_list_name <- dataset_list_filter[["parsed"]][["dataset_list_name"]]
@@ -763,7 +765,7 @@ get_filter_info <- (function(unfiltered_dataset_list, dataset_list_filter, filte
   }
 
   res <- list(
-    filter_info = fi,
+    result = fi,
     error_list = error_list
   )
 
