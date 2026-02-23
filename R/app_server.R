@@ -150,11 +150,6 @@ app_server_ <- function(input, output, session, opts) {
     fd
   })
 
-  shiny::observeEvent(filtered_dataset_list(), {
-    # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
-    session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
-  })
-
   shiny::observeEvent(
     {
       input[[ID$NAV_HEADER]]
@@ -278,6 +273,16 @@ app_server_ <- function(input, output, session, opts) {
 
     module_output[[id]] <- fn(afmm)
     used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
+  }
+
+  # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
+  if (length(dataset_lists) > 0) {
+    # Otherwise when no dataset_list is loaded in the app the overlay remains in screen
+    shiny::observeEvent(filtered_dataset_list(), {
+      session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
+    })
+  } else {
+    session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
   }
 
   # Dataset name and date

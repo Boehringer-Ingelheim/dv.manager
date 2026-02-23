@@ -9,11 +9,27 @@ $color-scrollbar: #9b9b9b7f;
   color: $primary;
 }
 
-// Override btn-default with btn-light otherwise color scheme contrast is not good.
-// The ideal would be to move modules away from button-default
-.btn-default{
+// Override btn-outline-secondary to look like btn-outline-primary
+// Hard overrided because extend does not work, related to the order in which 
+// rules are declared
+.btn-outline-secondary {
+  --bs-btn-color: #{$primary};
+  --bs-btn-border-color: #{$primary};
+  --bs-btn-hover-color: #{$white};
+  --bs-btn-hover-bg: #{$primary};
+  --bs-btn-hover-border-color: #{$primary};
+  --bs-btn-active-color: #{$white};
+  --bs-btn-active-bg: #{$primary};
+  --bs-btn-active-border-color:#{$primary};
+  --bs-btn-disabled-color: #{$primary};
+  --bs-btn-disabled-border-color: #{$primary};
+}
+
+// Override btn-default to look like btn-light
+.btn-default {
   @extend .btn-light
 }
+
 
 body {
   font-size: $font-size-base;

@@ -1,3 +1,7 @@
+# dv.manager 2.2.0-9014
+- Replaces outline-secondary style with outline-primary. Secondary lower contrast was not visible
+- Includes a testing module to visualize css styles in app
+
 # dv.manager 2.2.0-9013
 - Switches to green palette
 
