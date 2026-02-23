@@ -15,6 +15,12 @@ $color-scrollbar: #9b9b9b7f;
   @extend .btn-light
 }
 
+// Override btn-default with btn-light otherwise color scheme contrast is not good.
+// The ideal would be to move modules away from button-default
+.btn-outline-secondary {
+  @extend .btn-outline-primary
+}
+
 body {
   font-size: $font-size-base;
 }
