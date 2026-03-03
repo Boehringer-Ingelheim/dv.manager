@@ -695,13 +695,15 @@ apply_filter_to_dataset_list <- (function(unfiltered_dataset_list, dataset_list_
 }) |>
   shiny::maskReactiveContext()
 
-to_filter_validate <- jsonvalidate::json_validator(
+json_validator <- function(...) jsonvalidate::json_validator(...)
+
+to_filter_validate <- json_validator(
   system.file("to_filter_schema.json", package = "dv.manager", mustWork = TRUE),
   engine = "ajv",
   strict = TRUE
 )
 
-from_filter_validate <- jsonvalidate::json_validator(
+from_filter_validate <- json_validator(
   system.file("from_filter_schema.json", package = "dv.manager", mustWork = TRUE),
   engine = "ajv",
   strict = TRUE
