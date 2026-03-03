@@ -28,7 +28,7 @@ run_app(
 \item{data}{the list of datasets to be used in the Shiny application. This data parameter can be defined as:
 \itemize{
 \item a named list of lists in which each of the lists will be a list of data.frames. Each of the lists of data.frames
-contains a domain, a structure similar to that returned in a \code{dv.loader::load_data} call.
+contains a domain, a structure similar to that returned in a \verb{dv.loader::load_data} call.
 \item a named list of functions in which each of the functions will return a list of data.frames.
 }
 

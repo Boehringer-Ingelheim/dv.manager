@@ -222,7 +222,7 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
       new_var <- rep_len(NA_character_, nrow(subject_dataset))
       subgroup_ok <- TRUE
 
-      for (cat_idx in seq_len(length(cat_filters))) {
+      for (cat_idx in seq_along(cat_filters)) {
         # Others will be treated separately
         category_label <- cat_labels[[cat_idx]]
         category_filter <- cat_filters[[cat_idx]]

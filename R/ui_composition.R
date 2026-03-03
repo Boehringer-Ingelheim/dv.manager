@@ -203,7 +203,7 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
 
   buttons_hierarchy <- list()
 
-  for (idx in seq_len(length(hierarchy))) {
+  for (idx in seq_along(hierarchy)) {
     curr_el <- hierarchy[[idx]]
     curr_el_id <- names(hierarchy)[[idx]]
     is_el_root <- identical(curr_el[["kind"]], "root")
@@ -212,7 +212,7 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
 
     if (is_el_root || is_el_tab_group) {
       curr_level <- list()
-      for (jdx in seq_len(length(curr_el[["children"]]))) {
+      for (jdx in seq_along(curr_el[["children"]])) {
         curr_child_id <- curr_el[["children"]][[jdx]]
         curr_child <- hierarchy[[curr_child_id]]
         curr_child_name <- curr_child[["name"]]

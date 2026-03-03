@@ -921,7 +921,7 @@ mod_CSS_test <- function(module_id) {
     ui = function(id) {
       ns <- shiny::NS(id)
       shiny::tagList(
-        # Bootstrap Icons CDN (CSS only — no JS needed)
+        # Bootstrap Icons CDN (CSS only - no JS needed)
         shiny::tags$head(
           shiny::tags$link(
             rel = "stylesheet",
@@ -934,18 +934,18 @@ mod_CSS_test <- function(module_id) {
           shiny::div(
             class = "row",
 
-            # ── MAIN ────────────────────────────────────────────
+            # MAIN --------------------------------------------
             shiny::tags$main(
               class = "col-md-10 ms-auto py-4 px-4",
               style = "margin-left:200px;",
 
-              shiny::tags$h1(class = "mb-1", "Bootstrap 5 \u2014 Shiny Reference"),
+              shiny::tags$h1(class = "mb-1", "Bootstrap 5 - Shiny Reference"),
               shiny::tags$p(
                 class = "text-secondary mb-5",
                 "All BS5 components as a Shiny module with explicit package prefixes."
               ),
 
-              # ── BUTTONS ───────────────────────────────────────
+              # -- BUTTONS ---------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Buttons"),
                 shiny::div(
@@ -1026,7 +1026,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── ALERTS ────────────────────────────────────────
+              # -- ALERTS ----------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Alerts"),
                 shiny::div(class = "alert alert-primary", shiny::tags$strong("Primary"), " alert."),
@@ -1055,7 +1055,7 @@ mod_CSS_test <- function(module_id) {
                 shiny::div(
                   class = "alert alert-success alert-dismissible fade show",
                   shiny::tags$strong("Dismissible!"),
-                  " Click \u00d7 to close.",
+                  " Click x to close.",
                   shiny::tags$button(class = "btn-close", `data-bs-dismiss` = "alert")
                 ),
                 shiny::div(
@@ -1069,7 +1069,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── BADGES ────────────────────────────────────────
+              # -- BADGES ----------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Badges & text-bg-*"),
                 shiny::div(
@@ -1091,7 +1091,7 @@ mod_CSS_test <- function(module_id) {
                 ),
                 shiny::tags$p(
                   class = "text-secondary small",
-                  "text-bg-{variant} \u2014 auto contrast (BS 5.2+), preferred for components:"
+                  "text-bg-{variant} - auto contrast (BS 5.2+), preferred for components:"
                 ),
                 shiny::div(
                   class = "d-flex flex-wrap gap-2",
@@ -1106,7 +1106,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── MODALS ────────────────────────────────────────
+              # -- MODALS ----------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Modals / Dialogs"),
                 shiny::div(
@@ -1220,7 +1220,7 @@ mod_CSS_test <- function(module_id) {
                           class = "modal-body",
                           shiny::tags$code("modal-fullscreen"),
                           shiny::tags$p(
-                            "Also: modal-sm \u00b7 modal-lg \u00b7 modal-xl \u00b7 modal-fullscreen-md-down"
+                            "Also: modal-sm * modal-lg * modal-xl * modal-fullscreen-md-down"
                           )
                         ),
                         shiny::div(
@@ -1300,10 +1300,10 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── TOASTS ────────────────────────────────────────
+              # -- TOASTS ----------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Toasts"),
-                # Bootstrap JS is already loaded by Shiny — bootstrap object available globally
+                # Bootstrap JS is already loaded by Shiny - bootstrap object available globally
                 shiny::tags$button(
                   class = "btn btn-primary mb-3",
                   onclick = "new bootstrap.Toast(document.getElementById('liveToast'),{delay:3000}).show();",
@@ -1348,7 +1348,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── CARDS ─────────────────────────────────────────
+              # -- CARDS -----------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Cards"),
                 shiny::div(
@@ -1400,7 +1400,7 @@ mod_CSS_test <- function(module_id) {
                     shiny::div(
                       class = "card-body",
                       shiny::tags$h6(class = "card-title", "Group 1"),
-                      shiny::tags$p(class = "card-text small", "card-group — equal height")
+                      shiny::tags$p(class = "card-text small", "card-group - equal height")
                     )
                   ),
                   shiny::div(
@@ -1422,7 +1422,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── FORMS ─────────────────────────────────────────
+              # -- FORMS -----------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Form Controls"),
                 shiny::div(
@@ -1504,7 +1504,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── INPUT GROUPS ──────────────────────────────────
+              # -- INPUT GROUPS ----------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Input Groups"),
                 shiny::div(
@@ -1538,7 +1538,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── SELECTS ───────────────────────────────────────
+              # -- SELECTS ---------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Select Inputs"),
                 shiny::div(
@@ -1593,7 +1593,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── CHECKS & RADIOS ───────────────────────────────
+              # -- CHECKS & RADIOS -------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Checkboxes & Radios"),
                 shiny::div(
@@ -1687,7 +1687,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── SWITCHES ──────────────────────────────────────
+              # -- SWITCHES --------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Switches"),
                 shiny::div(
@@ -1720,7 +1720,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── DROPDOWNS ─────────────────────────────────────
+              # -- DROPDOWNS -------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Dropdowns"),
                 shiny::div(
@@ -1801,7 +1801,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── NAVS & TABS ───────────────────────────────────
+              # -- NAVS & TABS -----------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Navs & Tabs"),
                 shiny::tags$p(class = "text-secondary small", "Tabs"),
@@ -1847,7 +1847,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── NAVBAR ────────────────────────────────────────
+              # -- NAVBAR ----------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Navbar"),
                 shiny::tags$nav(
@@ -1900,7 +1900,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── BREADCRUMB ────────────────────────────────────
+              # -- BREADCRUMB ------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Breadcrumb"),
                 shiny::tags$nav(
@@ -1921,7 +1921,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── PAGINATION ────────────────────────────────────
+              # -- PAGINATION ------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Pagination"),
                 shiny::div(
@@ -1931,12 +1931,12 @@ mod_CSS_test <- function(module_id) {
                       class = "pagination",
                       shiny::tags$li(
                         class = "page-item disabled",
-                        shiny::tags$a(class = "page-link", href = "#", "\u00ab")
+                        shiny::tags$a(class = "page-link", href = "#", "<")
                       ),
                       shiny::tags$li(class = "page-item", shiny::tags$a(class = "page-link", href = "#", "1")),
                       shiny::tags$li(class = "page-item active", shiny::tags$a(class = "page-link", href = "#", "2")),
                       shiny::tags$li(class = "page-item", shiny::tags$a(class = "page-link", href = "#", "3")),
-                      shiny::tags$li(class = "page-item", shiny::tags$a(class = "page-link", href = "#", "\u00bb"))
+                      shiny::tags$li(class = "page-item", shiny::tags$a(class = "page-link", href = "#", ">"))
                     )
                   ),
                   shiny::tags$nav(
@@ -1950,7 +1950,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── PROGRESS ──────────────────────────────────────
+              # -- PROGRESS --------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Progress Bars"),
                 shiny::div(
@@ -1989,7 +1989,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── SPINNERS ──────────────────────────────────────
+              # -- SPINNERS --------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Spinners"),
                 shiny::div(
@@ -2017,7 +2017,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── ACCORDION ─────────────────────────────────────
+              # -- ACCORDION -------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Accordion"),
                 shiny::div(
@@ -2087,7 +2087,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── COLLAPSE ──────────────────────────────────────
+              # -- COLLAPSE --------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Collapse"),
                 shiny::div(
@@ -2121,7 +2121,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── OFFCANVAS ─────────────────────────────────────
+              # -- OFFCANVAS -------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Offcanvas"),
                 shiny::div(
@@ -2144,7 +2144,7 @@ mod_CSS_test <- function(module_id) {
                     ),
                     shiny::div(
                       class = "offcanvas-body",
-                      shiny::tags$p("offcanvas-start \u2014 great for Shiny filter panels."),
+                      shiny::tags$p("offcanvas-start - great for Shiny filter panels."),
                       shiny::sliderInput(ns("ocSlider"), "Filter", 1, 100, 50),
                       shiny::selectInput(ns("ocSel"), "Group", c("A", "B", "C"))
                     )
@@ -2206,7 +2206,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── TOOLTIPS & POPOVERS ───────────────────────────
+              # -- TOOLTIPS & POPOVERS ---------------------------
               shiny::tags[["div"]](
                 shiny::h1("Tooltips & Popovers"),
                 shiny::div(
@@ -2256,7 +2256,7 @@ mod_CSS_test <- function(module_id) {
                     "Hover Popover"
                   )
                 ),
-                # Bootstrap JS already loaded by Shiny — just initialise the components
+                # Bootstrap JS already loaded by Shiny - just initialise the components
                 shiny::tags$script(shiny::HTML(
                   "
               document.addEventListener('DOMContentLoaded', function () {
@@ -2269,7 +2269,7 @@ mod_CSS_test <- function(module_id) {
                 ))
               ),
 
-              # ── LIST GROUPS ───────────────────────────────────
+              # -- LIST GROUPS -----------------------------------
               shiny::tags[["div"]](
                 shiny::h1("List Groups"),
                 shiny::div(
@@ -2332,7 +2332,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── TABLES ────────────────────────────────────────
+              # -- TABLES ----------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Tables"),
                 shiny::div(
@@ -2382,7 +2382,7 @@ mod_CSS_test <- function(module_id) {
                 shiny::div(class = "table-responsive", shiny::tableOutput(ns("shinyTable")))
               ),
 
-              # ── TYPOGRAPHY ────────────────────────────────────
+              # -- TYPOGRAPHY ------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Typography"),
                 shiny::div(class = "display-3 lh-1 mb-2", "display-3"),
@@ -2393,22 +2393,22 @@ mod_CSS_test <- function(module_id) {
                 shiny::tags$h4("h4"),
                 shiny::tags$h5("h5"),
                 shiny::tags$h6("h6"),
-                shiny::tags$p(class = "lead", "lead \u2014 larger intro paragraph"),
+                shiny::tags$p(class = "lead", "lead - larger intro paragraph"),
                 shiny::tags$p(
                   shiny::tags$strong("fw-bold"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$em("fst-italic"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$mark("mark"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$del("del"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$ins("ins"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$small("small"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$code("code"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$kbd("Ctrl+C")
                 ),
                 shiny::tags$p(class = "text-muted", "text-muted"),
@@ -2430,7 +2430,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── COLORS ────────────────────────────────────────
+              # -- COLORS ----------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Colors: text-* / bg-* / text-bg-*"),
                 shiny::tags$p(class = "text-secondary small", "Text (foreground)"),
@@ -2458,7 +2458,7 @@ mod_CSS_test <- function(module_id) {
                 ),
                 shiny::tags$p(
                   class = "text-secondary small",
-                  "text-bg-{variant} \u2014 sets both bg and fg with auto contrast (BS 5.2+)"
+                  "text-bg-{variant} - sets both bg and fg with auto contrast (BS 5.2+)"
                 ),
                 shiny::div(
                   class = "d-flex flex-wrap gap-2 mb-3",
@@ -2486,7 +2486,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── SPACING & BORDERS ─────────────────────────────
+              # -- SPACING & BORDERS -----------------------------
               shiny::tags[["div"]](
                 shiny::h1("Spacing, Borders & Shadows"),
                 shiny::tags$p(class = "text-secondary small", shiny::tags$code("{m|p}{t|b|s|e|x|y}-{0-5|auto}")),
@@ -2532,7 +2532,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── FLEX ──────────────────────────────────────────
+              # -- FLEX ------------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Flexbox Utilities"),
                 shiny::div(
@@ -2568,7 +2568,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── GRID ──────────────────────────────────────────
+              # -- GRID ------------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Grid System"),
                 shiny::div(
@@ -2625,7 +2625,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── ICONS ─────────────────────────────────────────
+              # -- ICONS -----------------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Bootstrap Icons"),
                 shiny::div(
@@ -2694,7 +2694,7 @@ mod_CSS_test <- function(module_id) {
                 )
               ),
 
-              # ── SHINY + BS5 ───────────────────────────────────
+              # -- SHINY + BS5 -----------------------------------
               shiny::tags[["div"]](
                 shiny::h1("Shiny Inputs & Outputs inside BS5"),
                 shiny::div(
