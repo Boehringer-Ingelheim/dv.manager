@@ -939,7 +939,7 @@ mod_CSS_test <- function(module_id) {
               class = "col-md-10 ms-auto py-4 px-4",
               style = "margin-left:200px;",
 
-              shiny::tags$h1(class = "mb-1", "Bootstrap 5 \u2014 Shiny Reference"),
+              shiny::tags$h1(class = "mb-1", "Bootstrap 5 - Shiny Reference"),
               shiny::tags$p(
                 class = "text-secondary mb-5",
                 "All BS5 components as a Shiny module with explicit package prefixes."
@@ -1055,7 +1055,7 @@ mod_CSS_test <- function(module_id) {
                 shiny::div(
                   class = "alert alert-success alert-dismissible fade show",
                   shiny::tags$strong("Dismissible!"),
-                  " Click \u00d7 to close.",
+                  " Click x to close.",
                   shiny::tags$button(class = "btn-close", `data-bs-dismiss` = "alert")
                 ),
                 shiny::div(
@@ -1091,7 +1091,7 @@ mod_CSS_test <- function(module_id) {
                 ),
                 shiny::tags$p(
                   class = "text-secondary small",
-                  "text-bg-{variant} \u2014 auto contrast (BS 5.2+), preferred for components:"
+                  "text-bg-{variant} - auto contrast (BS 5.2+), preferred for components:"
                 ),
                 shiny::div(
                   class = "d-flex flex-wrap gap-2",
@@ -1220,7 +1220,7 @@ mod_CSS_test <- function(module_id) {
                           class = "modal-body",
                           shiny::tags$code("modal-fullscreen"),
                           shiny::tags$p(
-                            "Also: modal-sm \u00b7 modal-lg \u00b7 modal-xl \u00b7 modal-fullscreen-md-down"
+                            "Also: modal-sm * modal-lg * modal-xl * modal-fullscreen-md-down"
                           )
                         ),
                         shiny::div(
@@ -1931,12 +1931,12 @@ mod_CSS_test <- function(module_id) {
                       class = "pagination",
                       shiny::tags$li(
                         class = "page-item disabled",
-                        shiny::tags$a(class = "page-link", href = "#", "\u00ab")
+                        shiny::tags$a(class = "page-link", href = "#", "<")
                       ),
                       shiny::tags$li(class = "page-item", shiny::tags$a(class = "page-link", href = "#", "1")),
                       shiny::tags$li(class = "page-item active", shiny::tags$a(class = "page-link", href = "#", "2")),
                       shiny::tags$li(class = "page-item", shiny::tags$a(class = "page-link", href = "#", "3")),
-                      shiny::tags$li(class = "page-item", shiny::tags$a(class = "page-link", href = "#", "\u00bb"))
+                      shiny::tags$li(class = "page-item", shiny::tags$a(class = "page-link", href = "#", ">"))
                     )
                   ),
                   shiny::tags$nav(
@@ -2144,7 +2144,7 @@ mod_CSS_test <- function(module_id) {
                     ),
                     shiny::div(
                       class = "offcanvas-body",
-                      shiny::tags$p("offcanvas-start \u2014 great for Shiny filter panels."),
+                      shiny::tags$p("offcanvas-start - great for Shiny filter panels."),
                       shiny::sliderInput(ns("ocSlider"), "Filter", 1, 100, 50),
                       shiny::selectInput(ns("ocSel"), "Group", c("A", "B", "C"))
                     )
@@ -2393,22 +2393,22 @@ mod_CSS_test <- function(module_id) {
                 shiny::tags$h4("h4"),
                 shiny::tags$h5("h5"),
                 shiny::tags$h6("h6"),
-                shiny::tags$p(class = "lead", "lead \u2014 larger intro paragraph"),
+                shiny::tags$p(class = "lead", "lead - larger intro paragraph"),
                 shiny::tags$p(
                   shiny::tags$strong("fw-bold"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$em("fst-italic"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$mark("mark"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$del("del"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$ins("ins"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$small("small"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$code("code"),
-                  " \u00b7 ",
+                  " * ",
                   shiny::tags$kbd("Ctrl+C")
                 ),
                 shiny::tags$p(class = "text-muted", "text-muted"),
@@ -2458,7 +2458,7 @@ mod_CSS_test <- function(module_id) {
                 ),
                 shiny::tags$p(
                   class = "text-secondary small",
-                  "text-bg-{variant} \u2014 sets both bg and fg with auto contrast (BS 5.2+)"
+                  "text-bg-{variant} - sets both bg and fg with auto contrast (BS 5.2+)"
                 ),
                 shiny::div(
                   class = "d-flex flex-wrap gap-2 mb-3",
