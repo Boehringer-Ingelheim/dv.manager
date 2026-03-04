@@ -30,9 +30,6 @@ app_info_server <- function(id, afmm) {
         list_nm <- character(0)
         for (nm in n_afmm) {
           if (shiny::is.reactive(afmm[[nm]])) {
-            # list_nm[[idx]] <- paste0(nm, "(unresolved)")
-            # arg_list[[idx]] <- afmm[[nm]]
-            # idx <- idx + 1
             list_nm[[idx]] <- paste0(nm, "(resolved)")
             arg_list[[idx]] <- afmm[[nm]]()
             idx <- idx + 1
