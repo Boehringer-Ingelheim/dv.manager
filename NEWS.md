@@ -1,3 +1,6 @@
+# dv.manager 2.2.0-9016
+Includes mod_app_info
+
 # dv.manager 2.2.0-9015
 Pre main release cleaning
 
