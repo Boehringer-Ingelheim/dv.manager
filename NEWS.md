@@ -1,62 +1,12 @@
-# dv.manager 2.2.0-9015
-Pre main release cleaning
-
-# dv.manager 2.2.0-9014
-- Replaces outline-secondary style with outline-primary. Secondary lower contrast was not visible
-- Includes a testing module to visualize css styles in app
-
-# dv.manager 2.2.0-9013
-- Switches to green palette
-
-# dv.manager 2.2.0-9012
-- Adapt tests for devtools::check
-- Introduce binary64 to Uint8Array function in Javascript for Chromium version <140
-
-# dv.manager 2.2.0-9011
-- Adds the possibility of adding labels to datasets
-- Adds an overlay to indicate filter loading times
-
-# dv.manager 2.2.0-9010
-- Update documentation
-- Remove magrittr pipe
-- Improved clicked on saved states
-- Aesthetic changes in filter menus and dv.manager menus
-- Remove dv.filter and work only with the new filter
-
-# dv.manager 2.2.0-9009
-- Completely remove dv.filter from the code base
-
-# dv.manager 2.2.0-9008
-- Completely remove Azure Authentication from the code base
-
-# dv.manager 2.2.0-9007
-- Improves subgroup creation and includes tests
-
-# dv.manager 2.2.0-9006
-- Prevents running application with Shiny version 1.11.0 which container several bugs
-
-# dv.manager 2.2.0-9005
-- Filter: Includes fast routine for binary serialization for filter_data
-- Subgroup: Includes initial POC for subgroup creation in app runtime 
-
-
-# dv.manager 2.2.0-9004
-- Filter: Fixes out of range blockly color
-
-# dv.manager 2.2.0-9003
-- Filter: Forcefully casts variables with type numeric to numeric
-
-# dv.manager 2.2.0-9002
-- Factor levels are dropped when filtered
-
-# dv.manager 2.2.0-9001
-- Development filter:
-    - Revamps the UI for the filter in development
-    - Includes filter clearing, saving and exporting
-    - Includes an alternative filter that mimicks the previous filter with extra features
-    - Updates documentation
-- Defuncts dispatchers
-- Upgrades the bootstrap version to 5.0.0
+# dv.manager 3.0.0
+    - Upgrades Bootstrap to version 5.0.0
+        - Switches to a green color palette
+    - Moves the development filter into production, replacing dv.filter
+    - Drops factor levels when filtered out
+    - Formally removes defunct dispatchers
+    - Dataset can have labels that appear in the filter menus
+    - Adds an information overlay for startup and filter operations
+    - Removes Azure authentication
 
 # dv.manager 2.2.0
 
