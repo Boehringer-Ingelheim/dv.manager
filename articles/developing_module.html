@@ -8,8 +8,8 @@
 <title>Developing a new module • dv.manager</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
-<link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Developing a new module">
 </head>
 <body>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,11 +44,11 @@
     <li><a class="dropdown-item" href="../articles/passing_data.html">Passing data between modules</a></li>
     <li><a class="dropdown-item" href="../articles/css_namespace.html">Adding custom CSS styles to a module</a></li>
     <li><a class="dropdown-item" href="../articles/logging.html">logging</a></li>
-    <li><a class="dropdown-item" href="../articles/blockly_filter.html">(DEVELOPMENT) Blockly Filter</a></li>
+    <li><a class="dropdown-item" href="../articles/subgroup.html">(DEVELOPMENT) Subgrouping</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>How does it work</h6></li>
     <li><a class="dropdown-item" href="../articles/how_does_work.html">How does it work (Technic/Develop)</a></li>
-    <li><a class="dropdown-item" href="../articles/data_filtering.html">Sidebar filter implementation</a></li>
+    <li><a class="dropdown-item" href="../articles/filter.html">Filter</a></li>
     <li><a class="dropdown-item" href="../articles/arguments_from_module_manager.html">Arguments from Module Manager</a></li>
     <li><a class="dropdown-item" href="../articles/data_reloading.html">Data reloading</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -102,7 +102,7 @@ requirements are explained in this vignette.</li>
 <strong>dv.manager</strong> is prepared to work with ADAM or SDTM
 datasets and will be filtered using the a common key across all datasets
 specified by the user, by default “USUBJID”, see
-<code><a href="../articles/data_filtering.html">vignette("data_filtering")</a></code>.</li>
+<code>vignette("data_filtering")</code>.</li>
 </ol>
 <div class="section level3">
 <h3 id="program-a-module-with-shiny">1. Program a module with Shiny<a class="anchor" aria-label="anchor" href="#program-a-module-with-shiny"></a>
@@ -190,7 +190,6 @@ is a module and what it does.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mod_uniq_values</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">table_name</span>, <span class="va">column_names</span>, <span class="va">module_id</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span></span>
 <span>    <span class="co"># UI function</span></span>
 <span>    ui <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">mod_id</span><span class="op">)</span> <span class="op">{</span></span>
 <span>      <span class="fu">module_ui</span><span class="op">(</span><span class="va">mod_id</span>, <span class="va">column_names</span><span class="op">)</span></span>
@@ -200,7 +199,7 @@ is a module and what it does.</p>
 <span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">afmm</span><span class="op">)</span> <span class="op">{</span></span>
 <span>      <span class="fu">module_server</span><span class="op">(</span></span>
 <span>        <span class="va">module_id</span>,</span>
-<span>        dataset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="va">afmm</span><span class="op">[[</span><span class="st">"filtered_dataset"</span><span class="op">]</span><span class="op">]</span><span class="op">(</span><span class="op">)</span><span class="op">[[</span><span class="va">table_name</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span>        dataset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="va">afmm</span><span class="op">[[</span><span class="st">"filtered_dataset_list"</span><span class="op">]</span><span class="op">]</span><span class="op">(</span><span class="op">)</span><span class="op">[[</span><span class="va">table_name</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span>      <span class="op">)</span></span>
 <span>    <span class="op">}</span>,</span>
 <span>    <span class="co"># Module ID</span></span>
@@ -213,11 +212,13 @@ module manager and it will receive a set of arguments as defined
 explained in <code><a href="../articles/arguments_from_module_manager.html">vignette("arguments_from_module_manager")</a></code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dataset</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adsl <span class="op">=</span> <span class="fu">pharmaverseadam</span><span class="fu">::</span><span class="va"><a href="https://pharmaverse.github.io/pharmaverseadam/reference/adsl.html" class="external-link">adsl</a></span><span class="op">)</span></span>
-<span><span class="va">module_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"First module"</span> <span class="op">=</span> <span class="fu">mod_uniq_values</span><span class="op">(</span></span>
-<span>  <span class="st">"adsl"</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"AGE"</span><span class="op">)</span>,</span>
-<span>  module_id <span class="op">=</span> <span class="st">"mod1"</span></span>
-<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">module_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="st">"First module"</span> <span class="op">=</span> <span class="fu">mod_uniq_values</span><span class="op">(</span></span>
+<span>    <span class="st">"adsl"</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"AGE"</span><span class="op">)</span>,</span>
+<span>    module_id <span class="op">=</span> <span class="st">"mod1"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"DS"</span> <span class="op">=</span> <span class="va">dataset</span><span class="op">)</span>,</span>
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
@@ -263,7 +264,8 @@ the choices in the input to the:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">module_server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span>, <span class="va">dataset_list</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">module</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span>, <span class="va">session</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/observeEvent.html" class="external-link">observeEvent</a></span><span class="op">(</span><span class="fu">dataset_list</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/observeEvent.html" class="external-link">observeEvent</a></span><span class="op">(</span></span>
+<span>      <span class="fu">dataset_list</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>      <span class="op">{</span></span>
 <span>        <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/updateSelectInput.html" class="external-link">updateSelectInput</a></span><span class="op">(</span></span>
 <span>          inputId <span class="op">=</span> <span class="st">"data_select"</span>,</span>
@@ -306,10 +308,10 @@ by <strong>dv.manager</strong>.</p>
 <p>First, we remove the extra parameter from the UI function. Notice
 that this allows us to directly pass the function name instead of
 wrapping it in a anonymous function (see previous example).</p>
-<p>Then, we pass the whole <code>filtered_dataset</code> list to the
-<code>dataset</code> parameter in the server function because we are no
-longer specifying just one data set - in this way, we can allow the user
-to select the data set inside the application at run-time.</p>
+<p>Then, we pass the whole <code>filtered_dataset_list</code> list to
+the <code>dataset</code> parameter in the server function because we are
+no longer specifying just one data set - in this way, we can allow the
+user to select the data set inside the application at run-time.</p>
 <p>This allows us to remove all parameters from the
 <code>mod_uniq_values()</code> function definition with the exception of
 <code>module_id</code>.</p>
@@ -321,7 +323,7 @@ to select the data set inside the application at run-time.</p>
 <span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">afmm</span><span class="op">)</span> <span class="op">{</span></span>
 <span>      <span class="fu">module_server</span><span class="op">(</span></span>
 <span>        <span class="va">module_id</span>,</span>
-<span>        dataset <span class="op">=</span> <span class="va">afmm</span><span class="op">[[</span><span class="st">"filtered_dataset"</span><span class="op">]</span><span class="op">]</span></span>
+<span>        dataset <span class="op">=</span> <span class="va">afmm</span><span class="op">[[</span><span class="st">"filtered_dataset_list"</span><span class="op">]</span><span class="op">]</span></span>
 <span>      <span class="op">)</span></span>
 <span>    <span class="op">}</span>,</span>
 <span>    module_id <span class="op">=</span> <span class="va">module_id</span></span>
@@ -362,7 +364,7 @@ should be used to control this issue.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

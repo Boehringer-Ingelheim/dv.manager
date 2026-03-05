@@ -1,0 +1,350 @@
+# Arguments from Module Manager
+
+When developing a module, we create a wrapper function that returns a
+list that is used to instantiate a given module inside module manager.
+Within this list the `server` is a function with a single parameter
+provided by module manager when the server function is called. This
+parameter by convention usually called `afmm`, an acronym of
+**a**rguments **f**rom **m**odule **m**anager. `afmm` is a list with the
+following entries:
+
+1.  **data**: a list of lists of data frames (or of functions that
+    return data frames). Pass-through of the `run_app` argument by the
+    same name.
+
+2.  **unfiltered_dataset_list**: a reactive list containing the tables
+    inside the selected dataset before filtering them.
+
+3.  **filtered_dataset_list**: a reactive list containing the tables
+    inside the selected dataset after filtering them.
+
+4.  **url_parameters**: a reactive list of the parameters passed in the
+    url.
+
+5.  **dataset_metadata**: a list with the following entries:
+
+    1.  **name**: a reactive string with the name of the selected
+        dataset
+    2.  **date_range**: a reactive character vector with two entries
+        earliest and latest modification date in the dataset.
+
+6.  **module_output**: a function that when called returns a list of all
+    the values returned by the different modules indexed by the
+    module_id.
+
+7.  **module_names**: a non-reactive named list containing as values the
+    names of the module entries as displayed on the tab and as names the
+    ids of the module entries as used by Shiny.
+
+8.  **utils**: a list of convenience functions:
+
+    1.  **switch2mod**: a function that allows switching between tabs
+        programatically.
+
+Lets see some example recipes to use all these fields.
+
+Firstly, we will declare a simple module that creates a table, and a
+dataset. These will be the basis for our examples.
+
+``` r
+
+# Module
+table_ui <- function(id) {
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    DT::DTOutput(ns("table"))
+  )
+}
+
+table_server <- function(id, dataset) {
+  shiny::moduleServer(
+    id,
+    function(input, output, session) {
+      output$table <- DT::renderDT(
+        {
+          dataset()
+        },
+        selection = "single"
+      )
+    }
+  )
+}
+```
+
+## Raw access
+
+### Accessing the un/filtered_dataset
+
+Below we can see a wrapper that allow us to access the filtered dataset.
+
+``` r
+
+mod_table <- function(table_name, mod_id) {
+  mod <- list(
+    ui = table_ui,
+    server = function(afmm) {
+      table_server(id = mod_id, dataset = shiny::reactive(afmm[["filtered_dataset_list"]]()[[table_name]]))
+    },
+    module_id = mod_id
+  )
+  mod
+}
+
+data_list <- list(
+  "D1" = list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae),
+  "D2" = list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
+)
+
+module_list <- list(
+  "Table adsl" = mod_table(mod_id = "mod_1", "adsl"),
+  "Table adae" = mod_table(mod_id = "mod_1", "adae")
+)
+
+run_app(
+  data = data_list,
+  module_list = module_list,
+  filter_data = "adsl",
+  filter_key = "USUBJID"
+)
+```
+
+When creating the module list we can select which of the tables inside
+the dataset we will access. Nonetheless, this is just a design choice of
+the module developer. See below another possible example in which we can
+select either the filtered or unfiltered dataset input by toggling the
+logical `filtered` parameter.
+
+``` r
+
+mod_table <- function(table_name, filtered = FALSE, mod_id) {
+  mod <- list(
+    ui = table_ui,
+    server = function(afmm) {
+      if (filtered) {
+        source <- "filtered_dataset_list"
+      } else {
+        source <- "unfiltered_dataset_list"
+      }
+      table_server(id = mod_id, dataset = shiny::reactive(afmm[[source]]()[[table_name]]))
+    },
+    module_id = mod_id
+  )
+  mod
+}
+
+data_list <- list("D1" = list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae))
+
+module_list <- list(
+  "Table adsl" = mod_table(mod_id = "mod_1", "adsl"),
+  "Table adae" = mod_table(mod_id = "mod_1", "adae")
+)
+
+run_app(
+  data = data_list,
+  module_list = module_list,
+  filter_data = "adsl",
+  filter_key = "USUBJID"
+)
+```
+
+**A note on reactives**
+
+The call to afmm is included in a reactive, because
+`afmm[["unfiltered_dataset_list"]]` and
+`afmm[["filtered_dataset_list"]]` are reactives, therefore, they can
+only be accessed inside a reactive environment. Also note the
+parenthesis resolving the reactive before doing the subsetting. This
+does not differ from usual reactive programming.
+
+### Accessing dataset_name
+
+Find below an example on how to access the dataset_name
+
+``` r
+
+dataset_name_UI <- function(id) {
+  # nolint
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    shiny::textOutput(ns("text"))
+  )
+}
+
+dataset_name_server <- function(id, dataset_name) {
+  shiny::moduleServer(
+    id,
+    function(input, output, session) {
+      output$text <- shiny::renderText({
+        dataset_name()
+      })
+    }
+  )
+}
+
+mod_dataset_name <- function(module_id) {
+  mod <- list(
+    ui = dataset_name_UI,
+    server = function(afmm) {
+      dataset_name_server(module_id, afmm[["dataset_metadata"]][["name"]])
+    },
+    module_id = module_id
+  )
+  mod
+}
+
+run_app(
+  data = data_list,
+  module_list = list(
+    "Dataset Name" = mod_dataset_name("mod1")
+  ),
+  filter_data = "adsl",
+  filter_key = "USUBJID"
+)
+```
+
+Note how in this case we did not manipulate the dataset_name and
+therefore it is not included in a reactive call, as it can be passed “as
+is”.
+
+### Accessing the module_output
+
+`afmm[["module_output"]]` behavior slightly differs from the other
+entries in the `afmm` list. In this case it is a function that when
+called returns a list containing all the values returned by the
+different modules indexed by the `module_id`. Returning a function call
+instead of a list is based on the fact that we are passing as an
+argument something that is not yet created, as we are creating the list
+at the same time we are calling the server functions.
+
+This also forces us to wrap all `afmm[["module_output"]]` calls in a
+reactive call, regardless of the object used being a reactive or not, as
+we need to delay the evaluation until the app has started.
+
+Lets see an example of this. In this case we have created a module that
+receives a value and displays it. In this case we will receive that
+value from another module.
+
+``` r
+
+com_UI <- function(id, choices = c(1, 2, 3), message) {
+  # nolint
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    shiny::selectizeInput(ns("select"), label = "Select a number", choices = choices),
+    shiny::p(message),
+    shiny::textOutput(ns("output"))
+  )
+}
+
+com_server <- function(id, value) {
+  module <- function(input, output, session) {
+    output$output <- shiny::renderText({
+      shiny::req(value())
+    })
+
+    return(shiny::reactive(input$select))
+  }
+
+  return(
+    shiny::moduleServer(
+      id,
+      module
+    )
+  )
+}
+
+mod_com_test <- function(choices, message, value, mod_id) {
+  mod <- list(
+    ui = function(id) {
+      com_UI(id, choices, message)
+    },
+    server = function(afmm) {
+      com_server(id = mod_id, value = shiny::reactive(afmm[["module_output"]]()[[value]]))
+    },
+    module_id = mod_id
+  )
+  mod
+}
+
+run_app(
+  data = list(),
+  module_list = list(
+    "Send and Receive 1" = mod_com_test(
+      choices = 1:3,
+      message = "The other module has selected",
+      value = "mod_2",
+      mod_id = "mod_1"
+    ),
+    "Send and Receive 2" = mod_com_test(
+      choices = c("a", "b", "c"),
+      message = "The other module has selected",
+      value = "mod_1",
+      mod_id = "mod_2"
+    )
+  ),
+  filter_data = ""
+)
+```
+
+See how, we wrap everything in a reactive, make the call to
+module_output and then resolve the reactive once we have subsetted. Note
+that it is the module/app developer how to treat that output value.
+
+### Accessing util functions
+
+The `utils` field contains a list of utility functions for actions that
+need module manager. In this case the access is the simplest of all
+cases as it is just a list of functions.
+
+#### switch2mod
+
+`switch2mod` allows switching from tab to another in a programmatic
+manner.
+
+``` r
+
+########### Switch module
+
+switch_UI <- function(id, name) {
+  # nolint
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    shiny::h1(name),
+    shiny::actionButton(ns("switch"), "Switch tab")
+  )
+}
+
+switch_server <- function(id, selected, switch_func) {
+  shiny::moduleServer(
+    id,
+    function(input, output, session) {
+      shiny::observeEvent(input$switch, {
+        switch_func(selected)
+      })
+    }
+  )
+}
+
+mod_switch <- function(name, selected, module_id) {
+  mod <- list(
+    ui = function(module_id) {
+      switch_UI(module_id, name)
+    },
+    server = function(afmm) {
+      switch_server(module_id, selected, afmm[["utils"]][["switch2mod"]])
+    },
+    module_id = module_id
+  )
+  mod
+}
+
+run_app(
+  data = list(),
+  module_list = list(
+    "Mod 1" = mod_switch("Mod 1", "mod2", "mod1"),
+    "Mod 2" = mod_switch("Mod 2", "mod1", "mod2")
+  ),
+  filter_data = "",
+  filter_key = "USUBJID"
+)
+```

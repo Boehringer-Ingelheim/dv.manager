@@ -8,8 +8,8 @@
 <title>Passing data between modules • dv.manager</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
-<link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Passing data between modules">
 </head>
 <body>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,11 +44,11 @@
     <li><a class="dropdown-item" href="../articles/passing_data.html">Passing data between modules</a></li>
     <li><a class="dropdown-item" href="../articles/css_namespace.html">Adding custom CSS styles to a module</a></li>
     <li><a class="dropdown-item" href="../articles/logging.html">logging</a></li>
-    <li><a class="dropdown-item" href="../articles/blockly_filter.html">(DEVELOPMENT) Blockly Filter</a></li>
+    <li><a class="dropdown-item" href="../articles/subgroup.html">(DEVELOPMENT) Subgrouping</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>How does it work</h6></li>
     <li><a class="dropdown-item" href="../articles/how_does_work.html">How does it work (Technic/Develop)</a></li>
-    <li><a class="dropdown-item" href="../articles/data_filtering.html">Sidebar filter implementation</a></li>
+    <li><a class="dropdown-item" href="../articles/filter.html">Filter</a></li>
     <li><a class="dropdown-item" href="../articles/arguments_from_module_manager.html">Arguments from Module Manager</a></li>
     <li><a class="dropdown-item" href="../articles/data_reloading.html">Data reloading</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -89,7 +89,8 @@ module.</p>
 <p>In the following app you can select a value in one the modules and
 use its value in another module.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">com_test_UI</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span>, <span class="va">choices</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="va">message</span><span class="op">)</span> <span class="op">{</span> <span class="co"># nolint</span></span>
+<code class="sourceCode R"><span><span class="va">com_test_UI</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span>, <span class="va">choices</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="va">message</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># nolint</span></span>
 <span>  <span class="va">ns</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/NS.html" class="external-link">NS</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span></span>
 <span>  <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
 <span>    <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectizeInput</a></span><span class="op">(</span><span class="fu">ns</span><span class="op">(</span><span class="st">"select"</span><span class="op">)</span>, label <span class="op">=</span> <span class="st">"Select a number"</span>, choices <span class="op">=</span> <span class="va">choices</span><span class="op">)</span>,</span>
@@ -143,7 +144,7 @@ use its value in another module.</p>
 <span>      value <span class="op">=</span> <span class="st">"mod_1"</span>,</span>
 <span>      mod_id <span class="op">=</span> <span class="st">"mod_2"</span></span>
 <span>    <span class="op">)</span>,</span>
-<span>    <span class="st">"Simple"</span> <span class="op">=</span> <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/mod_simple.html">mod_simple</a></span><span class="op">(</span><span class="st">"adsl"</span>, <span class="st">"modSimp"</span><span class="op">)</span></span>
+<span>    <span class="st">"Simple"</span> <span class="op">=</span> <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/mod_simple.html">mod_simple</a></span><span class="op">(</span><span class="st">"adsl"</span>, <span class="st">"filtered_dataset_list"</span>, <span class="st">"modSimp"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span>,</span>
 <span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span></span>
@@ -159,10 +160,9 @@ that returns the list of values returned by the modules.</p>
 </h2>
 <p>If the element returned, by
 <code>afmm[["module_output"]]()[[selection]]</code> is not a reactive,
-it must be transformed into a reactive (usually a metaReactive) in the
-wrapper
-<code>metaReactive(afmm[["module_output"]]()[[selection]])</code>. This
-is done this way because at the moment the modules are invoked,
+it must be transformed into a reactive in the wrapper
+<code>reactive(afmm[["module_output"]]()[[selection]])</code>. This is
+done this way because at the moment the modules are invoked,
 module_output does not exist yet and its value should be retrieved after
 all the server functions have run and the variable exists inside the
 app_server environment.</p>
@@ -177,7 +177,7 @@ app_server environment.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

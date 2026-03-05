@@ -8,8 +8,8 @@
 <title>Arguments from Module Manager • dv.manager</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
-<link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Arguments from Module Manager">
 </head>
 <body>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,11 +44,11 @@
     <li><a class="dropdown-item" href="../articles/passing_data.html">Passing data between modules</a></li>
     <li><a class="dropdown-item" href="../articles/css_namespace.html">Adding custom CSS styles to a module</a></li>
     <li><a class="dropdown-item" href="../articles/logging.html">logging</a></li>
-    <li><a class="dropdown-item" href="../articles/blockly_filter.html">(DEVELOPMENT) Blockly Filter</a></li>
+    <li><a class="dropdown-item" href="../articles/subgroup.html">(DEVELOPMENT) Subgrouping</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>How does it work</h6></li>
     <li><a class="dropdown-item" href="../articles/how_does_work.html">How does it work (Technic/Develop)</a></li>
-    <li><a class="dropdown-item" href="../articles/data_filtering.html">Sidebar filter implementation</a></li>
+    <li><a class="dropdown-item" href="../articles/filter.html">Filter</a></li>
     <li><a class="dropdown-item" href="../articles/arguments_from_module_manager.html">Arguments from Module Manager</a></li>
     <li><a class="dropdown-item" href="../articles/data_reloading.html">Data reloading</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -96,15 +96,14 @@ list with the following entries:</p>
 <li><p><strong>data</strong>: a list of lists of data frames (or of
 functions that return data frames). Pass-through of the
 <code>run_app</code> argument by the same name.</p></li>
-<li><p><strong>unfiltered_dataset</strong>: a metaReactive list
+<li><p><strong>unfiltered_dataset_list</strong>: a reactive list
 containing the tables inside the selected dataset before filtering
 them.</p></li>
-<li><p><strong>filtered_dataset</strong>: a metaReactive list containing
-the tables inside the selected dataset after filtering them.</p></li>
+<li><p><strong>filtered_dataset_list</strong>: a reactive list
+containing the tables inside the selected dataset after filtering
+them.</p></li>
 <li><p><strong>url_parameters</strong>: a reactive list of the
 parameters passed in the url.</p></li>
-<li><p><strong>dataset_name</strong>: a reactive string containing the
-name of the selected dataset. (Deprecated)</p></li>
 <li>
 <p><strong>dataset_metadata</strong>: a list with the following
 entries:</p>
@@ -171,7 +170,7 @@ dataset.</p>
 <span>  <span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    ui <span class="op">=</span> <span class="va">table_ui</span>,</span>
 <span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">afmm</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="fu">table_server</span><span class="op">(</span>id <span class="op">=</span> <span class="va">mod_id</span>, dataset <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="va">afmm</span><span class="op">[[</span><span class="st">"filtered_dataset"</span><span class="op">]</span><span class="op">]</span><span class="op">(</span><span class="op">)</span><span class="op">[[</span><span class="va">table_name</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span>      <span class="fu">table_server</span><span class="op">(</span>id <span class="op">=</span> <span class="va">mod_id</span>, dataset <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="va">afmm</span><span class="op">[[</span><span class="st">"filtered_dataset_list"</span><span class="op">]</span><span class="op">]</span><span class="op">(</span><span class="op">)</span><span class="op">[[</span><span class="va">table_name</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="op">}</span>,</span>
 <span>    module_id <span class="op">=</span> <span class="va">mod_id</span></span>
 <span>  <span class="op">)</span></span>
@@ -205,9 +204,9 @@ toggling the logical <code>filtered</code> parameter.</p>
 <span>    ui <span class="op">=</span> <span class="va">table_ui</span>,</span>
 <span>    server <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">afmm</span><span class="op">)</span> <span class="op">{</span></span>
 <span>      <span class="kw">if</span> <span class="op">(</span><span class="va">filtered</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="va">source</span> <span class="op">&lt;-</span> <span class="st">"filtered_dataset"</span></span>
+<span>        <span class="va">source</span> <span class="op">&lt;-</span> <span class="st">"filtered_dataset_list"</span></span>
 <span>      <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>        <span class="va">source</span> <span class="op">&lt;-</span> <span class="st">"unfiltered_dataset"</span></span>
+<span>        <span class="va">source</span> <span class="op">&lt;-</span> <span class="st">"unfiltered_dataset_list"</span></span>
 <span>      <span class="op">}</span></span>
 <span>      <span class="fu">table_server</span><span class="op">(</span>id <span class="op">=</span> <span class="va">mod_id</span>, dataset <span class="op">=</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="va">afmm</span><span class="op">[[</span><span class="va">source</span><span class="op">]</span><span class="op">]</span><span class="op">(</span><span class="op">)</span><span class="op">[[</span><span class="va">table_name</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="op">}</span>,</span>
@@ -231,25 +230,19 @@ toggling the logical <code>filtered</code> parameter.</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>A note on reactives</strong></p>
 <p>The call to afmm is included in a reactive, because
-<code>afmm[["unfiltered_dataset]]</code> and
-<code>afmm[["filtered_dataset]]</code> are metaReactives, therefore,
+<code>afmm[["unfiltered_dataset_list"]]</code> and
+<code>afmm[["filtered_dataset_list"]]</code> are reactives, therefore,
 they can only be accessed inside a reactive environment. Also note the
 parenthesis resolving the reactive before doing the subsetting. This
 does not differ from usual reactive programming.</p>
-<p><strong>A note on metaReactives</strong> In this example we are using
-simple reactive to not overwhelm readers with no experience using the
-<code>shinymeta</code> package. To make use of the export functionality
-provided in modulemanager, this reactive should be replaced by
-<code><a href="https://rstudio.github.io/shinymeta/reference/metaReactive.html" class="external-link">shinymeta::metaReactive</a></code>. Please see
-<code>vignette("export_func_dev")</code> for a longer explanation on
-metaReactivity that escapes the scope of this vignette.</p>
 </div>
 <div class="section level3">
 <h3 id="accessing-dataset_name">Accessing dataset_name<a class="anchor" aria-label="anchor" href="#accessing-dataset_name"></a>
 </h3>
 <p>Find below an example on how to access the dataset_name</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dataset_name_UI</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span><span class="op">)</span> <span class="op">{</span> <span class="co"># nolint</span></span>
+<code class="sourceCode R"><span><span class="va">dataset_name_UI</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># nolint</span></span>
 <span>  <span class="va">ns</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/NS.html" class="external-link">NS</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span></span>
 <span>  <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
 <span>    <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">textOutput</a></span><span class="op">(</span><span class="fu">ns</span><span class="op">(</span><span class="st">"text"</span><span class="op">)</span><span class="op">)</span></span>
@@ -302,14 +295,15 @@ are passing as an argument something that is not yet created, as we are
 creating the list at the same time we are calling the server
 functions.</p>
 <p>This also forces us to wrap all <code>afmm[["module_output"]]</code>
-calls in a metaReactive/reactive call, regardless of the object used
-being a reactive or not, as we need to delay the evaluation until the
-app has started.</p>
+calls in a reactive call, regardless of the object used being a reactive
+or not, as we need to delay the evaluation until the app has
+started.</p>
 <p>Lets see an example of this. In this case we have created a module
 that receives a value and displays it. In this case we will receive that
 value from another module.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">com_UI</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span>, <span class="va">choices</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="va">message</span><span class="op">)</span> <span class="op">{</span> <span class="co"># nolint</span></span>
+<code class="sourceCode R"><span><span class="va">com_UI</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span>, <span class="va">choices</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="va">message</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># nolint</span></span>
 <span>  <span class="va">ns</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/NS.html" class="external-link">NS</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span></span>
 <span>  <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
 <span>    <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectizeInput</a></span><span class="op">(</span><span class="fu">ns</span><span class="op">(</span><span class="st">"select"</span><span class="op">)</span>, label <span class="op">=</span> <span class="st">"Select a number"</span>, choices <span class="op">=</span> <span class="va">choices</span><span class="op">)</span>,</span>
@@ -384,7 +378,8 @@ programmatic manner.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">########### Switch module</span></span>
 <span></span>
-<span><span class="va">switch_UI</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span>, <span class="va">name</span><span class="op">)</span> <span class="op">{</span> <span class="co"># nolint</span></span>
+<span><span class="va">switch_UI</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">id</span>, <span class="va">name</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># nolint</span></span>
 <span>  <span class="va">ns</span> <span class="op">&lt;-</span> <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/NS.html" class="external-link">NS</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span></span>
 <span>  <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">tagList</a></span><span class="op">(</span></span>
 <span>    <span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h1</a></span><span class="op">(</span><span class="va">name</span><span class="op">)</span>,</span>
@@ -439,7 +434,7 @@ programmatic manner.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

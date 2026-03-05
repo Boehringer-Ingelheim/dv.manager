@@ -8,8 +8,8 @@
 <title>logging • dv.manager</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
-<link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="logging">
 </head>
 <body>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,11 +44,11 @@
     <li><a class="dropdown-item" href="../articles/passing_data.html">Passing data between modules</a></li>
     <li><a class="dropdown-item" href="../articles/css_namespace.html">Adding custom CSS styles to a module</a></li>
     <li><a class="dropdown-item" href="../articles/logging.html">logging</a></li>
-    <li><a class="dropdown-item" href="../articles/blockly_filter.html">(DEVELOPMENT) Blockly Filter</a></li>
+    <li><a class="dropdown-item" href="../articles/subgroup.html">(DEVELOPMENT) Subgrouping</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>How does it work</h6></li>
     <li><a class="dropdown-item" href="../articles/how_does_work.html">How does it work (Technic/Develop)</a></li>
-    <li><a class="dropdown-item" href="../articles/data_filtering.html">Sidebar filter implementation</a></li>
+    <li><a class="dropdown-item" href="../articles/filter.html">Filter</a></li>
     <li><a class="dropdown-item" href="../articles/arguments_from_module_manager.html">Arguments from Module Manager</a></li>
     <li><a class="dropdown-item" href="../articles/data_reloading.html">Data reloading</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -96,9 +96,7 @@ message.</p>
 <p>In its default state, the logger will capture and decorate any
 ‘message’ or ‘warning’ condition. Simply put, any message you send using
 <code>message</code>, <code>warning</code>, <code><a href="https://rlang.r-lib.org/reference/abort.html" class="external-link">rlang::inform</a></code>
-and <code><a href="https://rlang.r-lib.org/reference/abort.html" class="external-link">rlang::warn</a></code>. Usually we will favour the
-<code>rlang</code> functions as adding fields to use in our logger is
-simpler.</p>
+and <code><a href="https://rlang.r-lib.org/reference/abort.html" class="external-link">rlang::warn</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="using-logging-levels">Using logging levels<a class="anchor" aria-label="anchor" href="#using-logging-levels"></a>
@@ -113,7 +111,7 @@ the logging messages sent by including a logging level field in it.</p>
 <span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_deactivate</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>The logging levels and their numerical value can be checked with:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu">log_get_levels</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_get_level_list</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="logging-messages-sent-from-your-module">Logging messages sent from your module<a class="anchor" aria-label="anchor" href="#logging-messages-sent-from-your-module"></a>
@@ -128,17 +126,26 @@ using <code>rlang</code></p>
 <span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_deactivate</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>You can use the <code>packageName</code> function to dynamically get
 the name of your package.</p>
+</div>
+<div class="section level2">
+<h2 id="using-dv-manager-convenience-logging-functions">Using dv.manager convenience logging functions<a class="anchor" aria-label="anchor" href="#using-dv-manager-convenience-logging-functions"></a>
+</h2>
 <p>You can also call <code>log_use_log</code> from
 <code>dv.manager</code> in the root of the package containing the
 module. This will add a file to your <code>R/</code> directory with two
-convenience functions that automatically add the package name.</p>
+convenience functions. These convenience functions
+<code>log_inform</code> and <code>log_warn</code> are aliases of
+<code>rlang</code> that also automatically add the package name and
+require the option <code>dv.logging.active</code> to be set to
+<code>TRUE</code>. From now on these function will be used. Notice in
+some of the examples we use them with a <code>:::</code> as they are
+internal to the <code>dv.manager</code> and are not exported.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Will create an R/utils_logging.R file with two convenience functions</span></span>
 <span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_use_log</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/load_all.html" class="external-link">load_all</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_activate</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu">log_inform</span><span class="op">(</span><span class="st">"An inform with package name"</span><span class="op">)</span></span>
-<span><span class="fu">log_warning</span><span class="op">(</span><span class="st">"A warning with package name"</span><span class="op">)</span></span>
+<span><span class="fu">log_warn</span><span class="op">(</span><span class="st">"A warning with package name"</span><span class="op">)</span></span>
 <span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_deactivate</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -178,28 +185,30 @@ improve human-readibility.</li>
 </ul>
 <p>The default handlers present and format this information.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">log_default_handlers</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">level</span> <span class="op">=</span> <span class="fl">999</span><span class="op">)</span> <span class="op">{</span></span>
+<code class="sourceCode R"><span><span class="va">log_default_handlers</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">level</span> <span class="op">=</span> <span class="fl">999</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">format_str</span> <span class="op">&lt;-</span> <span class="st">"[{date}][{package}|{short_sess_id}|{ns}]:{message}"</span></span>
 <span></span>
 <span>  <span class="va">cnd_to_str</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">cnd</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_add_date</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_add_ns</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_add_sess_id</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_add_short_sess_id</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>    <span class="va">cnd</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_add_date</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_add_ns</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_add_sess_id</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_add_short_sess_id</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_format</a></span><span class="op">(</span><span class="va">format_str</span><span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
 <span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    message <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="kw">if</span> <span class="op">(</span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu">log_check_print</span><span class="op">(</span><span class="va">cnd</span>, <span class="va">level</span><span class="op">)</span><span class="op">)</span> <span class="fu">cli</span><span class="fu">::</span><span class="fu"><a href="https://cli.r-lib.org/reference/cli_alert.html" class="external-link">cli_alert_info</a></span><span class="op">(</span><span class="fu">cnd_to_str</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span><span class="op">)</span></span>
+<span>      <span class="kw">if</span> <span class="op">(</span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu">log_check_print</span><span class="op">(</span><span class="va">cnd</span>, <span class="va">level</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="fu">cli</span><span class="fu">::</span><span class="fu"><a href="https://cli.r-lib.org/reference/cli_alert.html" class="external-link">cli_alert_info</a></span><span class="op">(</span><span class="fu">cnd_to_str</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span><span class="op">)</span></span>
+<span>      <span class="op">}</span></span>
 <span></span>
 <span>      <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/cnd_muffle.html" class="external-link">cnd_muffle</a></span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span></span>
 <span>    <span class="op">}</span>,</span>
 <span>    warning <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="kw">if</span> <span class="op">(</span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu">log_check_print</span><span class="op">(</span><span class="va">cnd</span>, <span class="va">level</span><span class="op">)</span><span class="op">)</span> <span class="fu">cli</span><span class="fu">::</span><span class="fu"><a href="https://cli.r-lib.org/reference/cli_alert.html" class="external-link">cli_alert_warning</a></span><span class="op">(</span><span class="fu">cnd_to_str</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span><span class="op">)</span></span>
+<span>      <span class="kw">if</span> <span class="op">(</span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu">log_check_print</span><span class="op">(</span><span class="va">cnd</span>, <span class="va">level</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="fu">cli</span><span class="fu">::</span><span class="fu"><a href="https://cli.r-lib.org/reference/cli_alert.html" class="external-link">cli_alert_warning</a></span><span class="op">(</span><span class="fu">cnd_to_str</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span><span class="op">)</span></span>
+<span>      <span class="op">}</span></span>
 <span>      <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/cnd_muffle.html" class="external-link">cnd_muffle</a></span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span>  <span class="op">)</span></span>
@@ -218,20 +227,20 @@ format is not present an <code>NA</code> value is returned instead.</p>
 <p>The default handlers are convenient, but the logging behavior can be
 modified by using a different set of handlers…</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">my_handlers</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
+<code class="sourceCode R"><span><span class="va">my_handlers</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">format_str</span> <span class="op">&lt;-</span> <span class="st">"Date:{date}|Pkg:{package}|{custom_field}:{message}"</span></span>
 <span></span>
 <span>  <span class="va">cnd_to_str</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">cnd</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_add_date</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>    <span class="va">cnd</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_add_date</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>      <span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_format</a></span><span class="op">(</span><span class="va">format_str</span><span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
 <span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    message <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="kw">if</span> <span class="op">(</span><span class="va">cnd</span><span class="op">[[</span><span class="st">"print_me"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="fu">cli</span><span class="fu">::</span><span class="fu"><a href="https://cli.r-lib.org/reference/cli_alert.html" class="external-link">cli_alert_info</a></span><span class="op">(</span><span class="fu">cnd_to_str</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span><span class="op">)</span></span>
+<span>      <span class="kw">if</span> <span class="op">(</span><span class="va">cnd</span><span class="op">[[</span><span class="st">"print_me"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="fu">cli</span><span class="fu">::</span><span class="fu"><a href="https://cli.r-lib.org/reference/cli_alert.html" class="external-link">cli_alert_info</a></span><span class="op">(</span><span class="fu">cnd_to_str</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span><span class="op">)</span></span>
+<span>      <span class="op">}</span></span>
 <span>      <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/cnd_muffle.html" class="external-link">cnd_muffle</a></span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span></span>
 <span>    <span class="op">}</span>,</span>
 <span>    warning <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span> <span class="op">{</span></span>
@@ -241,11 +250,13 @@ modified by using a different set of handlers…</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="st">"dv.logging.active"</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_activate</a></span><span class="op">(</span><span class="fu">my_handlers</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">dv.manager</span><span class="fu">:::</span><span class="fu">log_inform</span><span class="op">(</span><span class="st">"I will print this and its custom_field will be 1"</span>, print_me <span class="op">=</span> <span class="cn">TRUE</span>, custom_field <span class="op">=</span> <span class="st">"1"</span><span class="op">)</span></span>
 <span><span class="fu">dv.manager</span><span class="fu">:::</span><span class="fu">log_inform</span><span class="op">(</span><span class="st">"I will print this and its custom_field will be NA"</span>, print_me <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu">dv.manager</span><span class="fu">:::</span><span class="fu">log_inform</span><span class="op">(</span><span class="st">"I will not print this"</span>, print_me <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_deactivate</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/logging.html">log_deactivate</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="st">"dv.logging.active"</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <p>As you can see we can add new fields for logging, we can supress some
 messages depending on the fields, etc. This allows filtering logging
 messages by package, session, logging level, etc. So it adapts to our
@@ -284,7 +295,7 @@ functions.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

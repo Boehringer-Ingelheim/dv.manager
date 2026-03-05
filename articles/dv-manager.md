@@ -1,0 +1,78 @@
+# Getting started
+
+Here, we will follow some simple steps to create an application using
+**dv.manager**. Note that that **dv.manager** does not include any
+module it just serves as a container therefore along these steps we will
+install some packages from the DaVinci project.
+
+## Data loading
+
+**dv.manager** has been developed to work with DaVinci modules whose
+main purpose is to explore clinical trial data. The main input for this
+modules is data loaded from SDTM or ADAM datasets. We will use two dummy
+datasets in the dv.manager for illustration purposes.
+
+``` r
+
+data <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
+```
+
+**Notice** that datasets are all packed together in a single list.
+
+## Preprocessing the data (optional)
+
+We can optionally preprocess the loaded data by: computing derived
+variables, rename variables, select a subset of the variables or a
+subset of the population,…
+
+## Module selection
+
+Now, we have to select which modules will be included in our
+application. As mentioned before, **dv.manager** does not contain any
+modules, therefore we will install the *dv.listings* package (see how to
+install *dv.listings* an other modules in:
+`vignette("installing_module_packages")`).
+
+If you already have **dv.listings** installed you can skip this step.
+
+``` r
+
+if (!require("remotes")) install.packages("remotes")
+remotes::install_github("Boehringer-Ingelheim/dv.listings")
+```
+
+We can now include in our application or the modules included in the
+**dv.listings** package.
+
+For example, we can use the *listings* module from the **dv.listings**
+package.
+
+``` r
+
+module_list <- list(
+  "My First listing" = dv.listings::mod_listings(
+    dataset_names = "adsl",
+    module_id = "mod1"
+  )
+)
+```
+
+Please notice that in the dataset parameter we do not directly pass a
+dataset (e.g. a data.frame or a tibble), but just a string indicating
+which of the datasets we loaded before we want to display in this table.
+Please refer to these vignettes **\`vignette(“how_does_work”)\`** for
+the explanation on how data is dispatched to the different modules.
+
+## Launching our first application
+
+To launch our the application we now just need to call the run_app
+function in **dv.manager**.
+
+``` r
+
+dv.manager::run_app(
+  data = list("DS" = data),
+  module_list = module_list,
+  filter_data = "adsl"
+)
+```
