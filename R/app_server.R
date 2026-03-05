@@ -188,6 +188,10 @@ app_server_ <- function(input, output, session, opts) {
     as_dv_manager_module_output_safe_list(module_output)
   }
 
+  get_app_performance_info <- function() {
+    app_performance_info
+  }
+
   afmm <- list(
     data = dataset_lists,
     unfiltered_dataset = shiny::reactive({
@@ -258,21 +262,29 @@ app_server_ <- function(input, output, session, opts) {
         )
         dataset_list_filter()
       })
-    )
+    ),
+    app_performance_info = get_app_performance_info
   )
 
-  used_datasets <- list()
+  app_performance_info <- list()
+  get_app_performance_info <- function() {
+    app_performance_info
+  }
 
+  used_datasets <- list()
   module_output <- list()
+
   for (idx in seq_along(module_server)) {
     fn <- module_server[[idx]]
     id <- names(module_server)[[idx]]
+    app_performance_info[["init_time"]][[id]] <- Sys.time()
 
     assert(is.character(id), "id must be a character")
     assert(is.function(fn), "fn must be a function")
 
     module_output[[id]] <- fn(afmm)
     used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
+    app_performance_info[["init_time"]][[id]] <- Sys.time() - app_performance_info[["init_time"]][[id]]
   }
 
   # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)

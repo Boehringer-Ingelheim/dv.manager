@@ -7,6 +7,8 @@ app_info_UI <- function(id) {
     shiny::verbatimTextOutput(ns("object_mem_size")),
     shiny::h2("R session"),
     shiny::verbatimTextOutput(ns("r_session_mem_size")),
+    shiny::h1("Server init time"),
+    shiny::verbatimTextOutput(ns("server_init_time")),
     shiny::h1("devtools::session_info"),
     shiny::actionButton(ns("refresh_session_info"), label = "Refresh"),
     shiny::verbatimTextOutput(ns("session_info"))
@@ -21,7 +23,7 @@ app_info_server <- function(id, afmm) {
 
       output[["object_mem_size"]] <- shiny::renderPrint({
         shiny::validate(
-          shiny::need(requireNamespace("lobstr"), "lobstr package is required to see memory usage")
+          shiny::need(requireNamespace("lobstr", quietly = TRUE), "lobstr package is required to see memory usage")
         )
 
         n_afmm <- names(afmm)
@@ -32,12 +34,25 @@ app_info_server <- function(id, afmm) {
           if (shiny::is.reactive(afmm[[nm]])) {
             list_nm[[idx]] <- paste0(nm, "(resolved)")
             arg_list[[idx]] <- afmm[[nm]]()
-            idx <- idx + 1
           } else {
             list_nm[[idx]] <- paste0(nm, "(not_reactive)")
             arg_list[[idx]] <- afmm[[nm]]
-            idx <- idx + 1
           }
+
+          if (
+            inherits(
+              try(
+                lobstr::obj_sizes(arg_list[[idx]]),
+                silent = TRUE
+              ),
+
+              "try-error"
+            )
+          ) {
+            arg_list[[idx]] <- character(0)
+            list_nm[[idx]] <- paste0(list_nm[[idx]], "(not_reactive)(ERROR ESTIMATING SIZE)")
+          }
+          idx <- idx + 1
         }
 
         sizes <- do.call(lobstr::obj_sizes, arg_list)
@@ -49,12 +64,10 @@ app_info_server <- function(id, afmm) {
         lobstr::mem_used()
       })
 
-      shiny::observeEvent(input[["switch_to_target"]], {
-        afmm[["utils"]][["switch2mod"]](input[["target_id"]])
+      output[["server_init_time"]] <- shiny::renderPrint({
+        afmm[["app_performance_info"]]()
       })
 
-      output[["test_text"]] <- shiny::renderText("test")
-      output[["test_counter"]] <- shiny::renderText(filter_counter())
       output[["session_info"]] <- shiny::renderPrint({
         shiny::validate(
           shiny::need(requireNamespace("devtools", quietly = TRUE), "devtools package is required to see session info")
