@@ -43,7 +43,7 @@ dv.manager::run_app(
 )
 ```
 
-![](../man/figures/custom_basic.png){width="50%"}
+![](../man/figures/custom_basic.png){width="100%"}
 
 The effect of the changes can be visualized by comparing the output before the customization (block above) and after the customization (blocks inside each example).
 
@@ -75,7 +75,7 @@ dv.manager::run_app(
 )
 ```
 
-![](../man/figures/custom_add_tab.png){width="50%"}
+![](../man/figures/custom_add_tab.png){width="100%"}10
 
 The name of the entry in the list will serve as an external (i.e. human readable) identifier and `module_id` will act as an internal identifier.
 
@@ -110,7 +110,7 @@ dv.manager::run_app(
 )
 ```
 
-![](../man/figures/custom_change_name_tab.png){width="50%"}
+![](../man/figures/custom_change_name_tab.png){width="100%"}
 
 # Changing the data source
 
@@ -144,7 +144,7 @@ Notice how both listings are affected by the filter located in the sidebar.
 
 This example contains modules that only need a single dataset. More complex modules may need more datasets, please refer to the documentation of each particular module.
 
-![](../man/figures/custom_change_source_tab.png){width="50%"}
+![](../man/figures/custom_change_source_tab.png){width="100%"}
 
 # Loading several datasets in a single application
 
@@ -205,8 +205,8 @@ data <- list(
 library(dplyr)
 
 # Create a new filtering dataset
-data[["adsl_filter"]] <- data[["adsl"]] %>%
-  select(USUBJID, SEX, AGE) %>%
+data[["adsl_filter"]] <- data[["adsl"]] |>
+  select(USUBJID, SEX, AGE) |>
   mutate(SEX = as.factor(SEX))
 
 # Place new labels
@@ -251,8 +251,8 @@ data <- list(
 library(dplyr)
 
 # Create a new filtering dataset
-data[["adsl_mod"]] <- data[["adsl"]] %>%
-  select(USUBJID, SEX, AGE) %>%
+data[["adsl_mod"]] <- data[["adsl"]] |>
+  select(USUBJID, SEX, AGE) |>
   mutate(
     SEX = as.factor(SEX),
     AGE_M = AGE * 12

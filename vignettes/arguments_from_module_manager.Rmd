@@ -24,14 +24,12 @@ the server function is called. This parameter by convention usually called `afmm
 
 1. **data**: a list of lists of data frames (or of functions that return data frames). Pass-through of the `run_app` argument by the same name.
 
-1. **unfiltered_dataset**: a metaReactive list containing the tables inside the selected dataset before filtering them.
+1. **unfiltered_dataset_list**: a reactive list containing the tables inside the selected dataset before filtering them.
   
-1. **filtered_dataset**: a metaReactive list containing the tables inside the selected dataset after filtering them.
+1. **filtered_dataset_list**: a reactive list containing the tables inside the selected dataset after filtering them.
   
 1. **url_parameters**: a reactive list of the parameters passed in the url.
   
-1. **dataset_name**: a reactive string containing the name of the selected dataset. (Deprecated)
-
 1. **dataset_metadata**: a list with the following entries:
    a. **name**: a reactive string with the name of the selected dataset
    a. **date_range**: a reactive character vector with two entries earliest and latest modification date in the dataset.
@@ -83,7 +81,7 @@ mod_table <- function(table_name, mod_id) {
   mod <- list(
     ui = table_ui,
     server = function(afmm) {
-      table_server(id = mod_id, dataset = shiny::reactive(afmm[["filtered_dataset"]]()[[table_name]]))
+      table_server(id = mod_id, dataset = shiny::reactive(afmm[["filtered_dataset_list"]]()[[table_name]]))
     },
     module_id = mod_id
   )
@@ -118,9 +116,9 @@ mod_table <- function(table_name, filtered = FALSE, mod_id) {
     ui = table_ui,
     server = function(afmm) {
       if (filtered) {
-        source <- "filtered_dataset"
+        source <- "filtered_dataset_list"
       } else {
-        source <- "unfiltered_dataset"
+        source <- "unfiltered_dataset_list"
       }
       table_server(id = mod_id, dataset = shiny::reactive(afmm[[source]]()[[table_name]]))
     },
@@ -146,17 +144,15 @@ run_app(
 
 **A note on reactives**
 
-The call to afmm is included in a reactive, because `afmm[["unfiltered_dataset]]` and `afmm[["filtered_dataset]]` are metaReactives, therefore, they can only be accessed inside a reactive environment. Also note the parenthesis resolving the reactive before doing the subsetting. This does not differ from usual reactive programming.
-
-**A note on metaReactives**
-In this example we are using simple reactive to not overwhelm readers with no experience using the `shinymeta` package. To make use of the export functionality provided in modulemanager, this reactive should be replaced by `shinymeta::metaReactive`. Please see `vignette("export_func_dev")` for a longer explanation on metaReactivity that escapes the scope of this vignette.
+The call to afmm is included in a reactive, because `afmm[["unfiltered_dataset_list"]]` and `afmm[["filtered_dataset_list"]]` are reactives, therefore, they can only be accessed inside a reactive environment. Also note the parenthesis resolving the reactive before doing the subsetting. This does not differ from usual reactive programming.
 
 ## Accessing dataset_name
 
 Find below an example on how to access the dataset_name
 
 ```{r, eval=FALSE}
-dataset_name_UI <- function(id) { # nolint
+dataset_name_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::textOutput(ns("text"))
@@ -201,12 +197,13 @@ Note how in this case we did not manipulate the dataset_name and therefore it is
 
 `afmm[["module_output"]]` behavior slightly differs from the other entries in the `afmm` list. In this case it is a function that when called returns a list containing all the values returned by the different modules indexed by the `module_id`. Returning a function call instead of a list is based on the fact that we are passing as an argument something that is not yet created, as we are creating the list at the same time we are calling the server functions.
 
-This also forces us to wrap all `afmm[["module_output"]]` calls in a metaReactive/reactive call, regardless of the object used being a reactive or not, as we need to delay the evaluation until the app has started.
+This also forces us to wrap all `afmm[["module_output"]]` calls in a reactive call, regardless of the object used being a reactive or not, as we need to delay the evaluation until the app has started.
 
 Lets see an example of this. In this case we have created a module that receives a value and displays it. In this case we will receive that value from another module.
 
 ```{r eval = FALSE}
-com_UI <- function(id, choices = c(1, 2, 3), message) { # nolint
+com_UI <- function(id, choices = c(1, 2, 3), message) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::selectizeInput(ns("select"), label = "Select a number", choices = choices),
@@ -279,7 +276,8 @@ The `utils` field contains a list of utility functions for actions that need mod
 ```{r, eval = FALSE}
 ########### Switch module
 
-switch_UI <- function(id, name) { # nolint
+switch_UI <- function(id, name) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::h1(name),

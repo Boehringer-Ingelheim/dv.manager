@@ -74,22 +74,26 @@ log_default_handlers <- function(level = 999) {
   format_str <- "[{date}][{package}|{short_sess_id}|{ns}]:{message}"
 
   cnd_to_str <- function(cnd) {
-    cnd %>%
-      log_add_date() %>%
-      log_add_ns() %>%
-      log_add_sess_id() %>%
-      log_add_short_sess_id() %>%
+    cnd |>
+      log_add_date() |>
+      log_add_ns() |>
+      log_add_sess_id() |>
+      log_add_short_sess_id() |>
       log_format(format_str)
   }
 
   list(
     message = function(cnd) {
-      if (log_test_level(cnd, level)) cli::cli_alert_info(cnd_to_str(cnd))
+      if (log_test_level(cnd, level)) {
+        cli::cli_alert_info(cnd_to_str(cnd))
+      }
 
       rlang::cnd_muffle(cnd)
     },
     warning = function(cnd) {
-      if (log_test_level(cnd, level)) cli::cli_alert_warning(cnd_to_str(cnd))
+      if (log_test_level(cnd, level)) {
+        cli::cli_alert_warning(cnd_to_str(cnd))
+      }
       rlang::cnd_muffle(cnd)
     }
   )
@@ -209,7 +213,9 @@ log_get_level_list <- function() {
 log_use_log <- function() {
   origin <- system.file("templates/utils_logging.R", package = "dv.manager", mustWork = TRUE)
   target <- "R/utils_logging.R"
-  if (file.exists(target)) rlang::abort(paste(target, "already exists"))
+  if (file.exists(target)) {
+    rlang::abort(paste(target, "already exists"))
+  }
   file.copy(origin, target)
   rlang::inform(paste("Added file:", target))
 }

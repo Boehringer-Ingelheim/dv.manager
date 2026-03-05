@@ -6,7 +6,7 @@
 <!-- badges: start -->
 
 [![Lifecycle:
-experimental](man/figures/lifecycle_experimental.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+experimental](man/figures/lifecycle_experimental.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 
 <!-- badges: end -->
 

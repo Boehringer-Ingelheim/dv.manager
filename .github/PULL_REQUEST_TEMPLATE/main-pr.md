@@ -3,3 +3,4 @@
 - [ ] Merge all NEWS under a single version entry
 - [ ] Integration tests pass
 - [ ] devtools::document() is up to date
+- [ ] Interval devtools::check passes

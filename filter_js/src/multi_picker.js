@@ -166,7 +166,7 @@ export class multiPickerField extends Blockly.FieldTextInput {
     setTimeout(() => {
       // Wait until we are out of this stack to add listeners and hide elements. This "ensures" that the element is present in the DOM
       // We imitate the behavior of the selector by hiding the button
-      $(this.htmlInput_).next("button").css({ display: "none" }); // Hide the button selector so only the selection menu is visible
+      $(this.htmlInput_).next("button").css({ visibility: "hidden", height: 0, display: "block", padding: 0}); // Hide the button selector so only the selection menu is visible
       $(this.htmlInput_).selectpicker("show"); // Start with it open
       $(this.htmlInput_).selectpicker("toggle"); // Start with it open
       // Add listener to dispose the element so we destroy it on menu hide and store the value

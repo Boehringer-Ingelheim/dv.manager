@@ -10,7 +10,7 @@ switch_UI(id, name)
 
 switch_server(id, selected, switch_func)
 
-mod_switch(name, selected, switch_func, module_id)
+mod_switch(name, selected, module_id)
 }
 \arguments{
 \item{id}{the shiny module id+}

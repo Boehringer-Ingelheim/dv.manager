@@ -1,5 +1,4 @@
 check_resolved_modules <- function(resolved_module_list) {
-
   if (length(resolved_module_list[["module_id"]]) == 0) {
     msg <- "module_list has length 0. No modules are included in the app."
     log_warn(msg)
@@ -86,8 +85,8 @@ check_filter_data <- function(filter_data, datasets) {
       }
       filter_data %in% names(dataset_list)
     }
-  ) %>% purrr::keep(~ !.x)
-
+  ) |>
+    purrr::keep(~ !.x)
 
   if (length(filter_data_check) > 0) {
     purrr::iwalk(
@@ -172,18 +171,6 @@ check_meta_mtime_attribute <- function(datasets) {
   check_passed
 }
 
-check_azure_options <- function(azure_options) {
-  nm_az_opt <- names(azure_options)
-
-  azure_options_required_entries <- c("redirect", "resource", "tenant", "app", "password", "version")
-  if (!setequal(azure_options_required_entries, nm_az_opt)) {
-    msg <- "azure_options does not contain all required entries or contains unneeded entries"
-    rlang::abort(msg)
-  }
-
-  azure_options
-}
-
 check_deprecated_calls <- function(filter_data) {
   # No deprecated calls for the moment
 }
@@ -206,26 +193,44 @@ check_reload_period <- function(reload_period) {
   reload_period
 }
 
-check_set_filter_info <- function(filter_type, filter_default_state) {
-  checkmate::assert_subset(filter_type, choices = as.character(FILTER$TYPE), empty.ok = FALSE)
-
+check_set_filter_info <- function(filter_default_state) {
   if (!is.null(filter_default_state)) {
-    if (filter_type == FILTER$TYPE$BLOCKLY) {
-      if (file.exists(filter_default_state)) {
-        msg <- paste("Loading filter state from file", filter_default_state)
-        log_inform(msg)
-        filter_default_state <- paste0(readLines(filter_default_state), collapse = "\n")
-      }
-      x <- try(jsonlite::parse_json(filter_default_state), silent = TRUE)
-      if (inherits(x, "try-error")) {
-        # We only parse to check JSON is correctly set, it will be used further down the code
-        stop("`filter_default_state` cannot be parsed as JSON")
-      }
-    } else {
-      log_warn(paste("`filter_default_state` is ignored when `filter_type` is not", FILTER$TYPE$BLOCKLY))
-      filter_default_state <- NULL
+    if (file.exists(filter_default_state)) {
+      msg <- paste("Loading filter state from file", filter_default_state)
+      log_inform(msg)
+      filter_default_state <- paste0(readLines(filter_default_state), collapse = "\n")
+    }
+    utils::capture.output(x <- try(deserialize_filter_state_from_client(filter_default_state), silent = TRUE))
+    if (inherits(x, "try-error")) {
+      # We only parse to check JSON is correctly set, it will be used further down the code
+      stop("`filter_default_state` cannot be parsed as JSON")
     }
   }
 
-  list(filter_type = filter_type, filter_default_state = filter_default_state)
+  list(filter_default_state = filter_default_state)
+}
+
+check_set_subgroup_info <- function(enable_subgroup) {
+  checkmate::assert_logical(enable_subgroup, len = 1, any.missing = FALSE)
+  res <- list(enable = enable_subgroup)
+  res
+}
+
+check_parsable_json_input <- function(x) {
+  utils::capture.output(p <- try(deserialize_filter_state_from_client(x), silent = TRUE))
+  if (inherits(p, "try-error")) {
+    msg <- paste("Error parsing JSON:", substitute(x))
+    stop(msg)
+  }
+  NULL
+}
+
+
+assert_not_shiny_1_11_0 <- function() {
+  shiny_forbidden_version <- "1.11.0"
+  shiny_current_version <- as.character(utils::packageVersion("shiny"))
+
+  if (shiny_forbidden_version == shiny_current_version) {
+    stop("shiny version 1.11.0 has critical bugs please update")
+  }
 }

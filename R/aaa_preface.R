@@ -50,7 +50,9 @@ safe_list_ns <- local({
   }
 
   as_safe_list <- function(x) {
-    if (!is.list(x)) stop("x must be a list")
+    if (!is.list(x)) {
+      stop("x must be a list")
+    }
     class(x) <- c("safe_list", class(x))
     x
   }
@@ -95,7 +97,6 @@ safe_list_ns <- local({
       attr(err, "condition")[["message"]] == "Elements 'c' not found in safe_list",
       "Not present element 'c' cannot be accessed via $ and throws the correct error"
     )
-
 
     assert(identical(x[c("aa")], safe_list(aa = 0)), "[] returns a subset safe_list")
 
@@ -202,3 +203,59 @@ pack_of_constants <- function(...) {
 }
 
 poc <- pack_of_constants
+
+new_error_list <- function() {
+  errors <- list()
+  push_error <- function(x) {
+    if ("condition" %in% class(x)) {
+      errors[[length(errors) + 1]] <<- x
+    } else {
+      if (!is.list(x)) {
+        x <- list(message = x)
+      }
+      errors[[length(errors) + 1]] <<- do.call(errorCondition, x)
+    }
+  }
+
+  get_errors <- function() {
+    return(errors)
+  }
+
+  get_messages <- function() {
+    messages <- character(0)
+    for (idx in seq_along(errors)) {
+      messages[[idx]] <- errors[[idx]][["message"]]
+    }
+    return(messages)
+  }
+
+  any_error <- function() {
+    return(length(errors) > 0)
+  }
+
+  any_error_has_class <- function(class_name) {
+    for (error in errors) {
+      if (any(class_name %in% class(error))) {
+        return(TRUE)
+      }
+    }
+    return(FALSE)
+  }
+
+  merge_errors <- function(x) {
+    c(errors, x$get_errors())
+  }
+
+  return(
+    as_safe_list(
+      list(
+        push = push_error,
+        get_errors = get_errors,
+        get_messages = get_messages,
+        any = any_error,
+        any_has_class = any_error_has_class,
+        merge = merge_errors
+      )
+    )
+  )
+}

@@ -20,11 +20,8 @@ reference:
 - title: Utils
 - contents:
   - tab_group
-  - add_date_range
-  - mm_dispatch
-  - mm_resolve_dispatcher
+  - add_date_range  
   - logging
-  - build_secure_arguments
 - title: Dummy modules
 - contents:
   - mod_simple
@@ -44,15 +41,15 @@ articles:
   - developing_module
   - passing_data
   - css_namespace  
-  - logging
-  - blockly_filter
+  - logging  
+  - subgroup
 
 - title: How does it work
   navbar: How does it work
   desc: How does dv.manager work inside
   contents:
   - how_does_work
-  - data_filtering
+  - filter
   - arguments_from_module_manager
   - data_reloading
 

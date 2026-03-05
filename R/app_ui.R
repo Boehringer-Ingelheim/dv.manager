@@ -1,6 +1,6 @@
 #' The application User-Interface using an HTML template
 #'
-#' @param id This parameter can be either an string id if the app_ui is being used as a module or
+#' @param request_id This parameter can be either an string id if the app_ui is being used as a module or
 #' a request if the app_ui is being used as an standalone application then it becomes
 #' a Internal parameter for `{shiny}`
 #'     DO NOT REMOVE.
@@ -22,67 +22,31 @@ app_ui <- function(request_id) {
 
   ######################################
 
-  data <- get_config("data")
+  dataset_lists <- get_config("data")
   module_info <- get_config("module_info")
-  filter_data <- get_config("filter_data")
+  subject_filter_dataset_name <- get_config("filter_data")
   filter_info <- get_config("filter_info")
 
-  use_dataset_filter <- filter_info[["filter_type"]] == FILTER$TYPE$DATASETS
-  use_blockly_filter <- filter_info[["filter_type"]] == FILTER$TYPE$BLOCKLY
   filter_default_state <- filter_info[["filter_default_state"]]
+  enable_subgroup <- get_config("subgroup")[["enable"]]
 
   log_inform("Initializing HTML template UI")
   log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
   log_inform(glue::glue("Dataset options (N): {length(data)}"))
 
-  subject_filter_ui <- create_subject_level_ui(ns("global_filter"))
-
-  dataset_filters_ui <- create_dataset_filters_ui(
-    get_dataset_filters_info(data, filter_data),
-    ns
-  )
-
-  if (use_blockly_filter) {
-    filter_ui <- shiny::div(
-      class = "c-well shiny_filter",
-      shiny::tags$label(
-        "Filter",
-        shiny::icon("circle-info", title = TT[["SUBJECT_LEVEL_FILTER"]]),
-        class = "text-primary"
+  if (enable_subgroup) {
+    filter_ui <- shiny::tabsetPanel(
+      shiny::tabPanel(
+        title = "Filter",
+        new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
       ),
-      shiny::div(
-        class = "filter-control  filter-filters",
-        unnamespaced_filter_modal(list(
-          new_filter_ui(ns("filter"), data, state = filter_default_state)[["combined_ui"]]
-        )),
+      shiny::tabPanel(
+        title = "Subgroup",
+        shiny::div(class = "dv_subgroup_menu", mod_subgroup_ui(ns(ID$SUBGROUP), subject_filter_dataset_name))
       )
     )
   } else {
-    filter_ui <- list(
-      shiny::div(
-        class = "c-well shiny_filter",
-        shiny::tags$label(
-          "Subject Level Filter",
-          shiny::icon("circle-info", title = TT[["SUBJECT_LEVEL_FILTER"]]),
-          class = "text-primary"
-        ),
-        shiny::div(
-          class = "filter-control  filter-filters",
-          subject_filter_ui
-        )
-      ),
-      if (use_dataset_filter) {
-        shiny::div(
-          class = "c-well shiny_filter",
-          shiny::tags$label(
-            "Dataset Filter(s)",
-            shiny::icon("circle-info", title = TT[["DATASET_FILTER"]]),
-            class = "text-primary"
-          ),
-          dataset_filters_ui
-        )
-      }
-    )
+    filter_ui <- new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
   }
 
   collapsable_ui <-
@@ -92,11 +56,8 @@ app_ui <- function(request_id) {
         id = ns("shiny_filter_panel"),
         shinyjs::hidden(shiny::div(
           id = ns("dataset_selector"),
-          class = "c-well",
-          shiny::tags$label("Dataset Selection",
-            class = "text-primary"
-          ),
-          shiny::selectInput(ns("selector"), label = NULL, choices = names(data))
+          class = "ps-3 pe-3 pt-3 m-3 bg-light border rounded",
+          shiny::selectInput(ns("selector"), label = NULL, choices = names(dataset_lists))
         )),
         filter_ui
       )
@@ -106,7 +67,7 @@ app_ui <- function(request_id) {
     shiny::bookmarkButton("", class = "navbar-btn"),
     # Remove export functionality until new order
     # shiny::actionButton(ns("open_report_modal"), shiny::span(shiny::icon("download")), class = "navbar-btn"), # nolint
-    shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("cogs")), class = "navbar-btn"),
+    # shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("question")), class = "navbar-btn"), # nolint
     class = "dv_top_button_group"
   )
 
@@ -119,7 +80,7 @@ app_ui <- function(request_id) {
     )
 
   sidebar <- shiny::div(
-    class = "sidebar-container",
+    class = "dv-sidebar-container",
     shiny::tags$input(
       type = "checkbox",
       class = "checkbox",
@@ -129,23 +90,33 @@ app_ui <- function(request_id) {
     ),
     shiny::div(
       class = "sidebar",
-      shiny::tags$span(class = "logo-text", "DaVinci"),
-      shiny::tags$label(
-        `for` = "click",
-        class = "menu-icon",
-        shiny::div(class = "line line-1"),
-        shiny::div(class = "line line-2"),
-        shiny::div(class = "line line-3")
+      shiny::div(
+        shiny::img(src = "icons/dv_icon.svg", class = "p-2 menu-fade", style = "height: 100%; width: auto"),
+        shiny::tags$span(class = "icon-text menu-fade", "DaVinci"),
+        shiny::tags$label(
+          `for` = "click",
+          shiny::icon("times", class = "icon-close"),
+          shiny::img(src = "icons/dv_icon.svg", style = "height: 100%; width: auto", class = "icon-open"),
+          class = "icon-control"
+        ),
+        class = "icon-container"
       ),
       collapsable_ui
     )
   )
 
+  # Not convinced as it is removed somewhere else (app_server) (gvbu)
+  overlay_script <- shiny::tags[["script"]]("dv_overlay.show('Loading')")
+
   shiny::fluidPage(
+    class = "dv_main",
     insert_header_add_resources(app_title = get_config("title")),
     theme = get_app_theme(),
     class = "display-grid",
     sidebar,
-    module_info[["ui_fn"]](ns, dataset_name, top_buttons),
+    list(
+      overlay_script,
+      module_info[["ui_fn"]](ns, dataset_name, top_buttons)
+    )
   )
 }

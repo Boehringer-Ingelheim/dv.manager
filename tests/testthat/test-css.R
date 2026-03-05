@@ -1,10 +1,12 @@
 # nolint start
 
 test_that(
-  vdoc[["add_spec"]]("css from a module should not affect another module when css namespacing is activated", c(specs$css_namespacing)),
+  vdoc[["add_spec"]](
+    "css from a module should not affect another module when css namespacing is activated",
+    c(specs$INTERFACE$INTERFACE_CSS_NAMESPACE)
+  ),
   {
     skip_if_not_running_shiny_tests()
-    skip_if_suspect_check()
 
     app <- start_app_driver({
       dv.manager::run_app(
@@ -18,16 +20,18 @@ test_that(
       )
     })
 
-    expect_identical(app$get_js("$('#mod1-button').css('color')"), "rgb(51, 51, 51)")
+    expect_identical(app$get_js("$('#mod1-button').css('color')"), "rgb(8, 49, 42)")
     expect_identical(app$get_js("$('#mod2-button').css('color')"), "rgb(255, 0, 0)")
   }
 )
 
 test_that(
-  vdoc[["add_spec"]]("css from a module should not affect another module when css namespacing is activated", c(specs$css_namespacing)),
+  vdoc[["add_spec"]](
+    "css from a module should not affect another module when css namespacing is disabled",
+    c(specs$INTERFACE$INTERFACE_CSS_NAMESPACE)
+  ),
   {
     skip_if_not_running_shiny_tests()
-    skip_if_suspect_check()
 
     app <- start_app_driver(rlang::quo({
       options("dv.manager.disable_css_namespacing" = TRUE)

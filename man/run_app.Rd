@@ -15,11 +15,11 @@ run_app(
      NULL
  },
   startup_msg = NULL,
-  azure_options = NULL,
   reload_period = NULL,
   enableBookmarking = "server",
   filter_type = "simple",
   enable_dataset_filter = NULL,
+  enable_subgroup = FALSE,
   filter_default_state = NULL,
   .launch = TRUE
 )
@@ -28,7 +28,7 @@ run_app(
 \item{data}{the list of datasets to be used in the Shiny application. This data parameter can be defined as:
 \itemize{
 \item a named list of lists in which each of the lists will be a list of data.frames. Each of the lists of data.frames
-contains a domain, a structure similar to that returned in a \code{dv.loader::load_data} call.
+contains a domain, a structure similar to that returned in a \verb{dv.loader::load_data} call.
 \item a named list of functions in which each of the functions will return a list of data.frames.
 }
 
@@ -46,13 +46,6 @@ Default = "USUBJID" or NULL if no data = NULL}
 \item{startup_msg}{a message to be displayed at the start of the application. It can be either NULL or a modal
 message defined with shiny::modalDialog.}
 
-\item{azure_options}{A named vector/list containing the options for the Azure Authentication:
-Required fields: redirect, resource, tenant, app, version, password.
-See AzureAuth::build_authorization_uri for these. If NULL then application will not be secure.
-Note that azure_options is only required when the applications handles the authentication by itself. It is not
-required in other environments such as POSIT Connect or other environments where the authentication is handled
-externally.}
-
 \item{reload_period}{Either a lubridate object to specify a duration
 or a positive numeric value which is then interpreted as a lubridate duration object in days. By default NULL}
 
@@ -61,11 +54,13 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
 any previous calls to  \code{\link[shiny:enableBookmarking]{enableBookmarking()}}. See \code{\link[shiny:enableBookmarking]{enableBookmarking()}}
 for more information on bookmarking your app.}
 
-\item{filter_type}{Indicates which filter type, \code{simple}, \code{datasets}, \code{blockly} (in development), will be used in the application.}
+\item{filter_type}{\strong{DEPRECATED} Indicates which filter type, \code{simple}, \code{datasets}, \code{development}, will be used in the application.}
 
 \item{enable_dataset_filter}{\strong{DEPRECATED} A boolean flag indicating if dataset filters are enabled. The default value is FALSE.}
 
-\item{filter_default_state}{A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for \code{blockly} filters).}
+\item{enable_subgroup}{A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.}
+
+\item{filter_default_state}{A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for \code{development} filters).}
 
 \item{.launch}{by default it should always be TRUE. It should only be false for debugging and testing.
 When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.}

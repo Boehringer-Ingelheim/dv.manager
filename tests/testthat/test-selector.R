@@ -1,8 +1,7 @@
 test_that(
-  vdoc[["add_spec"]]("dataset selector is removed when only one dataset is passed", c(specs$dataset_selector)),
+  vdoc[["add_spec"]]("dataset selector is removed when only one dataset is passed", c(specs$DATASETS$DATASET_LIST_SELECTOR_VISIBLE)),
   {
     skip_if_not_running_shiny_tests()
-    skip_if_suspect_check()
 
     app_one <- start_app_driver({
       dv.manager::run_app(

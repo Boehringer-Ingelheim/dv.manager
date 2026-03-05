@@ -7,7 +7,7 @@
 #' @param data the list of datasets to be used in the Shiny application. This data parameter can be defined as:
 #'
 #'    - a named list of lists in which each of the lists will be a list of data.frames. Each of the lists of data.frames
-#'     contains a domain, a structure similar to that returned in a `dv.loader::load_data` call.
+#'     contains a domain, a structure similar to that returned in a \verb{dv.loader::load_data} call.
 #'
 #'    - a named list of functions in which each of the functions will return a list of data.frames.
 #'
@@ -20,17 +20,12 @@
 #'  Default = "USUBJID" or NULL if no data = NULL
 #' @param startup_msg a message to be displayed at the start of the application. It can be either NULL or a modal
 #' message defined with shiny::modalDialog.
-#' @param azure_options A named vector/list containing the options for the Azure Authentication:
-#' Required fields: redirect, resource, tenant, app, version, password.
-#' See AzureAuth::build_authorization_uri for these. If NULL then application will not be secure.
-#' Note that azure_options is only required when the applications handles the authentication by itself. It is not
-#' required in other environments such as POSIT Connect or other environments where the authentication is handled
-#' externally.
 #' @param reload_period Either a lubridate object to specify a duration
 #' or a positive numeric value which is then interpreted as a lubridate duration object in days. By default NULL
-#' @param filter_type Indicates which filter type, `simple`, `datasets`, `blockly` (in development), will be used in the application.
-#' @param filter_default_state A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for `blockly` filters).
+#' @param filter_type **DEPRECATED** Indicates which filter type, `simple`, `datasets`, `development`, will be used in the application.
+#' @param filter_default_state A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for `development` filters).
 #' @param enable_dataset_filter **DEPRECATED** A boolean flag indicating if dataset filters are enabled. The default value is FALSE.
+#' @param enable_subgroup  A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.
 #' @param .launch by default it should always be TRUE. It should only be false for debugging and testing.
 #' When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.
 #' @inheritParams shiny::shinyApp
@@ -39,39 +34,42 @@
 #' @export
 #'
 
-run_app <- function(data = NULL,
-                    module_list = list(),
-                    title = "Untitled",
-                    filter_data = NULL,
-                    filter_key = if (!is.null(data)) {
-                      "USUBJID"
-                    } else {
-                      NULL
-                    },
-                    startup_msg = NULL,
-                    azure_options = NULL,
-                    reload_period = NULL,
-                    enableBookmarking = "server", # nolint
-                    filter_type = "simple",
-                    enable_dataset_filter = NULL,
-                    filter_default_state = NULL,
-                    .launch = TRUE) {
-
+run_app <- function(
+  data = NULL,
+  module_list = list(),
+  title = "Untitled",
+  filter_data = NULL,
+  filter_key = if (!is.null(data)) {
+    "USUBJID"
+  } else {
+    NULL
+  },
+  startup_msg = NULL,
+  reload_period = NULL,
+  enableBookmarking = "server", # nolint
+  filter_type = "simple",
+  enable_dataset_filter = NULL,
+  enable_subgroup = FALSE,
+  filter_default_state = NULL,
+  .launch = TRUE
+) {
   dataset_lists <- data
 
   if (!missing(enable_dataset_filter)) {
-    stop("`enable_dataset_filter` argument has been removed. Please, use `filter_type = 'datasets'` argument instead.")
+    stop("`enable_dataset_filter` argument has been removed. This error will disappear in future releases")
   }
 
-  if (is.null(azure_options)) {
-    app_args <- list(
-      ui_func = app_ui,
-      srv_func = app_server,
-      options = list()
+  if (!missing(filter_type)) {
+    stop(
+      "`filter_type` argument has been removed. Filter types cannot be selected any more. This error will disappear in future releases"
     )
-  } else {
-    app_args <- build_secure_arguments(azure_options, app_ui, app_server)
   }
+
+  app_args <- list(
+    ui_func = app_ui,
+    srv_func = app_server,
+    options = list()
+  )
 
   config <- list()
   config[["module_info"]] <- check_resolved_modules(process_module_list(module_list))
@@ -89,21 +87,10 @@ run_app <- function(data = NULL,
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
-  config[["filter_info"]] <- check_set_filter_info(filter_type, filter_default_state)
+  config[["filter_info"]] <- check_set_filter_info(filter_default_state)
+  config[["subgroup"]] <- check_set_subgroup_info(enable_subgroup)
 
-  if (config[["filter_info"]][["filter_type"]] == FILTER$TYPE$BLOCKLY) {
-    msg <- paste(
-      "",
-      "#############################################################",
-      "# You are using using an experimental filter not ready for  #",
-      "# production.                                               #",
-      "# If this is not intended, please use 'simple' or 'datasets #",
-      "# in `filter_type` argument.                                #",
-      "#############################################################",
-      sep = "\n"
-    )
-    log_warn(msg)
-  }
+  assert_not_shiny_1_11_0()
 
   check_meta_mtime_attribute(dataset_lists)
 
@@ -127,127 +114,4 @@ run_app <- function(data = NULL,
   } else {
     c(app_args, list(config = config))
   }
-}
-
-#' Securize an application using an Azure
-#'
-#' @param app_ui,app_server the shiny ui and server functions
-#'
-#' @inheritParams run_app
-#'
-#' @return
-#'
-#' A list with the entries `ui_func` and `srv_func` and `options` that contains the securized version of the app.
-#'
-#' @export
-#'
-
-build_secure_arguments <- function(azure_options, app_ui, app_server) {
-  check_azure_options(azure_options)
-
-  port <- as.numeric(httr::parse_url(azure_options[["redirect"]])[["port"]])
-
-  sec_ui <- function(request) {
-    opts <- shiny::parseQueryString(request[["QUERY_STRING"]])
-
-    # ====================================================
-    # SECURE AUTHENTICATION STRATEGY
-    # ====================================================
-    # The secure authentication is done in three steps:
-
-    # 1. No code parameter is passed in to the URL parameters, therefore we create the authorization URL and redirect
-    # to that URL. We encode the URL parameters of the original petition into the state URL parameter when building the
-    # authentication URL. Server part does not run.
-
-    # 2. The user has already authenticated using the SSO, we are redirected to the app again with a code and a state
-    # URL parameter. We DO NOT try to get a token with the provided code right now in the server, because the code
-    # is only usable once and the URL we are petitioning would not have the original URL parameters (including
-    # bookmarking) in place yet. Hijacking Shiny bookmarking is not viable. Therefore we construct a new URL with the
-    # code obtained during Azure authentication plus the original URL parameters, and we redirect to this new URL.
-    # If state parameter is an empty string we skip this step.
-
-    # 3. Now, the URL parameters (including bookmarking) are available when the app is launched. Now, we validate the
-    # code in the URL by getting a token in the server part and if it is valid we run the server and the application
-    # starts.
-
-
-    ##### Step 1
-    if (is.null(opts[["code"]])) {
-      shinyjs::useShinyjs()
-      auth_uri <- AzureAuth::build_authorization_uri(
-        resource = azure_options[["resource"]],
-        tenant = azure_options[["tenant"]],
-        app = azure_options[["app"]],
-        redirect_uri = azure_options[["redirect"]],
-        version = azure_options[["version"]],
-        state = request[["QUERY_STRING"]]
-      )
-      redir_js <- sprintf("location.replace(\"%s\");", auth_uri)
-      shiny::tags[["script"]](shiny::HTML(redir_js))
-    } else {
-      if (!is.null(opts[["state"]])) {
-        ##### Step 2
-        if (opts[["state"]] != "") {
-          query <- paste0(
-            substr(opts[["state"]], 1, 1),
-            "code=", opts[["code"]], "&",
-            substr(opts[["state"]], 2, nchar(opts[["state"]]))
-          )
-        } else {
-          query <- paste0("/?code=", opts[["code"]])
-        }
-
-        url_query <- paste0(azure_options[["redirect"]], query)
-
-        redir_js <- sprintf("location.replace(\"%s\");", url_query)
-        shiny::tags[["script"]](shiny::HTML(redir_js))
-      } else {
-        ##### Step 3
-        shiny::tagList(
-          shinyjs::useShinyjs(),
-          app_ui(request)
-        )
-      }
-    }
-  }
-
-  sec_server <- function(input, output, session) {
-    opts <- shiny::parseQueryString(shiny::isolate(session$clientData$url_search))
-    if (is.null(opts[["code"]]) || !is.null(opts[["state"]])) {
-      #### Step 1 and 2
-      return()
-    } else {
-      #### Step 3
-      shinyjs::runjs("{
-                      let url = new URL(location.href);
-                      url.searchParams.delete('code');
-                      history.replaceState({}, '', url.href);
-                      }
-                     ")
-
-      token <- AzureAuth::get_azure_token(
-        resource = azure_options[["resource"]],
-        tenant = azure_options[["tenant"]],
-        app = azure_options[["app"]],
-        password = azure_options[["password"]],
-        auth_type = "authorization_code",
-        authorize_args = list(redirect_uri = azure_options[["redirect"]]),
-        version = azure_options[["version"]],
-        use_cache = FALSE,
-        auth_code = opts[["code"]]
-      )
-
-      if (AzureAuth::is_azure_token(token) && token$validate()) {
-        app_server(input, output, session)
-      } else {
-        rlang::abort("Error authenticating: returned token is not valid")
-      }
-    }
-  }
-
-  list(
-    ui_func = sec_ui,
-    srv_func = sec_server,
-    options = list(port = port)
-  )
 }

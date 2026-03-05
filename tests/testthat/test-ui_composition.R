@@ -2,51 +2,88 @@
 
 local({
   skip_if_not_running_shiny_tests()
-  skip_if_suspect_check()
+
+  add_date <- function(dataset, date) {
+    purrr::map2(
+      dataset,
+      date,
+      function(.x, .y) {
+        attr(.x, "meta") <- list(mtime = .y)
+        .x
+      }
+    )
+  }
+
+  dsl1 <- list(
+    ds1 = data.frame(a = c(1, 2, 3)),
+    ds2 = data.frame(a = c(1, 2, 3), b = c(7, 8, 9))
+  )
+
+  date13 <- lubridate::ymd_hms("2021-01-13 00:00:00")
+  date14 <- lubridate::ymd_hms("2021-01-14 00:00:00")
+  dataset_lists <- list(
+    both_dates = add_date(dsl1, list(date13, date14))
+  )
+
+  module_list <- list(
+    "UNGROUPED_MODULE" = dv.manager:::mod_afmm_export("ungrouped_afmm"),
+    "TAB_GROUP" = dv.manager::tab_group(
+      "GROUPED_MODULE" = dv.manager:::mod_afmm_export("grouped_afmm"),
+      "NESTED_GROUP" = dv.manager::tab_group(
+        "NESTED_MODULE" = dv.manager:::mod_afmm_export("nested_afmm")
+      )
+    )
+  )
+
+  args <- list(
+    data = dataset_lists,
+    module_list = module_list,
+    filter_data = "ds1",
+    filter_key = "a"
+  )
 
   app_expr <- rlang::quo({
-    dv.manager:::run_mock_app_tab_group()
+    Sys.setenv("LC_TIME" = "en_US.UTF-8")
+    do.call(dv.manager::run_app, !!args)
   })
-  root_app <- start_app_driver(app_expr)
-  .._switch_to_module <- function(tab_id, app) {
-    app$run_js(sprintf("dv_tab.set_tab_by_tab_id('%s', '%s')", tab_id, ID$NAV_HEADER))
+
+  rlang::eval_tidy(app_expr)
+
+  app <- start_app_driver(app_expr)
+  if (is.null(app)) {
+    stop("App could not be initialized")
   }
-  test_that("tab_group allows grouping of modules" |>
-    vdoc[["add_spec"]](c(specs$tab_group$group_modules)), {
-    app <- shinytest2::AppDriver$new(root_app$get_url())
 
-    .._switch_to_module("mod2", app)
+  test_that(
+    "tab_group allows grouping of modules" |>
+      vdoc[["add_spec"]](c(specs$MODULES$MODULE_GROUPING)),
+    {
+      ..switch_to_module("grouped_afmm", app)
 
-    expect_equal(
-      app$get_js(sprintf("$('#%s .dv_child_button_level.active').attr('value')", ID$NAV_HEADER)),
-      "__tabset_1__"
-    )
+      expect_equal(
+        app$get_js(sprintf("$('#%s .dv_child_button_level.active').attr('value')", ID$NAV_HEADER)),
+        "__tabset_1__"
+      )
 
-    expect_equal(
-      app$get_js("$('.dv_tab_container .dv_tab_content.active').attr('value')"),
-      "mod2"
-    )
+      expect_equal(app$get_js("$('.dv_tab_container .dv_tab_content.active').attr('value')"), "grouped_afmm")
 
-    expect_equal(
-      app$get_value(input = ID$NAV_HEADER),
-      "mod2"
-    )
+      expect_equal(app$get_value(input = ID$NAV_HEADER), "grouped_afmm")
 
-    v2 <- app$get_values(output = "mod2-text")[["output"]][["mod2-text"]]
-    expect_equal(
-      v2, "306"
-    )
-  })
+      grouped_afmm_output <- app$get_values(output = "grouped_afmm-test_text")[["output"]][["grouped_afmm-test_text"]]
+      expect_equal(grouped_afmm_output, "test")
+    }
+  )
 
-  test_that("tab_group allows nesting of modules" |>
-    vdoc[["add_spec"]](c(specs$tab_group$allows_nesting)), {
-    app <- shinytest2::AppDriver$new(root_app$get_url())
+  test_that(
+    "tab_group allows nesting of modules" |>
+      vdoc[["add_spec"]](c(specs$MODULES$MODULE_NESTING)),
+    {
+      ..switch_to_module("nested_afmm", app)
 
-    .._switch_to_module("mod4", app)
+      app$wait_for_idle()
 
-    app$wait_for_idle()
-
-    active_tabs <- app$get_js(sprintf("
+      active_tabs <- app$get_js(sprintf(
+        "
         (function(){
             let res = {};
           try{
@@ -63,69 +100,66 @@ local({
 
           return(res);
         })()
-      ", ID$NAV_HEADER))
+      ",
+        ID$NAV_HEADER
+      ))
 
-    expect_equal(
-      active_tabs$length, 2
-    )
+      expect_equal(active_tabs$length, 2)
 
-    expect_equal(
-      active_tabs$value[[1]], "__tabset_1__"
-    )
+      expect_equal(active_tabs$value[[1]], "__tabset_1__")
 
-    expect_equal(
-      active_tabs$value[[2]], "__tabset_2__"
-    )
+      expect_equal(active_tabs$value[[2]], "__tabset_2__")
 
-    expect_equal(
-      app$get_js("$('.dv_tab_container .dv_tab_content.active').attr('value')"),
-      "mod4"
-    )
+      expect_equal(
+        app$get_js(
+          "$('.dv_tab_container .dv_tab_content.active').attr('value')"
+        ),
+        "nested_afmm"
+      )
 
-    expect_equal(
-      app$get_value(input = ID$NAV_HEADER),
-      "mod4"
-    )
+      expect_equal(
+        app$get_value(input = ID$NAV_HEADER),
+        "nested_afmm"
+      )
 
+      nested_afmm_output <- app$get_values(output = "nested_afmm-test_text")[["output"]][["nested_afmm-test_text"]]
+      expect_equal(nested_afmm_output, "test")
+    }
+  )
 
-    v4 <- app$get_values(output = "mod4-text")[["output"]][["mod4-text"]]
-    expect_equal(
-      v4, "306"
-    )
-  })
+  test_that(
+    "tab_group output of grouped modules can be accesed by other modules" |>
+      vdoc[["add_spec"]](c(specs$MODULES$MODULE_ACCESS_OTHER_OUTPUTS)),
+    {
+      exported_values <- app$get_values(export = "ungrouped_afmm-afmm")[["export"]][["ungrouped_afmm-afmm"]]
+      ungrouped_afmm_output <- shiny::isolate(exported_values[["module_output"]]()[["ungrouped_afmm"]]())
+      expect_identical("ungrouped_afmm", ungrouped_afmm_output)
 
-  test_that("tab_group output of grouped modules can be accesed by other modules" |>
-    vdoc[["add_spec"]](c(specs$tab_group$output_accesible)), {
-    app <- shinytest2::AppDriver$new(root_app$get_url())
+      grouped_afmm_output <- shiny::isolate(exported_values[["module_output"]]()[["grouped_afmm"]]())
+      expect_identical("grouped_afmm", grouped_afmm_output)
 
-    # Switch to Module tab
-    .._switch_to_module("mod_rec_2", app)
-    app$wait_for_idle()
-    .._switch_to_module("mod_rec_1", app)
-    app$wait_for_idle()
-
-    v1 <- app$get_values(output = TRUE)[["output"]][["mod_rec_1-output"]]
-    v2 <- app$get_values(output = TRUE)[["output"]][["mod_rec_2-output"]]
-
-    expect_equal(v1, "a")
-    expect_equal(v2, "1")
-  })
-
+      nested_afmm_output <- shiny::isolate(exported_values[["module_output"]]()[["nested_afmm"]]())
+      expect_identical("nested_afmm", nested_afmm_output)
+    }
+  )
 
   #
-  test_that("tab_group other modules can switch into nested tabs" |>
-    vdoc[["add_spec"]](c(specs$tab_group$allows_switching)), {
-    app <- shinytest2::AppDriver$new(root_app$get_url())
+  test_that(
+    "tab_group other modules can switch into nested tabs" |>
+      vdoc[["add_spec"]](c(specs$MODULES$MODULE_SWITCHING_PROGRAMMATIC)),
+    {
+      ..switch_to_module("ungrouped_afmm", app)
 
-    # Switch to Module tab
-    .._switch_to_module("mod_switch1", app)
-    app$wait_for_idle()
-    app$click("mod_switch1-switch")
-    app$wait_for_idle()
+      app$set_inputs("ungrouped_afmm-target_id" = "grouped_afmm")
+      app$click("ungrouped_afmm-switch_to_target")
+      app$wait_for_idle()
+      expect_equal(app$get_value(input = ID$NAV_HEADER), "grouped_afmm")
 
-    expect_equal(
-      app$get_js("$('.dv_tab_container .dv_tab_content.active').attr('value')"),
-      "mod5"
-    )
-  })
+      app$set_inputs("grouped_afmm-target_id" = "nested_afmm")
+      app$click("grouped_afmm-switch_to_target")
+      app$wait_for_idle()
+
+      expect_equal(app$get_value(input = ID$NAV_HEADER), "nested_afmm")
+    }
+  )
 })

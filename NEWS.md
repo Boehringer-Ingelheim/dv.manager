@@ -1,3 +1,13 @@
+# dv.manager 3.0.0
+    - Upgrades Bootstrap to version 5.0.0
+        - Switches to a green color palette
+    - Moves the development filter into production, replacing dv.filter
+    - Drops factor levels when filtered out
+    - Formally removes defunct dispatchers
+    - Dataset can have labels that appear in the filter menus
+    - Adds an information overlay for startup and filter operations
+    - Removes Azure authentication
+
 # dv.manager 2.2.0
 
 - Blockly filter:
