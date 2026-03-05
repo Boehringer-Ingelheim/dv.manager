@@ -42,6 +42,6 @@ Suggests:
     shinytest2
 Config/testthat/edition: 3
 Config/testthat/parallel: false
-Depends: R (>= 4.0.0)
+Depends: R (>= 4.1.0)
 Remotes: boehringer-ingelheim/dv.loader@main
 VignetteBuilder: knitr
