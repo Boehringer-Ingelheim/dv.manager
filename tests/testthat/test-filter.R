@@ -1014,16 +1014,16 @@ local({
     r <- create_dataset_filter_info(dataset_list, e)
 
     test_that("create_dataset_filter_masks creates a mask per dataset in the filter and none for those not in the filter", {
-      expect_identical(names(r), c("d1", "d2"))
-      expect_length(r, 2)
+      expect_identical(names(r[["filter_info"]]), c("d1", "d2"))
+      expect_length(r[["filter_info"]], 2)
     })
 
     test_that("create_dataset_filter_masks creates a mask for dataset filters with children", {
-      expect_identical(r[["d1"]][["mask"]], c(TRUE, FALSE))
+      expect_identical(r[["filter_info"]][["d1"]][["mask"]], c(TRUE, FALSE))
     })
 
     test_that("create_dataset_filter_masks creates a TRUE mask for dataset filters with no children", {
-      expect_true(r[["d2"]][["mask"]])
+      expect_true(r[["filter_info"]][["d2"]][["mask"]])
     })
   })
 
@@ -1182,7 +1182,7 @@ local({
 
       expect_identical(
         create_dataset_filter_info(dataset_list, e),
-        list(d1 = list(mask = c(TRUE, TRUE), lvls = list()))
+        list(filter_info = list(d1 = list(mask = c(TRUE, TRUE), lvls = list())))
       )
     }
   )
@@ -1206,7 +1206,10 @@ local({
         dataset = "d1"
       )
 
-      expected <- list(subjects = c("SBJ-2", "SBJ-3", "SBJ-4"), dataset_list_lvls = list(d1 = list(), d2 = list()))
+      expected <- list(
+        subjects = c("SBJ-2", "SBJ-3", "SBJ-4"),
+        dataset_list_lvls = list(d1 = list(lvls = list()), d2 = list(lvls = list()))
+      )
       processed_element <- process_subject_filter_element(
         dataset_list = dataset_list,
         filter_element = e,
@@ -1240,7 +1243,10 @@ local({
         )
       )
 
-      expected <- list(subjects = c("SBJ-2", "SBJ-3", "SBJ-4"), dataset_list_lvls = list(d1 = list(), d2 = list()))
+      expected <- list(
+        subjects = c("SBJ-2", "SBJ-3", "SBJ-4"),
+        dataset_list_lvls = list(d1 = list(lvls = list()), d2 = list(lvls = list()))
+      )
       processed_element <- process_subject_filter_element(
         dataset_list = dataset_list,
         filter_element = e,
@@ -1283,7 +1289,10 @@ local({
         )
       )
 
-      expected <- list(subjects = c("SBJ-2", "SBJ-3"), dataset_list_lvls = list(d1 = list(), d2 = list()))
+      expected <- list(
+        subjects = c("SBJ-2", "SBJ-3"),
+        dataset_list_lvls = list(d1 = list(lvls = list()), d2 = list(lvls = list()))
+      )
       processed_element <- process_subject_filter_element(
         dataset_list = dataset_list,
         filter_element = e,
@@ -1341,7 +1350,7 @@ local({
         )
       )
 
-      expected <- list(d1 = list(subset_var = "c"), d2 = list(subset_var2 = c("f")))
+      expected <- list(d1 = list(lvls = list(subset_var = "c")), d2 = list(lvls = list(subset_var2 = c("f"))))
       processed_element <- process_subject_filter_element(
         dataset_list = dataset_list,
         filter_element = e,
@@ -1399,7 +1408,10 @@ local({
         )
       )
 
-      expected <- list(subjects = c("SBJ-2", "SBJ-3", "SBJ-4"), dataset_list_lvls = list(d1 = list(), d2 = list()))
+      expected <- list(
+        subjects = c("SBJ-2", "SBJ-3", "SBJ-4"),
+        dataset_list_lvls = list(d1 = list(lvls = list()), d2 = list(lvls = list()))
+      )
       processed_element <- process_subject_filter_element(
         dataset_list = dataset_list,
         filter_element = e,
@@ -1443,7 +1455,7 @@ local({
       )
       expected <- list(
         subjects = c("SBJ-2", "SBJ-3", "SBJ-4", "SBJ-1"),
-        dataset_list_lvls = list(d1 = list(), d2 = list())
+        dataset_list_lvls = list(d1 = list(lvls = list()), d2 = list(lvls = list()))
       )
       processed_element <- process_subject_filter_element(
         dataset_list = dataset_list,
@@ -1502,7 +1514,10 @@ local({
         )
       )
 
-      expected <- list(d1 = list(subset_var = c("b", "c", "d")), d2 = list(subset_var2 = c("f", "h")))
+      expected <- list(
+        d1 = list(lvls = list(subset_var = c("b", "c", "d"))),
+        d2 = list(lvls = list(subset_var2 = c("f", "h")))
+      )
       processed_element <- process_subject_filter_element(
         dataset_list = dataset_list,
         filter_element = e,
@@ -1556,7 +1571,10 @@ local({
         )
       )
 
-      expected <- list(subjects = c("SBJ-1", "SBJ-5", "SBJ-6"), dataset_list_lvls = list(d1 = list(), d2 = list()))
+      expected <- list(
+        subjects = c("SBJ-1", "SBJ-5", "SBJ-6"),
+        dataset_list_lvls = list(d1 = list(lvls = list()), d2 = list(lvls = list()))
+      )
       processed_element <- process_subject_filter_element(
         dataset_list = dataset_list,
         filter_element = e,
@@ -1590,7 +1608,7 @@ local({
         )
       )
 
-      expected <- list(d1 = list(subset_var = c("a", "LEVEL_WITH_NO_ROWS")), d2 = list())
+      expected <- list(d1 = list(lvls = list(subset_var = c("a", "LEVEL_WITH_NO_ROWS"))), d2 = list(lvls = list()))
       processed_element <- process_subject_filter_element(
         dataset_list = dataset_list,
         filter_element = e,
@@ -1792,7 +1810,7 @@ local({
   )
 
   test_that(
-    "apply_subject_filter_info applies lvl dropping, reintroduces lvl present still present in the variable, retains not present unfiltered lvls" |>
+    "apply_filter_info applies lvl dropping, reintroduces lvl present still present in the variable, retains not present unfiltered lvls" |>
       vdoc[["add_spec"]](c(
         specs$FILTERING$FILTER_GLOBAL_TABLE,
         specs$FILTERING$FILTER_GLOBAL_KEY,
@@ -1809,9 +1827,11 @@ local({
       )
 
       dataset_filter_info <- list(
-        d = list(
-          mask = c(TRUE, FALSE, TRUE),
-          lvls = list(subset_var = c("a", "NO_ROW_STAY"))
+        "filter_info" = list(
+          d = list(
+            mask = c(TRUE, FALSE, TRUE),
+            lvls = list(subset_var = c("a", "NO_ROW_STAY"))
+          )
         )
       )
 
@@ -1823,13 +1843,13 @@ local({
 
       expect_identical(
         expected,
-        levels(apply_dataset_filter_info(d, dataset_filter_info)[["d"]][["subset_var"]])
+        levels(apply_filter_info(d, dataset_filter_info)[["d"]][["subset_var"]])
       )
     }
   )
 
   test_that(
-    "apply_subject_filter_info applies lvl dropping, reintroduces lvl present still present in the variable, retains not present unfiltered lvls" |>
+    "apply_filter_info applies lvl dropping, reintroduces lvl present still present in the variable, retains not present unfiltered lvls" |>
       vdoc[["add_spec"]](c(
         specs$FILTERING$FILTER_GLOBAL_TABLE,
         specs$FILTERING$FILTER_GLOBAL_KEY,
@@ -1850,8 +1870,11 @@ local({
 
       subject_filter_info <- list(
         subjects = c("S-1", "S-3"),
-        dataset_list_lvls = list(
-          d = list(subset_var = c("a", "NO_ROW_STAY"))
+        filter_info = list(
+          d = list(
+            mask = c(TRUE, FALSE, TRUE),
+            lvls = list(subset_var = c("a", "NO_ROW_STAY"))
+          )
         )
       )
 
@@ -1861,8 +1884,10 @@ local({
         "NO_ROW_STAY" # Not present but not filtered
       )
 
+      applied <- apply_filter_info(d, subject_filter_info)
+
       expect_identical(
-        levels(apply_subject_filter_info(d, subject_filter_info, "subject_var")[["d"]][["subset_var"]]),
+        levels(applied[["d"]][["subset_var"]]),
         expected
       )
     }
@@ -2093,6 +2118,81 @@ local({
       expect_identical(r[["dataset_lists"]][[1]][["dataset_list"]][[1]][["variables"]][[1]][["name"]], "var1")
     }
   )
+
+  test_that("combine_filter_info returns combined filter info", {
+    # Both in subject and in dataset
+    # Subject is copied
+    # Datasets are combined (Both and 1 in one and not in the other)
+    # Masks are combined (Both and 1 in one and not in the other)
+    # vars are combined (Both and 1 in one and not in the other)
+
+    filter_info <- list(
+      error_list = new_error_list(),
+      "filter_info" = list(
+        subject = list(
+          subjects = c("sbj1", "sbj2"),
+          "filter_info" = list(
+            d_both1 = list(
+              mask = c(TRUE, TRUE),
+              lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "b"), var_only_subject = c("a", "b"))
+            ),
+            d_both2 = list(
+              mask = c(TRUE, TRUE),
+              lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "b"), var_only_subject = c("a", "b"))
+            ),
+            d_only_subject = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b")))
+          )
+        ),
+        dataset = list(
+          "filter_info" = list(
+            d_both1 = list(
+              mask = c(TRUE, FALSE),
+              lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "c"), var_only_dataset = c("a", "b"))
+            ),
+            d_both2 = list(
+              mask = c(TRUE, FALSE),
+              lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "c"), var_only_dataset = c("a", "b"))
+            ),
+            d_only_dataset = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b")))
+          )
+        )
+      )
+    )
+
+    expected_filter_info <- list(
+      "res" = list(
+        subjects = c("sbj1", "sbj2"),
+        "filter_info" = list(
+          d_both1 = list(
+            mask = c(TRUE, FALSE),
+            lvls = list(
+              var_both1 = c("a", "b"),
+              var_both2 = c("a"),
+              var_only_subject = c("a", "b"),
+              var_only_dataset = c("a", "b")
+            )
+          ),
+          d_both2 = list(
+            mask = c(TRUE, FALSE),
+            lvls = list(
+              var_both1 = c("a", "b"),
+              var_both2 = c("a"),
+              var_only_subject = c("a", "b"),
+              var_only_dataset = c("a", "b")
+            )
+          ),
+          d_only_subject = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b"))),
+          d_only_dataset = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b")))
+        )
+      ),
+      error_list = new_error_list()
+    )
+
+    expect_identical(
+      combine_filter_info(filter_info),
+      expected_filter_info
+    )
+  })
 })
 
 local({
