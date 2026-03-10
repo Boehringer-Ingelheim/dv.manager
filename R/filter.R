@@ -107,24 +107,24 @@ get_single_filter_data <- function(dataset) {
 
     if (is.character(var) || is.factor(var)) {
       l[[FDF$KIND]] <- K$CATEGORICAL
-      l[[FDF$NA_COUNT]] <- sum(is.na(var))
       na_clean_var <- var[!is.na(var)]
       count <- sort(table(na_clean_var), decreasing = TRUE)
       values <- names(count)
       count <- as.integer(count)
+      l[[FDF$NA_COUNT]] <- length(var) - sum(count) # All that is not accounted for must be an NA
+
       l[["value"]] <- values %||% character(0)
       l[["count"]] <- count
     } else if (is.numeric(var)) {
       var <- as.numeric(var)
       l[[FDF$KIND]] <- K$NUMERICAL
       l[[FDF$NA_COUNT]] <- sum(is.na(var))
-      na_clean_var <- var[!is.na(var)]
 
-      l[[FDF$MIN]] <- min(Inf, na_clean_var, na.rm = TRUE)
-      l[[FDF$MAX]] <- max(-Inf, na_clean_var, na.rm = TRUE)
+      l[[FDF$MIN]] <- min(Inf, var, na.rm = TRUE)
+      l[[FDF$MAX]] <- max(-Inf, var, na.rm = TRUE)
 
-      if (length(na_clean_var) > 0 && !all(is.infinite(na_clean_var))) {
-        hist_info <- graphics::hist(na_clean_var, plot = FALSE)
+      if (length(var) > 0 && !all(is.infinite(var)) && l[[FDF$NA_COUNT]] != length(var)) {
+        hist_info <- graphics::hist(var, plot = FALSE)
       } else {
         hist_info <- list(density = numeric(0))
       }
