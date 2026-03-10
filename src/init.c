@@ -4,10 +4,12 @@
 
 extern SEXP binary_serialize_filter_data_C(SEXP);
 extern SEXP binary_deserialize_filter_data_C(SEXP);
+extern SEXP has_finite_C(SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
     {"binary_serialize_filter_data_C", (DL_FUNC) &binary_serialize_filter_data_C, 1},
     {"binary_deserialize_filter_data_C", (DL_FUNC) &binary_deserialize_filter_data_C, 1},
+    {"has_finite_C", (DL_FUNC) &has_finite_C, 1},
     {NULL, NULL, 0}
 };
 

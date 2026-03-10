@@ -267,9 +267,16 @@ app_server_ <- function(input, output, session, opts) {
   )
 
   app_performance_info <- list()
-  get_app_performance_info <- function() {
-    app_performance_info
-  }
+  app_performance_info[["..app_start.."]] <- Sys.time()
+
+  time_to_first_filter <- shiny::observeEvent(
+    filtered_dataset_list(),
+    {
+      app_performance_info[["..time_to_first_filter.."]] <<- app_performance_info[["..app_start.."]] - Sys.time()
+      time_to_first_filter
+    },
+    once = TRUE
+  )
 
   used_datasets <- list()
   module_output <- list()

@@ -8,6 +8,7 @@ app_info_UI <- function(id) {
     shiny::h2("R session"),
     shiny::verbatimTextOutput(ns("r_session_mem_size")),
     shiny::h1("Server init time"),
+    shiny::actionButton(ns("refresh_server_init"), label = "Refresh"),
     shiny::verbatimTextOutput(ns("server_init_time")),
     shiny::h1("devtools::session_info"),
     shiny::actionButton(ns("refresh_session_info"), label = "Refresh"),
@@ -65,6 +66,7 @@ app_info_server <- function(id, afmm) {
       })
 
       output[["server_init_time"]] <- shiny::renderPrint({
+        input[["refresh_server_init"]]
         afmm[["app_performance_info"]]()
       })
 

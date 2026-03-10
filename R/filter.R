@@ -2,7 +2,9 @@ toJSON <- function(x) unclass(jsonlite::toJSON(x))
 fromJSON <- function(x) jsonlite::fromJSON(x, simplifyVector = TRUE, simplifyDataFrame = FALSE)
 as_scalar <- jsonlite::unbox
 serialize_filter_data_to_client_bin64 <- function(x) {
-  jsonlite::base64_enc(binary_serialize_filter_data_C(get_filter_data(x)))
+  fd <- get_filter_data(x)
+  bin <- binary_serialize_filter_data_C(fd)
+  enc <- jsonlite::base64_enc(bin)
 }
 deserialize_filter_state_from_client <- fromJSON
 
@@ -15,21 +17,21 @@ FC <- poc(
   ),
   FDF = poc(
     # Filter Data Field
-    NAME = "name",
-    NROW = "nrow",
-    VARIABLES = "variables",
-    DATASET_LIST = "dataset_list",
-    DATASET_LISTS = "dataset_lists",
-    LABEL = "label",
-    CLASS = "class",
-    KIND = "kind",
-    NA_COUNT = "NA_count",
-    VALUE = "value",
-    COUNT = "count",
-    MIN = "min",
-    MAX = "max",
-    DENSITY = "density",
-    MSG = "msg"
+    DATASET_LISTS = 1,
+    NAME = 1,
+    DATASET_LIST = 2,
+    LABEL = 2,
+    NROW = 3,
+    VARIABLES = 4,
+    CLASS = 3,
+    KIND = 4,
+    NA_COUNT = 5,
+    VALUE = 6,
+    COUNT = 7,
+    MIN = 6,
+    MAX = 7,
+    DENSITY = 8,
+    MSG = "msg" # Unused?
   ),
   FE = poc(
     F = poc(
@@ -91,14 +93,7 @@ get_single_filter_data <- function(dataset) {
   K <- FC$KIND
 
   for (idx in seq_len(n_var)) {
-    name <- nm_var[[idx]]
-    var <- dataset[[name]]
-    label <- attr(var, "label") %||% name # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
-
-    l <- stats::setNames(
-      object = list(name, label, class(var)[1]),
-      nm = c(FDF$NAME, FDF$LABEL, FDF$CLASS)
-    )
+    var <- dataset[[idx]]
 
     # Logical is treated as a factor in the client
     if (is.logical(var)) {
@@ -106,16 +101,28 @@ get_single_filter_data <- function(dataset) {
     }
 
     if (is.character(var) || is.factor(var)) {
+      l <- vector(mode = "list", length = 7)
+      l[[FDF$NAME]] <- nm_var[[idx]]
+      l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
+      l[[FDF$CLASS]] <- class(var)[[1]]
       l[[FDF$KIND]] <- K$CATEGORICAL
-      na_clean_var <- var[!is.na(var)]
-      count <- sort(table(na_clean_var), decreasing = TRUE)
-      values <- names(count)
-      count <- as.integer(count)
+
+      if (is.character(var)) {
+        var <- factor(var)
+      }
+
+      values <- levels(var)
+      count <- rep(0L, length(values))
       l[[FDF$NA_COUNT]] <- length(var) - sum(count) # All that is not accounted for must be an NA
 
-      l[["value"]] <- values %||% character(0)
-      l[["count"]] <- count
+      l[[FDF$VALUE]] <- values %||% character(0)
+      l[[FDF$COUNT]] <- count
     } else if (is.numeric(var)) {
+      l <- vector(mode = "list", length = 8)
+      l[[FDF$NAME]] <- nm_var[[idx]]
+      l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
+      l[[FDF$CLASS]] <- class(var)[[1]]
+
       var <- as.numeric(var)
       l[[FDF$KIND]] <- K$NUMERICAL
       l[[FDF$NA_COUNT]] <- sum(is.na(var))
@@ -123,7 +130,7 @@ get_single_filter_data <- function(dataset) {
       l[[FDF$MIN]] <- min(Inf, var, na.rm = TRUE)
       l[[FDF$MAX]] <- max(-Inf, var, na.rm = TRUE)
 
-      if (length(var) > 0 && !all(is.infinite(var)) && l[[FDF$NA_COUNT]] != length(var)) {
+      if (length(var) > 0 && has_finite_C(var) && l[[FDF$NA_COUNT]] != length(var)) {
         hist_info <- graphics::hist(var, plot = FALSE)
       } else {
         hist_info <- list(density = numeric(0))
@@ -131,6 +138,11 @@ get_single_filter_data <- function(dataset) {
 
       l[[FDF$DENSITY]] <- hist_info[["density"]]
     } else if (inherits(var, "POSIXct") || inherits(var, "Date")) {
+      l <- vector(mode = "list", length = 7)
+      l[[FDF$NAME]] <- nm_var[[idx]]
+      l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
+      l[[FDF$CLASS]] <- class(var)[[1]]
+
       if (inherits(var, "POSIXct")) {
         var <- as.Date(var)
       }
@@ -146,6 +158,11 @@ get_single_filter_data <- function(dataset) {
       l[[FDF$MIN]] <- min(inf_date, na_clean_var, na.rm = TRUE)
       l[[FDF$MAX]] <- max(minus_inf_date, na_clean_var, na.rm = TRUE)
     } else {
+      l <- vector(mode = "list", length = 5)
+      l[[FDF$NAME]] <- nm_var[[idx]]
+      l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
+      l[[FDF$CLASS]] <- class(var)[[1]]
+
       l[[FDF$KIND]] <- K$UNKNOWN
       l[[FDF$NA_COUNT]] <- NA_integer_
     }
@@ -171,26 +188,20 @@ get_filter_data <- function(dataset_lists) {
       current_dataset <- current_dataset_list[[jdx]]
       current_dataset_name <- nm_datasets[[jdx]]
       current_dataset_label <- attr(current_dataset_list[[jdx]], "label") %||% current_dataset_name
-      current_dataset_res[[jdx]] <- stats::setNames(
-        object = list(
-          current_dataset_name,
-          current_dataset_label,
-          nrow(current_dataset),
-          get_single_filter_data(current_dataset)
-        ),
-        nm = c(FDF$NAME, FDF$LABEL, FDF$NROW, FDF$VARIABLES)
-      )
+
+      current_dataset_res[[jdx]] <- vector(mode = "list", length = 4)
+      current_dataset_res[[jdx]][[FDF$NAME]] <- nm_datasets[[jdx]]
+      current_dataset_res[[jdx]][[FDF$LABEL]] <- attr(current_dataset_list[[jdx]], "label") %||% current_dataset_name
+      current_dataset_res[[jdx]][[FDF$NROW]] <- nrow(current_dataset)
+      current_dataset_res[[jdx]][[FDF$VARIABLES]] <- get_single_filter_data(current_dataset)
     }
-    res[[idx]] <- stats::setNames(
-      object = list(current_dataset_list_name, current_dataset_res),
-      nm = c(FDF$NAME, FDF$DATASET_LIST)
-    )
+
+    res[[idx]] <- vector(mode = "list", length = 2)
+    res[[idx]][[FDF$NAME]] <- current_dataset_list_name
+    res[[idx]][[FDF$DATASET_LIST]] <- current_dataset_res
   }
-  res <- stats::setNames(
-    object = list(res),
-    nm = c(FDF$DATASET_LISTS)
-  )
-  return(res)
+
+  return(list(res))
 }
 
 subject_filter_operations <- local({
@@ -978,22 +989,25 @@ binary_serialize_filter_data <- function(x) {
   w(C$MAGICNUM)
   w_int(C$VERSION)
 
-  dataset_lists <- x[["dataset_lists"]]
+  FDF <- FC$FDF
+  K <- FC$KIND
+
+  dataset_lists <- x[[FDF$DATASET_LISTS]]
   dataset_lists_len <- length(dataset_lists)
   w_int(dataset_lists_len)
 
   for (dataset_list_idx in seq_len(dataset_lists_len)) {
-    dataset_list_name <- dataset_lists[[dataset_list_idx]][["name"]]
-    dataset_list <- dataset_lists[[dataset_list_idx]][["dataset_list"]]
+    dataset_list_name <- dataset_lists[[dataset_list_idx]][[FDF$NAME]]
+    dataset_list <- dataset_lists[[dataset_list_idx]][[FDF$DATASET_LIST]]
     dataset_list_len <- length(dataset_list)
     w_string(dataset_list_name)
     w_int(dataset_list_len)
 
     for (dataset_idx in seq_len(dataset_list_len)) {
-      dataset_name <- dataset_list[[dataset_idx]][["name"]]
-      dataset_label <- dataset_list[[dataset_idx]][["label"]]
-      dataset_var <- dataset_list[[dataset_idx]][["variables"]]
-      dataset_nrow <- dataset_list[[dataset_idx]][["nrow"]]
+      dataset_name <- dataset_list[[dataset_idx]][[FDF$NAME]]
+      dataset_label <- dataset_list[[dataset_idx]][[FDF$LABEL]]
+      dataset_var <- dataset_list[[dataset_idx]][[FDF$VARIABLES]]
+      dataset_nrow <- dataset_list[[dataset_idx]][[FDF$NROW]]
       dataset_nvar <- length(dataset_var)
       w_string(dataset_name)
       w_string(dataset_label)
@@ -1002,27 +1016,27 @@ binary_serialize_filter_data <- function(x) {
 
       for (var_idx in seq_len(dataset_nvar)) {
         var <- dataset_var[[var_idx]]
-        kind <- var[["kind"]]
-        w_string(var[["name"]])
-        w_string(var[["label"]])
-        w_string(var[["class"]])
+        kind <- var[[FDF$KIND]]
+        w_string(var[[FDF$NAME]])
+        w_string(var[[FDF$LABEL]])
+        w_string(var[[FDF$CLASS]])
         w_string(kind)
-        w_int(var[["NA_count"]])
+        w_int(var[[FDF$NA_COUNT]])
 
-        if (kind == "categorical") {
-          var_value <- var[["value"]]
-          var_count <- var[["count"]]
+        if (kind == K$CATEGORICAL) {
+          var_value <- var[[FDF$VALUE]]
+          var_count <- var[[FDF$COUNT]]
           w_int(length(var_value))
           w_strings(var_value)
           w_int(var_count)
-        } else if (kind == "numerical") {
-          w_double(var[["min"]])
-          w_double(var[["max"]])
-          w_int(length(var[["density"]]))
-          w_doubles(var[["density"]])
-        } else if (kind == "date") {
-          w_double(var[["min"]])
-          w_double(var[["max"]])
+        } else if (kind == K$NUMERICAL) {
+          w_double(var[[FDF$MIN]])
+          w_double(var[[FDF$MAX]])
+          w_int(length(var[[FDF$DENSITY]]))
+          w_doubles(var[[FDF$DENSITY]])
+        } else if (kind == K$DATE) {
+          w_double(var[[FDF$MIN]])
+          w_double(var[[FDF$MAX]])
         } else {
           log_warn(paste("Unknown kind", kind))
         }
@@ -1055,6 +1069,9 @@ binary_deserialize_filter_data <- function(x) {
     VERSION = 1L,
     ENDIANNESS = "little"
   )
+
+  FDF <- FC$FDF
+  K <- FC$KIND
 
   con <- rawConnection(x, open = "rb")
   on.exit(close(con))
@@ -1102,50 +1119,54 @@ binary_deserialize_filter_data <- function(x) {
 
     for (dataset_idx in seq_len(dataset_list_len)) {
       dataset <- list()
-      dataset[["name"]] <- r_string()
-      dataset[["label"]] <- r_string()
-      dataset[["nrow"]] <- r_int()
+      dataset[[FDF$NAME]] <- r_string()
+      dataset[[FDF$LABEL]] <- r_string()
+      dataset[[FDF$NROW]] <- r_int()
       dataset_nvar <- r_int()
       dataset_var <- list()
 
       for (var_idx in seq_len(dataset_nvar)) {
         var <- list()
-        var[["name"]] <- r_string()
-        var[["label"]] <- r_string()
-        var[["class"]] <- r_string()
+        var[[FDF$NAME]] <- r_string()
+        var[[FDF$LABEL]] <- r_string()
+        var[[FDF$CLASS]] <- r_string()
         kind <- r_string()
-        var[["kind"]] <- kind
-        var[["NA_count"]] <- r_int()
+        var[[FDF$KIND]] <- kind
+        var[[FDF$NA_COUNT]] <- r_int()
 
-        if (kind == "categorical") {
+        if (kind == K$CATEGORICAL) {
           value_len <- r_int()
-          var[["value"]] <- vector(mode = "character", length = value_len)
+          var[[FDF$VALUE]] <- vector(mode = "character", length = value_len)
           for (idx in seq_len(value_len)) {
-            var[["value"]][[idx]] <- r_string()
+            var[[FDF$VALUE]][[idx]] <- r_string()
           }
-          var[["count"]] <- r_ints_n(value_len)
-        } else if (kind == "numerical") {
-          var[["min"]] <- r_double()
-          var[["max"]] <- r_double()
-          var[["density"]] <- r_doubles()
-        } else if (kind == "date") {
-          var[["min"]] <- r_double()
-          var[["max"]] <- r_double()
+          var[[FDF$COUNT]] <- r_ints_n(value_len)
+        } else if (kind == K$NUMERICAL) {
+          var[[FDF$MIN]] <- r_double()
+          var[[FDF$MAX]] <- r_double()
+          var[[FDF$DENSITY]] <- r_doubles()
+        } else if (kind == K$DATE) {
+          var[[FDF$MIN]] <- r_double()
+          var[[FDF$MAX]] <- r_double()
         } else {
           log_warn(paste("Unknown kind", kind))
         }
         dataset_var[[var_idx]] <- var
       }
-      dataset[["variables"]] <- dataset_var
+      dataset[[FDF$VARIABLES]] <- dataset_var
       dataset_list[[dataset_idx]] <- dataset
     }
-    dataset_lists[[dataset_list_idx]] <- list(
-      name = dataset_list_name,
-      dataset_list = dataset_list
-    )
+    dataset_lists[[dataset_list_idx]] <- list(dataset_list_name, dataset_list)
   }
 
-  x <- list(dataset_lists = dataset_lists)
+  x <- list(dataset_lists)
 
   return(x)
+}
+
+#' @noRd
+#' @useDynLib dv.manager
+#' @keywords internal
+has_finite_C <- function(x) {
+  .Call("has_finite_C", x, PACKAGE = "dv.manager")
 }
