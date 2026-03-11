@@ -2,9 +2,16 @@ toJSON <- function(x) unclass(jsonlite::toJSON(x))
 fromJSON <- function(x) jsonlite::fromJSON(x, simplifyVector = TRUE, simplifyDataFrame = FALSE)
 as_scalar <- jsonlite::unbox
 serialize_filter_data_to_client_bin64 <- function(x) {
+  start <- Sys.time()
   fd <- get_filter_data(x)
+  log_inform(paste("get_filter_data: ", Sys.time() - start))
+  start <- Sys.time()
   bin <- binary_serialize_filter_data_C(fd)
+  log_inform(paste("serializing: ", Sys.time() - start))
+  start <- Sys.time()
   enc <- jsonlite::base64_enc(bin)
+  log_inform(paste("enconding: ", Sys.time() - start))
+  enc
 }
 deserialize_filter_state_from_client <- fromJSON
 
@@ -88,11 +95,14 @@ get_single_filter_data <- function(dataset) {
   nm_var <- names(dataset)
   n_var <- length(nm_var)
   res <- vector(mode = "list", length = n_var)
+  times <- vector(mode = "list", length = n_var)
+  kind <- vector(mode = "character", length = n_var)
 
   FDF <- FC$FDF
   K <- FC$KIND
 
   for (idx in seq_len(n_var)) {
+    start <- Sys.time()
     var <- dataset[[idx]]
 
     # Logical is treated as a factor in the client
@@ -111,12 +121,12 @@ get_single_filter_data <- function(dataset) {
         var <- factor(var)
       }
 
-      values <- levels(var)
-      count <- rep(0L, length(values))
-      l[[FDF$NA_COUNT]] <- length(var) - sum(count) # All that is not accounted for must be an NA
+      na_clean_var <- var[!is.na(var)]
+      count <- sort(table(na_clean_var), decreasing = TRUE)
 
-      l[[FDF$VALUE]] <- values %||% character(0)
-      l[[FDF$COUNT]] <- count
+      l[[FDF$NA_COUNT]] <- length(var) - sum(count) # All that is not accounted for must be an NA
+      l[[FDF$VALUE]] <- names(count) %||% character(0)
+      l[[FDF$COUNT]] <- as.integer(count)
     } else if (is.numeric(var)) {
       l <- vector(mode = "list", length = 8)
       l[[FDF$NAME]] <- nm_var[[idx]]
@@ -168,7 +178,12 @@ get_single_filter_data <- function(dataset) {
     }
 
     res[[idx]] <- l
+    times[[idx]] <- Sys.time() - start
+    kind[[idx]] <- as.character(l[[FDF$KIND]])
   }
+  names(times) <- nm_var
+  attr(res, "times") <- times
+  attr(res, "kind") <- factor(kind)
   return(res)
 }
 
@@ -980,7 +995,7 @@ new_filter_server <- function(
     })
 
     res <- shiny::reactive({
-      log_inform("PROCESSING FILTER")
+      start <- Sys.time()
       json_r <- input[[ID$FILTER_STATE_JSON_INPUT]]
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
@@ -989,14 +1004,16 @@ new_filter_server <- function(
         }
         parsed_json <- deserialize_filter_state_from_client(json_r)
         log_inform("PROCESSING FILTER PARSED")
-        list(
+        res <- list(
           parsed = parsed_json %||% NA_character_,
           raw = json_r
         )
       } else {
         log_inform("PROCESSING FILTER NA")
-        NA_character_
+        res <- NA_character_
       }
+      log_inform(paste("Processing filter: ", Sys.time() - start))
+      res
     })
 
     output[[ID$EXPORT_CODE_INPUT]] <- shiny::downloadHandler(
@@ -1248,4 +1265,11 @@ binary_deserialize_filter_data <- function(x) {
 #' @keywords internal
 has_finite_C <- function(x) {
   .Call("has_finite_C", x, PACKAGE = "dv.manager")
+}
+
+#' @noRd
+#' @useDynLib dv.manager
+#' @keywords internal
+count_factor_C <- function(x) {
+  .Call("count_factor_C", x, PACKAGE = "dv.manager")
 }
