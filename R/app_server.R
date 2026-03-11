@@ -223,11 +223,11 @@ app_server_ <- function(input, output, session, opts) {
     }),
     unfiltered_dataset_list = unfiltered_dataset_list,
     unfiltered_plus_filter_info = unfiltered_plus_filter_info,
-    filtered_dataset = shiny::reactive({
-      #log_warn("(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]].") # nolintr
-      filtered_dataset_list()
-    }),
-    filtered_dataset_list = filtered_dataset_list,
+    # filtered_dataset = shiny::reactive({
+    #   #log_warn("(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]].") # nolintr
+    #   filtered_dataset_list()
+    # }),
+    # filtered_dataset_list = filtered_dataset_list,
     url_parameters = url_parameters,
     dataset_name = shiny::reactive({
       # log_warn("(Message for the module developer) afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]].") # nolintr
@@ -294,7 +294,7 @@ app_server_ <- function(input, output, session, opts) {
   app_performance_info[["..app_start.."]] <- Sys.time()
 
   time_to_first_filter <- shiny::observeEvent(
-    filtered_dataset_list(),
+    unfiltered_plus_filter_info(),
     {
       app_performance_info[["..time_to_first_filter.."]] <<- app_performance_info[["..app_start.."]] - Sys.time()
       time_to_first_filter
@@ -321,7 +321,7 @@ app_server_ <- function(input, output, session, opts) {
   # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
   if (length(dataset_lists) > 0) {
     # Otherwise when no dataset_list is loaded in the app the overlay remains in screen
-    shiny::observeEvent(filtered_dataset_list(), {
+    shiny::observeEvent(unfiltered_plus_filter_info(), {
       session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
     })
   } else {
