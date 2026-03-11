@@ -124,6 +124,7 @@ app_server_ <- function(input, output, session, opts) {
   unfiltered_plus_filter_info <- shiny::reactive({
     # Place reqs here so all elements are synchronized before going forward
     # Consider generation counters (Check current approach)
+    start <- Sys.time()
     r_unfiltered_dataset_list <- shiny::isolate(unfiltered_dataset_list())
     r_dataset_list_filter <- dataset_list_filter()
     filter_info <- combine_filter_info(get_filter_info(
@@ -144,6 +145,8 @@ app_server_ <- function(input, output, session, opts) {
       unfiltered_dataset_list = r_unfiltered_dataset_list,
       filter_info = filter_info
     )
+
+    log_inform(paste("Unfiltered_plus_filter_info: ", Sys.time() - start))
 
     res
   })
