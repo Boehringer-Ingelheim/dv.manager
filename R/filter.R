@@ -120,13 +120,10 @@ get_single_filter_data <- function(dataset) {
       if (is.character(var)) {
         var <- factor(var)
       }
-
-      na_clean_var <- var[!is.na(var)]
-      count <- sort(table(na_clean_var), decreasing = TRUE)
-
-      l[[FDF$NA_COUNT]] <- length(var) - sum(count) # All that is not accounted for must be an NA
-      l[[FDF$VALUE]] <- names(count) %||% character(0)
-      l[[FDF$COUNT]] <- as.integer(count)
+      count <- count_factor_C(var)
+      l[[FDF$NA_COUNT]] <- count[1]
+      l[[FDF$VALUE]] <- levels(var) %||% character(0)
+      l[[FDF$COUNT]] <- if (length(count) > 1) count[2:length(count)] else integer(0)
     } else if (is.numeric(var)) {
       l <- vector(mode = "list", length = 8)
       l[[FDF$NAME]] <- nm_var[[idx]]
@@ -134,11 +131,12 @@ get_single_filter_data <- function(dataset) {
       l[[FDF$CLASS]] <- class(var)[[1]]
 
       var <- as.numeric(var)
+      max_min_na <- max_min_count_na_C(var)
       l[[FDF$KIND]] <- K$NUMERICAL
-      l[[FDF$NA_COUNT]] <- sum(is.na(var))
+      l[[FDF$NA_COUNT]] <- max_min_na[[3]]
 
-      l[[FDF$MIN]] <- min(Inf, var, na.rm = TRUE)
-      l[[FDF$MAX]] <- max(-Inf, var, na.rm = TRUE)
+      l[[FDF$MIN]] <- min(Inf, max_min_na[[2]])
+      l[[FDF$MAX]] <- max(-Inf, max_min_na[[1]])
 
       if (length(var) > 0 && has_finite_C(var) && l[[FDF$NA_COUNT]] != length(var)) {
         hist_info <- graphics::hist(var, plot = FALSE)
@@ -1272,4 +1270,10 @@ has_finite_C <- function(x) {
 #' @keywords internal
 count_factor_C <- function(x) {
   .Call("count_factor_C", x, PACKAGE = "dv.manager")
+}
+#' @noRd
+#' @useDynLib dv.manager
+#' @keywords internal
+max_min_count_na_C <- function(x) {
+  .Call("max_min_count_na_C", x, PACKAGE = "dv.manager")
 }
