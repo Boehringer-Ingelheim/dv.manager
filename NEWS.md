@@ -1,3 +1,7 @@
+# dv.manager 3.0.0-9000
+
+- Fixes dataset selection error when instead of using dataset objects, functions are passed instead. 
+
 # dv.manager 3.0.0
     - Upgrades Bootstrap to version 5.0.0
         - Switches to a green color palette
