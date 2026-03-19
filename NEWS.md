@@ -1,4 +1,4 @@
-# dv.manager 3.0.1
+# dv.manager 3.0.0-9000
 
 - Fixes dataset selection error when instead of using dataset objects, functions are passed instead. 
 
