@@ -32,18 +32,15 @@ decorate_char_vars_to_factor_vars_dataset_list <- function(f) { # nolintr
 
 char_vars_to_factor_vars_dataset_lists <- function(dataset_lists) { # nolintr
   dataset_list_names <- names(dataset_lists)
-  for (dataset_list_name in dataset_list_names) {
-    dataset_list <- dataset_lists[[dataset_list_name]]
-    if (is.function(dataset_list)) {
-      factored_dataset_list <- decorate_char_vars_to_factor_vars_dataset_list(dataset_list)
-    } else if (is.list(dataset_list)) {
-      factored_dataset_list <- char_vars_to_factor_vars_dataset_list(dataset_list)
+  lapply(dataset_lists, function(d) {
+    if (is.function(d)) {
+      decorate_char_vars_to_factor_vars_dataset_list(d)
+    } else if (is.list(d)) {
+      char_vars_to_factor_vars_dataset_list(d)
     } else {
       stop("Unknown type")
     }
-    dataset_lists[[dataset_list_name]] <- factored_dataset_list
-  }
-  dataset_lists
+  })
 }
 
 decorate_ungroup2df_datasets_dataset_list <- function(f) { # nolintr
@@ -52,10 +49,11 @@ decorate_ungroup2df_datasets_dataset_list <- function(f) { # nolintr
   }
 }
 
-ungroup2df_datasets_dataset_list <- function(dataset_list) { # nolintr
+ungroup2df_datasets_dataset_list <- function(dataset_list) {
   dataset_names <- names(dataset_list)
   for (dataset_name in dataset_names) {
-    dataset_list[[dataset_name]] <- as.data.frame( # Transform to base::data.frame, discards tibble related classes...
+    dataset_list[[dataset_name]] <- as.data.frame(
+      # Transform to base::data.frame, discards tibble related classes...
       dplyr::ungroup(dataset_list[[dataset_name]])
     )
   }
@@ -64,16 +62,13 @@ ungroup2df_datasets_dataset_list <- function(dataset_list) { # nolintr
 
 ungroup2df_datasets_dataset_lists <- function(dataset_lists) { # nolintr
   dataset_list_names <- names(dataset_lists)
-  for (dataset_list_name in dataset_list_names) {
-    dataset_list <- dataset_lists[[dataset_list_name]]
-    if (is.function(dataset_list)) {
-      ungrouped_dataset_list <- decorate_ungroup2df_datasets_dataset_list(dataset_list)
-    } else if (is.list(dataset_list)) {
-      ungrouped_dataset_list <- ungroup2df_datasets_dataset_list(dataset_list)
+  lapply(dataset_lists, function(d) {
+    if (is.function(d)) {
+      decorate_ungroup2df_datasets_dataset_list(d)
+    } else if (is.list(d)) {
+      ungroup2df_datasets_dataset_list(d)
     } else {
       stop("Unknown type")
     }
-    dataset_lists[[dataset_list_name]] <- ungrouped_dataset_list
-  }
-  dataset_lists
+  })
 }
