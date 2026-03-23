@@ -171,7 +171,7 @@ const dv_tab = (function () {
   }
 
   return (res)
-})()
+})();
 
 
 
@@ -243,7 +243,85 @@ const dv_overlay = (function () {
   }
 
   return (res)
-})()
+})();
+
+/* Flame graph*/
+
+const dv_flame = (function () {
+
+  let log = console.log;
+  //let log = function () { return; };
+
+  let C = {
+    HEIGHT: 100,
+    GUT: 1
+  };
+
+  let ro = undefined;
+  let draw_this = undefined;
+  let data = undefined;
+
+  Shiny.addCustomMessageHandler("dv_manager_draw_flame_graph", function (message) {
+    if(!ro) {
+      ro = new ResizeObserver(()=>{
+        draw_this();
+      });
+      ro.observe(document.getElementById(message.id));
+    }
+    draw_this = function() {
+      draw(document.getElementById(message.id), message.data);
+    }
+    draw_this();  
+  });
+
+  let svgns = "http://www.w3.org/2000/svg";    
+
+  let svg = undefined;
+
+  let draw = function (el, data) {
+
+    let MAX_X = Math.max(...data.et);
+    let MAX_Y = Math.max(...data.depth);
+
+    if(svg) svg.remove();
+
+    
+    svg = document.createElementNS(svgns, "svg");    
+    svg.setAttribute('class', 'dv_flame');    
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', MAX_Y * C.HEIGHT);
+    svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+
+    const SIZE = el.getBoundingClientRect();
+    let x_scale = function(x_coord) {
+      return x_coord * (SIZE.width / MAX_X);
+    };
+
+    let y_scale = function (y_coord) {
+      return y_coord * C.HEIGHT;
+    };
+
+    let create_rect = function(st, duration, label, depth) {
+      let rect = document.createElementNS(svgns, 'rect');
+      rect.setAttribute('x', x_scale(st));
+      rect.setAttribute('y', y_scale(depth-1));
+      rect.setAttribute('height', C.HEIGHT);
+      rect.setAttribute('width', x_scale(duration));
+      rect.setAttribute('rx', 5);
+      rect.setAttribute('ry', 5);
+      return(rect)    ;
+    };
+
+    for(let idx = 0; idx < data.st.length; idx++) {
+      svg.appendChild(create_rect(data.st[idx], data.duration[idx], data.label_st[idx], data.depth[idx]))      
+    }
+    el.appendChild(svg);
+
+
+  }
+
+
+})();
 
 $(document).ready(function () {  
   $("div.dv-sidebar-container input[type=checkbox][id=click]").change(function (event) {
@@ -254,3 +332,7 @@ $(document).ready(function () {
     }
   });
 });
+
+
+
+

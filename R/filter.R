@@ -2,15 +2,11 @@ toJSON <- function(x) unclass(jsonlite::toJSON(x))
 fromJSON <- function(x) jsonlite::fromJSON(x, simplifyVector = TRUE, simplifyDataFrame = FALSE)
 as_scalar <- jsonlite::unbox
 serialize_filter_data_to_client_bin64 <- function(x) {
-  start <- Sys.time()
   fd <- get_filter_data(x)
-  log_inform(paste("get_filter_data: ", Sys.time() - start))
-  start <- Sys.time()
   bin <- binary_serialize_filter_data_C(fd)
-  log_inform(paste("serializing: ", Sys.time() - start))
-  start <- Sys.time()
+  ..timing..add_period("jsonlite::base64_enc(bin)", TRUE)
   enc <- jsonlite::base64_enc(bin)
-  log_inform(paste("enconding: ", Sys.time() - start))
+  ..timing..add_period("jsonlite::base64_enc(bin)", FALSE)
   enc
 }
 deserialize_filter_state_from_client <- fromJSON
@@ -95,8 +91,6 @@ get_single_filter_data <- function(dataset) {
   nm_var <- names(dataset)
   n_var <- length(nm_var)
   res <- vector(mode = "list", length = n_var)
-  times <- vector(mode = "list", length = n_var)
-  kind <- vector(mode = "character", length = n_var)
 
   FDF <- FC$FDF
   K <- FC$KIND
@@ -104,6 +98,7 @@ get_single_filter_data <- function(dataset) {
   for (idx in seq_len(n_var)) {
     start <- Sys.time()
     var <- dataset[[idx]]
+    ..timing..add_period(nm_var[[idx]], TRUE)
 
     # Logical is treated as a factor in the client
     if (is.logical(var)) {
@@ -176,16 +171,14 @@ get_single_filter_data <- function(dataset) {
     }
 
     res[[idx]] <- l
-    times[[idx]] <- Sys.time() - start
-    kind[[idx]] <- as.character(l[[FDF$KIND]])
+    ..timing..add_period(nm_var[[idx]], FALSE)
   }
-  names(times) <- nm_var
-  attr(res, "times") <- times
-  attr(res, "kind") <- factor(kind)
   return(res)
 }
 
 get_filter_data <- function(dataset_lists) {
+  ..timing..add_period("get_filter_data", TRUE)
+  on.exit(..timing..add_period("get_filter_data", FALSE), add = TRUE)
   FDF <- FC$FDF
 
   nm_dataset_list <- names(dataset_lists)
@@ -206,7 +199,9 @@ get_filter_data <- function(dataset_lists) {
       current_dataset_res[[jdx]][[FDF$NAME]] <- nm_datasets[[jdx]]
       current_dataset_res[[jdx]][[FDF$LABEL]] <- attr(current_dataset_list[[jdx]], "label") %||% current_dataset_name
       current_dataset_res[[jdx]][[FDF$NROW]] <- nrow(current_dataset)
+      ..timing..add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[jdx]]), TRUE)
       current_dataset_res[[jdx]][[FDF$VARIABLES]] <- get_single_filter_data(current_dataset)
+      ..timing..add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[jdx]]), FALSE)
     }
 
     res[[idx]] <- vector(mode = "list", length = 2)
@@ -1154,6 +1149,8 @@ binary_deserialize_filter_data_C <- function(x) {
 #' @useDynLib dv.manager
 #' @keywords internal
 binary_serialize_filter_data_C <- function(x) {
+  ..timing..add_period("binary_serialize_filter_data_C", TRUE)
+  on.exit(..timing..add_period("binary_serialize_filter_data_C", FALSE), add = TRUE)
   .Call("binary_serialize_filter_data_C", x, PACKAGE = "dv.manager")
 }
 

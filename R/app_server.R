@@ -27,9 +27,18 @@ app_server_module <- function(id) {
   shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
 }
 
+
 # nolint start cyclocomp_linter
 app_server_ <- function(input, output, session, opts) {
   ns <- session[["ns"]]
+
+  ..timing..init_time_cont(session[["token"]])
+  session[["onSessionEnded"]](function() {
+    ..timing..dispose_time_cont(session[["token"]])
+  })
+
+  ..timing..add_period("app_server_", TRUE)
+  on.exit(..timing..add_period("app_server_", FALSE), add = TRUE)
 
   # Inject tools available for the rest of modules
   session$userData$manager_utils <- list(
@@ -311,14 +320,15 @@ app_server_ <- function(input, output, session, opts) {
   for (idx in seq_along(module_server)) {
     fn <- module_server[[idx]]
     id <- names(module_server)[[idx]]
-    app_performance_info[["init_time"]][[id]] <- Sys.time()
+
+    ..timing..add_period(id, TRUE)
 
     assert(is.character(id), "id must be a character")
     assert(is.function(fn), "fn must be a function")
 
     module_output[[id]] <- fn(afmm)
     used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
-    app_performance_info[["init_time"]][[id]] <- Sys.time() - app_performance_info[["init_time"]][[id]]
+    ..timing..add_period(id, FALSE)
   }
 
   # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)

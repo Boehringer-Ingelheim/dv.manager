@@ -4,6 +4,32 @@ $sidebar-width-open: 300px;
 $sidebar-width-collapsed: 60px;
 $color-scrollbar: #9b9b9b7f;
 
+// ── Raw tokens ───────────────────────────────────────────────
+
+// Yellow
+$yellow-light : #fbf9aa;
+$yellow : #ffe667; // Main
+$yellow-medium : #ffd03d;
+$yellow-dark : #e18600;
+
+// Blue
+$blue-light : #d2f2f7;
+$blue : #a3e5ee; // Main
+$blue-medium : #6ad2e2;
+$blue-dark : #076d7e;
+
+// Red
+$red-light : #f5cdb9;
+$red : #f58a68; // Main
+$red-medium : #ee6541;
+$red-dark : #86251b;
+
+// Violet
+$violet-light : #e0e1f6;
+$violet : #c5c3ee; // Main
+$violet-medium : #928bde;
+$violet-dark : #5d4495;
+
 .fas.fa-filter {
   // Overwrite hardcoded color
   color: $primary;
@@ -28,6 +54,14 @@ $color-scrollbar: #9b9b9b7f;
 // Override btn-default to look like btn-light
 .btn-default {
   @extend .btn-light
+}
+
+svg.dv_flame{
+  rect{
+    fill: $blue;
+    stroke-width: 1;
+    stroke: $blue-medium;
+  }
 }
 
 
