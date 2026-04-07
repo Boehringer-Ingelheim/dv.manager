@@ -5,11 +5,12 @@
 
 #include <R.h>
 #include <Rinternals.h>
-
+#include <time.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 #ifdef DEBUG
 #define _DP(...) \
@@ -457,9 +458,6 @@ SEXP has_finite_C(SEXP x) {
 // }
 
 
-#include <time.h>
-#include <assert.h>
-
 double multi_count(int32_t *input, int32_t *counts, int32_t input_size, int32_t n_levels)
 {
   double t = 0;
@@ -684,53 +682,95 @@ SEXP count_factor_C(SEXP factor_sexp){
 
 
 SEXP max_min_count_na_C(SEXP x) {
-    int n = Rf_length(x);
-    if (TYPEOF(x) != REALSXP) Rf_error("Input must be numeric vector");
+    R_xlen_t n = XLENGTH(x);
+    double *px = REAL(x);
+    double s_max = R_NegInf;
+    double s_min = R_PosInf;
+    R_xlen_t na_count = 0;
 
-    double *xp = REAL(x);
-    const uint64_t NA_BITS = 0x7FF00000000007A2ULL;
-
-    double max0 = R_NegInf, max1 = R_NegInf, max2 = R_NegInf, max3 = R_NegInf;
-    double min0 = R_PosInf, min1 = R_PosInf, min2 = R_PosInf, min3 = R_PosInf;
-    int na0 = 0, na1 = 0, na2 = 0, na3 = 0;
-
-    int i = 0;
-    for (; i <= n - 4; i += 4) {
-        uint64_t b0, b1, b2, b3;
-        memcpy(&b0, &xp[i+0], sizeof(b0));
-        memcpy(&b1, &xp[i+1], sizeof(b1));
-        memcpy(&b2, &xp[i+2], sizeof(b2));
-        memcpy(&b3, &xp[i+3], sizeof(b3));
-
-        if (b0 == NA_BITS) { na0++; } else { if (xp[i+0] > max0) max0 = xp[i+0]; if (xp[i+0] < min0) min0 = xp[i+0]; }
-        if (b1 == NA_BITS) { na1++; } else { if (xp[i+1] > max1) max1 = xp[i+1]; if (xp[i+1] < min1) min1 = xp[i+1]; }
-        if (b2 == NA_BITS) { na2++; } else { if (xp[i+2] > max2) max2 = xp[i+2]; if (xp[i+2] < min2) min2 = xp[i+2]; }
-        if (b3 == NA_BITS) { na3++; } else { if (xp[i+3] > max3) max3 = xp[i+3]; if (xp[i+3] < min3) min3 = xp[i+3]; }
-    }
-    // scalar tail
-    for (; i < n; i++) {
-        uint64_t bits;
-        memcpy(&bits, &xp[i], sizeof(bits));
-        if (bits == NA_BITS) { na0++; } else { if (xp[i] > max0) max0 = xp[i]; if (xp[i] < min0) min0 = xp[i]; }
+    for (R_xlen_t k = 0; k < n; k++) {
+        if (ISNAN(px[k])) {
+            na_count++;
+        } else {
+            if (px[k] > s_max) s_max = px[k];
+            if (px[k] < s_min) s_min = px[k];
+        }
     }
 
-    // merge
-    double max_val = max0;
-    if (max1 > max_val) max_val = max1;
-    if (max2 > max_val) max_val = max2;
-    if (max3 > max_val) max_val = max3;
+    SEXP result = PROTECT(Rf_allocVector(VECSXP, 3));
 
-    double min_val = min0;
-    if (min1 < min_val) min_val = min1;
-    if (min2 < min_val) min_val = min2;
-    if (min3 < min_val) min_val = min3;
+    SET_VECTOR_ELT(result, 0, Rf_ScalarReal(s_max));
+    SET_VECTOR_ELT(result, 1, Rf_ScalarReal(s_min));
+    SET_VECTOR_ELT(result, 2, Rf_ScalarInteger((int) na_count));
 
-    int na_count = na0 + na1 + na2 + na3;
-
-    SEXP res = PROTECT(Rf_allocVector(VECSXP, 3));
-    SET_VECTOR_ELT(res, 0, Rf_ScalarReal(max_val));
-    SET_VECTOR_ELT(res, 1, Rf_ScalarReal(min_val));
-    SET_VECTOR_ELT(res, 2, Rf_ScalarInteger(na_count));
     UNPROTECT(1);
-    return res;
+    return result;
+}
+
+
+
+
+SEXP write_time_inplace_C(SEXP vec, SEXP idx) {
+    if (TYPEOF(vec) != REALSXP)
+        Rf_error("write_time_inplace_C: vec must be a numeric/POSIXct vector");
+    if (TYPEOF(idx) != INTSXP && TYPEOF(idx) != REALSXP)
+        Rf_error("write_time_inplace_C: idx must be an integer");
+
+    int i = (TYPEOF(idx) == INTSXP) ? INTEGER(idx)[0] : (int)REAL(idx)[0];
+
+    if (i < 1 || i > LENGTH(vec))
+        Rf_error("write_time_inplace_C: idx %d out of bounds (length %d)", i, LENGTH(vec));
+
+    /* CLOCK_REALTIME gives seconds + nanoseconds since epoch,
+       matching what Sys.time() / POSIXct uses */
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    double t = (double)ts.tv_sec + (double)ts.tv_nsec * 1e-9;
+
+    /* Direct pointer write — bypasses all R copy-on-modify checks */
+    REAL(vec)[i - 1] = t;
+
+    return R_NilValue;
+}
+
+
+SEXP write_char_inplace_C(SEXP vec, SEXP idx, SEXP val) {
+    if (TYPEOF(vec) != STRSXP)
+        Rf_error("write_char_inplace_C: vec must be a character vector");
+    if (TYPEOF(val) != STRSXP || LENGTH(val) != 1)
+        Rf_error("write_char_inplace_C: val must be a length-1 character vector");
+
+    int i = (TYPEOF(idx) == INTSXP) ? INTEGER(idx)[0] : (int)REAL(idx)[0];
+
+    if (i < 1 || i > LENGTH(vec))
+        Rf_error("write_char_inplace_C: idx %d out of bounds (length %d)", i, LENGTH(vec));
+
+    /* SET_STRING_ELT is the correct way to write into a STRSXP —
+       it handles the internal CHARSXP and write barrier correctly.
+       It does NOT trigger copy-on-modify. */
+    SET_STRING_ELT(vec, i - 1, STRING_ELT(val, 0));
+
+    return R_NilValue;
+}
+
+SEXP write_lgl_inplace_C(SEXP vec, SEXP idx, SEXP val) {
+    if (TYPEOF(vec) != LGLSXP)
+        Rf_error("write_lgl_inplace_C: vec must be a logical vector");
+    if (LENGTH(val) != 1)
+        Rf_error("write_lgl_inplace_C: val must be length-1");
+
+    int i = (TYPEOF(idx) == INTSXP) ? INTEGER(idx)[0] : (int)REAL(idx)[0];
+
+    if (i < 1 || i > LENGTH(vec))
+        Rf_error("write_lgl_inplace_C: idx %d out of bounds (length %d)", i, LENGTH(vec));
+
+    /* Coerce val to logical if needed */
+    int lval;
+    if (TYPEOF(val) == LGLSXP)       lval = LOGICAL(val)[0];
+    else if (TYPEOF(val) == INTSXP)  lval = INTEGER(val)[0];
+    else Rf_error("write_lgl_inplace_C: val must be logical or integer");
+
+    LOGICAL(vec)[i - 1] = lval;
+
+    return R_NilValue;
 }

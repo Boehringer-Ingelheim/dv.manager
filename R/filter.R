@@ -115,10 +115,19 @@ get_single_filter_data <- function(dataset) {
       if (is.character(var)) {
         var <- factor(var)
       }
-      count <- count_factor_C(var)
-      l[[FDF$NA_COUNT]] <- count[1]
-      l[[FDF$VALUE]] <- levels(var) %||% character(0)
-      l[[FDF$COUNT]] <- if (length(count) > 1) count[2:length(count)] else integer(0)
+      C <- count_factor_C(var)
+      l[[FDF$NA_COUNT]] <- C[[1]]
+
+      if (length(C) > 1) {
+        C <- C[2:length(C)]
+        names(C) <- levels(var)
+        # C <- sort(C)
+        l[[FDF$COUNT]] <- unname(C)
+        l[[FDF$VALUE]] <- names(C)
+      } else {
+        l[[FDF$COUNT]] <- integer(0)
+        l[[FDF$VALUE]] <- character(0)
+      }
     } else if (is.numeric(var)) {
       l <- vector(mode = "list", length = 8)
       l[[FDF$NAME]] <- nm_var[[idx]]
@@ -130,8 +139,8 @@ get_single_filter_data <- function(dataset) {
       l[[FDF$KIND]] <- K$NUMERICAL
       l[[FDF$NA_COUNT]] <- max_min_na[[3]]
 
-      l[[FDF$MIN]] <- min(Inf, max_min_na[[2]])
-      l[[FDF$MAX]] <- max(-Inf, max_min_na[[1]])
+      l[[FDF$MIN]] <- max_min_na[[2]]
+      l[[FDF$MAX]] <- max_min_na[[1]]
 
       if (length(var) > 0 && has_finite_C(var) && l[[FDF$NA_COUNT]] != length(var)) {
         hist_info <- graphics::hist(var, plot = FALSE)
