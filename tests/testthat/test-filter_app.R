@@ -124,7 +124,7 @@ local({
           filter_test_server(
             id = module_id,
             filtered_dataset_list = shiny::reactive({
-              get_filtered_data(afmm[["unfiltered_plus_filter_info"]]())
+              get_filtered_dataset_list(afmm[["unfiltered_plus_filter_info"]]())
             }),
             unfiltered_dataset_list = shiny::reactive(afmm[["unfiltered_plus_filter_info"]]()[[
               "unfiltered_dataset_list"
@@ -157,7 +157,7 @@ local({
     })
   }
 
-  get_filtered_dataset_list <- timed(function(app) {
+  get_filtered_dataset_listset_list <- timed(function(app) {
     shiny::isolate(app$get_value(export = "filter_test-filtered_dataset_list")())
   })
 
@@ -650,7 +650,7 @@ local({
           app$run_js(gjsc(dataset_name, vn, fv))
           app$wait_for_idle()
           expect_identical(gmdfv(dataset_name, fv, TRUE), get_filter_state(app))
-          expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 3L)
+          expect_identical(nrow(get_filtered_dataset_listset_list(app)[["dataset_1"]]), 3L)
         }
       )
 
@@ -667,7 +667,7 @@ local({
           app$run_js(set_NA_include_js_code(dataset_name, vn, FALSE))
           app$wait_for_idle()
           expect_identical(gmdfv(dataset_name, fv, FALSE), get_filter_state(app))
-          expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 2L)
+          expect_identical(nrow(get_filtered_dataset_listset_list(app)[["dataset_1"]]), 2L)
         }
       )
 

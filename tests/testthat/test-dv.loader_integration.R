@@ -49,7 +49,7 @@ test_that("integration with dv.loader;
               if (from == "unfiltered_dataset_list") {
                 afmm[["unfiltered_plus_filter_info"]]()[["unfiltered_dataset_list"]][["dataset"]]
               } else if (from == "filtered_dataset_list") {
-                get_filtered_data(afmm[["unfiltered_plus_filter_info"]](), dataset_names = dataset)[[dataset]]
+                get_filtered_dataset_list(afmm[["unfiltered_plus_filter_info"]](), dataset_names = dataset)[[dataset]]
               } else {
                 stop("Unrecognized from")
               }

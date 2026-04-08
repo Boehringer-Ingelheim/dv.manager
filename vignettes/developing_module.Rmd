@@ -116,7 +116,7 @@ mod_uniq_values <- function(table_name, column_names, module_id) {
       module_server(
         module_id,
         dataset = reactive({
-          get_filtered_data(afmm[["unfiltered_plus_filter_info"]](), dataset_names = dataset)[[dataset]]
+          get_filtered_dataset_list(afmm[["unfiltered_plus_filter_info"]](), dataset_names = dataset)[[dataset]]
         })
       )
     },

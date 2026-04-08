@@ -277,7 +277,7 @@ local({
         app$wait_for_idle()
 
         exported_values <- app$get_values(export = "afmm-afmm")[["export"]][["afmm-afmm"]]
-        filtered_dataset <- get_filtered_data(
+        filtered_dataset <- get_filtered_dataset_list(
           shiny::isolate(exported_values[["unfiltered_plus_filter_info"]]()),
           "ds1"
         )[["ds1"]]
@@ -369,7 +369,7 @@ local({
       app$wait_for_idle()
 
       exported_values <- app$get_values(export = "afmm-afmm")[["export"]][["afmm-afmm"]]
-      filtered_dsl1_ds1 <- get_filtered_data(
+      filtered_dsl1_ds1 <- get_filtered_dataset_list(
         shiny::isolate(exported_values[["unfiltered_plus_filter_info"]]()),
         "ds1"
       )[["ds1"]]
@@ -383,7 +383,7 @@ local({
       app$wait_for_idle()
 
       exported_values <- app$get_values(export = "afmm-afmm")[["export"]][["afmm-afmm"]]
-      filtered_dsl2_ds1 <- get_filtered_data(
+      filtered_dsl2_ds1 <- get_filtered_dataset_list(
         shiny::isolate(exported_values[["unfiltered_plus_filter_info"]]()),
         "ds1"
       )[["ds1"]]

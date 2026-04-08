@@ -83,7 +83,7 @@ mod_table <- function(table_name, mod_id) {
     server = function(afmm) {
       table_server(
         id = mod_id,
-        dataset = shiny::reactive(get_filtered_data(afmm[["unfiltered_plus_filter_info"]](), table_name)[[table_name]])
+        dataset = shiny::reactive(get_filtered_dataset_list(afmm[["unfiltered_plus_filter_info"]](), table_name)[[table_name]])
       )
     },
     module_id = mod_id
@@ -124,7 +124,7 @@ mod_table <- function(table_name, filtered = FALSE, mod_id) {
           if (!filtered) {
             afmm[["unfiltered_plus_filter_info"]]()[["unfiltered_dataset_list"]][[table_name]]
           } else {
-            get_filtered_data(afmm[["unfiltered_plus_filter_info"]](), dataset_names = table_name)[[table_name]]
+            get_filtered_dataset_list(afmm[["unfiltered_plus_filter_info"]](), dataset_names = table_name)[[table_name]]
           }
         })
       )

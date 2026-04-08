@@ -1313,7 +1313,13 @@ max_min_count_na_C <- function(x) {
 #' @return A named list of filtered `data.frame` objects, one per entry in `dataset_names`, with
 #'   rows, columns, factor levels, and variable labels all reconciled against the original data.
 #'
-get_filtered_data_ <- function(unfiltered_dataset_list, filter_info, dataset_names, dataset_vars, dataset_extra_masks) {
+get_filtered_dataset_list_ <- function(
+  unfiltered_dataset_list,
+  filter_info,
+  dataset_names,
+  dataset_vars,
+  dataset_extra_masks
+) {
   if (missing(dataset_names)) {
     dataset_names <- names(unfiltered_dataset_list)
   }
@@ -1375,24 +1381,24 @@ get_filtered_data_ <- function(unfiltered_dataset_list, filter_info, dataset_nam
 #' Get Filtered Data
 #'
 #' @description
-#' Wrapper around [get_filtered_data_()] that accepts the combined`unfiltered_plus_filter_info``.
+#' Wrapper around [get_filtered_dataset_list_()] that accepts the combined`unfiltered_plus_filter_info``.
 #'
 #' @param unfiltered_plus_filter_info A named list with two elements:
 #'   \describe{
 #'     \item{`unfiltered_dataset_list`}{A named list of unfiltered `data.frame` objects.}
-#'     \item{`filter_info`}{The filter-info structure described in [get_filtered_data_()].}
+#'     \item{`filter_info`}{The filter-info structure described in [get_filtered_dataset_list_()].}
 #'   }
-#' @param dataset_names See [get_filtered_data_()].
-#' @param dataset_vars See [get_filtered_data_()].
-#' @param dataset_extra_masks See [get_filtered_data_()].
+#' @param dataset_names See [get_filtered_dataset_list_()].
+#' @param dataset_vars See [get_filtered_dataset_list_()].
+#' @param dataset_extra_masks See [get_filtered_dataset_list_()].
 #'
-#' @return A named list of filtered `data.frame` objects. See [get_filtered_data_()] for details.
+#' @return A named list of filtered `data.frame` objects. See [get_filtered_dataset_list_()] for details.
 #'
 #' @export
-get_filtered_data <- function(unfiltered_plus_filter_info, dataset_names, dataset_vars, dataset_extra_masks) {
+get_filtered_dataset_list <- function(unfiltered_plus_filter_info, dataset_names, dataset_vars, dataset_extra_masks) {
   unfiltered_dataset_list <- as_safe_list(unfiltered_plus_filter_info[["unfiltered_dataset_list"]])
   filter_info <- as_safe_list(unfiltered_plus_filter_info[["filter_info"]])
-  get_filtered_data_(unfiltered_dataset_list, filter_info, dataset_names, dataset_vars, dataset_extra_masks)
+  get_filtered_dataset_list_(unfiltered_dataset_list, filter_info, dataset_names, dataset_vars, dataset_extra_masks)
 }
 
 #' Apply Level Information to a Filtered Dataset

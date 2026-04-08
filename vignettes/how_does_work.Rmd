@@ -51,7 +51,8 @@ These modules are simple wrappers around pure Shiny modules that return a list c
 See below an example with a simple module
 
 ```{r, eval = FALSE}
-table_UI <- function(id) { # nolint
+table_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     DT::DTOutput(ns("table"))
@@ -85,7 +86,7 @@ mod_table <- function(dataset, mod_id, table_name) {
     server = function(afmm) {
       table_server(
         id = mod_id,
-        dataset = shiny::reactive(afmm[["filtered_dataset_list"]]())[[table_name]]
+        dataset = shiny::reactive(get_filtered_dataset_list(afmm[["unfiltered_plus_info"]]())[[table_name]])
       )
     },
     module_id = mod_id

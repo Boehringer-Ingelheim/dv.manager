@@ -152,7 +152,7 @@ app_server_ <- function(input, output, session, opts) {
     res <- list(
       unfiltered_dataset_list = r_unfiltered_dataset_list,
       filter_info = filter_info,
-      get_filtered_data = get_filtered_data
+      get_filtered_dataset_list = get_filtered_dataset_list
     )
 
     log_inform(paste("Unfiltered_plus_filter_info: ", Sys.time() - start))
@@ -170,7 +170,7 @@ app_server_ <- function(input, output, session, opts) {
   filtered_dataset_list <- shiny::reactive({
     start <- Sys.time()
     r_unfiltered_plus_filter_info <- unfiltered_plus_filter_info()
-    fd <- get_filtered_data(r_unfiltered_plus_filter_info)
+    fd <- get_filtered_dataset_list(r_unfiltered_plus_filter_info)
 
     log_inform(paste("Filtered_Dataset_list: ", Sys.time() - start))
 
