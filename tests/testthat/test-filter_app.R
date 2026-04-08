@@ -123,8 +123,12 @@ local({
         server = function(afmm) {
           filter_test_server(
             id = module_id,
-            filtered_dataset_list = afmm[["filtered_dataset_list"]],
-            unfiltered_dataset_list = afmm[["unfiltered_dataset_list"]],
+            filtered_dataset_list = shiny::reactive({
+              get_filtered_data(afmm[["unfiltered_plus_filter_info"]]())
+            }),
+            unfiltered_dataset_list = shiny::reactive(afmm[["unfiltered_plus_filter_info"]]()[[
+              "unfiltered_dataset_list"
+            ]]),
             filter_metadata = afmm[["filter_metadata"]]
           )
         },
@@ -619,6 +623,7 @@ local({
     )
 
     app <- shinytest2::AppDriver$new(root_app$get_url())
+
     on.exit(app$stop(), add = TRUE, after = FALSE)
     for (idx in seq_along(test_cases)) {
       vn <- test_cases[[idx]][["var_name"]]

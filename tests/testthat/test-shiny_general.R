@@ -277,9 +277,12 @@ local({
         app$wait_for_idle()
 
         exported_values <- app$get_values(export = "afmm-afmm")[["export"]][["afmm-afmm"]]
-        filtered_dataset_list_dsl1 <- shiny::isolate(exported_values[["filtered_dataset_list"]]())
+        filtered_dataset <- get_filtered_data(
+          shiny::isolate(exported_values[["unfiltered_plus_filter_info"]]()),
+          "ds1"
+        )[["ds1"]]
 
-        expect_identical(filtered_dataset_list_dsl1[["ds1"]][["a"]], c(2, 3))
+        expect_identical(filtered_dataset[["a"]], c(2, 3))
 
         set_filter(app, NA)
       }
@@ -366,16 +369,34 @@ local({
       app$wait_for_idle()
 
       exported_values <- app$get_values(export = "afmm-afmm")[["export"]][["afmm-afmm"]]
-      filtered_dataset_list_dsl1 <- shiny::isolate(exported_values[["filtered_dataset_list"]]())
+      filtered_dsl1_ds1 <- get_filtered_data(
+        shiny::isolate(exported_values[["unfiltered_plus_filter_info"]]()),
+        "ds1"
+      )[["ds1"]]
+
+      dsl1_name <- attr(
+        shiny::isolate(exported_values[["unfiltered_plus_filter_info"]]())[["unfiltered_dataset_list"]],
+        "dataset_list_name"
+      )
 
       app$set_inputs(selector = names(dataset_lists)[[2]])
       app$wait_for_idle()
 
       exported_values <- app$get_values(export = "afmm-afmm")[["export"]][["afmm-afmm"]]
-      filtered_dataset_list_dsl2 <- shiny::isolate(exported_values[["filtered_dataset_list"]]())
+      filtered_dsl2_ds1 <- get_filtered_data(
+        shiny::isolate(exported_values[["unfiltered_plus_filter_info"]]()),
+        "ds1"
+      )[["ds1"]]
 
-      expect_identical(filtered_dataset_list_dsl1[["ds1"]][["a"]], c(2, 3))
-      expect_identical(filtered_dataset_list_dsl2[["ds1"]][["a"]], c(2, 3))
+      dsl2_name <- attr(
+        shiny::isolate(exported_values[["unfiltered_plus_filter_info"]]())[["unfiltered_dataset_list"]],
+        "dataset_list_name"
+      )
+
+      expect_identical(filtered_dsl1_ds1[["a"]], c(2, 3))
+      expect_identical(dsl1_name, "both_dates")
+      expect_identical(filtered_dsl2_ds1[["a"]], c(2, 3))
+      expect_identical(dsl2_name, "one_date")
     }
   )
 })
