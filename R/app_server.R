@@ -149,10 +149,10 @@ app_server_ <- function(input, output, session, opts) {
           FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class
         )
     )
-
     res <- list(
       unfiltered_dataset_list = r_unfiltered_dataset_list,
-      filter_info = filter_info
+      filter_info = filter_info,
+      get_filtered_data = get_filtered_data
     )
 
     log_inform(paste("Unfiltered_plus_filter_info: ", Sys.time() - start))
@@ -169,11 +169,8 @@ app_server_ <- function(input, output, session, opts) {
 
   filtered_dataset_list <- shiny::reactive({
     start <- Sys.time()
-    unfiltered_plus_filter_info_r <- unfiltered_plus_filter_info()
-    fd <- apply_filter_info_to_dataset_list(
-      unfiltered_plus_filter_info_r[["unfiltered_dataset_list"]],
-      unfiltered_plus_filter_info_r[["filter_info"]]
-    )
+    r_unfiltered_plus_filter_info <- unfiltered_plus_filter_info()
+    fd <- get_filtered_data(r_unfiltered_plus_filter_info)
 
     log_inform(paste("Filtered_Dataset_list: ", Sys.time() - start))
 

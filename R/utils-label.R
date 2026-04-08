@@ -147,9 +147,8 @@ possibly_set_lbls <- function(df, lbls) {
   df
 }
 
-possibly_copy_labels <- function(target, origin) {
-  lbls <- get_lbls(origin)
-  possibly_set_lbls(target, lbls)
+copy_labels_from_dataset <- function(from, to) {
+  possibly_set_lbls(to, get_lbls(from))
 }
 
 #' Renames a list to include its value in the name

@@ -81,7 +81,10 @@ mod_table <- function(table_name, mod_id) {
   mod <- list(
     ui = table_ui,
     server = function(afmm) {
-      table_server(id = mod_id, dataset = shiny::reactive(afmm[["filtered_dataset_list"]]()[[table_name]]))
+      table_server(
+        id = mod_id,
+        dataset = shiny::reactive(get_filtered_data(afmm[["unfiltered_plus_filter_info"]](), table_name)[[table_name]])
+      )
     },
     module_id = mod_id
   )
@@ -115,12 +118,16 @@ mod_table <- function(table_name, filtered = FALSE, mod_id) {
   mod <- list(
     ui = table_ui,
     server = function(afmm) {
-      if (filtered) {
-        source <- "filtered_dataset_list"
-      } else {
-        source <- "unfiltered_dataset_list"
-      }
-      table_server(id = mod_id, dataset = shiny::reactive(afmm[[source]]()[[table_name]]))
+      table_server(
+        id = mod_id,
+        dataset = shiny::reactive({
+          if (!filtered) {
+            afmm[["unfiltered_plus_filter_info"]]()[["unfiltered_dataset_list"]][[table_name]]
+          } else {
+            get_filtered_data(afmm[["unfiltered_plus_filter_info"]](), dataset_names = table_name)[[table_name]]
+          }
+        })
+      )
     },
     module_id = mod_id
   )
@@ -142,9 +149,6 @@ run_app(
 )
 ```
 
-**A note on reactives**
-
-The call to afmm is included in a reactive, because `afmm[["unfiltered_dataset_list"]]` and `afmm[["filtered_dataset_list"]]` are reactives, therefore, they can only be accessed inside a reactive environment. Also note the parenthesis resolving the reactive before doing the subsetting. This does not differ from usual reactive programming.
 
 ## Accessing dataset_name
 

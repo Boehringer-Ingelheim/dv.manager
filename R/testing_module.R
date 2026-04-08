@@ -44,7 +44,7 @@ afmm_export_server <- function(id, afmm) {
     function(input, output, session) {
       shiny::setBookmarkExclude(c("target_id", "switch_to_target", "browse"))
       filter_counter <- shiny::reactiveVal(0)
-      shiny::observeEvent(afmm[["filtered_dataset_list"]](), {
+      shiny::observeEvent(afmm[["unfiltered_plus_filter_info"]](), {
         current_counter <- filter_counter()
         filter_counter(current_counter + 1)
       })
@@ -174,7 +174,18 @@ mod_simple <- function(dataset, from, module_id) {
   mod <- list(
     ui = simple_UI,
     server = function(afmm) {
-      simple_server(module_id, shiny::reactive(afmm[[from]]()[[dataset]]))
+      simple_server(
+        module_id,
+        shiny::reactive({
+          if (from == "unfiltered_dataset_list") {
+            afmm[["unfiltered_plus_filter_info"]]()[["unfiltered_dataset_list"]][[dataset]]
+          } else if (from == "filtered_dataset_list") {
+            get_filtered_data(afmm[["unfiltered_plus_filter_info"]](), dataset_names = dataset)[[dataset]]
+          } else {
+            stop("Unrecognized from")
+          }
+        })
+      )
     },
     module_id = module_id
   )
@@ -329,7 +340,15 @@ mod_table <- function(dataset, from, mod_id) {
     server = function(afmm) {
       table_server(
         id = mod_id,
-        dataset = shiny::reactive(afmm[[from]]()[[dataset]])
+        dataset = shiny::reactive({
+          if (from == "unfiltered_dataset_list") {
+            afmm[["unfiltered_plus_filter_info"]]()[["unfiltered_dataset_list"]][[dataset]]
+          } else if (from == "filtered_dataset_list") {
+            get_filtered_data(afmm[["unfiltered_plus_filter_info"]](), dataset_names = dataset)[[dataset]]
+          } else {
+            stop("Unrecognized from")
+          }
+        })
       )
     },
     module_id = mod_id
@@ -762,7 +781,9 @@ mod_simple2 <- function(dataset_name, module_id) {
     server = function(afmm) {
       simple_server(
         module_id,
-        shiny::reactive(afmm[["filtered_dataset_list"]]()[[dataset_name]])
+        shiny::reactive({
+          get_filtered_data(afmm[["unfiltered_plus_filter_info"]](), dataset_names = dataset_name)[[dataset_name]]
+        })
       )
     },
     module_id = module_id,
@@ -787,7 +808,9 @@ mod_dataset_labels <- function(dataset_names, module_id) {
     server = function(afmm) {
       dataset_labels_server(
         module_id,
-        shiny::reactive(afmm[["filtered_dataset_list"]]()[dataset_names])
+        shiny::reactive({
+          get_filtered_data(afmm[["unfiltered_plus_filter_info"]](), dataset_names)
+        })
       )
     },
     module_id = module_id,
@@ -913,7 +936,12 @@ mod_multi_simple <- function(module_id) {
   mod <- list(
     ui = multi_simple_UI,
     server = function(afmm) {
-      multi_simple_server(module_id, afmm[["filtered_dataset_list"]])
+      multi_simple_server(
+        module_id,
+        shiny::reactive({
+          get_filtered_data(afmm[["unfiltered_plus_filter_info"]](), dataset_names = dataset)[[dataset]]
+        })
+      )
     },
     module_id = module_id
   )
