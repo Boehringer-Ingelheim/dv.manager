@@ -8,17 +8,12 @@ extern SEXP has_finite_C(SEXP);
 extern SEXP count_factor_C(SEXP);
 extern SEXP max_min_count_na_C(SEXP);
 
-
-
 static const R_CallMethodDef CallEntries[] = {
     {"binary_serialize_filter_data_C", (DL_FUNC) &binary_serialize_filter_data_C, 1},
     {"binary_deserialize_filter_data_C", (DL_FUNC) &binary_deserialize_filter_data_C, 1},
     {"has_finite_C", (DL_FUNC) &has_finite_C, 1},
     {"count_factor_C", (DL_FUNC) &count_factor_C, 1},
-    {"max_min_count_na_C", (DL_FUNC) &max_min_count_na_C, 1},
-    
-    // {"count_factor_sorted_C", (DL_FUNC) &count_factor_sorted_C, 1},
-    // {"count_factor_radix_sorted_C", (DL_FUNC) &count_factor_radix_sorted_C, 1},
+    {"max_min_count_na_C", (DL_FUNC) &max_min_count_na_C, 1},    
     {NULL, NULL, 0}
 };
 
