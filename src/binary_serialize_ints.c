@@ -444,193 +444,52 @@ SEXP has_finite_C(SEXP x) {
     return Rf_ScalarLogical(FALSE);
 }
 
-// factor_count
+enum{
+  BANK_COUNT = 4
+};
 
+void count_integer(const int32_t * restrict src, size_t n, int32_t * restrict counts, int level_count) {
+    // @luis this routine considered NA to be part of level_count and this makes it compatible with yours
+    level_count += 1;
+                      
+    // Round bank size to 32-byte alignment to avoid cache line splits
+    int bank_size = (level_count + 7) & ~7;
+    
+    // Allocate BANK_COUNT independent banks
+    int32_t *banks = (int32_t *)aligned_alloc(32, bank_size * BANK_COUNT * sizeof(int32_t));
+    memset(banks, 0, bank_size * BANK_COUNT * sizeof(int32_t));
 
-// typedef struct {
-//     int count;
-//     int orig_idx;
-// } level_count;
+    int32_t *b0 = &banks[bank_size * 0];
+    int32_t *b1 = &banks[bank_size * 1];
+    int32_t *b2 = &banks[bank_size * 2];
+    int32_t *b3 = &banks[bank_size * 3];
 
-// static int cmp_decreasing(const void *a, const void *b) {
-//     int diff = ((level_count *)b)->count - ((level_count *)a)->count;
-//     return diff != 0 ? diff : ((level_count *)a)->orig_idx - ((level_count *)b)->orig_idx;
-// }
+    size_t i = 0;
+    for (; i + (BANK_COUNT-1) < n; i += BANK_COUNT) {
+        int32_t v0 = src[i+0] & 0x7FFFFFFF;
+        int32_t v1 = src[i+1] & 0x7FFFFFFF;
+        int32_t v2 = src[i+2] & 0x7FFFFFFF;
+        int32_t v3 = src[i+3] & 0x7FFFFFFF;
 
+        b0[v0]++;
+        b1[v1]++;
+        b2[v2]++;
+        b3[v3]++;
+    }
 
-double multi_count(int32_t *input, int32_t *counts, int32_t input_size, int32_t n_levels)
-{
-  double t = 0;
+    // tail
+    for (; i < n; i++) {
+        b0[src[i] & 0x7FFFFFFF]++;
+    }
 
-  clock_t t0 = clock();
-  int32_t *counts0 = (int32_t *)calloc((n_levels + 1), sizeof(int32_t));
-  int32_t *counts1 = (int32_t *)calloc((n_levels + 1), sizeof(int32_t));
-  int32_t *counts2 = (int32_t *)calloc((n_levels + 1), sizeof(int32_t));
-  int32_t *counts3 = (int32_t *)calloc((n_levels + 1), sizeof(int32_t));
-  int32_t n_counts = 4;
-  assert(counts0 != 0 && counts1 != 0 && counts2 != 0 && counts3 != 0);
+    for (int j = 0; j < level_count; j++) {
+        counts[j] = b0[j] + b1[j] + b2[j] + b3[j];
+    }
 
-  int32_t i = 0;
-  for (; i <= input_size - n_counts; i += n_counts)
-  {
-    counts0[input[i + 0] & (0x7fffffff)] += 1;
-    counts1[input[i + 1] & (0x7fffffff)] += 1;
-    counts2[input[i + 2] & (0x7fffffff)] += 1;
-    counts3[input[i + 3] & (0x7fffffff)] += 1;
-  }
-  // Scalar tail: handle remaining elements
-  for (; i < input_size; i++)
-  {
-    counts0[input[i] & (0x7fffffff)] += 1;
-  }
-
-  for (; i < input_size; i++)
-  {
-    counts0[input[i] % n_levels] += 1;
-  }
-
-  for (int32_t j = 0; j < n_levels + 1; j++)
-  {
-    counts[j] = counts0[j] + counts1[j] + counts2[j] + counts3[j];
-  }
-
-  free(counts0);
-  free(counts1);
-  free(counts2);
-  free(counts3);
-
-  clock_t t1 = clock();
-
-  t = (double)(t1 - t0) / CLOCKS_PER_SEC;
-  return t;
+    free(banks);
 }
 
-
-// static void radix_sort_desc(level_count *lc, int n) {
-//     level_count *tmp = (level_count *)R_alloc(n, sizeof(level_count));
-
-//     // 4 passes of 8 bits each = 32 bit integer
-//     for (int shift = 0; shift < 32; shift += 8) {
-//         int freq[256] = {0};
-
-//         // frequency count
-//         for (int i = 0; i < n; i++)
-//             freq[(lc[i].count >> shift) & 0xFF]++;
-
-//         // prefix sum — descending: accumulate from 255 down
-//         int total = 0;
-//         for (int i = 255; i >= 0; i--) {
-//             int f    = freq[i];
-//             freq[i]  = total;
-//             total   += f;
-//         }
-
-//         // scatter
-//         for (int i = 0; i < n; i++) {
-//             int bucket = (lc[i].count >> shift) & 0xFF;
-//             tmp[freq[bucket]++] = lc[i];
-//         }
-
-//         // swap pointers
-//         level_count *swap = lc;
-//         lc       = tmp;
-//         tmp      = swap;
-//     }
-
-//     // After 4 passes (even number) result is back in lc
-// }
-
-// SEXP count_factor_radix_sorted_C(SEXP factor_sexp) {
-//     SEXP levels    = Rf_getAttrib(factor_sexp, R_LevelsSymbol);
-//     int n          = Rf_length(factor_sexp);
-//     int num_levels = Rf_length(levels);
-//     int *codes     = INTEGER(factor_sexp);
-
-//     clock_t t0, t1;
-
-//     t0 = clock();
-//     level_count *lc = (level_count *)R_alloc(num_levels, sizeof(level_count));
-//     for (int i = 0; i < num_levels; i++) {
-//         lc[i].count    = 0;
-//         lc[i].orig_idx = i;
-//     }
-//     t1 = clock();
-//     // Rprintf("counting:    %.4f ms\n", 1000.0 * (t1 - t0) / CLOCKS_PER_SEC);
-
-
-//     for (int i = 0; i < n; i++) {
-//         int code = codes[i];
-//         lc[code - 1].count += (code != NA_INTEGER);
-//     }
-
-//     t0 = clock();
-//     radix_sort_desc(lc, num_levels);
-//     t1 = clock();
-//     // Rprintf("sorting:    %.4f ms\n", 1000.0 * (t1 - t0) / CLOCKS_PER_SEC);
-
-//     SEXP counts = PROTECT(Rf_allocVector(INTSXP, num_levels));
-//     SEXP names  = PROTECT(Rf_allocVector(STRSXP, num_levels));
-//     int *cnt_out = INTEGER(counts);
-
-//     t0 = clock();
-//     for (int i = 0; i < num_levels; i++) {
-//         cnt_out[i] = lc[i].count;
-//         SET_STRING_ELT(names, i, STRING_ELT(levels, lc[i].orig_idx));
-//     }
-//     t1 = clock();
-//     // Rprintf("moving labels:    %.4f ms\n", 1000.0 * (t1 - t0) / CLOCKS_PER_SEC);
-
-//     Rf_setAttrib(counts, R_NamesSymbol, names);
-//     UNPROTECT(2);
-//     return counts;
-// }
-
-// SEXP count_factor_sorted_C(SEXP factor_sexp) {
-//     SEXP levels    = Rf_getAttrib(factor_sexp, R_LevelsSymbol);
-//     int n          = Rf_length(factor_sexp);
-//     int num_levels = Rf_length(levels);
-//     int *codes     = INTEGER(factor_sexp);
-
-//     clock_t t0, t1;
-
-//     t0 = clock();
-//     level_count *lc = (level_count *)R_alloc(num_levels, sizeof(level_count));
-//     for (int i = 0; i < num_levels; i++) {
-//         lc[i].count    = 0;
-//         lc[i].orig_idx = i;
-//     }
-//     t1 = clock();
-//     // Rprintf("counting:    %.4f ms\n", 1000.0 * (t1 - t0) / CLOCKS_PER_SEC);
-
-
-//     for (int i = 0; i < n; i++) {
-//         int code = codes[i];
-//         lc[code - 1].count += (code != NA_INTEGER);
-//     }
-
-//     t0 = clock();
-//     qsort(lc, num_levels, sizeof(level_count), cmp_decreasing);
-//     t1 = clock();
-//     // Rprintf("sorting:    %.4f ms\n", 1000.0 * (t1 - t0) / CLOCKS_PER_SEC);
-
-//     SEXP counts = PROTECT(Rf_allocVector(INTSXP, num_levels));
-//     SEXP names  = PROTECT(Rf_allocVector(STRSXP, num_levels));
-//     int *cnt_out = INTEGER(counts);
-
-//     t0 = clock();
-//     for (int i = 0; i < num_levels; i++) {
-//         cnt_out[i] = lc[i].count;
-//         SET_STRING_ELT(names, i, STRING_ELT(levels, lc[i].orig_idx));
-//     }
-//     t1 = clock();
-//     // Rprintf("moving labels:    %.4f ms\n", 1000.0 * (t1 - t0) / CLOCKS_PER_SEC);
-
-//     Rf_setAttrib(counts, R_NamesSymbol, names);
-//     UNPROTECT(2);
-//     return counts;
-// }
-
-SEXP count_factor_unblocked_C(SEXP factor_sexp) {
+SEXP count_factor_C(SEXP factor_sexp) {
     int32_t n = Rf_length(factor_sexp);    
     int32_t *codes = INTEGER(factor_sexp);
     SEXP levels = Rf_getAttrib(factor_sexp, R_LevelsSymbol);
@@ -639,47 +498,11 @@ SEXP count_factor_unblocked_C(SEXP factor_sexp) {
     SEXP counts = PROTECT(Rf_allocVector(INTSXP, num_levels+1)); //NA in index 0
     int32_t *cnt = INTEGER(counts);
     memset(cnt, 0, num_levels * sizeof(int32_t));
-    multi_count(codes, cnt, n, num_levels);
+    count_integer(codes, n, cnt, num_levels);
 
     UNPROTECT(1);
     return counts;
 }
-
-// SEXP count_factor_blocked_C(SEXP factor_sexp) {
-//     int n = Rf_length(factor_sexp);
-//     int *codes = INTEGER(factor_sexp);
-//     SEXP levels = Rf_getAttrib(factor_sexp, R_LevelsSymbol);
-//     int num_levels = Rf_length(levels);
-
-//     SEXP counts = PROTECT(Rf_allocVector(INTSXP, num_levels));
-//     int *cnt = INTEGER(counts);
-//     memset(cnt, 0, num_levels * sizeof(int));
-
-//     #define BLOCK_SIZE 4096
-
-//     for (int lvl_start = 0; lvl_start < num_levels; lvl_start += BLOCK_SIZE) {
-//         int lvl_end = lvl_start + BLOCK_SIZE;
-//         if (lvl_end > num_levels) lvl_end = num_levels;
-
-//         for (int i = 0; i < n; i++) {
-//             int c = codes[i];
-//             if (c != NA_INTEGER) {
-//                 int idx = c - 1;
-//                 if (idx >= lvl_start && idx < lvl_end)
-//                     cnt[idx]++;
-//             }
-//         }
-//     }
-
-//     Rf_setAttrib(counts, R_NamesSymbol, levels);
-//     UNPROTECT(1);
-//     return counts;
-// }
-
-SEXP count_factor_C(SEXP factor_sexp){
-    return count_factor_unblocked_C(factor_sexp);    
-}
-
 
 SEXP max_min_count_na_C(SEXP x) {
     R_xlen_t n = XLENGTH(x);
@@ -707,9 +530,6 @@ SEXP max_min_count_na_C(SEXP x) {
     return result;
 }
 
-
-
-
 SEXP write_time_inplace_C(SEXP vec, SEXP idx) {
     if (TYPEOF(vec) != REALSXP)
         Rf_error("write_time_inplace_C: vec must be a numeric/POSIXct vector");
@@ -732,7 +552,6 @@ SEXP write_time_inplace_C(SEXP vec, SEXP idx) {
 
     return R_NilValue;
 }
-
 
 SEXP write_char_inplace_C(SEXP vec, SEXP idx, SEXP val) {
     if (TYPEOF(vec) != STRSXP)
