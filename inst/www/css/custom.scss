@@ -57,10 +57,15 @@ $violet-dark : #5d4495;
 }
 
 svg.dv_flame{
-  rect{
+  rect.period{
     fill: $blue;
     stroke-width: 1;
     stroke: $blue-medium;
+  }
+  rect.event{
+    fill: $violet;
+    stroke-width: 1;
+    stroke: $violet_medium;    
   }
 }
 
