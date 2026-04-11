@@ -1821,6 +1821,7 @@ local({
     res <- get_filtered_dataset_list_(list(ds = ds), filter_info)
     expect_equal(nrow(res$ds), 2)
     expect_equal(res$ds$id, c(1L, 3L))
+    expect_false(lobstr::obj_addr(res$ds$id) == lobstr::obj_addr(ds$id))
   })
 
   test_that("get_filtered_dataset_list extra mask is AND-combined with filter mask", {
@@ -1834,9 +1835,10 @@ local({
     )
     res <- get_filtered_dataset_list_(list(ds = ds), filter_info, dataset_extra_masks = list(ds = c(TRUE, FALSE, TRUE)))
     expect_equal(res$ds$id, c(1L, 3L))
+    expect_false(lobstr::obj_addr(res$ds$id) == lobstr::obj_addr(ds$id))
   })
 
-  test_that("get_filtered_dataset_list dataset_vars restricts columns", {
+  test_that("get_filtered_dataset_list dataset_vars restricts columns without copying data", {
     ds <- data.frame(a = 1:2, b = 3:4, c = 5:6)
     filter_info <- list(
       result = list(
@@ -1847,6 +1849,8 @@ local({
     )
     res <- get_filtered_dataset_list_(list(ds = ds), filter_info, dataset_vars = list(ds = c("a", "c")))
     expect_equal(names(res$ds), c("a", "c"))
+    expect_true(lobstr::obj_addr(res$ds$a) == lobstr::obj_addr(ds$a))
+    expect_true(lobstr::obj_addr(res$ds$c) == lobstr::obj_addr(ds$c))
   })
 
   test_that("get_filtered_dataset_list only requested dataset_names are returned", {
@@ -1869,9 +1873,23 @@ local({
     attr(unfiltered$x, "label") <- "My Label"
     filtered <- unfiltered[1:2, , drop = FALSE]
     attr(filtered$x, "label") <- NULL
-
     res <- copy_labels_from_dataset(unfiltered, filtered)
     expect_equal(attr(res$x, "label"), "My Label")
+  })
+
+  test_that("get_filtered_dataset_list all TRUE mask does not copy data vectors", {
+    ds <- data.frame(a = 1:2, b = 3:4, c = 5:6)
+    filter_info <- list(
+      result = list(
+        filter_info = list(
+          ds = list(mask = c(TRUE, TRUE), lvls = list())
+        )
+      )
+    )
+    res <- get_filtered_dataset_list_(list(ds = ds), filter_info)
+    expect_true(lobstr::obj_addr(res$ds$a) == lobstr::obj_addr(ds$a))
+    expect_true(lobstr::obj_addr(res$ds$b) == lobstr::obj_addr(ds$b))
+    expect_true(lobstr::obj_addr(res$ds$c) == lobstr::obj_addr(ds$c))
   })
 
   test_that("apply_lvls_info_to_ds dropped factor levels are restored when prescribed by ds_lvl", {
