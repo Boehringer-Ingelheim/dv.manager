@@ -1336,8 +1336,8 @@ get_filtered_dataset_list_ <- function(
   }
 
   checkmate::assert_subset(dataset_names, names(unfiltered_dataset_list))
-  checkmate::assert_list(dataset_vars)
-  checkmate::assert_list(dataset_extra_masks)
+  checkmate::assert_list(dataset_vars, names = "unique")
+  checkmate::assert_list(dataset_extra_masks, names = "unique")
   checkmate::assert_subset(names(dataset_vars), names(unfiltered_dataset_list))
   checkmate::assert_subset(names(dataset_extra_masks), names(unfiltered_dataset_list))
 
