@@ -32,13 +32,13 @@ app_server_module <- function(id) {
 app_server_ <- function(input, output, session, opts) {
   ns <- session[["ns"]]
 
-  ..timing..init_time_cont(session[["token"]])
+  ..t$init()
   session[["onSessionEnded"]](function() {
-    ..timing..dispose_time_cont(session[["token"]])
+    ..t$dispose()
   })
 
-  ..timing..add_period("app_server_", TRUE)
-  on.exit(..timing..add_period("app_server_", FALSE), add = TRUE)
+  ..t$add_period("app_server_", TRUE)
+  on.exit(..t$add_period("app_server_", FALSE), add = TRUE)
 
   # Inject tools available for the rest of modules
   session$userData$manager_utils <- list(
@@ -90,6 +90,8 @@ app_server_ <- function(input, output, session, opts) {
   selected_dataset_list <- shiny::reactive({
     dataset_list_name <- input[["selector"]]
     shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
+    ..t$add_period("selected_dataset_list", TRUE)
+    on.exit(..t$add_period("selected_dataset_list", FALSE))
     assert(dataset_list_name %in% names(dataset_lists))
 
     if (is.function(dataset_lists[[dataset_list_name]])) {
@@ -116,6 +118,8 @@ app_server_ <- function(input, output, session, opts) {
   }
 
   unfiltered_dataset_list <- shiny::reactive({
+    ..t$add_period("unfiltered_dataset_list", TRUE)
+    on.exit(..t$add_period("unfiltered_dataset_list", FALSE))
     r_selected_dataset_list <- selected_dataset_list()
     r_apply_subgroups <- apply_subgroups()
     res_apply_subgroups <- r_apply_subgroups(r_selected_dataset_list, subject_filter_dataset_name, filter_key_var)
@@ -131,9 +135,10 @@ app_server_ <- function(input, output, session, opts) {
   })
 
   unfiltered_plus_filter_info <- shiny::reactive({
+    ..t$add_period("unfiltered_plus_filter_info", TRUE)
+    on.exit(..t$add_period("unfiltered_plus_filter_info", FALSE))
     # Place reqs here so all elements are synchronized before going forward
     # Consider generation counters (Check current approach)
-    start <- Sys.time()
     r_unfiltered_dataset_list <- shiny::isolate(unfiltered_dataset_list())
     r_dataset_list_filter <- dataset_list_filter()
     filter_info <- combine_filter_info(get_filter_info(
@@ -155,7 +160,7 @@ app_server_ <- function(input, output, session, opts) {
       get_filtered_dataset_list = get_filtered_dataset_list
     )
 
-    log_inform(paste("Unfiltered_plus_filter_info: ", Sys.time() - start))
+    ..t$add_event("received filter")
 
     res
   })
@@ -294,14 +299,14 @@ app_server_ <- function(input, output, session, opts) {
     fn <- module_server[[idx]]
     id <- names(module_server)[[idx]]
 
-    ..timing..add_period(id, TRUE)
+    ..t$add_period(id, TRUE)
 
     assert(is.character(id), "id must be a character")
     assert(is.function(fn), "fn must be a function")
 
     module_output[[id]] <- fn(afmm)
     used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
-    ..timing..add_period(id, FALSE)
+    ..t$add_period(id, FALSE)
   }
 
   # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
