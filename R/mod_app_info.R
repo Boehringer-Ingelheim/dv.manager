@@ -127,13 +127,218 @@ mod_app_info <- function(mod_id = ".._app_info..") {
 
 ##### TIMING
 
-time_env_to_df <- function(time_env) {
-  overflow <- time_env[["period_idx"]] > 1e6
-  max_idx <- ceiling(time_env[["period_idx"]] - 1) / 2
-  incomplete_tags <- sum(time_env[["period_start"]][time_env[["period_idx"]] - 1]) !=
-    sum(!time_env[["period_start"]][time_env[["period_idx"]] - 1])
+..t <- local({
+  MAX_IDX <- 1e6
+  TIMING_OPTION <- "dv.manager.timing"
 
-  start_vec <- time_env[["period_start"]][seq_len(time_env[["period_idx"]] - 1)]
+  get_token <- function() {
+    "NULL"
+  }
+
+  set_token_getter <- function(f) {
+    get_token <<- function() {
+      x <- f()
+      stopifnot(!is.null(x))
+      x
+    }
+  }
+
+  get_token_getter <- function() {
+    get_token
+  }
+
+  reset_token_getter <- function() {
+    get_token <<- function() {
+      "NULL"
+    }
+  }
+
+  if (!isFALSE(getOption(TIMING_OPTION))) {
+    times_container <- new.env(parent = emptyenv()) # Consider
+
+    init <- function(session_token = get_token()) {
+      if (session_token != "NULL") {
+        timing <- local(
+          {
+            origin <- Sys.time()
+
+            event_time <- .POSIXct(numeric(MAX_IDX))
+            event_label <- vector(mode = "character", length = MAX_IDX)
+            event_idx <- 0L
+
+            period_time <- .POSIXct(numeric(MAX_IDX))
+            period_label <- vector(mode = "character", length = MAX_IDX)
+            period_start <- rep(as.logical(NA), MAX_IDX)
+            period_idx <- 0L
+
+            list(
+              get_member = function(x) {
+                members <- get_members()
+                stopifnot(members %in% names(members))
+                return(members(x))
+              },
+              get_members = function() {
+                list(
+                  origin = origin,
+                  event_time = event_time,
+                  event_label = event_label,
+                  event_idx = event_idx,
+                  period_time = period_time,
+                  period_label = period_label,
+                  period_start = period_start,
+                  period_idx = period_idx
+                )
+              },
+              add_period = function(label, start) {
+                if (period_idx >= MAX_IDX) {
+                  dv.manager:::log_inform("Period timings container is full. No more times will be recorded")
+                  return()
+                } else {
+                  period_idx <<- period_idx + 1
+                  period_time[[period_idx]] <<- Sys.time()
+                  period_label[[period_idx]] <<- label
+                  period_start[[period_idx]] <<- start
+                }
+              },
+              add_event = function(label) {
+                if (event_idx >= MAX_IDX) {
+                  dv.manager:::log_inform("Event timings container is full. No more times will be recorded")
+                  return()
+                } else {
+                  event_idx <<- event_idx + 1
+                  event_time[[event_idx]] <<- Sys.time()
+                  event_label[[event_idx]] <<- label
+                }
+              }
+            )
+          }
+        )
+      } else {
+        timing <- local(
+          {
+            event_time <- .POSIXct(NA_real_)
+            event_label <- NA_character_
+            event_idx <- NA_integer_
+
+            period_time <- .POSIXct(numeric(MAX_IDX))
+            period_label <- vector(mode = "character", length = MAX_IDX)
+            period_start <- rep(as.logical(NA), MAX_IDX)
+            period_idx <- 0L
+
+            list(
+              get_member = function(x) {
+                members <- get_members()
+                stopifnot(members %in% names(members))
+                return(members(x))
+              },
+              get_members = function() {
+                list(
+                  origin = origin,
+                  event_time = event_time,
+                  event_label = event_label,
+                  event_idx = event_idx,
+                  period_time = period_time,
+                  period_label = period_label,
+                  period_start = period_start,
+                  period_idx = period_idx
+                )
+              },
+              add_period = function(label, start, session_token = shiny::getDefaultReactiveDomain()[["token"]]) {
+                if (period_idx >= MAX_IDX) {
+                  dv.manager:::log_inform("Period timings container is full. No more times will be recorded")
+                  return()
+                } else {
+                  if (start) {
+                    period_idx <<- period_idx + 1
+                    period_time[[period_idx]] <<- Sys.time()
+                    period_label[[period_idx]] <<- label
+                    period_start[[period_idx]] <<- start
+                  } else {
+                    msg <- sprintf(
+                      "period %s - %s duration %f since origin",
+                      period_label[[period_idx]],
+                      label,
+                      Sys.time() - period_time[[period_idx]]
+                    )
+                    period_idx <<- period_idx - 1
+                    dv.manager:::log_inform(msg)
+                  }
+                }
+              },
+              add_event = function(label, session_token = shiny::getDefaultReactiveDomain()[["token"]]) {
+                msg <- sprintf("Event %s triggered at %f since origin", label, Sys.time() - origin)
+                dv.manager:::log_inform(msg)
+              }
+            )
+          }
+        )
+      }
+
+      # dv.manager:::log_inform(sprintf("Setting times container %s", session_token))
+
+      times_container[[session_token]] <- timing
+    }
+
+    dispose <- function(session_token = get_token()) {
+      times_container[[session_token]] <- NULL
+    }
+
+    get_cont <- function(session_token = get_token()) {
+      if (!is.null(session_token)) {
+        times_container[[session_token]]
+      }
+    }
+
+    add_period <- function(..., session_token = get_token()) {
+      times_container[[session_token]]$add_period(...)
+    }
+
+    add_event <- function(..., session_token = get_token()) {
+      times_container[[session_token]]$add_event(...)
+    }
+  } else {
+    times_container <- NULL
+
+    init <- function(session_token = NULL) {}
+
+    dispose <- function(session_token = NULL) {}
+
+    get_cont <- function(session_token = NULL) {
+      NULL
+    }
+
+    add_period <- function(label, start, session_token = NULL) {}
+
+    add_event <- function(label, session_token = NULL) {}
+  }
+
+  init("NULL") # In case we are not running it in shiny
+
+  poc(
+    init = init,
+    dispose = dispose,
+    get_cont = get_cont,
+    add_period = add_period,
+    add_event = add_event,
+    set_token_getter = set_token_getter,
+    reset_token_getter = reset_token_getter,
+    get_token_getter = get_token_getter,
+    C = poc(
+      TIMING_OPTION = TIMING_OPTION
+    )
+  )
+})
+
+time_env_to_df <- function(time_env) {
+  overflow <- time_env[["period_idx"]] >= 1e6
+
+  stopifnot(!overflow)
+
+  max_idx <- ceiling(time_env[["period_idx"]]) / 2
+  incomplete_tags <- sum(time_env[["period_start"]][time_env[["period_idx"]]]) !=
+    sum(!time_env[["period_start"]][time_env[["period_idx"]]])
+
+  start_vec <- time_env[["period_start"]][seq_len(time_env[["period_idx"]])]
   stack_depth <- integer(max_idx)
   st_stack <- integer(max_idx)
   st_idx <- integer(max_idx)
@@ -156,93 +361,31 @@ time_env_to_df <- function(time_env) {
       et_idx[[st_et_ptr]] <- vec_idx
     }
   }
-  origin <- as.numeric(min(time_env[["period_time"]][st_idx]))
+  origin <- time_env[["origin"]]
 
-  df <- data.frame(
+  df_period <- data.frame(
     label_st = time_env[["period_label"]][st_idx],
     label_et = time_env[["period_label"]][et_idx],
-    st = as.numeric(time_env[["period_time"]][st_idx]) - origin,
-    et = as.numeric(time_env[["period_time"]][et_idx]) - origin,
+    st = as.numeric(time_env[["period_time"]][st_idx] - origin),
+    et = as.numeric(time_env[["period_time"]][et_idx] - origin),
     depth = factor(stack_depth),
     imputed = FALSE
   )
-  df <- df[order(df[["st"]]), , drop = FALSE]
-  df[["duration"]] <- df[["et"]] - df[["st"]]
-  yyjsonr::write_json_file(df, "data.json")
-  return(df)
-}
 
-# This could be lists with the correct closures
-MAX_IDX <- 1e6
-TIMING_OPTION <- "dv.manager.timing"
+  df_period <- df_period[order(df_period[["st"]]), , drop = FALSE]
+  df_period[["duration"]] <- df_period[["et"]] - df_period[["st"]]
 
-if (!isFALSE(getOption(TIMING_OPTION))) {
-  times_container <- new.env(parent = emptyenv()) # Consider
+  df_event <- data.frame(
+    label_st = time_env[["event_label"]][seq_len(time_env[["event_idx"]])],
+    st = as.numeric(time_env[["event_time"]][seq_len(time_env[["event_idx"]])] - origin),
+    et = as.numeric(time_env[["event_time"]][seq_len(time_env[["event_idx"]])] - origin)
+  )
 
-  ..timing..init_time_cont <- function(session_token = shiny::getDefaultReactiveDomain()[["token"]]) {
-    if (!is.null(session_token)) {
-      times_container[[session_token]] <- new.env(parent = emptyenv())
-      times_container[[session_token]][["event_time"]] <- .POSIXct(numeric(MAX_IDX))
-      times_container[[session_token]][["event_label"]] <- vector(mode = "character", length = MAX_IDX)
-      times_container[[session_token]][["event_idx"]] <- 1L # Next idx
+  # yyjsonr::write_json_file(df, "data.json")
 
-      times_container[[session_token]][["period_time"]] <- .POSIXct(numeric(MAX_IDX))
-      times_container[[session_token]][["period_label"]] <- vector(mode = "character", length = MAX_IDX)
-      times_container[[session_token]][["period_start"]] <- rep(as.logical(NA), MAX_IDX)
-      times_container[[session_token]][["period_idx"]] <- 1L
-    }
-  }
-
-  ..timing..dispose_time_cont <- function(session_token = shiny::getDefaultReactiveDomain()[["token"]]) {
-    if (!is.null(session_token)) {
-      times_container[[session_token]] <- NULL
-    }
-  }
-
-  ..timing..get_time_cont <- function(session_token = shiny::getDefaultReactiveDomain()[["token"]]) {
-    if (!is.null(session_token)) {
-      times_container[[session_token]]
-    }
-  }
-
-  ..timing..add_period <- function(label, start, session_token = shiny::getDefaultReactiveDomain()[["token"]]) {
-    if (!is.null(session_token)) {
-      next_idx <- times_container[[session_token]][["period_idx"]]
-      if (next_idx > 1e6) {
-        message("Period timings container is full. No more times will be recorded")
-        return()
-      }
-      times_container[[session_token]][["period_time"]][[next_idx]] <- Sys.time()
-      times_container[[session_token]][["period_label"]][[next_idx]] <- label
-      times_container[[session_token]][["period_start"]][[next_idx]] <- start
-      times_container[[session_token]][["period_idx"]] <- next_idx + 1
-    }
-  }
-
-  ..timing..add_event <- function(label, session_token = shiny::getDefaultReactiveDomain()[["token"]]) {
-    if (!is.null(session_token)) {
-      next_idx <- times[[session_token]][["event_idx"]]
-      if (next_idx > 1e6) {
-        message("Event timings container is full. No more times will be recorded")
-        return()
-      }
-      times_container[[session_token]][["event_time"]][[next_idx]] <- Sys.time()
-      times_container[[session_token]][["event_label"]][[next_idx]] <- label
-      times_container[[session_token]][["event_idx"]] <- next_idx + 1
-    }
-  }
-} else {
-  times_container <- NULL
-
-  ..timing..init_time_cont <- function(session_token = NULL) {}
-
-  ..timing..dispose_time_cont <- function(session_token = NULL) {}
-
-  ..timing..get_time_cont <- function(session_token = NULL) {
-    NULL
-  }
-
-  ..timing..add_period <- function(label, start, session_token = NULL) {}
-
-  ..timing..add_event <- function(label, session_token = NULL) {}
+  l <- list(
+    period = df_period,
+    event = df_event
+  )
+  return(l)
 }
