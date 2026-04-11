@@ -210,10 +210,6 @@ app_server_ <- function(input, output, session, opts) {
     as_dv_manager_module_output_safe_list(module_output)
   }
 
-  get_app_performance_info <- function() {
-    app_performance_info
-  }
-
   afmm <- list(
     data = dataset_lists,
     unfiltered_dataset = shiny::reactive({
@@ -288,20 +284,7 @@ app_server_ <- function(input, output, session, opts) {
         )
         dataset_list_filter()
       })
-    ),
-    app_performance_info = get_app_performance_info
-  )
-
-  app_performance_info <- list()
-  app_performance_info[["..app_start.."]] <- Sys.time()
-
-  time_to_first_filter <- shiny::observeEvent(
-    unfiltered_plus_filter_info(),
-    {
-      app_performance_info[["..time_to_first_filter.."]] <<- app_performance_info[["..app_start.."]] - Sys.time()
-      time_to_first_filter
-    },
-    once = TRUE
+    )
   )
 
   used_datasets <- list()
