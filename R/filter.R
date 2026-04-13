@@ -1381,6 +1381,8 @@ get_filtered_dataset_list_ <- function(
     if (all(ds_mask)) {
       filtered_dataset <- unfiltered_dataset_list[[ds_name]][, ds_columns, drop = FALSE]
     } else {
+      # Fastest option:
+      # microbenchmark::microbenchmark(iris[mask, cols, drop = FALSE], iris[mask,,drop = FALSE][cols], iris[cols][mask,,drop = FALSE], times = 1e4)
       filtered_dataset <- unfiltered_dataset_list[[ds_name]][ds_mask, ds_columns, drop = FALSE]
       filtered_dataset <- apply_lvls_info_to_ds(unfiltered_dataset, filtered_dataset, ds_lvl)
       filtered_dataset <- copy_labels_from_dataset(unfiltered_dataset, filtered_dataset)
