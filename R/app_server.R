@@ -155,9 +155,20 @@ app_server_ <- function(input, output, session, opts) {
       get_filtered_dataset_list = get_filtered_dataset_list
     )
 
-    ..t$add_event("received filter")
+    ..t$add_event("received unfiltered_dataset_list_plus_info")
 
     res
+  })
+
+  filtered_dataset_list <- shiny::reactive({
+    ..t$add_period("filtered_dataset_list", TRUE)
+    on.exit(..t$add_period("filtered_dataset_list", FALSE))
+    r_unfiltered_plus_filter_info <- unfiltered_plus_filter_info()
+    fd <- get_filtered_dataset_list(r_unfiltered_plus_filter_info)
+
+    ..t$add_event("received filtered_dataset_list")
+
+    fd
   })
 
   dataset_list_filter <- new_filter_server(
@@ -219,6 +230,7 @@ app_server_ <- function(input, output, session, opts) {
       unfiltered_dataset_list()
     }),
     unfiltered_dataset_list = unfiltered_dataset_list,
+    filtered_dataset_list = filtered_dataset_list,
     unfiltered_plus_filter_info = unfiltered_plus_filter_info,
     url_parameters = url_parameters,
     dataset_name = shiny::reactive({
