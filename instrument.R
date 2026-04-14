@@ -46,16 +46,17 @@
       message("Timings container is full. No more times will be recorded")
       return()
     } else {
+      token <- get_token()
       idx <<- idx + 1
       time[[idx]] <<- time_
       label[[idx]] <<- label
       start[[idx]] <<- TRUE
-      session[idx] <<- get_token()
+      session[idx] <<- token
       idx <<- idx + 1
       time[[idx]] <<- time_
       label[[idx]] <<- label
       start[[idx]] <<- FALSE
-      session[idx] <<- get_token()
+      session[idx] <<- token
     }
   }
 
@@ -126,6 +127,67 @@
     return(df)
   }
 
+  insert_gap_rows <- function(df, gap_label = "unmeasured") {
+    df$depth <- as.integer(df$depth) # coerce factor -> integer once, up front
+
+    make_gap <- function(parent, gap_st, gap_et) {
+      row <- parent
+      row$session <- DUMMY_TOKEN
+      row$label_st <- gap_label
+      row$label_et <- gap_label
+      row$st <- gap_st
+      row$et <- gap_et
+      row$depth <- parent$depth + 1L
+      row$imputed <- TRUE
+      row$duration <- gap_et - gap_st
+      row
+    }
+
+    all_gaps <- list()
+
+    for (i in seq_len(nrow(df))) {
+      parent <- df[i, ]
+
+      if (isTRUE(parent$et == parent$st)) {
+        next
+      }
+
+      is_child <- which(
+        df$depth == parent$depth + 1L &
+          df$st >= parent$st &
+          df$et <= parent$et
+      )
+
+      children <- df[is_child, , drop = FALSE]
+      if (nrow(children) == 0L) {
+        next
+      }
+
+      n <- nrow(children)
+
+      if (isTRUE(children$st[1L] > parent$st)) {
+        all_gaps[[length(all_gaps) + 1L]] <- make_gap(parent, parent$st, children$st[1L])
+      }
+
+      for (j in seq_len(n - 1L)) {
+        if (isTRUE(children$et[j] < children$st[j + 1L])) {
+          all_gaps[[length(all_gaps) + 1L]] <- make_gap(parent, children$et[j], children$st[j + 1L])
+        }
+      }
+
+      if (isTRUE(children$et[n] < parent$et)) {
+        all_gaps[[length(all_gaps) + 1L]] <- make_gap(parent, children$et[n], parent$et)
+      }
+    }
+
+    if (length(all_gaps) == 0L) {
+      return(df)
+    }
+
+    result <- rbind(df, do.call(rbind, all_gaps))
+    result[order(result$st, result$depth), ]
+  }
+
   instrument <- function(pkgs) {
     for (pkg in pkgs) {
       utils::assignInNamespace("..t", ..t, pkgs)
@@ -145,6 +207,9 @@
     deinstrument = deinstrument,
     get_members = get_members,
     time_list_to_df = time_list_to_df,
+    time_list_as_df = function() {
+      insert_gap_rows(time_list_to_df(get_members()))
+    },
     DUMMY_TOKEN = DUMMY_TOKEN
   )
 })

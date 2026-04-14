@@ -1,6 +1,8 @@
 app_info_UI <- function(id) {
   # nolint
   ns <- shiny::NS(id)
+  ..t$add_period(ns("app_ui"), TRUE)
+  on.exit(..t$add_period(ns("app_ui"), FALSE))
   shiny::tagList(
     shiny::h1("Mem Usage"),
     shiny::h2("Objects"),
@@ -30,61 +32,64 @@ app_info_server <- function(id, afmm) {
         "refresh_session_mem_size"
       ))
 
-      output[["object_mem_size"]] <- shiny::renderPrint({
-        ..t$add_period("object_mem_size", TRUE)
-        on.exit(..t$add_period("object_mem_size", FALSE))
-        shiny::req(input[["refresh_object_mem_size"]] > 0)
-        shiny::validate(
-          shiny::need(requireNamespace("lobstr", quietly = TRUE), "lobstr package is required to see memory usage")
-        )
+      # output[["object_mem_size"]] <- shiny::renderPrint({
+      #   ..t$add_period("object_mem_size", TRUE)
+      #   on.exit(..t$add_period("object_mem_size", FALSE))
+      #   shiny::req(input[["refresh_object_mem_size"]] > 0)
+      #   shiny::validate(
+      #     shiny::need(requireNamespace("lobstr", quietly = TRUE), "lobstr package is required to see memory usage")
+      #   )
 
-        sizes <- shiny::isolate({
-          n_afmm <- names(afmm)
-          arg_list <- list()
-          idx <- 1
-          list_nm <- character(0)
-          for (nm in n_afmm) {
-            if (shiny::is.reactive(afmm[[nm]])) {
-              list_nm[[idx]] <- paste0(nm, "(resolved)")
-              arg_list[[idx]] <- afmm[[nm]]()
-            } else {
-              list_nm[[idx]] <- paste0(nm, "(not_reactive)")
-              arg_list[[idx]] <- afmm[[nm]]
-            }
+      #   sizes <- shiny::isolate({
+      #     n_afmm <- names(afmm)
+      #     arg_list <- list()
+      #     idx <- 1
+      #     list_nm <- character(0)
+      #     for (nm in n_afmm) {
+      #       if (shiny::is.reactive(afmm[[nm]])) {
+      #         list_nm[[idx]] <- paste0(nm, "(resolved)")
+      #         arg_list[[idx]] <- afmm[[nm]]()
+      #       } else {
+      #         list_nm[[idx]] <- paste0(nm, "(not_reactive)")
+      #         arg_list[[idx]] <- afmm[[nm]]
+      #       }
 
-            if (
-              inherits(
-                try(
-                  lobstr::obj_sizes(arg_list[[idx]]),
-                  silent = TRUE
-                ),
+      #       if (
+      #         inherits(
+      #           try(
+      #             lobstr::obj_sizes(arg_list[[idx]]),
+      #             silent = TRUE
+      #           ),
 
-                "try-error"
-              )
-            ) {
-              arg_list[[idx]] <- character(0)
-              list_nm[[idx]] <- paste0(list_nm[[idx]], "(not_reactive)(ERROR ESTIMATING SIZE)")
-            }
-            idx <- idx + 1
-          }
+      #           "try-error"
+      #         )
+      #       ) {
+      #         arg_list[[idx]] <- character(0)
+      #         list_nm[[idx]] <- paste0(list_nm[[idx]], "(not_reactive)(ERROR ESTIMATING SIZE)")
+      #       }
+      #       idx <- idx + 1
+      #     }
 
-          sizes <- do.call(lobstr::obj_sizes, arg_list)
-          names(sizes) <- list_nm
-          sizes
-        })
-        sizes
-      })
+      #     sizes <- do.call(lobstr::obj_sizes, arg_list)
+      #     names(sizes) <- list_nm
+      #     sizes
+      #   })
+      #   sizes
+      # })
 
-      output[["r_session_mem_size"]] <- shiny::renderPrint({
-        shiny::req(input[["refresh_session_mem_size"]] > 0)
-        ..t$add_period("mem_used", TRUE)
-        on.exit(..t$add_period("mem_used", FALSE))
-        lobstr::mem_used()
-      })
+      # output[["r_session_mem_size"]] <- shiny::renderPrint({
+      #   shiny::req(input[["refresh_session_mem_size"]] > 0)
+      #   ..t$add_period("mem_used", TRUE)
+      #   on.exit(..t$add_period("mem_used", FALSE))
+      #   lobstr::mem_used()
+      # })
 
       shiny::observeEvent(list(input[["refresh_server_init"]]), {
         shiny::req(input[["refresh_server_init"]] > 0)
-        df <- time_env_to_df(..t$get_cont()$get_members())
+        df <- ..t$time_list_as_df()
+        browser()
+        session_mask <- df["session"] == shiny::getDefaultReactiveDomain()[["token"]] | df["session"] == ..t$DUMMY_TOKEN
+        df <- df[session_mask, , drop = FALSE]
         msg <- list(
           id = session[["ns"]]("server_init_time"),
           data = df
@@ -95,15 +100,15 @@ app_info_server <- function(id, afmm) {
         )
       })
 
-      output[["session_info"]] <- shiny::renderPrint({
-        ..t$add_period("session_info", TRUE)
-        on.exit(..t$add_period("session_info", FALSE))
-        shiny::validate(
-          shiny::need(requireNamespace("devtools", quietly = TRUE), "devtools package is required to see session info")
-        )
-        shiny::req(input[["refresh_session_info"]] > 0)
-        devtools::session_info()
-      })
+      # output[["session_info"]] <- shiny::renderPrint({
+      #   ..t$add_period("session_info", TRUE)
+      #   on.exit(..t$add_period("session_info", FALSE))
+      #   shiny::validate(
+      #     shiny::need(requireNamespace("devtools", quietly = TRUE), "devtools package is required to see session info")
+      #   )
+      #   shiny::req(input[["refresh_session_info"]] > 0)
+      #   devtools::session_info()
+      # })
       return(NULL)
     }
   )
@@ -124,268 +129,10 @@ mod_app_info <- function(mod_id = ".._app_info..") {
   )
 }
 
-
-##### TIMING
-
-..t <- local({
-  MAX_IDX <- 1e6
-  TIMING_OPTION <- "dv.manager.timing"
-
-  get_token <- function() {
-    "NULL"
-  }
-
-  set_token_getter <- function(f) {
-    get_token <<- function() {
-      x <- f()
-      stopifnot(!is.null(x))
-      x
-    }
-  }
-
-  get_token_getter <- function() {
-    get_token
-  }
-
-  reset_token_getter <- function() {
-    get_token <<- function() {
-      "NULL"
-    }
-  }
-
-  if (!isFALSE(getOption(TIMING_OPTION))) {
-    times_container <- new.env(parent = emptyenv()) # Consider
-
-    init <- function(session_token = get_token()) {
-      if (session_token != "NULL") {
-        timing <- local(
-          {
-            origin <- Sys.time()
-
-            event_time <- .POSIXct(numeric(MAX_IDX))
-            event_label <- vector(mode = "character", length = MAX_IDX)
-            event_idx <- 0L
-
-            period_time <- .POSIXct(numeric(MAX_IDX))
-            period_label <- vector(mode = "character", length = MAX_IDX)
-            period_start <- rep(as.logical(NA), MAX_IDX)
-            period_idx <- 0L
-
-            list(
-              get_member = function(x) {
-                members <- get_members()
-                stopifnot(members %in% names(members))
-                return(members(x))
-              },
-              get_members = function() {
-                list(
-                  origin = origin,
-                  event_time = event_time,
-                  event_label = event_label,
-                  event_idx = event_idx,
-                  period_time = period_time,
-                  period_label = period_label,
-                  period_start = period_start,
-                  period_idx = period_idx
-                )
-              },
-              add_period = function(label, start) {
-                if (period_idx >= MAX_IDX) {
-                  dv.manager:::log_inform("Period timings container is full. No more times will be recorded")
-                  return()
-                } else {
-                  period_idx <<- period_idx + 1
-                  period_time[[period_idx]] <<- Sys.time()
-                  period_label[[period_idx]] <<- label
-                  period_start[[period_idx]] <<- start
-                }
-              },
-              add_event = function(label) {
-                if (event_idx >= MAX_IDX) {
-                  dv.manager:::log_inform("Event timings container is full. No more times will be recorded")
-                  return()
-                } else {
-                  event_idx <<- event_idx + 1
-                  event_time[[event_idx]] <<- Sys.time()
-                  event_label[[event_idx]] <<- label
-                }
-              }
-            )
-          }
-        )
-      } else {
-        timing <- local(
-          {
-            event_time <- .POSIXct(NA_real_)
-            event_label <- NA_character_
-            event_idx <- NA_integer_
-
-            period_time <- .POSIXct(numeric(MAX_IDX))
-            period_label <- vector(mode = "character", length = MAX_IDX)
-            period_start <- rep(as.logical(NA), MAX_IDX)
-            period_idx <- 0L
-
-            list(
-              get_member = function(x) {
-                members <- get_members()
-                stopifnot(members %in% names(members))
-                return(members(x))
-              },
-              get_members = function() {
-                list(
-                  origin = origin,
-                  event_time = event_time,
-                  event_label = event_label,
-                  event_idx = event_idx,
-                  period_time = period_time,
-                  period_label = period_label,
-                  period_start = period_start,
-                  period_idx = period_idx
-                )
-              },
-              add_period = function(label, start, session_token = shiny::getDefaultReactiveDomain()[["token"]]) {
-                if (period_idx >= MAX_IDX) {
-                  dv.manager:::log_inform("Period timings container is full. No more times will be recorded")
-                  return()
-                } else {
-                  if (start) {
-                    period_idx <<- period_idx + 1
-                    period_time[[period_idx]] <<- Sys.time()
-                    period_label[[period_idx]] <<- label
-                    period_start[[period_idx]] <<- start
-                  } else {
-                    msg <- sprintf(
-                      "period %s - %s duration %f since origin",
-                      period_label[[period_idx]],
-                      label,
-                      Sys.time() - period_time[[period_idx]]
-                    )
-                    period_idx <<- period_idx - 1
-                    dv.manager:::log_inform(msg)
-                  }
-                }
-              },
-              add_event = function(label, session_token = shiny::getDefaultReactiveDomain()[["token"]]) {
-                msg <- sprintf("Event %s triggered at %f since origin", label, Sys.time() - origin)
-                dv.manager:::log_inform(msg)
-              }
-            )
-          }
-        )
-      }
-
-      # dv.manager:::log_inform(sprintf("Setting times container %s", session_token))
-
-      times_container[[session_token]] <- timing
-    }
-
-    dispose <- function(session_token = get_token()) {
-      times_container[[session_token]] <- NULL
-    }
-
-    get_cont <- function(session_token = get_token()) {
-      if (!is.null(session_token)) {
-        times_container[[session_token]]
-      }
-    }
-
-    add_period <- function(..., session_token = get_token()) {
-      times_container[[session_token]]$add_period(...)
-    }
-
-    add_event <- function(..., session_token = get_token()) {
-      times_container[[session_token]]$add_event(...)
-    }
-  } else {
-    times_container <- NULL
-
-    init <- function(session_token = NULL) {}
-
-    dispose <- function(session_token = NULL) {}
-
-    get_cont <- function(session_token = NULL) {
-      NULL
-    }
-
-    add_period <- function(label, start, session_token = NULL) {}
-
-    add_event <- function(label, session_token = NULL) {}
-  }
-
-  init("NULL") # In case we are not running it in shiny
-
-  poc(
-    init = init,
-    dispose = dispose,
-    get_cont = get_cont,
-    add_period = add_period,
-    add_event = add_event,
-    set_token_getter = set_token_getter,
-    reset_token_getter = reset_token_getter,
-    get_token_getter = get_token_getter,
-    C = poc(
-      TIMING_OPTION = TIMING_OPTION
-    )
-  )
-})
-
-time_env_to_df <- function(time_env) {
-  overflow <- time_env[["period_idx"]] >= 1e6
-
-  stopifnot(!overflow)
-
-  max_idx <- ceiling(time_env[["period_idx"]]) / 2
-  incomplete_tags <- sum(time_env[["period_start"]][time_env[["period_idx"]]]) !=
-    sum(!time_env[["period_start"]][time_env[["period_idx"]]])
-
-  start_vec <- time_env[["period_start"]][seq_len(time_env[["period_idx"]])]
-  stack_depth <- integer(max_idx)
-  st_stack <- integer(max_idx)
-  st_idx <- integer(max_idx)
-  et_idx <- integer(max_idx)
-
-  st_et_ptr <- 0
-  st_stack_ptr <- 0
-
-  for (vec_idx in seq_along(start_vec)) {
-    cs <- start_vec[vec_idx]
-    if (cs) {
-      # push in the stack
-      st_stack_ptr <- st_stack_ptr + 1
-      st_stack[[st_stack_ptr]] <- vec_idx
-    } else {
-      st_et_ptr <- st_et_ptr + 1
-      st_idx[[st_et_ptr]] <- st_stack[[st_stack_ptr]]
-      stack_depth[[st_et_ptr]] <- st_stack_ptr
-      st_stack_ptr <- st_stack_ptr - 1
-      et_idx[[st_et_ptr]] <- vec_idx
-    }
-  }
-  origin <- time_env[["origin"]]
-
-  df_period <- data.frame(
-    label_st = time_env[["period_label"]][st_idx],
-    label_et = time_env[["period_label"]][et_idx],
-    st = as.numeric(time_env[["period_time"]][st_idx] - origin),
-    et = as.numeric(time_env[["period_time"]][et_idx] - origin),
-    depth = factor(stack_depth),
-    imputed = FALSE
-  )
-
-  df_period <- df_period[order(df_period[["st"]]), , drop = FALSE]
-  df_period[["duration"]] <- df_period[["et"]] - df_period[["st"]]
-
-  df_event <- data.frame(
-    label_st = time_env[["event_label"]][seq_len(time_env[["event_idx"]])],
-    st = as.numeric(time_env[["event_time"]][seq_len(time_env[["event_idx"]])] - origin),
-    et = as.numeric(time_env[["event_time"]][seq_len(time_env[["event_idx"]])] - origin)
-  )
-
-  # yyjsonr::write_json_file(df, "data.json")
-
-  l <- list(
-    period = df_period,
-    event = df_event
-  )
-  return(l)
-}
+..t <- list(
+  add_period = function(...) {},
+  add_event = function(...) {},
+  get_members = function(...) {},
+  time_list_to_df = function(...) {},
+  DUMMY_TOKEN = ""
+)

@@ -932,6 +932,9 @@ new_filter_server <- function(
     log_inform(paste("Listening to:", ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)))
 
     shiny::observeEvent(selected_dataset_list(), {
+      ..t$add_period(session$ns("observeEvent send filter data"), TRUE)
+      on.exit(..t$add_period(session$ns("observeEvent send filter data"), FALSE), add = TRUE)
+
       # Not convinced as it is removed somewhere else (app_server) (gvbu)
       session[["sendCustomMessage"]]("dv_manager_show_overlay", list(message = "Setting up filter"))
 
@@ -1384,9 +1387,9 @@ get_filtered_dataset_list_ <- function(
       # Fastest option:
       # microbenchmark::microbenchmark(iris[mask, cols, drop = FALSE], iris[mask,,drop = FALSE][cols], iris[cols][mask,,drop = FALSE], times = 1e4)
       filtered_dataset <- unfiltered_dataset_list[[ds_name]][ds_mask, ds_columns, drop = FALSE]
-      filtered_dataset <- apply_lvls_info_to_ds(unfiltered_dataset, filtered_dataset, ds_lvl)
-      filtered_dataset <- copy_labels_from_dataset(unfiltered_dataset, filtered_dataset)
     }
+    filtered_dataset <- apply_lvls_info_to_ds(unfiltered_dataset, filtered_dataset, ds_lvl)
+    filtered_dataset <- copy_labels_from_dataset(unfiltered_dataset, filtered_dataset)
 
     res[[ds_name]] <- filtered_dataset
   }

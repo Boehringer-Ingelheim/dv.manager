@@ -104,16 +104,7 @@ run_app <- function(
       (log_with_logging_handlers(app_args[["srv_func"]]))(input, output, session)
     },
     options = app_args[["options"]],
-    enableBookmarking = enableBookmarking,
-    onStart = function() {
-      log_inform("Setting token getter")
-      ..t$set_token_getter(function() shiny::getDefaultReactiveDomain()[["token"]])
-      ..t_subscribe_subscribers()
-      shiny::onStop(function() {
-        ..t$reset_token_getter()
-        ..t_unsubscribe_subscribers()
-      })
-    }
+    enableBookmarking = enableBookmarking
   )
 
   if (.launch) {
@@ -122,23 +113,5 @@ run_app <- function(
     app
   } else {
     c(app_args, list(config = config))
-  }
-}
-
-..t_SUBSCRIBE_OPTION_NAME <- "dv.log.subscribeme"
-
-..t_subscribe_subscribers <- function() {
-  subscribers <- getOption(..t_SUBSCRIBE_OPTION_NAME)
-  for (subscriber in subscribers) {
-    log_inform(sprintf("Subscribing `%s` to package timer", subscriber$name))
-    subscriber$set(..t)
-  }
-}
-
-..t_unsubscribe_subscribers <- function() {
-  subscribers <- getOption(..t_SUBSCRIBE_OPTION_NAME)
-  for (subscriber in subscribers) {
-    log_inform(sprintf("Unsubscribing `%s` to package timer", subscriber$name))
-    subscriber$reset()
   }
 }

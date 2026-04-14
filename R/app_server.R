@@ -32,11 +32,6 @@ app_server_module <- function(id) {
 app_server_ <- function(input, output, session, opts) {
   ns <- session[["ns"]]
 
-  ..t$init()
-  session[["onSessionEnded"]](function() {
-    ..t$dispose()
-  })
-
   ..t$add_period("app_server_", TRUE)
   on.exit(..t$add_period("app_server_", FALSE), add = TRUE)
 

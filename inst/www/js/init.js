@@ -286,14 +286,18 @@ const dv_flame = (function () {
         <div class="card-body">
           <h6 class="card-subtitle text-muted mb-1" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Event</h6>
           <h5 class="card-title mb-3" id="dv_flame_detail_label"></h5>
-          <div class="d-flex gap-2">
+          <div class="d-flex gap-2">            
             <div class="flex-fill bg-light rounded p-2">
-              <div class="text-muted" style="font-size: 11px;">Time</div>
-              <div class="fw-semibold" id="dv_flame_detail_start"></div>
+              <div class="text-muted" style="font-size: 11px;">Respect to first entry</div>
+              <div class="fw-semibold" id="dv_flame_detail_origin"></div>
             </div>
             <div class="flex-fill bg-light rounded p-2">
               <div class="text-muted" style="font-size: 11px;">Duration</div>
               <div class="fw-semibold" id="dv_flame_detail_duration"></div>
+            </div>
+            <div class="flex-fill bg-light rounded p-2">
+              <div class="text-muted" style="font-size: 11px;">Time</div>
+              <div class="fw-semibold" id="dv_flame_detail_start"></div>
             </div>
           </div>
         </div>
@@ -301,12 +305,14 @@ const dv_flame = (function () {
     detail_label_el = document.getElementById("dv_flame_detail_label");
     detail_start_el = document.getElementById("dv_flame_detail_start");
     detail_duration_el = document.getElementById("dv_flame_detail_duration");
+    detail_dv_flame_detail_origin_el = document.getElementById("dv_flame_detail_origin");
   }
 
   function update_detail(data, idx) {
     detail_label_el.textContent = data.label_st[idx];
-    detail_start_el.textContent = data.st[idx].toPrecision(3);
+    detail_start_el.textContent = new Date(data.st[idx]).toString();
     detail_duration_el.textContent = data.duration[idx].toPrecision(3) + "s";
+    detail_dv_flame_detail_origin_el.textContent = (data.st[idx] - Math.min(...data.st)).toPrecision(3) + "s";
   }
 
   Shiny.addCustomMessageHandler("dv_manager_draw_flame_graph", function (message) {
@@ -334,9 +340,9 @@ const dv_flame = (function () {
           current_is_event = is_event;
           init_detail_panel();
           if(is_event) {
-            update_detail(data.event, idx);
+            update_detail(data, idx);
           } else {
-            update_detail(data.period, idx);
+            update_detail(data, idx);
             
           }          
         }
@@ -357,8 +363,7 @@ const dv_flame = (function () {
     //     zoom = undefined;
     //     draw_me();
     //   });
-    // }
-
+    // }\
     data = message.data;
     cont_el = document.getElementById(message.id);
     draw_me();
@@ -374,9 +379,6 @@ const dv_flame = (function () {
 
     if (svg) svg.remove();
     if (!el.checkVisibility()) return; // Do not redraw if I am not visible
-
-    let period_data = data.period;
-    let event_data = data.event;
 
     let create_period = function (st, et, label, depth, idx) {
       let group = document.createElementNS(svgns, 'g');
@@ -462,21 +464,23 @@ const dv_flame = (function () {
     let MAX_X;
     let MAX_Y;
 
-    if (zoom !== undefined) {
-      time_period_max = period_data.et[idx_restrict];
-      time_period_min = period_data.st[idx_restrict];
-      base_depth = Number(period_data.depth[idx_restrict]);
-      MIN_X = time_period_min;
-      MAX_X = time_period_max;
-      MAX_Y = Math.max(...period_data.depth) + 1;
-    } else {
-      time_period_max = Infinity;
-      time_period_min = -Infinity;
-      base_depth = 1;
-      MIN_X = 0;
-      MAX_X = Math.max(...period_data.et, ...event_data.st);
-      MAX_Y = Math.max(...period_data.depth);
-    }
+    // if (zoom !== undefined) {
+    //   time_period_max = et[idx_restrict];
+    //   time_period_min = data.st[idx_restrict];
+    //   base_depth = Number(data.depth[idx_restrict]);
+    //   MIN_X = time_period_min;
+    //   MAX_X = time_period_max;
+    //   MAX_Y = Math.max(...data.depth) + 1;
+    // } else {
+      
+    // }
+
+    time_period_max = Math.max(...data.et);
+    time_period_min = Math.min(...data.st);
+    base_depth = 1;          
+    MIN_X = time_period_min;
+    MAX_X = time_period_max;
+    MAX_Y = Math.max(...data.depth);
 
     let x_scale = function (x_coord) {
       return (((x_coord - MIN_X) / (MAX_X - MIN_X)) * (SIZE.width - C.EVENT_WIDTH)) + 0;
@@ -498,15 +502,13 @@ const dv_flame = (function () {
 
     const fragment = document.createDocumentFragment();
 
-    for (let idx = 0; idx < period_data.st.length; idx++) {
-      if (period_data.st[idx] >= time_period_min && period_data.et[idx] <= time_period_max) {
-        fragment.appendChild(create_period(period_data.st[idx], period_data.et[idx], period_data.label_st[idx], period_data.depth[idx] - (base_depth - 1), idx));
-      }
-    }
-
-    for (let idx = 0; idx < event_data.st.length; idx++) {
-      if (event_data.st[idx] >= time_period_min) {
-        fragment.appendChild(create_event(event_data.st[idx], event_data.et[idx], event_data.label_st[idx],base_depth, idx));
+    for (let idx = 0; idx < data.st.length; idx++) {
+      if (data.st[idx] >= time_period_min && data.et[idx] <= time_period_max) {
+        if (data.duration[idx] > 0) {
+          fragment.appendChild(create_period(data.st[idx], data.et[idx], data.label_st[idx], data.depth[idx] - (base_depth - 1), idx));
+        } else {
+          fragment.appendChild(create_event(data.st[idx], data.et[idx], data.label_st[idx], MAX_Y-1, idx));
+        }
       }
     }
 
