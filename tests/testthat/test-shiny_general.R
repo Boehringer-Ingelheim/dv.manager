@@ -229,13 +229,16 @@ local({
 
       app$run_js("document.getElementById('._bookmark_').click()")
 
-      tries <- 10
+      tries <- 100
       while (is.null(app$get_js("document.querySelector('.modal-dialog textarea').value")) && tries > 0) {
         tries <- tries - 1
-        Sys.sleep(1)
+        Sys.sleep(2)
       }
 
       bmk_url <- app$get_js("document.querySelector('.modal-dialog textarea').value")
+
+      message("BOOKMARK URL")
+      message(bmk_url)
 
       bookmark_app <- shinytest2::AppDriver$new(bmk_url)
       bookmark_app$wait_for_idle()
