@@ -8,6 +8,8 @@
 #' @keywords internal
 
 app_ui <- function(request_id) {
+  ..t$add_period("app_ui", TRUE)
+  on.exit(..t$add_period("app_ui", FALSE))
   if (is.environment(request_id)) {
     log_inform("I am the ui of an app")
     id <- character(0)
@@ -93,9 +95,7 @@ app_ui <- function(request_id) {
         shinyjs::hidden(shiny::div(
           id = ns("dataset_selector"),
           class = "c-well",
-          shiny::tags$label("Dataset Selection",
-            class = "text-primary"
-          ),
+          shiny::tags$label("Dataset Selection", class = "text-primary"),
           shiny::selectInput(ns("selector"), label = NULL, choices = names(data))
         )),
         filter_ui

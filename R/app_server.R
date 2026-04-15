@@ -74,6 +74,8 @@ app_server_module <- function(id) {
 # nolint start cyclocomp_linter
 app_server_ <- function(input, output, session, opts) {
   ns <- session[["ns"]]
+  ..t$add_period("app_server_", TRUE)
+  on.exit(..t$add_period("app_server_", FALSE), add = TRUE)
 
   # Inject tools available for the rest of modules
   session$userData$manager_utils <- list(
@@ -135,11 +137,13 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-
   if (use_blockly_filter) {
-    dataset_filter <- new_filter_server("filter", shiny::reactive({
-      input$selector
-    }))
+    dataset_filter <- new_filter_server(
+      "filter",
+      shiny::reactive({
+        input$selector
+      })
+    )
 
     filtered_dataset <- shinymeta::metaReactive({
       ufd <- shiny::isolate(unfiltered_dataset())
@@ -180,7 +184,6 @@ app_server_ <- function(input, output, session, opts) {
         }
       )
 
-
       # Check NA optimization in the future
       subject_set <- tryCatch(
         {
@@ -206,7 +209,6 @@ app_server_ <- function(input, output, session, opts) {
       shiny::reactive(unfiltered_dataset()[[filter_data]])
     )
 
-
     if (use_dataset_filter) {
       log_inform("Dataset filter server")
 
@@ -229,6 +231,8 @@ app_server_ <- function(input, output, session, opts) {
       })
 
       filtered_dataset <- shinymeta::metaReactive({
+        ..t$add_period("filtered_dataset_list", TRUE)
+        on.exit(..t$add_period("filtered_dataset_list", FALSE))
         # dv.filter returns a logical vector. This contemplates the case of empty lists
         shiny::req(is.logical(global_filtered_values()))
 
@@ -264,13 +268,16 @@ app_server_ <- function(input, output, session, opts) {
 
         # Global dataset filtering
         global_filtered <- purrr::map(
-          fds, function(current_ds) {
+          fds,
+          function(current_ds) {
             mask <- current_ds[[filter_key]] %in% filtered_key_values
             labels <- get_lbls(current_ds)
             current_ds <- current_ds[mask, , drop = FALSE]
             set_lbls(current_ds, labels)
           }
         )
+        ..t$add_event("received filtered_dataset_list")
+        global_filtered
       })
 
       shiny::observeEvent(
@@ -334,7 +341,9 @@ app_server_ <- function(input, output, session, opts) {
     filtered_dataset = filtered_dataset,
     url_parameters = url_parameters,
     dataset_name = shiny::reactive({
-      rlang::warn("afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]].") # nolintr
+      rlang::warn(
+        "afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]]."
+      ) # nolintr
       input$selector
     }),
     dataset_metadata = list(
@@ -396,9 +405,6 @@ app_server_ <- function(input, output, session, opts) {
     module_output[[id]] <- fn(afmm)
     used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
   }
-
-
-
 
   #### Report modal
 
