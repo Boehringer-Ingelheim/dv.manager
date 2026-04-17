@@ -138,7 +138,9 @@ possibly_set_lbls <- function(df, lbls) {
 
   for (idx in seq_along(lbls)) {
     if (n_l[[idx]] %in% n_d) {
-      attr(df[[n_l[[idx]]]], "label") <- lbls[[idx]]
+      if (!identical(attr(df[[n_l[[idx]]]], "label"), lbls[[idx]])) {
+        attr(df[[n_l[[idx]]]], "label") <- lbls[[idx]]
+      }
     } else {
       next()
     }
