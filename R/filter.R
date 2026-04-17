@@ -98,8 +98,6 @@ get_single_filter_data <- function(dataset) {
   for (idx in seq_len(n_var)) {
     start <- Sys.time()
     var <- dataset[[idx]]
-    # ..t$add_period(nm_var[[idx]], TRUE)
-
     # Logical is treated as a factor in the client
     if (is.logical(var)) {
       var <- factor(var)
@@ -121,7 +119,7 @@ get_single_filter_data <- function(dataset) {
       if (length(C) > 1) {
         C <- C[2:length(C)]
         names(C) <- levels(var)
-        # C <- sort(C)
+        C <- sort(C)
         l[[FDF$COUNT]] <- unname(C)
         l[[FDF$VALUE]] <- names(C)
       } else {
