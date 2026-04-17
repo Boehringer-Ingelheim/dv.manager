@@ -48,7 +48,7 @@ local({
 
   get_unfiltered_dataset_from_afmm <- function(app) {
     afmm <- app$get_value(export = "afmm-afmm")
-    shiny::isolate(afmm[["unfiltered_plus_filter_info"]]()[["unfiltered_dataset_list"]])
+    shiny::isolate(afmm[["unfiltered_dataset_list"]]())
   }
 
   prepare_subgroup <- function(app, subgroup) {
@@ -104,7 +104,7 @@ local({
     subgroups <- shiny::isolate(app$get_value(export = "subgroup-subgroups")())
 
     afmm <- app$get_value(export = "afmm-afmm")
-    unfiltered_dataset_list <- shiny::isolate(afmm[["unfiltered_plus_filter_info"]]()[["unfiltered_dataset_list"]])
+    unfiltered_dataset_list <- shiny::isolate(afmm[["unfiltered_dataset_list"]]())
     relevant_dataset <- unfiltered_dataset_list[[dataset_name]]
 
     return(

@@ -229,6 +229,12 @@ app_server_ <- function(input, output, session, opts) {
       ) # nolintr
       unfiltered_dataset_list()
     }),
+    filtered_dataset = shiny::reactive({
+      log_warn(
+        "(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]]."
+      ) # nolintr
+      filtered_dataset_list()
+    }),
     unfiltered_dataset_list = unfiltered_dataset_list,
     filtered_dataset_list = filtered_dataset_list,
     unfiltered_plus_filter_info = unfiltered_plus_filter_info,

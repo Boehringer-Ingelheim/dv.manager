@@ -115,9 +115,7 @@ mod_uniq_values <- function(table_name, column_names, module_id) {
     server = function(afmm) {
       module_server(
         module_id,
-        dataset = reactive({
-          get_filtered_dataset_list(afmm[["unfiltered_plus_filter_info"]](), dataset_names = dataset)[[dataset]]
-        })
+        dataset = reactive(afmm[["filtered_dataset_list"]]()[[table_name]])
       )
     },
     # Module ID
@@ -235,7 +233,7 @@ mod_uniq_values <- function(module_id) {
     server = function(afmm) {
       module_server(
         module_id,
-        dataset = shiny::reactive({})
+        dataset = afmm[["filtered_dataset_list"]]
       )
     },
     module_id = module_id
