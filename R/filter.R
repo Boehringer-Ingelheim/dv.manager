@@ -178,7 +178,6 @@ get_single_filter_data <- function(dataset) {
     }
 
     res[[idx]] <- l
-    # ..t$add_period(nm_var[[idx]], FALSE)
   }
   return(res)
 }
@@ -1373,17 +1372,21 @@ get_filtered_dataset_list_ <- function(
     # Depending on the type of subsetting unrequired extra copies can be made because:
     # (Allocation is always done because we are assigning but are only concerned about the `data` itself not the `pointer` to the data)
     # We have to be careful with row indexing that always triggers copy behavior
+    # nolint start
     # ds <- data.frame(a = 1:2, b = 3:4, c = 5:6)
     # full_copy <- ds[c(TRUE, TRUE), c("a", "b", "c"), drop = FALSE] # <--- DANGEROUS, copy but all  is the same
     # no_copy <- ds[, c("a", "c"), drop = FALSE] # Takes columns as is but the address is the same
     # required_copy <- ds[c(TRUE, FALSE), c("a", "c"), drop = FALSE] # Copy of all columns is required as the number of rows varies
     # lobstr::ref(ds, full_copy, no_copy, required_copy)
+    # nolint end
 
     if (all(ds_mask)) {
       filtered_dataset <- unfiltered_dataset_list[[ds_name]][, ds_columns, drop = FALSE]
     } else {
+      # nolint start
       # Fastest option:
       # microbenchmark::microbenchmark(iris[mask, cols, drop = FALSE], iris[mask,,drop = FALSE][cols], iris[cols][mask,,drop = FALSE], times = 1e4)
+      # nolint end
       filtered_dataset <- unfiltered_dataset_list[[ds_name]][ds_mask, ds_columns, drop = FALSE]
     }
     filtered_dataset <- apply_lvls_info_to_ds(unfiltered_dataset, filtered_dataset, ds_lvl)

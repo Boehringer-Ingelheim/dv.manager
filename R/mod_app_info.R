@@ -1,3 +1,5 @@
+# nolint start
+
 app_info_UI <- function(id) {
   # nolint
   ns <- shiny::NS(id)
@@ -136,3 +138,5 @@ mod_app_info <- function(mod_id = ".._app_info..") {
   time_list_to_df = function(...) {},
   DUMMY_TOKEN = ""
 )
+
+# nolint end
