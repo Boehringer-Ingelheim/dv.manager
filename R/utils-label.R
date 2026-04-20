@@ -138,6 +138,7 @@ possibly_set_lbls <- function(df, lbls) {
 
   for (idx in seq_along(lbls)) {
     if (n_l[[idx]] %in% n_d) {
+      # Do not replace if they are the same, in a general instance a full copy the vector is done to add the attr
       if (!identical(attr(df[[n_l[[idx]]]], "label"), lbls[[idx]])) {
         attr(df[[n_l[[idx]]]], "label") <- lbls[[idx]]
       }
