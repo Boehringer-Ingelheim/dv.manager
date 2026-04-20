@@ -119,7 +119,7 @@ get_single_filter_data <- function(dataset) {
       if (length(C) > 1) {
         C <- C[2:length(C)]
         names(C) <- levels(var)
-        C <- sort(C)
+        C <- sort(C, decreasing = TRUE)
         l[[FDF$COUNT]] <- unname(C)
         l[[FDF$VALUE]] <- names(C)
       } else {
