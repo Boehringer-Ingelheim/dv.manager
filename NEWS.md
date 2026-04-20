@@ -3,8 +3,7 @@
  - Includes code for instrumenting code for time measurements
     - Includes an attempt of a graphical output in mod_app_info
  - Includes an experimental `afmm` mask approach to improve memory performance
- - 
-
+ 
 # dv.manager 3.0.0-9000
  - Includes mod_app_info 
 
