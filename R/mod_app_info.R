@@ -89,7 +89,6 @@ app_info_server <- function(id, afmm) {
       shiny::observeEvent(list(input[["refresh_server_init"]]), {
         shiny::req(input[["refresh_server_init"]] > 0)
         df <- ..t$time_list_as_df()
-        browser()
         session_mask <- df["session"] == shiny::getDefaultReactiveDomain()[["token"]] | df["session"] == ..t$DUMMY_TOKEN
         df <- df[session_mask, , drop = FALSE]
         msg <- list(
