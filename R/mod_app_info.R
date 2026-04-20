@@ -120,6 +120,7 @@ app_info_server <- function(id, afmm) {
 #' A module to inspect the app information
 #' @param mod_id Shiny module id. Default: ".._app_info.."
 #' @export
+#' @keywords internal
 
 mod_app_info <- function(mod_id = ".._app_info..") {
   list(

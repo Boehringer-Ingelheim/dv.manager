@@ -7,8 +7,9 @@
 mod_app_info(mod_id = ".._app_info..")
 }
 \arguments{
-\item{mod_id}{Shiny module id. Default: \code{app_info}}
+\item{mod_id}{Shiny module id. Default: ".._app_info.."}
 }
 \description{
 A module to inspect the app information
 }
+\keyword{internal}
