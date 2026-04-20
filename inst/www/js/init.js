@@ -309,8 +309,8 @@ const dv_flame = (function () {
   }
 
   function update_detail(data, idx) {
-    detail_label_el.textContent = data.label_st[idx];
-    detail_start_el.textContent = new Date(data.st[idx]).toString();
+    detail_label_el.textContent = data.label_st[idx];    
+    detail_start_el.textContent = new Date(data.st[idx]*1000).toString();
     detail_duration_el.textContent = data.duration[idx].toPrecision(3) + "s";
     detail_dv_flame_detail_origin_el.textContent = (data.st[idx] - Math.min(...data.st)).toPrecision(3) + "s";
   }
