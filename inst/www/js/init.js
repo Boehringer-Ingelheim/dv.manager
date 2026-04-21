@@ -115,9 +115,77 @@ const dv_tab = (function () {
 
   }
 
-  const init = function (id) {
+  const init = function (id, tab_state_json) {
     log("Initializing: " + id);
+    let tab_state = JSON.parse(tab_state_json);
+    let default_tab = tab_state.default_tab;
+    let hierarchy = tab_state.hierarchy;
 
+    let dv_button_container = document.getElementById(id);
+
+    if(default_tab) {
+      dv_button_container.setAttribute("default-tab", default_tab);
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    const keys = Object.keys(hierarchy);
+
+    // Iterate with index
+    for (let idx = 0; idx < keys.length; idx++) {
+      const curr_el_id = keys[idx];
+      const value = hierarchy[curr_el_id];
+      
+      const is_root = value.kind === "root";
+      const is_tab_group = value.kind === "tab_group";
+      const is_module = value.kind === "module";
+
+      if(is_root || is_tab_group) {
+        let curr_level = document.createElement("div");
+        curr_level.setAttribute("value", curr_el_id);
+        curr_level.classList.add("dv_button_level");
+        
+        for(let jdx = 0; jdx < value.children.length; jdx++){
+          let child_id = value.children[jdx];
+          let is_child_tab_group = hierarchy[child_id].kind === "tab_group";
+          let is_child_module = hierarchy[child_id].kind === "module";
+          let name = hierarchy[child_id].name;
+          
+          
+          let button = document.createElement("button");          
+          button.setAttribute("data-value", child_id);
+          button.classList.add("dv_tab_activate_button", "btn", "btn-primary");
+          button.setAttribute("type", "button");
+          button.textContent = name;
+          if(jdx === 0) {
+            button.classList.add("clicked");
+          }
+
+          if (is_child_tab_group) {
+            button.setAttribute("data-type", "hier-button");
+          } else if (is_child_module) {
+            button.setAttribute("data-type", "tab-button");
+          } else {
+            console.error("Unknown kind: " + child_id.kind + " " + idx + " " + jdx);
+          }
+
+          curr_level.appendChild(button);
+        }
+
+        if(is_root) {
+          curr_level.classList.add("dv_root_button_level");
+        } else if(is_tab_group) {
+          curr_level.classList.add("dv_child_button_level");
+        } else {
+          console.error("Unknown kind: " + value.kind + " " + idx);
+        }       
+
+        fragment.appendChild(curr_level);
+      }
+
+    }
+
+    dv_button_container.appendChild(fragment);
 
     // Set listeners
 
@@ -525,6 +593,7 @@ $(document).ready(function () {
     }
   });
 });
+
 
 
 
