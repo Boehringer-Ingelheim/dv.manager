@@ -51,7 +51,8 @@ These modules are simple wrappers around pure Shiny modules that return a list c
 See below an example with a simple module
 
 ```{r, eval = FALSE}
-table_UI <- function(id) { # nolint
+table_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     DT::DTOutput(ns("table"))

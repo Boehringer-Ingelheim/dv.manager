@@ -171,7 +171,7 @@ const dv_tab = (function () {
   }
 
   return (res)
-})()
+})();
 
 
 
@@ -243,7 +243,278 @@ const dv_overlay = (function () {
   }
 
   return (res)
-})()
+})();
+
+/* Flame graph*/
+
+const dv_flame = (function () {
+
+  let log = console.log;
+
+  let C = {
+    HEIGHT: 100,
+    GUT: 1,
+    MIN_RECT_WIDTH_FOR_TEXT: 18,
+    TEXT_MARGIN: 3,
+    EVENT_WIDTH :10
+  };
+
+  let ro = undefined;
+  let cont_el = undefined;
+  let data = undefined;
+  let hover_listener = false;
+  let click_listener = false;
+  let svgns = "http://www.w3.org/2000/svg";
+  let svg = undefined;
+  let zoom = undefined;
+  let current_idx = undefined;
+  let current_is_event = undefined;
+
+  let detail_id = ".._app_info..-server_init_time_detail";
+  let detail_initialized = false;
+  let detail_label_el = undefined;
+  let detail_start_el = undefined;
+  let detail_duration_el = undefined;
+
+  let last_width = 0;
+
+  function init_detail_panel() {
+    if (detail_initialized) return;
+    detail_initialized = true;
+    document.getElementById(detail_id).innerHTML = `
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h6 class="card-subtitle text-muted mb-1" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Event</h6>
+          <h5 class="card-title mb-3" id="dv_flame_detail_label"></h5>
+          <div class="d-flex gap-2">            
+            <div class="flex-fill bg-light rounded p-2">
+              <div class="text-muted" style="font-size: 11px;">Respect to first entry</div>
+              <div class="fw-semibold" id="dv_flame_detail_origin"></div>
+            </div>
+            <div class="flex-fill bg-light rounded p-2">
+              <div class="text-muted" style="font-size: 11px;">Duration</div>
+              <div class="fw-semibold" id="dv_flame_detail_duration"></div>
+            </div>
+            <div class="flex-fill bg-light rounded p-2">
+              <div class="text-muted" style="font-size: 11px;">Time</div>
+              <div class="fw-semibold" id="dv_flame_detail_start"></div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    detail_label_el = document.getElementById("dv_flame_detail_label");
+    detail_start_el = document.getElementById("dv_flame_detail_start");
+    detail_duration_el = document.getElementById("dv_flame_detail_duration");
+    detail_dv_flame_detail_origin_el = document.getElementById("dv_flame_detail_origin");
+  }
+
+  function update_detail(data, idx) {
+    detail_label_el.textContent = data.label_st[idx];    
+    detail_start_el.textContent = new Date(data.st[idx]*1000).toString();
+    detail_duration_el.textContent = data.duration[idx].toPrecision(3) + "s";
+    detail_dv_flame_detail_origin_el.textContent = (data.st[idx] - Math.min(...data.st)).toPrecision(3) + "s";
+  }
+
+  Shiny.addCustomMessageHandler("dv_manager_draw_flame_graph", function (message) {
+    if (!ro) {
+      ro = new ResizeObserver(() => {
+        const w = document.getElementById(message.id).getBoundingClientRect().width;
+        if (w !== last_width) {
+          last_width = w;
+          draw_me();
+        }
+      });
+      ro.observe(document.getElementById(message.id));
+    }
+
+    if (!hover_listener) {
+      hover_listener = true;
+      document.getElementById(message.id).addEventListener("mouseover", (e) => {
+        const el = e.target;
+        if (el.tagName === "rect") {
+          let idx = Number(el.getAttribute("idx"));
+          let is_event = el.classList.contains("event");
+          if (current_idx === idx && current_is_event == is_event) return;
+
+          current_idx = idx;
+          current_is_event = is_event;
+          init_detail_panel();
+          if(is_event) {
+            update_detail(data, idx);
+          } else {
+            update_detail(data, idx);
+            
+          }          
+        }
+      });
+    }
+
+    // if (!click_listener) {
+    //   click_listener = true;
+    //   document.getElementById(message.id).addEventListener("click", (e) => {
+    //     const el = e.target;
+    //     if (el.tagName === "rect") {
+    //       zoom = Number(el.getAttribute("idx"));
+    //       draw_me();
+    //     }
+    //   });
+
+    //   document.getElementById(message.id).addEventListener("dblclick", (e) => {
+    //     zoom = undefined;
+    //     draw_me();
+    //   });
+    // }\
+    data = message.data;
+    cont_el = document.getElementById(message.id);
+    draw_me();
+  });
+
+  let draw_me = function () {
+    draw(cont_el, data, zoom);
+  };
+
+  let draw = function (el, data, idx_restrict) {
+
+    log("Drawing chart");
+
+    if (svg) svg.remove();
+    if (!el.checkVisibility()) return; // Do not redraw if I am not visible
+
+    let create_period = function (st, et, label, depth, idx) {
+      let group = document.createElementNS(svgns, 'g');
+      let rect = document.createElementNS(svgns, 'rect');
+      let rect_x = x_scale(st);
+      let rect_width = x_scale(et) - x_scale(st);
+      let rect_y = y_scale(depth - 1);
+      rect.setAttribute('x', rect_x);
+      rect.setAttribute('y', rect_y);
+      rect.setAttribute('height', C.HEIGHT);
+      rect.setAttribute('width', rect_width);
+      rect.setAttribute('idx', idx);
+      rect.setAttribute('rx', 5);
+      rect.setAttribute('ry', 5);
+      rect.setAttribute('class', 'period');
+
+      group.appendChild(rect);
+
+      if (rect_width > C.MIN_RECT_WIDTH_FOR_TEXT) {
+        const text_el = document.createElementNS(svgns, "text");
+        text_el.textContent = label;
+        svg.appendChild(text_el);
+        let label_height = text_el.getBBox().height;
+
+        let text_kept_prop = Math.min(1, (rect_width - (C.TEXT_MARGIN * 2)) / text_el.getComputedTextLength());
+        svg.removeChild(text_el);
+        text_el.textContent = label.slice(0, Math.floor(label.length * text_kept_prop));
+
+        text_el.setAttribute('x', rect_x + C.TEXT_MARGIN);
+        text_el.setAttribute('y', rect_y + C.HEIGHT - C.TEXT_MARGIN - label_height);
+        text_el.setAttribute('text-anchor', "start");
+        text_el.setAttribute('dominant-baseline', "auto");
+        text_el.setAttribute('font_size', 13);
+        text_el.setAttribute('idx', idx);
+        group.appendChild(text_el);
+      }
+
+      return (group);
+    };
+
+    let create_event = function (st, et, label, depth, idx) {
+      let group = document.createElementNS(svgns, 'g');
+      let rect = document.createElementNS(svgns, 'rect');
+      let rect_x = x_scale(st);      
+      let rect_width = C.EVENT_WIDTH;      
+      let rect_y = y_scale(depth - 1);
+      rect.setAttribute('x', rect_x);
+      rect.setAttribute('y', rect_y);
+      rect.setAttribute('height', C.HEIGHT);
+      rect.setAttribute('width', rect_width);
+      rect.setAttribute('idx', idx);
+      rect.setAttribute('rx', 5);
+      rect.setAttribute('ry', 5);
+      rect.setAttribute('class', 'event');
+
+      group.appendChild(rect);
+
+    
+      const text_el = document.createElementNS(svgns, "text");
+      text_el.textContent = label;
+      svg.appendChild(text_el);
+      let label_height = text_el.getBBox().height;
+      
+      svg.removeChild(text_el);
+      text_el.textContent = label.slice(0, Math.floor(label.length));
+
+      text_el.setAttribute('x', rect_x + C.TEXT_MARGIN);
+      text_el.setAttribute('y', rect_y + C.HEIGHT - C.TEXT_MARGIN - label_height);
+      text_el.setAttribute('text-anchor', "start");
+      text_el.setAttribute('dominant-baseline', "auto");
+      text_el.setAttribute('font_size', 13);
+      text_el.setAttribute('idx', idx);
+      group.appendChild(text_el);
+      
+
+      return (group);
+    };
+
+    let time_period_max;
+    let time_period_min;
+    let base_depth;
+    let MIN_X;
+    let MAX_X;
+    let MAX_Y;
+
+    // if (zoom !== undefined) {
+    //   time_period_max = et[idx_restrict];
+    //   time_period_min = data.st[idx_restrict];
+    //   base_depth = Number(data.depth[idx_restrict]);
+    //   MIN_X = time_period_min;
+    //   MAX_X = time_period_max;
+    //   MAX_Y = Math.max(...data.depth) + 1;
+    // } else {
+      
+    // }
+
+    time_period_max = Math.max(...data.et);
+    time_period_min = Math.min(...data.st);
+    base_depth = 1;          
+    MIN_X = time_period_min;
+    MAX_X = time_period_max;
+    MAX_Y = Math.max(...data.depth);
+
+    let x_scale = function (x_coord) {
+      return (((x_coord - MIN_X) / (MAX_X - MIN_X)) * (SIZE.width - C.EVENT_WIDTH)) + 0;
+    };
+
+    let y_scale = function (y_coord) {
+      return y_coord * C.HEIGHT;
+    };
+
+    svg = document.createElementNS(svgns, "svg");
+    el.appendChild(svg);
+
+    svg.setAttribute('class', 'dv_flame');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', MAX_Y * C.HEIGHT);
+    svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+
+    const SIZE = el.getBoundingClientRect();
+
+    const fragment = document.createDocumentFragment();
+
+    for (let idx = 0; idx < data.st.length; idx++) {
+      if (data.st[idx] >= time_period_min && data.et[idx] <= time_period_max) {
+        if (data.duration[idx] > 0) {
+          fragment.appendChild(create_period(data.st[idx], data.et[idx], data.label_st[idx], data.depth[idx] - (base_depth - 1), idx));
+        } else {
+          fragment.appendChild(create_event(data.st[idx], data.et[idx], data.label_st[idx], MAX_Y-1, idx));
+        }
+      }
+    }
+
+    svg.appendChild(fragment);
+  };
+})();
 
 $(document).ready(function () {  
   $("div.dv-sidebar-container input[type=checkbox][id=click]").change(function (event) {
@@ -254,3 +525,8 @@ $(document).ready(function () {
     }
   });
 });
+
+
+
+
+

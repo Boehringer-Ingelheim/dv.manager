@@ -2071,7 +2071,7 @@ let update_filter_result_handler = function(msg, root_el){
   console.log(parsed_msg);
 
   let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
-  let current_dataset_list = get_filter_property(root_el, FC.PROPERTY.DATA).dataset_lists.find(obj=>obj.name === dataset_list_name);
+  let current_dataset_list = get_filter_property(root_el, FC.PROPERTY.DATA, clone = false).dataset_lists.find(obj=>obj.name === dataset_list_name);
 
   
   let row_count = parsed_msg.row_count; 

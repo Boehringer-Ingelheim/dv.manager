@@ -8,6 +8,8 @@
 #' @keywords internal
 
 app_ui <- function(request_id) {
+  ..t$add_period("app_ui", TRUE)
+  on.exit(..t$add_period("app_ui", FALSE))
   if (is.environment(request_id)) {
     log_inform("I am the ui of an app")
     id <- character(0)

@@ -138,7 +138,10 @@ possibly_set_lbls <- function(df, lbls) {
 
   for (idx in seq_along(lbls)) {
     if (n_l[[idx]] %in% n_d) {
-      attr(df[[n_l[[idx]]]], "label") <- lbls[[idx]]
+      # Do not replace if they are the same, in a general instance a full copy the vector is done to add the attr
+      if (!identical(attr(df[[n_l[[idx]]]], "label"), lbls[[idx]])) {
+        attr(df[[n_l[[idx]]]], "label") <- lbls[[idx]]
+      }
     } else {
       next()
     }
@@ -147,9 +150,8 @@ possibly_set_lbls <- function(df, lbls) {
   df
 }
 
-possibly_copy_labels <- function(target, origin) {
-  lbls <- get_lbls(origin)
-  possibly_set_lbls(target, lbls)
+copy_labels_from_dataset <- function(from, to) {
+  possibly_set_lbls(to, get_lbls(from))
 }
 
 #' Renames a list to include its value in the name
