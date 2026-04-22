@@ -203,16 +203,37 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
 
   tabs <- shiny::div(class = "dv_tab_container", mod_ui_containers)
 
-  buttons_hierarchy_container <- shiny::div(
-    class = "dv_button_container",
-    id = ns(ID$NAV_HEADER)
-  )
+  tab_menus_container <- shiny::div(class = "dv_tab_menu_container")
 
   default_tab <- shiny::restoreInput(ns(ID$NAV_HEADER), NA)
 
-  header <- shiny::div(
-    buttons_hierarchy_container,
+  top_buttons_div <- shiny::div(
+    shiny::div(
+      id = ns("dv_expanded_tab_container"),
+      style = "display:inline",
+      shiny::div(
+        shiny::checkboxInput(ns("expanded_tab"), label = NULL, TRUE),
+        style = "display:none"
+      ),
+      shiny::tags[["label"]](
+        shiny::icon("compress"),
+        class = "btn btn-primary compress-icon",
+        "for" = ns("expanded_tab")
+      ),
+      shiny::tags[["label"]](
+        shiny::icon("expand"),
+        class = "btn btn-primary expand-icon",
+        "for" = ns("expanded_tab")
+      )
+    ),
     top_buttons,
+    class = "dv_top_button_group"
+  )
+
+  header <- shiny::div(
+    tab_menus_container,
+    top_buttons_div,
+    id = ns(ID$NAV_HEADER),
     class = "dv_manager_top_bar"
   )
 

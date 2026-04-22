@@ -1,8 +1,8 @@
 // handle the dataset info bar
 const dv_tab = (function () {
 
-  // let log = console.log;
-  let log = function () { return; };
+   let log = console.log;
+  //let log = function () { return; };
 
   let containers = [];
 
@@ -18,7 +18,10 @@ const dv_tab = (function () {
   };
 
   const _set_tab_by_tab_id = function (tab_id, root_el) {
-    let target_tab_element = root_el.querySelector(".dv_tab_activate_button[data-value='" + tab_id + "']");
+
+    // Expanded tabset
+    let expanded_root = root_el.querySelector("div.dv_expanded_button_container");
+    let target_tab_element = expanded_root.querySelector(".dv_tab_activate_button[data-value='" + tab_id + "']");
     if (target_tab_element === null) {
       console.error("tab_id:'" + tab_id + "' not found in button set");
       return (false);
@@ -28,7 +31,7 @@ const dv_tab = (function () {
     let clicked;
 
     do {
-      clicked = root_el.querySelector(".dv_tab_activate_button[data-value='" + next_element + "']");
+      clicked = expanded_root.querySelector(".dv_tab_activate_button[data-value='" + next_element + "']");
       const unclicked = clicked.parentElement.querySelector(".dv_tab_activate_button.clicked");
 
       // Apply changes elements
@@ -40,8 +43,19 @@ const dv_tab = (function () {
     } while (!clicked.parentElement.classList.contains("dv_root_button_level"));
 
     remove_active_all(root_el);
-    const active_tab_id = set_clicked_active(root_el);
-    return (active_tab_id);
+    const active_tab_info = set_clicked_active(expanded_root);
+
+    // compressed tabset
+
+    let compressed_root = root_el.querySelector("div.dv_compressed_button_container");
+    compressed_root.querySelectorAll("span")[1].textContent = active_tab_info.name;
+    compressed_root.querySelectorAll("span")[1].setAttribute("data-value", active_tab_info.id);
+
+    // Update tab
+    root_el.parentElement.parentElement.querySelector(".dv_tab_container .dv_tab_content[value='" + active_tab_info.id + "']").classList.add("active");
+    notify_shiny_display_change($(root_el).find(".dv_tab_content[value='" + active_tab_info.id + "']"), "shown");
+
+    return (active_tab_info.id);
   }
 
   const remove_active_all = function (root_el) {
@@ -76,57 +90,67 @@ const dv_tab = (function () {
       }
     }
 
-    const tab_target = curr_el.getAttribute("data-value");
-
-    root_el.parentElement.parentElement.querySelector(".dv_tab_container .dv_tab_content[value='" + tab_target + "']").classList.add("active");
-    notify_shiny_display_change($(root_el).find(".dv_tab_content[value='" + tab_target + "']"), "shown");
-    return (tab_target);
+    const tab_info = {
+      id: curr_el.getAttribute("data-value"),
+      name: curr_el.textContent
+    };
+    
+    return (tab_info);
   }
 
-  const on_click = function (e, root_el) {
+  const get_expanded_tab_id = function (e, root_el) {
 
     const container_id = root_el.id;
     const clicked = e !== null ? e.target : root_el.querySelector(".dv_root_button_level.clicked");
 
-    if (clicked.classList.contains("dv_tab_activate_button")) {
-      const unclicked = clicked.parentElement.querySelector(".dv_tab_activate_button.clicked");
-
-      unclicked.classList.remove("clicked");
-      clicked.classList.add("clicked");
-
-      // Hide everything
-      remove_active_all(root_el);
-      // Show clicked
-      const active_tab = set_clicked_active(root_el);
-      const res = {
-        active_tab: active_tab,
-        container_id: container_id
-      }
-      return (res);
+    if (clicked.classList.contains("dv_tab_activate_button")) {      
+      return (clicked.getAttribute("data-value"));
     } else {
       return (null);
     }
 
   }
 
-  const set_tab_by_tab_id = function (tab_id, container_id) {
-    const active_tab_id = _set_tab_by_tab_id(tab_id, document.getElementById(container_id));
-    Shiny.setInputValue(container_id, active_tab_id)
+  const get_compressed_tab_id = function (e, modules) {
+    
+    if (Object.keys(modules).length === 0) return (null); // No modules in the app
+
+    let new_tab_id
+
+    if(e.target.getAttribute("data-direction") === "plus") {
+      let current_id = e.target.parentElement.children[1].getAttribute("data-value");
+      let current_idx = Object.keys(modules).indexOf(current_id);      
+
+      if(current_idx < Object.keys(modules).length - 1) {
+        new_tab_id = Object.keys(modules)[current_idx + 1]
+      } else {
+        new_tab_id = current_id;
+      }        
+    } else if (e.target.getAttribute("data-direction") === "minus") {
+      let current_id = e.target.parentElement.children[1].getAttribute("data-value");
+      let current_idx = Object.keys(modules).indexOf(current_id);      
+
+      if(current_idx > 0) {
+        new_tab_id = Object.keys(modules)[current_idx - 1]
+      } else {
+        new_tab_id = current_id;
+      }          
+
+    } else {
+      
+    }
+
+  return (new_tab_id);
+
 
   }
 
-  const init = function (id, tab_state_json) {
-    log("Initializing: " + id);
-    let tab_state = JSON.parse(tab_state_json);
-    let default_tab = tab_state.default_tab;
-    let hierarchy = tab_state.hierarchy;
+  const set_tab_by_tab_id = function (tab_id, container_id) {
+    const active_tab_id = _set_tab_by_tab_id(tab_id, document.getElementById(container_id));
+    Shiny.setInputValue(container_id, active_tab_id);
+  }
 
-    let dv_button_container = document.getElementById(id);
-
-    if(default_tab) {
-      dv_button_container.setAttribute("default-tab", default_tab);
-    }
-
+  const draw_expanded = function(el, hierarchy) {
     const fragment = document.createDocumentFragment();
 
     const keys = Object.keys(hierarchy);
@@ -135,29 +159,29 @@ const dv_tab = (function () {
     for (let idx = 0; idx < keys.length; idx++) {
       const curr_el_id = keys[idx];
       const value = hierarchy[curr_el_id];
-      
+
       const is_root = value.kind === "root";
       const is_tab_group = value.kind === "tab_group";
       const is_module = value.kind === "module";
 
-      if(is_root || is_tab_group) {
+      if (is_root || is_tab_group) {
         let curr_level = document.createElement("div");
         curr_level.setAttribute("value", curr_el_id);
         curr_level.classList.add("dv_button_level");
-        
-        for(let jdx = 0; jdx < value.children.length; jdx++){
+
+        for (let jdx = 0; jdx < value.children.length; jdx++) {
           let child_id = value.children[jdx];
           let is_child_tab_group = hierarchy[child_id].kind === "tab_group";
           let is_child_module = hierarchy[child_id].kind === "module";
           let name = hierarchy[child_id].name;
-          
-          
-          let button = document.createElement("button");          
+
+
+          let button = document.createElement("button");
           button.setAttribute("data-value", child_id);
           button.classList.add("dv_tab_activate_button", "btn", "btn-primary");
           button.setAttribute("type", "button");
           button.textContent = name;
-          if(jdx === 0) {
+          if (jdx === 0) {
             button.classList.add("clicked");
           }
 
@@ -172,52 +196,139 @@ const dv_tab = (function () {
           curr_level.appendChild(button);
         }
 
-        if(is_root) {
+        if (is_root) {
           curr_level.classList.add("dv_root_button_level");
-        } else if(is_tab_group) {
+        } else if (is_tab_group) {
           curr_level.classList.add("dv_child_button_level");
         } else {
           console.error("Unknown kind: " + value.kind + " " + idx);
-        }       
+        }
 
         fragment.appendChild(curr_level);
       }
 
     }
 
-    dv_button_container.appendChild(fragment);
+    el.appendChild(fragment);    
+  }
 
+  const draw_compressed = function (el, hierarchy) {
+    const fragment = document.createDocumentFragment();
+
+    const keys = Object.keys(hierarchy);
+    const modules = Object.fromEntries(
+      Object.entries(hierarchy).filter(([_, entry]) => entry.kind === "module")
+    );
+
+    el.classList.add("dv_button_level");
+    const left_arrow = document.createElement("span");
+    const right_arrow = document.createElement("span");
+    const module_name = document.createElement("span");
+    right_arrow.textContent = "→";
+    right_arrow.classList.add("fs-1", "text-white");
+    right_arrow.setAttribute("data-direction", "plus");
+    right_arrow.style.cursor="pointer";
+    left_arrow.classList.add("fs-1", "text-white");
+    left_arrow.textContent = "←";
+    left_arrow.setAttribute("data-direction", "minus");
+    left_arrow.style.cursor="pointer";
+    module_name.textContent = "Module Name";
+    module_name.classList.add("text-white", "fs-5");
+    module_name.style.cursor = "pointer";
+
+    el.classList.add("d-flex", "align-items-baseline", "justify-content-center");
+    el.appendChild(left_arrow);
+    el.appendChild(module_name);
+    el.appendChild(right_arrow);
+
+    return(modules);
+  }
+
+  const init = function (id, tab_state_json) {
+    log("Initializing: " + id);
+    let tab_state = JSON.parse(tab_state_json);
+    let default_tab = tab_state.default_tab;
+    let hierarchy = tab_state.hierarchy;
+
+    let dv_tab_menu_container = document.getElementById(id).querySelector("div.dv_tab_menu_container");
+
+    let expanded_button_container = document.createElement("div");
+    expanded_button_container.classList.add("dv_expanded_button_container","dv_button_container");
+    dv_tab_menu_container.appendChild(expanded_button_container);
+
+    let compressed_button_container = document.createElement("div");
+    compressed_button_container.classList.add("dv_compressed_button_container");
+    dv_tab_menu_container.appendChild(compressed_button_container);
+
+    if(default_tab) {
+      dv_tab_menu_container.setAttribute("default-tab", default_tab);
+    }
+
+    draw_expanded(expanded_button_container, hierarchy);
+    let modules = draw_compressed(compressed_button_container, hierarchy);
+
+    let is_expanded_el = document.getElementById(id).querySelector("input[type=checkbox]");
+    let compress_icon = document.getElementById(id).querySelector(".compress-icon");
+    let expand_icon = document.getElementById(id).querySelector(".expand-icon");
+
+    let update_icons_and_tab_menu = function(){
+      if (is_expanded_el.checked) {
+        compress_icon.style.display = "inline";
+        expand_icon.setAttribute('style', 'display: none !important;');
+        compressed_button_container.setAttribute('style', 'display: none !important;');
+        expanded_button_container.style.display = "";
+      } else {
+        compress_icon.setAttribute('style', 'display: none !important;');
+        expand_icon.style.display = "inline";
+        compressed_button_container.style.display = "";
+        expanded_button_container.setAttribute('style', 'display: none !important;');
+      }
+    }
+    
+    update_icons_and_tab_menu();
+    
     // Set listeners
 
     let in_set = function () {
 
-      let root_el = document.getElementById(id);
-      let default_tab = root_el?.getAttribute("default-tab");
+      let root_el = dv_tab_menu_container;
+      let default_tab_id = root_el?.getAttribute("default-tab");
+      let first_module_id = Object.keys(modules)[0];      
 
-      let first_tab_button = root_el.querySelector(".dv_tab_activate_button[data-type='tab-button']");
-      let first_tab = first_tab_button !== null ? first_tab_button.getAttribute("data-value") : null;
-
-      let active_tab;
-      if (default_tab !== null) {
-        active_tab = _set_tab_by_tab_id(default_tab, root_el);
-      } else if (first_tab !== null) {
-        active_tab = _set_tab_by_tab_id(first_tab, root_el);
+      let active_tab_id;
+      if (default_tab_id !== null) {
+        active_tab_id = _set_tab_by_tab_id(default_tab_id, root_el);
+      } else if (first_module_id !== null) {
+        active_tab_id = _set_tab_by_tab_id(first_module_id, root_el);
       } else {
         // No buttons in nav header, no modules in the app
-        active_tab = null;
+        active_tab_id = null;
       }
 
       // Send on start
-      if (active_tab !== null) {
-        Shiny.setInputValue(id, active_tab)
+      if (active_tab_id !== null) {
+        Shiny.setInputValue(id, active_tab_id)
       }
 
       // Set listener for button presses
       root_el.addEventListener('click', function (event) {
-        const response = on_click(event, root_el);
-        if (!response !== null) {
-          Shiny.setInputValue(id, response.active_tab)
+
+        let response;
+        if(compressed_button_container.contains(event.target)) {
+          response = _set_tab_by_tab_id(get_compressed_tab_id(event, modules), root_el)
+        } else if (expanded_button_container.contains(event.target)) {          
+          response = _set_tab_by_tab_id(get_expanded_tab_id(event, root_el), root_el)
         }
+        
+        if (!response !== null) {
+          Shiny.setInputValue(id, response.active_tab_id)
+        }
+      });
+
+      compressed_button_container
+
+      is_expanded_el.addEventListener('change', function (event) {
+        update_icons_and_tab_menu();
       });
 
       Shiny.addCustomMessageHandler("set_active_tab", function (message) {
@@ -593,6 +704,8 @@ $(document).ready(function () {
     }
   });
 });
+
+
 
 
 

@@ -65,12 +65,11 @@ app_ui <- function(request_id) {
       )
     )
 
-  top_buttons <- shiny::div(
-    shiny::bookmarkButton("", class = "navbar-btn"),
+  top_buttons <- list(
+    shiny::bookmarkButton("", class = "navbar-btn")
     # Remove export functionality until new order
     # shiny::actionButton(ns("open_report_modal"), shiny::span(shiny::icon("download")), class = "navbar-btn"), # nolint
     # shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("question")), class = "navbar-btn"), # nolint
-    class = "dv_top_button_group"
   )
 
   dataset_name <-
