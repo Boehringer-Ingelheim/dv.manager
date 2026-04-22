@@ -265,7 +265,7 @@ const dv_tab = (function () {
     left_arrow.setAttribute("data-direction", "minus");
     left_arrow.style.cursor="pointer";
     module_name.textContent = "Module Name";
-    module_name.classList.add("text-white", "fs-5");
+    module_name.classList.add("text-white", "fs-5", "ps-3", 'pe-3');
     module_name.style.cursor = "pointer";
 
     el.classList.add("d-flex", "align-items-baseline", "justify-content-center");
