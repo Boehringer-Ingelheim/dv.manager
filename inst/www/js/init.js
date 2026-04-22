@@ -116,33 +116,65 @@ const dv_tab = (function () {
     if (Object.keys(modules).length === 0) return (null); // No modules in the app
 
     let new_tab_id
+    let current_id = e.target.closest(".dv_compressed_button_container").children[1].getAttribute("data-value");
+    let current_idx = Object.keys(modules).indexOf(current_id);  
 
     if(e.target.getAttribute("data-direction") === "plus") {
-      let current_id = e.target.parentElement.children[1].getAttribute("data-value");
-      let current_idx = Object.keys(modules).indexOf(current_id);      
-
       if(current_idx < Object.keys(modules).length - 1) {
         new_tab_id = Object.keys(modules)[current_idx + 1]
       } else {
         new_tab_id = current_id;
       }        
     } else if (e.target.getAttribute("data-direction") === "minus") {
-      let current_id = e.target.parentElement.children[1].getAttribute("data-value");
-      let current_idx = Object.keys(modules).indexOf(current_id);      
-
       if(current_idx > 0) {
         new_tab_id = Object.keys(modules)[current_idx - 1]
       } else {
         new_tab_id = current_id;
-      }          
+      }
+    } else if (e.target.hasAttribute("data-value")) { // Clicked on center show menu
+      const container = document.createElement('menu_container');
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: transparent; z-index: 999;';
 
+      const menu = document.createElement('div');
+      menu.id = 'menu';
+      menu.style.cssText = 'position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 1000;';
+      menu.classList.add("card");
+
+      const card_header = document.createElement('div');
+      card_header.className = 'card-header';
+      card_header.textContent = 'Select a module:';
+
+      const card_body = document.createElement( "div");
+      card_body.classList.add("card-body", "p-2");
+
+      const fragment = document.createDocumentFragment();
+
+      Object.entries(modules).forEach(([id, obj]) => {
+        const span = document.createElement('span');
+        span.textContent = obj.name;
+        span.setAttribute('data-id', id);
+        span.style.cssText = 'display: block; padding: 8px 12px; cursor: pointer; white-space: nowrap;';
+        fragment.appendChild(span);
+      });
+
+      card_body.appendChild(fragment);
+      menu.appendChild(card_header);
+      menu.appendChild(card_body);
+      container.appendChild(menu);
+      container.appendChild(overlay);
+      e.target.parentElement.appendChild(container);
+      new_tab_id = current_id;
+    } else if(e.target.hasAttribute("data-id")) {      
+      new_tab_id = e.target.getAttribute("data-id");
+      e.target.closest("menu_container").remove();
     } else {
-      
+      if (e.target.closest("menu_container"))
+        e.target.closest("menu_container").remove();
+      new_tab_id = current_id;
     }
 
   return (new_tab_id);
-
-
   }
 
   const set_tab_by_tab_id = function (tab_id, container_id) {
@@ -313,15 +345,15 @@ const dv_tab = (function () {
       // Set listener for button presses
       root_el.addEventListener('click', function (event) {
 
-        let response;
+        let current_tab;
         if(compressed_button_container.contains(event.target)) {
-          response = _set_tab_by_tab_id(get_compressed_tab_id(event, modules), root_el)
+          current_tab = _set_tab_by_tab_id(get_compressed_tab_id(event, modules), root_el)
         } else if (expanded_button_container.contains(event.target)) {          
-          response = _set_tab_by_tab_id(get_expanded_tab_id(event, root_el), root_el)
+          current_tab = _set_tab_by_tab_id(get_expanded_tab_id(event, root_el), root_el)
         }
-        
-        if (!response !== null) {
-          Shiny.setInputValue(id, response.active_tab_id)
+
+        if (current_tab !== null) {
+          Shiny.setInputValue(id, current_tab)
         }
       });
 
@@ -704,6 +736,7 @@ $(document).ready(function () {
     }
   });
 });
+
 
 
 
