@@ -218,12 +218,14 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
       shiny::tags[["label"]](
         shiny::icon("compress"),
         class = "btn btn-primary compress-icon",
-        "for" = ns("expanded_tab")
+        "for" = ns("expanded_tab"),
+        title = "Collapse Navigation Bar"
       ),
       shiny::tags[["label"]](
         shiny::icon("expand"),
         class = "btn btn-primary expand-icon",
-        "for" = ns("expanded_tab")
+        "for" = ns("expanded_tab"),
+        title = "Expand Navigation Bar"
       )
     ),
     top_buttons,
@@ -254,9 +256,9 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
       "{",
       "\"parent_id\":",
       ns(parent_id),
-      "\", \"kind\":",
+      ", \"kind\":",
       kind,
-      "\", \"name\":",
+      ", \"name\":",
       name,
       children,
       "}"
@@ -279,6 +281,8 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
     json_hierarchy,
     "}"
   )
+
+  browser()
 
   escape_special_chars <- function(x) {
     y <- gsub("\\\\", "\\\\\\\\", x)
