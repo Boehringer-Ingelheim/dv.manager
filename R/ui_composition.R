@@ -243,10 +243,10 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
     parent_id <- if (!is.na(entry[["parent"]])) paste0('"', entry[["parent"]], '"') else "null"
     kind <- if (!is.na(entry[["kind"]])) paste0('"', entry[["kind"]], '"') else "null"
     name <- if (!is.na(entry[["name"]])) paste0('"', entry[["name"]], '"') else "null"
-    children <- if (entry[["kind"]] != "module") {
+    children <- if (entry[["kind"]] != "module" && length(entry[["children"]]) > 0) {
       paste0(', "children":[', paste0('"', ns(entry[["children"]]), '"', collapse = ","), ']')
     } else {
-      ""
+      paste0(', "children":[]')
     }
 
     json_hierarchy[[idx]] <- paste0(

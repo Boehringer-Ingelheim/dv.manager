@@ -19,6 +19,8 @@ const dv_tab = (function () {
 
   const _set_tab_by_tab_id = function (tab_id, root_el) {
 
+    if(!tab_id) return(null);
+
     // Expanded tabset
     let expanded_root = root_el.querySelector("div.dv_expanded_button_container");
     let target_tab_element = expanded_root.querySelector(".dv_tab_activate_button[data-value='" + tab_id + "']");
@@ -244,34 +246,34 @@ const dv_tab = (function () {
     el.appendChild(fragment);    
   }
 
-  const draw_compressed = function (el, hierarchy) {
-    const fragment = document.createDocumentFragment();
+  const draw_compressed = function (el, hierarchy) {    
 
-    const keys = Object.keys(hierarchy);
     const modules = Object.fromEntries(
       Object.entries(hierarchy).filter(([_, entry]) => entry.kind === "module")
     );
 
-    el.classList.add("dv_button_level");
-    const left_arrow = document.createElement("span");
-    const right_arrow = document.createElement("span");
-    const module_name = document.createElement("span");
-    right_arrow.textContent = "→";
-    right_arrow.classList.add("fs-1", "text-white");
-    right_arrow.setAttribute("data-direction", "plus");
-    right_arrow.style.cursor="pointer";
-    left_arrow.classList.add("fs-1", "text-white");
-    left_arrow.textContent = "←";
-    left_arrow.setAttribute("data-direction", "minus");
-    left_arrow.style.cursor="pointer";
-    module_name.textContent = "Module Name";
-    module_name.classList.add("text-white", "fs-5", "ps-3", 'pe-3');
-    module_name.style.cursor = "pointer";
+    if (Object.keys(modules).length > 0) {
+      el.classList.add("dv_button_level");
+      const left_arrow = document.createElement("span");
+      const right_arrow = document.createElement("span");
+      const module_name = document.createElement("span");
+      right_arrow.textContent = "→";
+      right_arrow.classList.add("fs-1", "text-white");
+      right_arrow.setAttribute("data-direction", "plus");
+      right_arrow.style.cursor = "pointer";
+      left_arrow.classList.add("fs-1", "text-white");
+      left_arrow.textContent = "←";
+      left_arrow.setAttribute("data-direction", "minus");
+      left_arrow.style.cursor = "pointer";
+      module_name.textContent = "Module Name";
+      module_name.classList.add("text-white", "fs-5", "ps-3", 'pe-3');
+      module_name.style.cursor = "pointer";
 
-    el.classList.add("d-flex", "align-items-baseline", "justify-content-center");
-    el.appendChild(left_arrow);
-    el.appendChild(module_name);
-    el.appendChild(right_arrow);
+      el.classList.add("d-flex", "align-items-baseline", "justify-content-center");
+      el.appendChild(left_arrow);
+      el.appendChild(module_name);
+      el.appendChild(right_arrow);
+    } 
 
     return(modules);
   }
