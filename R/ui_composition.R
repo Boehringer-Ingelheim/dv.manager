@@ -244,19 +244,19 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
     kind <- if (!is.na(entry[["kind"]])) paste0('"', entry[["kind"]], '"') else "null"
     name <- if (!is.na(entry[["name"]])) paste0('"', entry[["name"]], '"') else "null"
     children <- if (entry[["kind"]] != "module" && length(entry[["children"]]) > 0) {
-      paste0(', "children":[', paste0('"', ns(entry[["children"]]), '"', collapse = ","), ']')
+      paste0(", \"children\":[", paste0("\"", ns(entry[["children"]]), "\"", collapse = ","), "]")
     } else {
-      paste0(', "children":[]')
+      paste0(", \"children\":[]")
     }
 
     json_hierarchy[[idx]] <- paste0(
-      paste0('"', names(hierarchy)[[idx]], '":'),
-      '{',
-      '"parent_id":',
+      paste0("\"", names(hierarchy)[[idx]], "\":"),
+      "{",
+      "\"parent_id\":",
       ns(parent_id),
-      ', "kind":',
+      "\", \"kind\":",
       kind,
-      ', "name":',
+      "\", \"name\":",
       name,
       children,
       "}"
@@ -265,17 +265,17 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
 
   json_hierarchy <- paste0("{", paste0(json_hierarchy, collapse = ","), "}")
   default_tab <- if (!is.na(default_tab)) {
-    paste0('"', default_tab, '"')
+    paste0("\"", default_tab, "\"")
   } else {
     "null"
   }
 
   json_module_tab_selector_state <- paste0(
     "{",
-    '"default_tab":',
+    "\"default_tab\":",
     default_tab,
-    ',',
-    '"hierarchy":',
+    ",",
+    "\"hierarchy\":",
     json_hierarchy,
     "}"
   )
