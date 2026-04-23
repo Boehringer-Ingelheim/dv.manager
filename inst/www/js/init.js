@@ -18,7 +18,7 @@ const dv_tab = (function () {
     $(window).trigger('resize'); // If it had a different window size when it has hidden, the size is kept on shown
   };
 
-  const _set_tab_by_tab_id = function (tab_id, root_el) {
+  const _set_tab_by_tab_id = function (tab_id, hierarchy, root_el) {
 
     if(!tab_id) return(null);
 
@@ -46,19 +46,19 @@ const dv_tab = (function () {
     } while (!clicked.parentElement.classList.contains("dv_root_button_level"));
 
     remove_active_all(root_el);
-    const active_tab_info = set_clicked_active(expanded_root);
+    const active_tab_id = set_clicked_active(expanded_root);
 
     // compressed tabset
 
     let compressed_root = root_el.querySelector("div.dv_compressed_button_container");
-    compressed_root.querySelectorAll("span")[1].textContent = active_tab_info.name;
-    compressed_root.querySelectorAll("span")[1].setAttribute("data-value", active_tab_info.id);
+    compressed_root.querySelectorAll("span")[1].textContent = get_module_path(active_tab_id, hierarchy);
+    compressed_root.querySelectorAll("span")[1].setAttribute("data-value", active_tab_id);
 
     // Update tab
-    root_el.parentElement.parentElement.querySelector(".dv_tab_container .dv_tab_content[value='" + active_tab_info.id + "']").classList.add("active");
-    notify_shiny_display_change($(root_el).find(".dv_tab_content[value='" + active_tab_info.id + "']"), "shown");
+    root_el.parentElement.parentElement.querySelector(".dv_tab_container .dv_tab_content[value='" + active_tab_id + "']").classList.add("active");
+    notify_shiny_display_change($(root_el).find(".dv_tab_content[value='" + active_tab_id + "']"), "shown");
 
-    return (active_tab_info.id);
+    return (active_tab_id);
   }
 
   const remove_active_all = function (root_el) {
@@ -92,13 +92,8 @@ const dv_tab = (function () {
         return;
       }
     }
-
-    const tab_info = {
-      id: curr_el.getAttribute("data-value"),
-      name: curr_el.textContent
-    };
-    
-    return (tab_info);
+   
+    return (curr_el.getAttribute("data-value"));
   }
 
   const get_expanded_tab_id = function (e, root_el) {
@@ -114,7 +109,9 @@ const dv_tab = (function () {
 
   }
 
-  const get_compressed_tab_id = function (e, modules) {
+  const get_compressed_tab_id = function (e, hierarchy) {
+
+    const modules = get_module_list(hierarchy);
     
     if (Object.keys(modules).length === 0) return (null); // No modules in the app
 
@@ -180,8 +177,8 @@ const dv_tab = (function () {
   return (new_tab_id);
   }
 
-  const set_tab_by_tab_id = function (tab_id, container_id) {
-    const active_tab_id = _set_tab_by_tab_id(tab_id, document.getElementById(container_id));
+  const set_tab_by_tab_id = function (tab_id, hierarchy, container_id) {
+    const active_tab_id = _set_tab_by_tab_id(tab_id, hierarchy, document.getElementById(container_id));
     Shiny.setInputValue(container_id, active_tab_id);
   }
 
@@ -247,13 +244,7 @@ const dv_tab = (function () {
     el.appendChild(fragment);    
   }
 
-  const draw_compressed = function (el, hierarchy) {    
-
-    const modules = Object.fromEntries(
-      Object.entries(hierarchy).filter(([_, entry]) => entry.kind === "module")
-    );
-
-    if (Object.keys(modules).length > 0) {
+  const draw_compressed = function (el) {    
       el.classList.add("dv_button_level");
       const left_arrow = document.createElement("span");
       const right_arrow = document.createElement("span");
@@ -274,10 +265,27 @@ const dv_tab = (function () {
       el.appendChild(left_arrow);
       el.appendChild(module_name);
       el.appendChild(right_arrow);
-    } 
-
-    return(modules);
   }
+
+
+  let get_module_path = function(module_id, hierarchy) {        
+      let curr_module = hierarchy[module_id];
+      let curr_parent_id = curr_module.parent_id;
+      let path_name = "";
+      while (hierarchy[curr_parent_id].kind !== "root") {
+        path_name = hierarchy[curr_parent_id].name + "/" + path_name;
+        curr_parent_id = hierarchy[curr_parent_id].parent_id;
+      }
+      return(path_name + curr_module.name);
+    }
+  
+
+  let get_module_list = function(hierarchy){
+    return (Object.fromEntries(
+      Object.entries(hierarchy).filter(([_, entry]) => entry.kind === "module")
+    ));
+  }
+  
 
   const init = function (id, tab_state_json) {
     log("Initializing: " + id);
@@ -299,8 +307,10 @@ const dv_tab = (function () {
       dv_tab_menu_container.setAttribute("default-tab", default_tab);
     }
 
-    draw_expanded(expanded_button_container, hierarchy);
-    let modules = draw_compressed(compressed_button_container, hierarchy);
+    if (Object.keys(hierarchy).length > 1) {
+      draw_expanded(expanded_button_container, hierarchy);
+      draw_compressed(compressed_button_container);
+    }
 
     let is_expanded_el = document.getElementById(id).querySelector("input[type=checkbox]");
     let compress_icon = document.getElementById(id).querySelector(".compress-icon");
@@ -328,13 +338,13 @@ const dv_tab = (function () {
 
       let root_el = dv_tab_menu_container;
       let default_tab_id = root_el?.getAttribute("default-tab");
-      let first_module_id = Object.keys(modules)[0];      
+      let first_module_id = Object.keys(get_module_list(hierarchy))[0];      
 
       let active_tab_id;
       if (default_tab_id !== null) {
-        active_tab_id = _set_tab_by_tab_id(default_tab_id, root_el);
+        active_tab_id = _set_tab_by_tab_id(default_tab_id, hierarchy, root_el);
       } else if (first_module_id !== null) {
-        active_tab_id = _set_tab_by_tab_id(first_module_id, root_el);
+        active_tab_id = _set_tab_by_tab_id(first_module_id, hierarchy, root_el);
       } else {
         // No buttons in nav header, no modules in the app
         active_tab_id = null;
@@ -350,9 +360,9 @@ const dv_tab = (function () {
 
         let current_tab;
         if(compressed_button_container.contains(event.target)) {
-          current_tab = _set_tab_by_tab_id(get_compressed_tab_id(event, modules), root_el)
+          current_tab = _set_tab_by_tab_id(get_compressed_tab_id(event, hierarchy), hierarchy, root_el)
         } else if (expanded_button_container.contains(event.target)) {          
-          current_tab = _set_tab_by_tab_id(get_expanded_tab_id(event, root_el), root_el)
+          current_tab = _set_tab_by_tab_id(get_expanded_tab_id(event, root_el), hierarchy, root_el)
         }
 
         if (current_tab !== null) {
@@ -367,7 +377,7 @@ const dv_tab = (function () {
       });
 
       Shiny.addCustomMessageHandler("set_active_tab", function (message) {
-        set_tab_by_tab_id(message.tab_id, message.id)
+        set_tab_by_tab_id(message.tab_id, hierarchy, message.id)
       });
 
       // Call once and remove
