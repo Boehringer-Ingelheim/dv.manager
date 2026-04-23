@@ -1,3 +1,6 @@
+# dv.manager 3.0.0-9002
+ - Bookmarks filter type
+
 # dv.manager 3.0.0-9001
  - Improves performance of filter set up
  - Includes code for instrumenting code for time measurements
