@@ -1,8 +1,8 @@
 // handle the dataset info bar
 const dv_tab = (function () {
 
-   let log = console.log;
-  //let log = function () { return; };
+  //let log = console.log;
+  let log = function () { return; };
 
   let containers = [];
 
@@ -15,6 +15,7 @@ const dv_tab = (function () {
   // even when they are visible in the client
   const notify_shiny_display_change = function ($el, visibility) {
     $el.trigger(visibility);
+    $(window).trigger('resize'); // If it had a different window size when it has hidden, the size is kept on shown
   };
 
   const _set_tab_by_tab_id = function (tab_id, root_el) {
