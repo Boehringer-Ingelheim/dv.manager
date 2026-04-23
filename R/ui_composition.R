@@ -282,8 +282,6 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
     "}"
   )
 
-  browser()
-
   escape_special_chars <- function(x) {
     y <- gsub("\\\\", "\\\\\\\\", x)
     y <- gsub('"', '\\\\"', y)
