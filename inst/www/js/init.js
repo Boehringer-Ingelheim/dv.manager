@@ -177,8 +177,13 @@ const dv_tab = (function () {
   return (new_tab_id);
   }
 
-  const set_tab_by_tab_id = function (tab_id, hierarchy, container_id) {
-    const active_tab_id = _set_tab_by_tab_id(tab_id, hierarchy, document.getElementById(container_id));
+  let baked_set_tab_by_tab_id = function(_,_) {
+    console.error("Unitialized function");
+  }
+
+  const set_tab_by_tab_id = function (tab_id, container_id) {
+    const active_tab_id = baked_set_tab_by_tab_id(tab_id, document.getElementById(container_id));
+    log("Sending tab to " + container_id + " : " + active_tab_id);
     Shiny.setInputValue(container_id, active_tab_id);
   }
 
@@ -273,7 +278,7 @@ const dv_tab = (function () {
       let curr_parent_id = curr_module.parent_id;
       let path_name = "";
       while (hierarchy[curr_parent_id].kind !== "root") {
-        path_name = hierarchy[curr_parent_id].name + "/" + path_name;
+        path_name = hierarchy[curr_parent_id].name + " / " + path_name;
         curr_parent_id = hierarchy[curr_parent_id].parent_id;
       }
       return(path_name + curr_module.name);
@@ -292,6 +297,9 @@ const dv_tab = (function () {
     let tab_state = JSON.parse(tab_state_json);
     let default_tab = tab_state.default_tab;
     let hierarchy = tab_state.hierarchy;
+    baked_set_tab_by_tab_id = function (tab_id, root_el) {
+      return(_set_tab_by_tab_id(tab_id, hierarchy, root_el));
+    }
 
     let dv_tab_menu_container = document.getElementById(id).querySelector("div.dv_tab_menu_container");
 
@@ -366,6 +374,7 @@ const dv_tab = (function () {
         }
 
         if (current_tab !== null) {
+          log("Sending tab to " + id + " : " + current_tab);
           Shiny.setInputValue(id, current_tab)
         }
       });
@@ -376,8 +385,8 @@ const dv_tab = (function () {
         update_icons_and_tab_menu();
       });
 
-      Shiny.addCustomMessageHandler("set_active_tab", function (message) {
-        set_tab_by_tab_id(message.tab_id, hierarchy, message.id)
+      Shiny.addCustomMessageHandler("set_active_tab", function (message) {        
+        set_tab_by_tab_id(message.tab_id, message.id)
       });
 
       // Call once and remove
@@ -473,7 +482,8 @@ const dv_overlay = (function () {
 
 const dv_flame = (function () {
 
-  let log = console.log;
+  //let log = console.log;
+  let log = function(_){};
 
   let C = {
     HEIGHT: 100,
