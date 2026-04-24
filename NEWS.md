@@ -1,5 +1,15 @@
+
 # dv.manager 3.0.0-9003
  - Introduces collapsed tab menus
+
+# dv.manager 3.0.0-9002
+ - Bookmarks filter type
+
+# dv.manager 3.0.0-9001
+ - Improves performance of filter set up
+ - Includes code for instrumenting code for time measurements
+    - Includes an attempt of a graphical output in mod_app_info
+ - Includes an experimental `afmm` mask approach to improve memory performance
  
 # dv.manager 3.0.0-9000
  - Includes mod_app_info 
