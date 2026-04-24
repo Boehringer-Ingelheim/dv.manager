@@ -1,7 +1,7 @@
 // handle the dataset info bar
 const dv_tab = (function () {
 
-  // let log = console.log;
+  //let log = console.log;
   let log = function () { return; };
 
   let containers = [];
@@ -15,10 +15,16 @@ const dv_tab = (function () {
   // even when they are visible in the client
   const notify_shiny_display_change = function ($el, visibility) {
     $el.trigger(visibility);
+    $(window).trigger('resize'); // If it had a different window size when it has hidden, the size is kept on shown
   };
 
-  const _set_tab_by_tab_id = function (tab_id, root_el) {
-    let target_tab_element = root_el.querySelector(".dv_tab_activate_button[data-value='" + tab_id + "']");
+  const _set_tab_by_tab_id = function (tab_id, hierarchy, root_el) {
+
+    if(!tab_id) return(null);
+
+    // Expanded tabset
+    let expanded_root = root_el.querySelector("div.dv_expanded_button_container");
+    let target_tab_element = expanded_root.querySelector(".dv_tab_activate_button[data-value='" + tab_id + "']");
     if (target_tab_element === null) {
       console.error("tab_id:'" + tab_id + "' not found in button set");
       return (false);
@@ -28,7 +34,7 @@ const dv_tab = (function () {
     let clicked;
 
     do {
-      clicked = root_el.querySelector(".dv_tab_activate_button[data-value='" + next_element + "']");
+      clicked = expanded_root.querySelector(".dv_tab_activate_button[data-value='" + next_element + "']");
       const unclicked = clicked.parentElement.querySelector(".dv_tab_activate_button.clicked");
 
       // Apply changes elements
@@ -40,7 +46,18 @@ const dv_tab = (function () {
     } while (!clicked.parentElement.classList.contains("dv_root_button_level"));
 
     remove_active_all(root_el);
-    const active_tab_id = set_clicked_active(root_el);
+    const active_tab_id = set_clicked_active(expanded_root);
+
+    // compressed tabset
+
+    let compressed_root = root_el.querySelector("div.dv_compressed_button_container");
+    compressed_root.querySelectorAll("span")[1].textContent = get_module_path(active_tab_id, hierarchy);
+    compressed_root.querySelectorAll("span")[1].setAttribute("data-value", active_tab_id);
+
+    // Update tab
+    root_el.parentElement.parentElement.querySelector(".dv_tab_container .dv_tab_content[value='" + active_tab_id + "']").classList.add("active");
+    notify_shiny_display_change($(root_el).find(".dv_tab_content[value='" + active_tab_id + "']"), "shown");
+
     return (active_tab_id);
   }
 
@@ -75,84 +92,300 @@ const dv_tab = (function () {
         return;
       }
     }
-
-    const tab_target = curr_el.getAttribute("data-value");
-
-    root_el.parentElement.parentElement.querySelector(".dv_tab_container .dv_tab_content[value='" + tab_target + "']").classList.add("active");
-    notify_shiny_display_change($(root_el).find(".dv_tab_content[value='" + tab_target + "']"), "shown");
-    return (tab_target);
+   
+    return (curr_el.getAttribute("data-value"));
   }
 
-  const on_click = function (e, root_el) {
+  const get_expanded_tab_id = function (e, root_el) {
 
     const container_id = root_el.id;
     const clicked = e !== null ? e.target : root_el.querySelector(".dv_root_button_level.clicked");
 
-    if (clicked.classList.contains("dv_tab_activate_button")) {
-      const unclicked = clicked.parentElement.querySelector(".dv_tab_activate_button.clicked");
-
-      unclicked.classList.remove("clicked");
-      clicked.classList.add("clicked");
-
-      // Hide everything
-      remove_active_all(root_el);
-      // Show clicked
-      const active_tab = set_clicked_active(root_el);
-      const res = {
-        active_tab: active_tab,
-        container_id: container_id
-      }
-      return (res);
+    if (clicked.classList.contains("dv_tab_activate_button")) {      
+      return (clicked.getAttribute("data-value"));
     } else {
       return (null);
     }
 
   }
 
-  const set_tab_by_tab_id = function (tab_id, container_id) {
-    const active_tab_id = _set_tab_by_tab_id(tab_id, document.getElementById(container_id));
-    Shiny.setInputValue(container_id, active_tab_id)
+  const get_compressed_tab_id = function (e, hierarchy) {
 
+    const modules = get_module_list(hierarchy);
+    
+    if (Object.keys(modules).length === 0) return (null); // No modules in the app
+
+    let new_tab_id
+    let current_id = e.target.closest(".dv_compressed_button_container").children[1].getAttribute("data-value");
+    let current_idx = Object.keys(modules).indexOf(current_id);  
+
+    if(e.target.getAttribute("data-direction") === "plus") {
+      if(current_idx < Object.keys(modules).length - 1) {
+        new_tab_id = Object.keys(modules)[current_idx + 1]
+      } else {
+        new_tab_id = current_id;
+      }        
+    } else if (e.target.getAttribute("data-direction") === "minus") {
+      if(current_idx > 0) {
+        new_tab_id = Object.keys(modules)[current_idx - 1]
+      } else {
+        new_tab_id = current_id;
+      }
+    } else if (e.target.hasAttribute("data-value")) { // Clicked on center show menu
+      const container = document.createElement('menu_container');
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: transparent; z-index: 999;';
+
+      const menu = document.createElement('div');
+      menu.id = 'menu';
+      menu.style.cssText = 'position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 1000;';
+      menu.classList.add("card");
+
+      const card_header = document.createElement('div');
+      card_header.className = 'card-header';
+      card_header.textContent = 'Select a module:';
+
+      const card_body = document.createElement( "div");
+      card_body.classList.add("card-body", "p-2");
+
+      const fragment = document.createDocumentFragment();
+
+      Object.entries(modules).forEach(([id, obj]) => {
+        const span = document.createElement('span');
+        span.textContent = obj.name;
+        span.setAttribute('data-id', id);
+        span.style.cssText = 'display: block; padding: 8px 12px; cursor: pointer; white-space: nowrap;';
+        fragment.appendChild(span);
+      });
+
+      card_body.appendChild(fragment);
+      menu.appendChild(card_header);
+      menu.appendChild(card_body);
+      container.appendChild(menu);
+      container.appendChild(overlay);
+      e.target.parentElement.appendChild(container);
+      new_tab_id = current_id;
+    } else if(e.target.hasAttribute("data-id")) {      
+      new_tab_id = e.target.getAttribute("data-id");
+      e.target.closest("menu_container").remove();
+    } else {
+      if (e.target.closest("menu_container"))
+        e.target.closest("menu_container").remove();
+      new_tab_id = current_id;
+    }
+
+  return (new_tab_id);
   }
 
-  const init = function (id) {
+  let baked_set_tab_by_tab_id = function(_,_) {
+    console.error("Unitialized function");
+  }
+
+  const set_tab_by_tab_id = function (tab_id, container_id) {
+    const active_tab_id = baked_set_tab_by_tab_id(tab_id, document.getElementById(container_id));
+    log("Sending tab to " + container_id + " : " + active_tab_id);
+    Shiny.setInputValue(container_id, active_tab_id);
+  }
+
+  const draw_expanded = function(el, hierarchy) {
+    const fragment = document.createDocumentFragment();
+
+    const keys = Object.keys(hierarchy);
+
+    // Iterate with index
+    for (let idx = 0; idx < keys.length; idx++) {
+      const curr_el_id = keys[idx];
+      const value = hierarchy[curr_el_id];
+
+      const is_root = value.kind === "root";
+      const is_tab_group = value.kind === "tab_group";
+      const is_module = value.kind === "module";
+
+      if (is_root || is_tab_group) {
+        let curr_level = document.createElement("div");
+        curr_level.setAttribute("value", curr_el_id);
+        curr_level.classList.add("dv_button_level");
+
+        for (let jdx = 0; jdx < value.children.length; jdx++) {
+          let child_id = value.children[jdx];
+          let is_child_tab_group = hierarchy[child_id].kind === "tab_group";
+          let is_child_module = hierarchy[child_id].kind === "module";
+          let name = hierarchy[child_id].name;
+
+
+          let button = document.createElement("button");
+          button.setAttribute("data-value", child_id);
+          button.classList.add("dv_tab_activate_button", "btn", "btn-primary");
+          button.setAttribute("type", "button");
+          button.textContent = name;
+          if (jdx === 0) {
+            button.classList.add("clicked");
+          }
+
+          if (is_child_tab_group) {
+            button.setAttribute("data-type", "hier-button");
+          } else if (is_child_module) {
+            button.setAttribute("data-type", "tab-button");
+          } else {
+            console.error("Unknown kind: " + child_id.kind + " " + idx + " " + jdx);
+          }
+
+          curr_level.appendChild(button);
+        }
+
+        if (is_root) {
+          curr_level.classList.add("dv_root_button_level");
+        } else if (is_tab_group) {
+          curr_level.classList.add("dv_child_button_level");
+        } else {
+          console.error("Unknown kind: " + value.kind + " " + idx);
+        }
+
+        fragment.appendChild(curr_level);
+      }
+
+    }
+
+    el.appendChild(fragment);    
+  }
+
+  const draw_compressed = function (el) {    
+      el.classList.add("dv_button_level");
+      const left_arrow = document.createElement("span");
+      const right_arrow = document.createElement("span");
+      const module_name = document.createElement("span");
+      right_arrow.textContent = "→";
+      right_arrow.classList.add("fs-1", "text-white");
+      right_arrow.setAttribute("data-direction", "plus");
+      right_arrow.style.cursor = "pointer";
+      left_arrow.classList.add("fs-1", "text-white");
+      left_arrow.textContent = "←";
+      left_arrow.setAttribute("data-direction", "minus");
+      left_arrow.style.cursor = "pointer";
+      module_name.textContent = "Module Name";
+      module_name.classList.add("text-white", "fs-5", "ps-3", 'pe-3');
+      module_name.style.cursor = "pointer";
+
+      el.classList.add("d-flex", "align-items-baseline", "justify-content-center");
+      el.appendChild(left_arrow);
+      el.appendChild(module_name);
+      el.appendChild(right_arrow);
+  }
+
+
+  let get_module_path = function(module_id, hierarchy) {        
+      let curr_module = hierarchy[module_id];
+      let curr_parent_id = curr_module.parent_id;
+      let path_name = "";
+      while (hierarchy[curr_parent_id].kind !== "root") {
+        path_name = hierarchy[curr_parent_id].name + " / " + path_name;
+        curr_parent_id = hierarchy[curr_parent_id].parent_id;
+      }
+      return(path_name + curr_module.name);
+    }
+  
+
+  let get_module_list = function(hierarchy){
+    return (Object.fromEntries(
+      Object.entries(hierarchy).filter(([_, entry]) => entry.kind === "module")
+    ));
+  }
+  
+
+  const init = function (id, tab_state_json) {
     log("Initializing: " + id);
+    let tab_state = JSON.parse(tab_state_json);
+    let default_tab = tab_state.default_tab;
+    let hierarchy = tab_state.hierarchy;
+    baked_set_tab_by_tab_id = function (tab_id, root_el) {
+      return(_set_tab_by_tab_id(tab_id, hierarchy, root_el));
+    }
 
+    let dv_tab_menu_container = document.getElementById(id).querySelector("div.dv_tab_menu_container");
 
+    let expanded_button_container = document.createElement("div");
+    expanded_button_container.classList.add("dv_expanded_button_container","dv_button_container");
+    dv_tab_menu_container.appendChild(expanded_button_container);
+
+    let compressed_button_container = document.createElement("div");
+    compressed_button_container.classList.add("dv_compressed_button_container");
+    dv_tab_menu_container.appendChild(compressed_button_container);
+
+    if(default_tab) {
+      dv_tab_menu_container.setAttribute("default-tab", default_tab);
+    }
+
+    if (Object.keys(hierarchy).length > 1) {
+      draw_expanded(expanded_button_container, hierarchy);
+      draw_compressed(compressed_button_container);
+    }
+
+    let is_expanded_el = document.getElementById(id).querySelector("input[type=checkbox]");
+    let compress_icon = document.getElementById(id).querySelector(".compress-icon");
+    let expand_icon = document.getElementById(id).querySelector(".expand-icon");
+
+    let update_icons_and_tab_menu = function(){
+      if (is_expanded_el.checked) {
+        compress_icon.style.display = "inline";
+        expand_icon.setAttribute('style', 'display: none !important;');
+        compressed_button_container.setAttribute('style', 'display: none !important;');
+        expanded_button_container.style.display = "";
+      } else {
+        compress_icon.setAttribute('style', 'display: none !important;');
+        expand_icon.style.display = "inline";
+        compressed_button_container.style.display = "";
+        expanded_button_container.setAttribute('style', 'display: none !important;');
+      }
+    }
+    
+    update_icons_and_tab_menu();
+    
     // Set listeners
 
     let in_set = function () {
 
-      let root_el = document.getElementById(id);
-      let default_tab = root_el?.getAttribute("default-tab");
+      let root_el = dv_tab_menu_container;
+      let default_tab_id = root_el?.getAttribute("default-tab");
+      let first_module_id = Object.keys(get_module_list(hierarchy))[0];      
 
-      let first_tab_button = root_el.querySelector(".dv_tab_activate_button[data-type='tab-button']");
-      let first_tab = first_tab_button !== null ? first_tab_button.getAttribute("data-value") : null;
-
-      let active_tab;
-      if (default_tab !== null) {
-        active_tab = _set_tab_by_tab_id(default_tab, root_el);
-      } else if (first_tab !== null) {
-        active_tab = _set_tab_by_tab_id(first_tab, root_el);
+      let active_tab_id;
+      if (default_tab_id !== null) {
+        active_tab_id = _set_tab_by_tab_id(default_tab_id, hierarchy, root_el);
+      } else if (first_module_id !== null) {
+        active_tab_id = _set_tab_by_tab_id(first_module_id, hierarchy, root_el);
       } else {
         // No buttons in nav header, no modules in the app
-        active_tab = null;
+        active_tab_id = null;
       }
 
       // Send on start
-      if (active_tab !== null) {
-        Shiny.setInputValue(id, active_tab)
+      if (active_tab_id !== null) {
+        Shiny.setInputValue(id, active_tab_id)
       }
 
       // Set listener for button presses
       root_el.addEventListener('click', function (event) {
-        const response = on_click(event, root_el);
-        if (!response !== null) {
-          Shiny.setInputValue(id, response.active_tab)
+
+        let current_tab;
+        if(compressed_button_container.contains(event.target)) {
+          current_tab = _set_tab_by_tab_id(get_compressed_tab_id(event, hierarchy), hierarchy, root_el)
+        } else if (expanded_button_container.contains(event.target)) {          
+          current_tab = _set_tab_by_tab_id(get_expanded_tab_id(event, root_el), hierarchy, root_el)
+        }
+
+        if (current_tab !== null) {
+          log("Sending tab to " + id + " : " + current_tab);
+          Shiny.setInputValue(id, current_tab)
         }
       });
 
-      Shiny.addCustomMessageHandler("set_active_tab", function (message) {
+      compressed_button_container
+
+      is_expanded_el.addEventListener('change', function (event) {
+        update_icons_and_tab_menu();
+      });
+
+      Shiny.addCustomMessageHandler("set_active_tab", function (message) {        
         set_tab_by_tab_id(message.tab_id, message.id)
       });
 
@@ -249,7 +482,8 @@ const dv_overlay = (function () {
 
 const dv_flame = (function () {
 
-  let log = console.log;
+  //let log = console.log;
+  let log = function(_){};
 
   let C = {
     HEIGHT: 100,
@@ -525,6 +759,10 @@ $(document).ready(function () {
     }
   });
 });
+
+
+
+
 
 
 

@@ -1,3 +1,7 @@
+
+# dv.manager 3.0.0-9003
+ - Introduces collapsed tab menus
+
 # dv.manager 3.0.0-9002
  - Bookmarks filter type
 
