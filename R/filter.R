@@ -832,6 +832,7 @@ new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states =
 
   filter_bookmark <- shiny::restoreInput(ns(ID$FILTER_STATE_JSON_INPUT), state)
   saved_states_bookmark <- shiny::restoreInput(ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT), saved_states)
+  filter_mode <- shiny::restoreInput(ns(ID$FILTER_MODE_INPUT), "Basic")
 
   log_inform(paste("Loading state", filter_bookmark))
   log_inform(paste("Loading saved states", saved_states_bookmark))
@@ -849,13 +850,15 @@ new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states =
   init_tag <- shiny::tags[["script"]](
     shiny::HTML(
       sprintf(
-        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+        "dv_filter.init('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
         escape_special_chars(id),
         escape_special_chars(filter_bookmark),
         escape_special_chars(saved_states_bookmark),
         escape_special_chars(subject_dataset_name),
+        escape_special_chars(filter_mode),
         escape_special_chars(ns(ID$FILTER_STATE_JSON_INPUT)),
         escape_special_chars(ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)),
+        escape_special_chars(ns(ID$FILTER_MODE_INPUT)),
         escape_special_chars(ns(ID$EXPORT_CODE_INPUT)),
         escape_special_chars(ns(ID$FILTER_LOG_INPUT))
       )
