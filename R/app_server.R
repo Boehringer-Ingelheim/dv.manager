@@ -30,6 +30,8 @@ app_server_module <- function(id) {
 # nolint start cyclocomp_linter
 app_server_ <- function(input, output, session, opts) {
   ns <- session[["ns"]]
+  ..t$add_period("app_server_", TRUE)
+  on.exit(..t$add_period("app_server_", FALSE), add = TRUE)
 
   # Inject tools available for the rest of modules
   session$userData$manager_utils <- list(
@@ -129,6 +131,8 @@ app_server_ <- function(input, output, session, opts) {
   )
 
   filtered_dataset_list <- shiny::reactive({
+    ..t$add_period("filtered_dataset_list", TRUE)
+    on.exit(..t$add_period("filtered_dataset_list", FALSE), add = TRUE)
     unfiltered_dataset_list_r <- shiny::isolate(unfiltered_dataset_list())
     dataset_list_filter_r <- dataset_list_filter()
 
@@ -146,6 +150,8 @@ app_server_ <- function(input, output, session, opts) {
       warning(error_message)
       shiny::showNotification(error_message, type = "error")
     }
+
+    ..t$add_event("received filtered_dataset_list")
 
     fd
   })
