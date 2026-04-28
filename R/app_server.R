@@ -320,10 +320,12 @@ app_server_ <- function(input, output, session, opts) {
         shiny::req(is.logical(global_filtered_values()))
         log_inform("New filter applied")
         filtered_key_values <- unfiltered_dataset()[[filter_data]][[filter_key]][global_filtered_values()] # nolint
-        purrr::map(
+        df <- purrr::map(
           unfiltered_dataset(),
           ~ dplyr::filter(.x, .data[[filter_key]] %in% filtered_key_values) # nolint
         )
+        ..t$add_event("received filtered_dataset_list")
+        df
       })
     }
   }
