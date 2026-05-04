@@ -27,8 +27,6 @@ app_server_module <- function(id) {
   shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
 }
 
-
-# nolint start cyclocomp_linter
 app_server_ <- function(input, output, session, opts) {
   ns <- session[["ns"]]
 
@@ -317,7 +315,18 @@ app_server_ <- function(input, output, session, opts) {
     assert(is.character(id), "id must be a character")
     assert(is.function(fn), "fn must be a function")
 
-    module_output[[id]] <- fn(afmm)
+    EEF_error_messages <- character(0)
+    check_mod_fn <- module_meta[[id]][["check_mod_fn"]]
+    if (!is.null(check_mod_fn)) {
+      EEF_error_messages <- EEF_run_check_mod_fn(check_mod_fn = check_mod_fn, afmm = afmm)
+      app_creator_feedback_server(id = id, error_messages = EEF_error_messages)
+    }
+
+    module_output[id] <- list(NULL)
+    if (!length(EEF_error_messages)) {
+      module_output[[id]] <- fn(afmm)
+    }
+
     used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
     ..t$add_period(id, FALSE)
   }
@@ -360,8 +369,6 @@ app_server_ <- function(input, output, session, opts) {
     shiny::showModal(create_info_modal(session = session, input = input, ns = ns))
   })
 }
-
-# nolint end cyclocomp_linter
 
 # Convoluted way of having a testable server function
 # TestServer reads the caller environment
