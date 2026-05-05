@@ -1902,7 +1902,7 @@ local({
         )
       )
     )
-    res <- attr(get_filtered_dataset_list_(list(ds = ds), filter_info), "label")
+    res <- attr(get_filtered_dataset_list_(list(ds = ds), filter_info)[["ds"]], "label")
     expect_identical(res, "label")
   })
 
