@@ -140,8 +140,8 @@ resolve_module_list <- function(module_list) {
 
         child_ui <- curr_child[["ui"]]
         if (!is.null(curr_child[["meta"]][["check_mod_fn"]])) {
-          # `module` UI gated by app_creator_feedback_server
-          child_ui <- function(module_id) EEF_app_creator_feedback_ui(module_id, curr_child[["ui"]](module_id))
+          # `module` UI gated by EEF[["app_creator_feedback_server"]]
+          child_ui <- function(module_id) EEF[["app_creator_feedback_ui"]](module_id, curr_child[["ui"]](module_id))
         }
 
         ui_entry <- list(child_ui)

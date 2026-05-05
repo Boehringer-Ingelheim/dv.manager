@@ -318,8 +318,8 @@ app_server_ <- function(input, output, session, opts) {
     EEF_error_messages <- character(0)
     check_mod_fn <- module_meta[[id]][["check_mod_fn"]]
     if (!is.null(check_mod_fn)) {
-      EEF_error_messages <- EEF_run_check_mod_fn(check_mod_fn = check_mod_fn, afmm = afmm)
-      app_creator_feedback_server(id = id, error_messages = EEF_error_messages)
+      EEF_error_messages <- EEF[["run_check_mod_fn"]](check_mod_fn = check_mod_fn, afmm = afmm)
+      EEF[["app_creator_feedback_server"]](id = id, error_messages = EEF_error_messages)
     }
 
     module_output[id] <- list(NULL)
