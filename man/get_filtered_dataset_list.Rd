@@ -5,14 +5,14 @@
 \title{Get Filtered Data}
 \usage{
 get_filtered_dataset_list(
-  unfiltered_plus_filter_info,
+  unfiltered_dataset_list_with_filter_info,
   dataset_names,
   dataset_vars,
   dataset_extra_masks
 )
 }
 \arguments{
-\item{unfiltered_plus_filter_info}{A named list with two elements:
+\item{unfiltered_dataset_list_with_filter_info}{A named list with two elements:
 \describe{
 \item{\code{unfiltered_dataset_list}}{A named list of unfiltered \code{data.frame} objects.}
 \item{\code{filter_info}}{The filter-info structure described in get_filtered_dataset_list_.}
@@ -28,6 +28,6 @@ get_filtered_dataset_list(
 A named list of filtered \code{data.frame} objects. See get_filtered_dataset_list for details.
 }
 \description{
-Wrapper around get_filtered_dataset_list_ that accepts the combined`unfiltered_plus_filter_info``.
+Wrapper around get_filtered_dataset_list_ that accepts the combined`unfiltered_dataset_list_with_filter_info``.
 }
 \keyword{internal}
