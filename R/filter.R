@@ -1325,7 +1325,6 @@ get_filtered_dataset_ <- function(
   mask
 ) {
   checkmate::assert_subset(x = name, names(unfiltered_dataset_list))
-  checkmate::assert_subset(x = vars, names(unfiltered_dataset_list[[name]]))
 
   if (missing(vars)) {
     vars <- colnames(unfiltered_dataset_list[[name]])
@@ -1335,10 +1334,12 @@ get_filtered_dataset_ <- function(
     mask <- TRUE
   }
 
+  checkmate::assert_subset(x = vars, names(unfiltered_dataset_list[[name]]))
+
   ufd <- unfiltered_dataset_list[[name]]
   ds_lbl <- attr(ufd, "label")
-  ds_lvl <- filter_info[["result"]][["filter_info"]][[name]][["lvls"]]
-  ds_mask <- filter_info[["result"]][["filter_info"]][[name]][["mask"]] & mask
+  ds_lvl <- filter_info[[name]][["lvls"]]
+  ds_mask <- filter_info[[name]][["mask"]] & mask
 
   # Depending on the type of subsetting unrequired extra copies can be made because:
   # (Allocation is always done because we are assigning but are only concerned about the `data` itself not the `pointer` to the data)
@@ -1358,15 +1359,15 @@ get_filtered_dataset_ <- function(
     # Fastest option:
     # microbenchmark::microbenchmark(iris[mask, cols, drop = FALSE], iris[mask,,drop = FALSE][cols], iris[cols][mask,,drop = FALSE], times = 1e4)
     # nolint end
-    fd <- unfiltered_dataset_list[[ds_name]][ds_mask, vars, drop = FALSE]
+    fd <- unfiltered_dataset_list[[name]][ds_mask, vars, drop = FALSE]
   }
 
   fd <- apply_lvls_info_to_ds(ufd, fd, ds_lvl)
   fd <- copy_labels_from_dataset(ufd, fd)
-  if (!is.null(lbl)) {
-    attr(filtered_dataset, "label") <- ds_lbl
+  if (!is.null(ds_lbl)) {
+    attr(fd, "label") <- ds_lbl
   }
-  res
+  fd
 }
 
 #' Get Filtered Data

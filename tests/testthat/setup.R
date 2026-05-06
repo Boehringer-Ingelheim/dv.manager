@@ -15,14 +15,14 @@ specs <- vdoc[["specs"]]
 
 # -----
 
-if(
+if (
   !isTRUE(as.logical(Sys.getenv("CI"))) &&
-  !isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
-  ) {
-    warning("Attempting to run local tests without 'LOCAL_SHINY_TESTS' option")
-  }
+    !isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
+) {
+  warning("Attempting to run local tests without 'LOCAL_SHINY_TESTS' option")
+}
 
-run_shiny_tests <- !isFALSE(as.logical(Sys.getenv("SKIP_SHINY_TESTS")))
+run_shiny_tests <- !isTRUE(as.logical(Sys.getenv("SKIP_SHINY_TESTS")))
 
 skip_if_not_running_shiny_tests <- function() testthat::skip_if_not(run_shiny_tests, message = "Skip tests") # nolint
 
@@ -53,11 +53,15 @@ start_app_driver <- function(expr, defer = TRUE) {
           )
         )
         app$wait_for_idle()
-        if (defer) withr::defer_parent(app$stop())
+        if (defer) {
+          withr::defer_parent(app$stop())
+        }
         app
       },
       condition = function(e) {
-        if (exists("app") && "stop" %in% names(app)) app$stop()
+        if (exists("app") && "stop" %in% names(app)) {
+          app$stop()
+        }
         print(e)
         NULL
       }

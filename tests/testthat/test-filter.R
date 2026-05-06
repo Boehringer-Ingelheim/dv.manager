@@ -1809,100 +1809,97 @@ local({
     }
   )
 
-  test_that("get_filtered_dataset_list basic row filtering works", {
-    ds <- data.frame(id = 1:3, x = c("a", "b", "c"))
-    filter_info <- list(
-      result = list(
-        filter_info = list(
-          ds = list(mask = c(TRUE, FALSE, TRUE), lvls = list())
-        )
+  test_that("get_filtered_dataset basic row filtering works", {
+    ufd_with_fi <- list(
+      unfiltered_dataset_list = local({
+        list(ds = data.frame(id = 1:3, x = c("a", "b", "c")))
+      }),
+      filter_info = list(
+        ds = list(mask = c(TRUE, FALSE, TRUE), lvls = list())
       )
     )
-    res <- get_filtered_dataset_list_(list(ds = ds), filter_info)
-    expect_equal(nrow(res$ds), 2)
-    expect_equal(res$ds$id, c(1L, 3L))
-    expect_false(lobstr::obj_addr(res$ds$id) == lobstr::obj_addr(ds$id))
+    res <- get_filtered_dataset(ufd_with_fi, "ds")
+    expect_equal(nrow(res), 2)
+    expect_equal(res$id, c(1L, 3L))
+    expect_false(lobstr::obj_addr(res$id) == lobstr::obj_addr(ufd_with_fi$unfiltered_dataset_list$ds$id))
   })
 
-  test_that("get_filtered_dataset_list extra mask is AND-combined with filter mask", {
-    ds <- data.frame(id = 1:3)
-    filter_info <- list(
-      result = list(
-        filter_info = list(
-          ds = list(mask = c(TRUE, TRUE, TRUE), lvls = list())
-        )
+  test_that("get_filtered_dataset extra mask is AND-combined with filter mask", {
+    ufd_with_fi <- list(
+      unfiltered_dataset_list = local({
+        list(ds = data.frame(id = 1:3))
+      }),
+      filter_info = list(
+        ds = list(mask = c(TRUE, TRUE, TRUE), lvls = list())
       )
     )
-    res <- get_filtered_dataset_list_(list(ds = ds), filter_info, dataset_extra_masks = list(ds = c(TRUE, FALSE, TRUE)))
-    expect_equal(res$ds$id, c(1L, 3L))
-    expect_false(lobstr::obj_addr(res$ds$id) == lobstr::obj_addr(ds$id))
+    res <- get_filtered_dataset(ufd_with_fi, "ds", mask = c(TRUE, FALSE, TRUE))
+    expect_equal(res$id, c(1L, 3L))
+    expect_false(lobstr::obj_addr(res$id) == lobstr::obj_addr(ufd_with_fi$unfiltered_dataset_list$ds$id))
   })
 
-  test_that("get_filtered_dataset_list dataset_vars restricts columns without copying data", {
-    ds <- data.frame(a = 1:2, b = 3:4, c = 5:6)
-    filter_info <- list(
-      result = list(
-        filter_info = list(
-          ds = list(mask = c(TRUE, TRUE), lvls = list())
-        )
+  test_that("get_filtered_dataset vars restricts columns without copying data", {
+    ufd_with_fi <- list(
+      unfiltered_dataset_list = local({
+        list(ds = data.frame(a = 1:2, b = 3:4, c = 5:6))
+      }),
+      filter_info = list(
+        ds = list(mask = c(TRUE, TRUE), lvls = list())
       )
     )
-    res <- get_filtered_dataset_list_(list(ds = ds), filter_info, dataset_vars = list(ds = c("a", "c")))
-    expect_equal(names(res$ds), c("a", "c"))
-    expect_true(lobstr::obj_addr(res$ds$a) == lobstr::obj_addr(ds$a))
-    expect_true(lobstr::obj_addr(res$ds$c) == lobstr::obj_addr(ds$c))
+
+    res <- get_filtered_dataset(ufd_with_fi, "ds", vars = c("a", "c"))
+    expect_equal(names(res), c("a", "c"))
+    expect_true(lobstr::obj_addr(res$a) == lobstr::obj_addr(ufd_with_fi$unfiltered_dataset_list$ds$a))
+    expect_true(lobstr::obj_addr(res$c) == lobstr::obj_addr(ufd_with_fi$unfiltered_dataset_list$ds$c))
   })
 
-  test_that("get_filtered_dataset_list only requested dataset_names are returned", {
-    ds1 <- data.frame(x = 1:2)
-    ds2 <- data.frame(y = 1:2)
-    filter_info <- list(
-      result = list(
-        filter_info = list(
-          ds1 = list(mask = c(TRUE, TRUE), lvls = list()),
-          ds2 = list(mask = c(TRUE, TRUE), lvls = list())
-        )
+  test_that("get_filtered_dataset variable labels are copied from unfiltered to filtered dataset", {
+    ufd_with_fi <- list(
+      unfiltered_dataset_list = local({
+        ds <- data.frame(x = 1:3)
+        attr(ds$x, "label") <- "label"
+        list(ds = ds)
+      }),
+      filter_info = list(
+        ds = list(mask = c(TRUE, TRUE, TRUE), lvls = list())
       )
     )
-    res <- get_filtered_dataset_list_(list(ds1 = ds1, ds2 = ds2), filter_info, dataset_names = "ds1")
-    expect_equal(names(res), "ds1")
+
+    res <- get_filtered_dataset(ufd_with_fi, "ds", vars = c("x"), mask = c(TRUE, FALSE, FALSE))
+    expect_equal(attr(res$x, "label"), "label")
   })
 
-  test_that("get_filtered_dataset_list variable labels are copied from unfiltered to filtered dataset", {
-    unfiltered <- data.frame(x = 1:3)
-    attr(unfiltered$x, "label") <- "My Label"
-    filtered <- unfiltered[1:2, , drop = FALSE]
-    attr(filtered$x, "label") <- NULL
-    res <- copy_labels_from_dataset(unfiltered, filtered)
-    expect_equal(attr(res$x, "label"), "My Label")
-  })
-
-  test_that("get_filtered_dataset_list all TRUE mask does not copy data vectors", {
-    ds <- data.frame(a = 1:2, b = 3:4, c = 5:6)
-    filter_info <- list(
-      result = list(
-        filter_info = list(
-          ds = list(mask = c(TRUE, TRUE), lvls = list())
-        )
+  test_that("get_filtered_dataset_ all TRUE mask does not copy data vectors", {
+    ufd_with_fi <- list(
+      unfiltered_dataset_list = local({
+        ds <- data.frame(a = 1:2, b = 3:4, c = 5:6)
+        list(ds = ds)
+      }),
+      filter_info = list(
+        ds = list(mask = c(TRUE, TRUE), lvls = list())
       )
     )
-    res <- get_filtered_dataset_list_(list(ds = ds), filter_info)
-    expect_true(lobstr::obj_addr(res$ds$a) == lobstr::obj_addr(ds$a))
-    expect_true(lobstr::obj_addr(res$ds$b) == lobstr::obj_addr(ds$b))
-    expect_true(lobstr::obj_addr(res$ds$c) == lobstr::obj_addr(ds$c))
+
+    res <- get_filtered_dataset(ufd_with_fi, "ds")
+    expect_true(lobstr::obj_addr(res$a) == lobstr::obj_addr(ufd_with_fi$unfiltered_dataset_list$ds$a))
+    expect_true(lobstr::obj_addr(res$b) == lobstr::obj_addr(ufd_with_fi$unfiltered_dataset_list$ds$b))
+    expect_true(lobstr::obj_addr(res$c) == lobstr::obj_addr(ufd_with_fi$unfiltered_dataset_list$ds$c))
   })
 
-  test_that("get_filtered_dataset_list all TRUE mask does not copy data vectors", {
-    ds <- data.frame(a = 1:2, b = 3:4, c = 5:6)
-    attr(ds, "label") <- "label"
-    filter_info <- list(
-      result = list(
-        filter_info = list(
-          ds = list(mask = c(TRUE, TRUE), lvls = list())
-        )
+  test_that("get_filtered_dataset_ keeps ds label attribute", {
+    ufd_with_fi <- list(
+      unfiltered_dataset_list = local({
+        ds <- data.frame(a = 1:2, b = 3:4, c = 5:6)
+        attr(ds, "label") <- "label"
+        list(ds = ds)
+      }),
+      filter_info = list(
+        ds = list(mask = c(TRUE, TRUE), lvls = list())
       )
     )
-    res <- attr(get_filtered_dataset_list_(list(ds = ds), filter_info)[["ds"]], "label")
+
+    res <- attr(get_filtered_dataset(ufd_with_fi, "ds"), "label")
     expect_identical(res, "label")
   })
 
@@ -2595,6 +2592,7 @@ local({
 })
 
 local({
+  skip_if_not_running_shiny_tests()
   # Related to the first beat of the app and subsequent updates
   # Mainly related to the above, the main requisite is that when starting the app on a bookmarked state
   # a single filtered dataset_list is sent to the modules, otherwise bookmark state is spent on the first filtered

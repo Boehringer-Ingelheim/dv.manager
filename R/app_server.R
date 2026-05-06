@@ -151,7 +151,7 @@ app_server_ <- function(input, output, session, opts) {
     )
     res <- list(
       unfiltered_dataset_list = r_unfiltered_dataset_list,
-      filter_info = filter_info,
+      filter_info = filter_info[["result"]][["filter_info"]],
       get_filtered_dataset = get_filtered_dataset
     )
 
