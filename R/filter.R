@@ -1008,13 +1008,13 @@ new_filter_server <- function(
           assert(from_filter_validate(json_r), "failed to validate message from filter")
         }
         parsed_json <- deserialize_filter_state_from_client(json_r)
-        log_inform("Recieved regular JSON filter")
+        log_inform("Received regular JSON filter")
         res <- list(
           parsed = parsed_json %||% NA_character_,
           raw = json_r
         )
       } else {
-        log_inform("Recieved NA JSON filter")
+        log_inform("Received NA JSON filter")
         res <- NA_character_
       }
       res

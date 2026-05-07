@@ -138,9 +138,7 @@ resolve_module_list <- function(module_list) {
       } else {
         module_id <- curr_child[["module_id"]]
 
-        child_ui <- curr_child[["ui"]]
-
-        ui_entry <- list(child_ui)
+        ui_entry <- list(curr_child[["ui"]])
         names(ui_entry) <- module_id
         res[["ui"]] <- c(res[["ui"]], ui_entry)
 

@@ -88,7 +88,7 @@ run_app <- function(
     )
   })
 
-  if (.enable_EEF) {
+  if (!isFALSE(.enable_EEF)) {
     log_inform("Running EEF checkers")
     config[["module_info"]] <- check_EEF(config[["module_info"]], config[["afmm_static"]])
   } else {
