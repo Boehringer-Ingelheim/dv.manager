@@ -1,3 +1,6 @@
+# dv.manager 3.0.0-9006
+ - Moves early error feedback to run app
+
 # dv.manager 3.0.0-9005
  - Integrates early error feedback wrappers
 
