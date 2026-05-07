@@ -294,6 +294,14 @@ app_server_ <- function(input, output, session, opts) {
         }
         session$sendCustomMessage("set_active_tab", list(id = session[["ns"]](ID$NAV_HEADER), tab_id = selected))
       }
+    ),
+    filter_metadata = list(
+      output = shiny::reactive({
+        log_warn(
+          "You are using afmm[['filter_metadata']][['output']]. This is not a public element and it may disappear or be modified without notice"
+        )
+        dataset_list_filter()
+      })
     )
   )
 
