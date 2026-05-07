@@ -938,7 +938,7 @@ new_filter_server <- function(
       # Not convinced as it is removed somewhere else (app_server) (gvbu)
       session[["sendCustomMessage"]]("dv_manager_show_overlay", list(message = "Setting up filter"))
 
-      log_inform(paste0("Send init message to ", ns_id))
+      log_inform(paste0("Send init message to: ", ns_id))
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
       current_dataset_lists <- stats::setNames(list(selected_dataset_list()), dataset_list_name)
 
@@ -957,7 +957,7 @@ new_filter_server <- function(
 
     shiny::observeEvent(input[[ID$SAVED_FILTER_STATE_JSON_MSG_INPUT]], {
       log_inform(
-        paste("Received saved states:", input[[ID$SAVED_FILTER_STATE_JSON_MSG_INPUT]])
+        paste("Received saved states(", ns(id), "):", input[[ID$SAVED_FILTER_STATE_JSON_MSG_INPUT]])
       )
     })
 
@@ -990,7 +990,7 @@ new_filter_server <- function(
     })
 
     shiny::observeEvent(input[[ID$FILTER_STATE_JSON_INPUT]], {
-      log_inform(paste("RECEIVED FILTER", ns(id)))
+      log_inform(paste("Received Filter input:", ns(id)))
     })
 
     shiny::observeEvent(input[[ID$FILTER_LOG_INPUT]], {
@@ -1000,7 +1000,7 @@ new_filter_server <- function(
     })
 
     res <- shiny::reactive({
-      start <- Sys.time()
+      log_inform(paste("Processing filter", ns(id)))
       json_r <- input[[ID$FILTER_STATE_JSON_INPUT]]
 
       if (checkmate::test_string(json_r, min.chars = 1)) {
@@ -1008,16 +1008,15 @@ new_filter_server <- function(
           assert(from_filter_validate(json_r), "failed to validate message from filter")
         }
         parsed_json <- deserialize_filter_state_from_client(json_r)
-        log_inform("PROCESSING FILTER PARSED")
+        log_inform("Recieved regular JSON filter")
         res <- list(
           parsed = parsed_json %||% NA_character_,
           raw = json_r
         )
       } else {
-        log_inform("PROCESSING FILTER NA")
+        log_inform("Recieved NA JSON filter")
         res <- NA_character_
       }
-      log_inform(paste("Processing filter: ", Sys.time() - start))
       res
     })
 
