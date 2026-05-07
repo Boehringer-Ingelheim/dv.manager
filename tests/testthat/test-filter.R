@@ -1892,6 +1892,20 @@ local({
     expect_true(lobstr::obj_addr(res$ds$c) == lobstr::obj_addr(ds$c))
   })
 
+  test_that("get_filtered_dataset_list all TRUE mask does not copy data vectors", {
+    ds <- data.frame(a = 1:2, b = 3:4, c = 5:6)
+    attr(ds, "label") <- "label"
+    filter_info <- list(
+      result = list(
+        filter_info = list(
+          ds = list(mask = c(TRUE, TRUE), lvls = list())
+        )
+      )
+    )
+    res <- attr(get_filtered_dataset_list_(list(ds = ds), filter_info)[["ds"]], "label")
+    expect_identical(res, "label")
+  })
+
   test_that("apply_lvls_info_to_ds dropped factor levels are restored when prescribed by ds_lvl", {
     unfiltered <- data.frame(x = factor(c("a", "b", "c")))
     filtered <- unfiltered[1:2, , drop = FALSE] # "c" absent

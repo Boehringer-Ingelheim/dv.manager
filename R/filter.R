@@ -1352,6 +1352,7 @@ get_filtered_dataset_list_ <- function(
     ds_name <- dataset_names[[ds_idx]]
     unfiltered_dataset <- unfiltered_dataset_list[[ds_name]]
     lbls <- get_lbls(unfiltered_dataset)
+    lbl <- attr(unfiltered_dataset, "label")
 
     ds_lvl <- filter_info[["result"]][["filter_info"]][[ds_name]][["lvls"]]
 
@@ -1395,6 +1396,9 @@ get_filtered_dataset_list_ <- function(
     }
     filtered_dataset <- apply_lvls_info_to_ds(unfiltered_dataset, filtered_dataset, ds_lvl)
     filtered_dataset <- copy_labels_from_dataset(unfiltered_dataset, filtered_dataset)
+    if (!is.null(lbl)) {
+      attr(filtered_dataset, "label") <- lbl
+    }
 
     res[[ds_name]] <- filtered_dataset
   }

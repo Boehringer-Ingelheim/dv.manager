@@ -1,5 +1,8 @@
-# dv.manager 3.0.0-9004
+# dv.manager 3.0.0-9005
  - Integrates early error feedback wrappers
+
+# dv.manager 3.0.0-9004
+ - Bugfix: dataset labels were not retained after filtering
 
 # dv.manager 3.0.0-9003
  - Introduces collapsed tab menus
