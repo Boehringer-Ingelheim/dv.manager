@@ -1,7 +1,7 @@
 app_server <- function(input = NULL, output = NULL, session = NULL) {
   opts <- list(
+    "afmm_static" = get_config("afmm_static"),
     "module_info" = get_config("module_info"),
-    "data" = get_config("data"),
     "filter_data" = get_config("filter_data"),
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
@@ -15,8 +15,8 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
 
 app_server_module <- function(id) {
   opts <- list(
+    "afmm_static" = get_config("afmm_static"),
     "module_info" = get_config("module_info"),
-    "data" = get_config("data"),
     "filter_data" = get_config("filter_data"),
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
@@ -44,11 +44,14 @@ app_server_ <- function(input, output, session, opts) {
     }
   )
 
+  afmm_static <- opts[["afmm_static"]]
+  dataset_lists <- afmm_static[["data"]]
+  module_names <- afmm_static[["module_names"]]
+
   module_server <- opts[["module_info"]][["server"]]
   module_meta <- opts[["module_info"]][["meta"]]
-  module_names <- opts[["module_info"]][["module_name"]]
   module_hierarchy_list <- opts[["module_info"]][["hierarchy"]]
-  dataset_lists <- opts[["data"]]
+
   subject_filter_dataset_name <- opts[["filter_data"]]
   filter_key_var <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
@@ -219,8 +222,7 @@ app_server_ <- function(input, output, session, opts) {
     as_dv_manager_module_output_safe_list(module_output)
   }
 
-  afmm <- list(
-    data = dataset_lists,
+  afmm_reactive <- list(
     unfiltered_dataset = shiny::reactive({
       log_warn(
         "(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]]."
@@ -254,7 +256,6 @@ app_server_ <- function(input, output, session, opts) {
       })
     ),
     module_output = module_output_fn,
-    module_names = module_names,
     utils = list(
       switch2 = function(selected) {
         .Defunct(
@@ -303,6 +304,11 @@ app_server_ <- function(input, output, session, opts) {
     )
   )
 
+  afmm <- c(
+    afmm_static,
+    afmm_reactive
+  )
+
   used_datasets <- list()
   module_output <- list()
 
@@ -315,18 +321,7 @@ app_server_ <- function(input, output, session, opts) {
     assert(is.character(id), "id must be a character")
     assert(is.function(fn), "fn must be a function")
 
-    EEF_error_messages <- character(0)
-    check_mod_fn <- module_meta[[id]][["check_mod_fn"]]
-    if (!is.null(check_mod_fn)) {
-      EEF_error_messages <- EEF[["run_check_mod_fn"]](check_mod_fn = check_mod_fn, afmm = afmm)
-      EEF[["app_creator_feedback_server"]](id = id, error_messages = EEF_error_messages)
-    }
-
-    module_output[id] <- list(NULL)
-    if (!length(EEF_error_messages)) {
-      module_output[[id]] <- fn(afmm)
-    }
-
+    module_output[[id]] <- fn(afmm)
     used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
     ..t$add_period(id, FALSE)
   }

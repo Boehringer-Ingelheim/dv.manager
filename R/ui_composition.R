@@ -139,10 +139,6 @@ resolve_module_list <- function(module_list) {
         module_id <- curr_child[["module_id"]]
 
         child_ui <- curr_child[["ui"]]
-        if (!is.null(curr_child[["meta"]][["check_mod_fn"]])) {
-          # `module` UI gated by EEF[["app_creator_feedback_server"]]
-          child_ui <- function(module_id) EEF[["app_creator_feedback_ui"]](module_id, curr_child[["ui"]](module_id))
-        }
 
         ui_entry <- list(child_ui)
         names(ui_entry) <- module_id
@@ -177,21 +173,6 @@ resolve_module_list <- function(module_list) {
   }
 
   res
-}
-
-
-process_module_list <- function(module_list) {
-  resolved_module_list <- resolve_module_list(module_list)
-
-  # We need the ns to be able to invoke all ui functions
-  # TODO: Consider removing namespacing it would make all these simpler
-
-  res <- resolved_module_list
-  res[["ui_fn"]] <- function(ns, footer, top_buttons) {
-    compose_ui(resolved_module_list[["hierarchy"]], resolved_module_list[["ui"]], ns, footer, top_buttons)
-  }
-
-  return(res)
 }
 
 compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {

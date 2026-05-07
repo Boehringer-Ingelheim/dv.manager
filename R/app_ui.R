@@ -24,7 +24,7 @@ app_ui <- function(request_id) {
 
   ######################################
 
-  dataset_lists <- get_config("data")
+  dataset_lists <- get_config("afmm_static")[["data"]]
   module_info <- get_config("module_info")
   subject_filter_dataset_name <- get_config("filter_data")
   filter_info <- get_config("filter_info")
@@ -117,7 +117,7 @@ app_ui <- function(request_id) {
     sidebar,
     list(
       overlay_script,
-      module_info[["ui_fn"]](ns, dataset_name, top_buttons)
+      compose_ui(module_info[["hierarchy"]], module_info[["ui"]], ns, dataset_name, top_buttons)
     )
   )
 }
