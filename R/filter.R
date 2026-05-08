@@ -1286,36 +1286,6 @@ max_min_count_na_C <- function(x) {
   .Call("max_min_count_na_C", x, PACKAGE = "dv.manager")
 }
 
-#' Get Filtered Data
-#'
-#' @description
-#' Function that applies filter masks and column selections to a named list of
-#' datasets. For each requested dataset it: applies the pre-computed boolean mask from
-#' `filter_info`, optionally combines it with caller-supplied extra masks, restricts columns to
-#' those listed in `dataset_vars`, restores factor levels according to the filter's level
-#' information, and copies variable labels back onto the result.
-#'
-#' @param unfiltered_dataset_list A named list of `data.frame` objects representing the original,
-#'   unfiltered datasets.
-#' @param filter_info A named list produced by the filtering machinery. Must contain the element
-#'   `result$filter_info`, where each entry is keyed by dataset name and holds:
-#'   \describe{
-#'     \item{`mask`}{A logical vector with one element per row of the corresponding dataset.}
-#'     \item{`lvls`}{A named list mapping factor-variable names to the levels that should be
-#'       retained after filtering.}
-#'   }
-#' @param dataset_names A character vector of dataset names to process. Must be a subset of
-#'   `names(unfiltered_dataset_list)`. Defaults to all datasets in `unfiltered_dataset_list`.
-#' @param dataset_vars A named list of character vectors specifying which columns to keep for each
-#'   dataset. Names must be a subset of `names(unfiltered_dataset_list)`. Defaults to all columns
-#'   of each dataset.
-#' @param dataset_extra_masks A named list of additional logical vectors (one per dataset) that are
-#'   AND-combined with the mask from `filter_info`. Defaults to an empty list (no extra masking).
-#'
-#' @return A named list of filtered `data.frame` objects, one per entry in `dataset_names`, with
-#'   rows, columns, factor levels, and variable labels all reconciled against the original data.
-#'
-#' @keywords internal
 get_filtered_dataset_ <- function(
   unfiltered_dataset_list,
   filter_info,
@@ -1373,23 +1343,6 @@ get_filtered_dataset_ <- function(
   fd
 }
 
-#' Get Filtered Data
-#'
-#' @description
-#' Wrapper around get_filtered_dataset_list_ that accepts the combined`unfiltered_dataset_list_with_filter_info``.
-#'
-#' @param unfiltered_dataset_list_with_filter_info A named list with two elements:
-#'   \describe{
-#'     \item{`unfiltered_dataset_list`}{A named list of unfiltered `data.frame` objects.}
-#'     \item{`filter_info`}{The filter-info structure described in get_filtered_dataset_list_.}
-#'   }
-#' @param dataset_names See get_filtered_dataset_list_.
-#' @param dataset_vars See get_filtered_dataset_list_.
-#' @param dataset_extra_masks See get_filtered_dataset_list_.
-#'
-#' @return A named list of filtered `data.frame` objects. See get_filtered_dataset_list for details.
-#' @keywords internal
-#' @export
 get_filtered_dataset <- function(unfiltered_dataset_list_with_filter_info, name, vars, mask) {
   get_filtered_dataset_(
     as_safe_list(unfiltered_dataset_list_with_filter_info[["unfiltered_dataset_list"]]),
@@ -1412,29 +1365,6 @@ get_filtered_dataset_list <- function(unfiltered_dataset_list_with_filter_info) 
   res
 }
 
-#' Apply Level Information to a Filtered Dataset
-#'
-#' @description
-#' Reconciles factor levels in a filtered dataset against the level information captured at filter
-#' time. After row-filtering, factor levels that were present in the original data may be lost;
-#' conversely, OR-type filter operations can re-introduce rows whose levels would otherwise have
-#' been dropped.
-#'
-#' Only variables that appear in both the filtered dataset **and** `ds_lvl` are modified; all other
-#' columns are left untouched.
-#'
-#' Level order is respected
-#'
-#' @param unfiltered_dataset The original `data.frame` before any row filtering, used as source for the full set
-#'  of factor levels and their order.
-#' @param filtered_dataset The `data.frame` after row and column filtering whose factor levels need
-#'   to be reconciled.
-#' @param ds_lvl A namedlist mapping factor-variable names to the character vectors of levels.
-#'
-#' @return `filtered_dataset` with factor levels of the relevant variables.
-#'
-#' @keywords internal
-#' @export
 apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) {
   ds_names <- names(filtered_dataset)
   ds_lvl_names <- names(ds_lvl)
