@@ -1352,17 +1352,17 @@ get_filtered_dataset_ <- function(
   # nolint end
 
   if (all(ds_mask)) {
-    fd <- unfiltered_dataset_list[[name]][, vars, drop = FALSE]
+    fd <- ufd[, vars, drop = FALSE]
   } else {
     # nolint start
     # Fastest option:
     # microbenchmark::microbenchmark(iris[mask, cols, drop = FALSE], iris[mask,,drop = FALSE][cols], iris[cols][mask,,drop = FALSE], times = 1e4)
     # nolint end
     fd <- unfiltered_dataset_list[[name]][ds_mask, vars, drop = FALSE]
+    fd <- apply_lvls_info_to_ds(ufd, fd, ds_lvl)
+    fd <- copy_labels_from_dataset(ufd, fd)
   }
 
-  fd <- apply_lvls_info_to_ds(ufd, fd, ds_lvl)
-  fd <- copy_labels_from_dataset(ufd, fd)
   if (!is.null(ds_lbl)) {
     attr(fd, "label") <- ds_lbl
   }
