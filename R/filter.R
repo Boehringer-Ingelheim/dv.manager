@@ -2,7 +2,7 @@ toJSON <- function(x) unclass(jsonlite::toJSON(x))
 fromJSON <- function(x) jsonlite::fromJSON(x, simplifyVector = TRUE, simplifyDataFrame = FALSE)
 as_scalar <- jsonlite::unbox
 serialize_filter_data_to_client_bin64 <- function(x) {
-  fd <- get_filter_data(x)
+  fd <- get_filter_data_dataset_list(x)
   bin <- binary_serialize_filter_data_C(fd)
   ..t$add_period("jsonlite::base64_enc(bin)", TRUE)
   enc <- jsonlite::base64_enc(bin)
@@ -182,9 +182,9 @@ get_single_filter_data <- function(dataset) {
   return(res)
 }
 
-get_filter_data <- function(dataset_lists) {
-  ..t$add_period("get_filter_data", TRUE)
-  on.exit(..t$add_period("get_filter_data", FALSE), add = TRUE)
+get_filter_data_dataset_list <- function(dataset_lists) {
+  ..t$add_period("get_filter_data_dataset_list", TRUE)
+  on.exit(..t$add_period("get_filter_data_dataset_list", FALSE), add = TRUE)
   FDF <- FC$FDF
 
   nm_dataset_list <- names(dataset_lists)

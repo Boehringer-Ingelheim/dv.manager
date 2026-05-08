@@ -2129,7 +2129,7 @@ local({
   )
 
   test_that(
-    "get_filter_data returns one entry per dataset_list and dataset" |>
+    "get_filter_data_dataset_list returns one entry per dataset_list and dataset" |>
       vdoc[["add_spec"]](c(
         specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
         specs$FILTERING$FILTER_SUPPORTED_TYPES,
@@ -2147,7 +2147,7 @@ local({
         )
       )
 
-      r <- get_filter_data(dataset_lists)
+      r <- get_filter_data_dataset_list(dataset_lists)
 
       expect_length(r[[FC$FDF$DATASET_LISTS]], 2)
       expect_length(r[[FC$FDF$DATASET_LISTS]][[1]][[FC$FDF$DATASET_LIST]], 2)
@@ -2466,7 +2466,7 @@ local({
         dv.manager:::run_app(
           data = dataset_lists,
           module_list = list(
-            Simple3 = dv.manager:::mod_simple(
+            Simple3 = dv.manager:::mod_0simple(
               dataset = "ds2",
               module_id = "mod",
               from = "filtered_dataset_list"
