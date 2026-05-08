@@ -129,9 +129,9 @@ app_server_ <- function(input, output, session, opts) {
     subgrouped_dataset_list
   })
 
-  unfiltered_plus_filter_info <- shiny::reactive({
-    ..t$add_period("unfiltered_plus_filter_info", TRUE)
-    on.exit(..t$add_period("unfiltered_plus_filter_info", FALSE))
+  unfiltered_dataset_list_with_filter_info <- shiny::reactive({
+    ..t$add_period("unfiltered_dataset_list_with_filter_info", TRUE)
+    on.exit(..t$add_period("unfiltered_dataset_list_with_filter_info", FALSE))
     # Place reqs here so all elements are synchronized before going forward
     # Consider generation counters (Check current approach)
     r_unfiltered_dataset_list <- shiny::isolate(unfiltered_dataset_list())
@@ -151,11 +151,11 @@ app_server_ <- function(input, output, session, opts) {
     )
     res <- list(
       unfiltered_dataset_list = r_unfiltered_dataset_list,
-      filter_info = filter_info,
-      get_filtered_dataset_list = get_filtered_dataset_list
+      filter_info = filter_info[["result"]][["filter_info"]],
+      get_filtered_dataset = get_filtered_dataset
     )
 
-    ..t$add_event("received unfiltered_dataset_list_plus_info")
+    ..t$add_event("received unfiltered_dataset_list_with_filter_info")
 
     res
   })
@@ -163,11 +163,9 @@ app_server_ <- function(input, output, session, opts) {
   filtered_dataset_list <- shiny::reactive({
     ..t$add_period("filtered_dataset_list", TRUE)
     on.exit(..t$add_period("filtered_dataset_list", FALSE))
-    r_unfiltered_plus_filter_info <- unfiltered_plus_filter_info()
-    fd <- get_filtered_dataset_list(r_unfiltered_plus_filter_info)
-
+    r_unfiltered_dataset_list_with_filter_info <- unfiltered_dataset_list_with_filter_info()
+    fd <- get_filtered_dataset_list(r_unfiltered_dataset_list_with_filter_info)
     ..t$add_event("received filtered_dataset_list")
-
     fd
   })
 
@@ -175,10 +173,10 @@ app_server_ <- function(input, output, session, opts) {
     ID$FILTER,
     unfiltered_dataset_list,
     subject_filter_dataset_name,
-    unfiltered_plus_filter_info
+    unfiltered_dataset_list_with_filter_info
   )
 
-  shiny::observeEvent(unfiltered_plus_filter_info(), {
+  shiny::observeEvent(unfiltered_dataset_list_with_filter_info(), {
     # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
     session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
   })
@@ -237,21 +235,23 @@ app_server_ <- function(input, output, session, opts) {
     }),
     unfiltered_dataset_list = unfiltered_dataset_list,
     filtered_dataset_list = filtered_dataset_list,
-    unfiltered_plus_filter_info = unfiltered_plus_filter_info,
+    unfiltered_dataset_list_with_filter_info = unfiltered_dataset_list_with_filter_info,
     url_parameters = url_parameters,
     dataset_name = shiny::reactive({
-      # log_warn("(Message for the module developer) afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]].") # nolintr
+      log_warn(
+        "(Message for the module developer) afmm[[\"dataset_name\"]]() will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_plus_info\"]]()[[\"unfiltered_dataset_list\"]], \"dataset_list_name\")."
+      )
       input$selector
     }),
     dataset_metadata = list(
       name = shiny::reactive({
         log_warn(
-          "(Message for the module developer) afmm[[\"dataset_metadata\"]][[\"name\"]] will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_plus_info\"]][[\"unfiltered_dataset_list\"]], \"dataset_list_name\")."
+          "(Message for the module developer) afmm[[\"dataset_metadata\"]][[\"name\"]]() will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_plus_info\"]]()[[\"unfiltered_dataset_list\"]], \"dataset_list_name\")."
         ) # nolintr
         attr(unfiltered_dataset_list(), "dataset_list_name")
       }),
       date_range = shiny::reactive({
-        "(Message for the module developer) afmm[[\"dataset_metadata\"]][[\"date_range\"]] will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_plus_info\"]][[\"unfiltered_dataset_list\"]], \"date_range\")."
+        "(Message for the module developer) afmm[[\"dataset_metadata\"]][[\"date_range\"]] will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_plus_info\"]]()[[\"unfiltered_dataset_list\"]], \"date_range\")."
         attr(unfiltered_dataset_list(), "date_range")
       })
     ),
@@ -325,7 +325,7 @@ app_server_ <- function(input, output, session, opts) {
   # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
   if (length(dataset_lists) > 0) {
     # Otherwise when no dataset_list is loaded in the app the overlay remains in screen
-    shiny::observeEvent(unfiltered_plus_filter_info(), {
+    shiny::observeEvent(unfiltered_dataset_list_with_filter_info(), {
       session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
     })
   } else {

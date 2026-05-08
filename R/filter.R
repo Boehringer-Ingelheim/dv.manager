@@ -1317,100 +1317,65 @@ max_min_count_na_C <- function(x) {
 #'   rows, columns, factor levels, and variable labels all reconciled against the original data.
 #'
 #' @keywords internal
-get_filtered_dataset_list_ <- function(
+get_filtered_dataset_ <- function(
   unfiltered_dataset_list,
   filter_info,
-  dataset_names,
-  dataset_vars,
-  dataset_extra_masks
+  name,
+  vars,
+  mask
 ) {
-  if (missing(dataset_names)) {
-    dataset_names <- names(unfiltered_dataset_list)
+  checkmate::assert_subset(x = name, names(unfiltered_dataset_list))
+
+  if (missing(vars)) {
+    vars <- colnames(unfiltered_dataset_list[[name]])
   }
 
-  if (missing(dataset_vars)) {
-    dataset_vars <- lapply(dataset_names, function(x) {
-      colnames(unfiltered_dataset_list[[x]])
-    })
-    names(dataset_vars) <- dataset_names
+  if (missing(mask)) {
+    mask <- TRUE
   }
 
-  if (missing(dataset_extra_masks)) {
-    dataset_extra_masks <- list()
-  }
+  checkmate::assert_subset(x = vars, names(unfiltered_dataset_list[[name]]))
 
-  checkmate::assert_subset(dataset_names, names(unfiltered_dataset_list))
-  checkmate::assert_list(dataset_vars, names = "unique")
-  checkmate::assert_list(dataset_extra_masks, names = "unique")
-  checkmate::assert_subset(names(dataset_vars), names(unfiltered_dataset_list))
-  checkmate::assert_subset(names(dataset_extra_masks), names(unfiltered_dataset_list))
+  ufd <- unfiltered_dataset_list[[name]]
+  ds_lbl <- attr(ufd, "label")
+  ds_lvl <- filter_info[[name]][["lvls"]]
+  ds_mask <- filter_info[[name]][["mask"]] & mask
 
-  res <- vector(mode = "list", length = length(dataset_names))
-  names(res) <- dataset_names
+  # Depending on the type of subsetting unrequired extra copies can be made because:
+  # (Allocation is always done because we are assigning but are only concerned about the `data` itself not the `pointer` to the data)
+  # We have to be careful with row indexing that always triggers copy behavior
+  # nolint start
+  # ds <- data.frame(a = 1:2, b = 3:4, c = 5:6)
+  # full_copy <- ds[c(TRUE, TRUE), c("a", "b", "c"), drop = FALSE] # <--- DANGEROUS, copy but all  is the same
+  # no_copy <- ds[, c("a", "c"), drop = FALSE] # Takes columns as is but the address is the same
+  # required_copy <- ds[c(TRUE, FALSE), c("a", "c"), drop = FALSE] # Copy of all columns is required as the number of rows varies
+  # lobstr::ref(ds, full_copy, no_copy, required_copy)
+  # nolint end
 
-  for (ds_idx in seq_along(dataset_names)) {
-    ds_name <- dataset_names[[ds_idx]]
-    unfiltered_dataset <- unfiltered_dataset_list[[ds_name]]
-    lbls <- get_lbls(unfiltered_dataset)
-    lbl <- attr(unfiltered_dataset, "label")
-
-    ds_lvl <- filter_info[["result"]][["filter_info"]][[ds_name]][["lvls"]]
-
-    ds_mask <- local({
-      mask <- filter_info[["result"]][["filter_info"]][[ds_name]][["mask"]]
-      if (ds_name %in% names(dataset_extra_masks)) {
-        mask <- mask & dataset_extra_masks[[ds_name]]
-      }
-      mask
-    })
-
-    ds_columns <- local({
-      if (ds_name %in% names(dataset_vars)) {
-        dataset_vars[[ds_name]]
-      } else {
-        colnames(unfiltered_dataset)
-      }
-    })
-
-    checkmate::assert_subset(dataset_vars[[ds_name]], names(unfiltered_dataset))
-
-    # Depending on the type of subsetting unrequired extra copies can be made because:
-    # (Allocation is always done because we are assigning but are only concerned about the `data` itself not the `pointer` to the data)
-    # We have to be careful with row indexing that always triggers copy behavior
+  if (all(ds_mask)) {
+    fd <- unfiltered_dataset_list[[name]][, vars, drop = FALSE]
+  } else {
     # nolint start
-    # ds <- data.frame(a = 1:2, b = 3:4, c = 5:6)
-    # full_copy <- ds[c(TRUE, TRUE), c("a", "b", "c"), drop = FALSE] # <--- DANGEROUS, copy but all  is the same
-    # no_copy <- ds[, c("a", "c"), drop = FALSE] # Takes columns as is but the address is the same
-    # required_copy <- ds[c(TRUE, FALSE), c("a", "c"), drop = FALSE] # Copy of all columns is required as the number of rows varies
-    # lobstr::ref(ds, full_copy, no_copy, required_copy)
+    # Fastest option:
+    # microbenchmark::microbenchmark(iris[mask, cols, drop = FALSE], iris[mask,,drop = FALSE][cols], iris[cols][mask,,drop = FALSE], times = 1e4)
     # nolint end
-
-    if (all(ds_mask)) {
-      filtered_dataset <- unfiltered_dataset_list[[ds_name]][, ds_columns, drop = FALSE]
-    } else {
-      # nolint start
-      # Fastest option:
-      # microbenchmark::microbenchmark(iris[mask, cols, drop = FALSE], iris[mask,,drop = FALSE][cols], iris[cols][mask,,drop = FALSE], times = 1e4)
-      # nolint end
-      filtered_dataset <- unfiltered_dataset_list[[ds_name]][ds_mask, ds_columns, drop = FALSE]
-    }
-    filtered_dataset <- apply_lvls_info_to_ds(unfiltered_dataset, filtered_dataset, ds_lvl)
-    filtered_dataset <- copy_labels_from_dataset(unfiltered_dataset, filtered_dataset)
-    if (!is.null(lbl)) {
-      attr(filtered_dataset, "label") <- lbl
-    }
-
-    res[[ds_name]] <- filtered_dataset
+    fd <- unfiltered_dataset_list[[name]][ds_mask, vars, drop = FALSE]
   }
-  res
+
+  fd <- apply_lvls_info_to_ds(ufd, fd, ds_lvl)
+  fd <- copy_labels_from_dataset(ufd, fd)
+  if (!is.null(ds_lbl)) {
+    attr(fd, "label") <- ds_lbl
+  }
+  fd
 }
 
 #' Get Filtered Data
 #'
 #' @description
-#' Wrapper around get_filtered_dataset_list_ that accepts the combined`unfiltered_plus_filter_info``.
+#' Wrapper around get_filtered_dataset_list_ that accepts the combined`unfiltered_dataset_list_with_filter_info``.
 #'
-#' @param unfiltered_plus_filter_info A named list with two elements:
+#' @param unfiltered_dataset_list_with_filter_info A named list with two elements:
 #'   \describe{
 #'     \item{`unfiltered_dataset_list`}{A named list of unfiltered `data.frame` objects.}
 #'     \item{`filter_info`}{The filter-info structure described in get_filtered_dataset_list_.}
@@ -1422,10 +1387,26 @@ get_filtered_dataset_list_ <- function(
 #' @return A named list of filtered `data.frame` objects. See get_filtered_dataset_list for details.
 #' @keywords internal
 #' @export
-get_filtered_dataset_list <- function(unfiltered_plus_filter_info, dataset_names, dataset_vars, dataset_extra_masks) {
-  unfiltered_dataset_list <- as_safe_list(unfiltered_plus_filter_info[["unfiltered_dataset_list"]])
-  filter_info <- as_safe_list(unfiltered_plus_filter_info[["filter_info"]])
-  get_filtered_dataset_list_(unfiltered_dataset_list, filter_info, dataset_names, dataset_vars, dataset_extra_masks)
+get_filtered_dataset <- function(unfiltered_dataset_list_with_filter_info, name, vars, mask) {
+  get_filtered_dataset_(
+    as_safe_list(unfiltered_dataset_list_with_filter_info[["unfiltered_dataset_list"]]),
+    as_safe_list(unfiltered_dataset_list_with_filter_info[["filter_info"]]),
+    name,
+    vars,
+    mask
+  )
+}
+
+get_filtered_dataset_list <- function(unfiltered_dataset_list_with_filter_info) {
+  ufd <- unfiltered_dataset_list_with_filter_info[["unfiltered_dataset_list"]]
+  res <- vector(mode = "list", length = length(ufd))
+  names(res) <- names(ufd)
+
+  for (nm in names(res)) {
+    res[[nm]] <- get_filtered_dataset(unfiltered_dataset_list_with_filter_info, nm)
+  }
+
+  res
 }
 
 #' Apply Level Information to a Filtered Dataset
