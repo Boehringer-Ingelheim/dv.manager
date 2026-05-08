@@ -15,7 +15,7 @@ test_that(
           "no css" = dv.manager:::mod_button_no_css("mod1"),
           "css" = dv.manager:::mod_button_css("mod2")
         ),
-        filter_data = "",
+        filter_dataset_name = "",
         filter_key = ""
       )
     })
@@ -42,7 +42,7 @@ test_that(
           "no css" = dv.manager:::mod_button_no_css("mod1"),
           "css" = dv.manager:::mod_button_css("mod2")
         ),
-        filter_data = "",
+        filter_dataset_name = "",
         filter_key = ""
       )
     }))

@@ -91,7 +91,13 @@ local({
     {
       r <- suppressMessages(
         suppressWarnings(
-          run_app(dataset_lists, module_list = list(), filter_data = "ds1", filter_key = "char_var1", .launch = FALSE)
+          run_app(
+            dataset_lists,
+            module_list = list(),
+            filter_dataset_name = "ds1",
+            filter_key = "char_var1",
+            .launch = FALSE
+          )
         )
       )
 
@@ -179,7 +185,7 @@ local({
     {
       r <- suppressMessages(
         suppressWarnings(
-          run_app(dataset_lists, module_list = list(), filter_data = "ds1", filter_key = "num", .launch = FALSE)
+          run_app(dataset_lists, module_list = list(), filter_dataset_name = "ds1", filter_key = "num", .launch = FALSE)
         )
       )
 

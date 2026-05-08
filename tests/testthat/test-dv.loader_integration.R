@@ -67,7 +67,7 @@ test_that("integration with dv.loader;
 
   testing_options <- list(
     afmm_static = afmm_static,
-    filter_data = "mpg",
+    filter_dataset_name = "mpg",
     module_info = module_info,
     filter_key = "car",
     filter_info = list(filter_default_state = NULL),

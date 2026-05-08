@@ -38,7 +38,7 @@ local({
   args <- list(
     data = dataset_lists,
     module_list = module_list,
-    filter_data = "ds1",
+    filter_dataset_name = "ds1",
     filter_key = "a"
   )
 

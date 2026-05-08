@@ -143,7 +143,7 @@ local({
             module_id = "filter_test"
           )
         ),
-        filter_data = "dataset_1",
+        filter_dataset_name = "dataset_1",
         filter_key = "sbj_var",
         enableBookmarking = "url",
         filter_default = !!fd
@@ -270,7 +270,7 @@ local({
           dv.manager::run_app(
             data = list(),
             module_list = list("filter_test" = mod_filter_test(module_id = "filter_test")),
-            filter_data = "adsl",
+            filter_dataset_name = "adsl",
             filter_key = "USUBJID",
             enableBookmarking = "url"
           )
@@ -295,7 +295,7 @@ local({
           dv.manager::run_app(
             data = list(dummy = list(adsl = data.frame(USUBJID = character(0)))),
             module_list = list("filter_test" = mod_filter_test(module_id = "filter_test")),
-            filter_data = "adsl",
+            filter_dataset_name = "adsl",
             filter_key = "USUBJID",
             enableBookmarking = "url"
           )

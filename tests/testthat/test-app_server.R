@@ -25,7 +25,7 @@ test_that(
 
     testing_options <- list(
       afmm_static = afmm_static,
-      filter_data = "a",
+      filter_dataset_name = "a",
       module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
@@ -65,7 +65,7 @@ test_that(
 
     testing_options <- list(
       afmm_static = afmm_static,
-      filter_data = "a",
+      filter_dataset_name = "a",
       module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
@@ -132,7 +132,7 @@ test_that(
 
     testing_options <- list(
       afmm_static = afmm_static,
-      filter_data = "a",
+      filter_dataset_name = "a",
       module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
@@ -163,7 +163,7 @@ test_that(
 
     testing_options <- list(
       afmm_static = afmm_static,
-      filter_data = NULL,
+      filter_dataset_name = NULL,
       module_info = module_info,
       filter_key = NULL,
       filter_info = list(filter_default_state = NULL),
@@ -242,7 +242,7 @@ test_that(
 
     testing_options <- list(
       afmm_static = afmm_static,
-      filter_data = "a",
+      filter_dataset_name = "a",
       module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
@@ -292,7 +292,7 @@ test_that(
 
     testing_options <- list(
       afmm_static = afmm_static,
-      filter_data = "a",
+      filter_dataset_name = "a",
       module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
@@ -344,7 +344,7 @@ test_that(
 
     testing_options <- list(
       afmm_static = afmm_static,
-      filter_data = "a",
+      filter_dataset_name = "a",
       module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
@@ -388,7 +388,7 @@ test_that(
 
     testing_options <- list(
       afmm_static = afmm_static,
-      filter_data = "a",
+      filter_dataset_name = "a",
       module_info = module_info,
       filter_key = "mpg",
       reload_period = lubridate::duration(1, "seconds"),

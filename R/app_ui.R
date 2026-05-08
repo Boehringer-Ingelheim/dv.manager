@@ -26,7 +26,7 @@ app_ui <- function(request_id) {
 
   dataset_lists <- get_config("afmm_static")[["data"]]
   module_info <- get_config("module_info")
-  subject_filter_dataset_name <- get_config("filter_data")
+  subject_filter_dataset_name <- get_config("filter_dataset_name")
   filter_info <- get_config("filter_info")
 
   filter_default_state <- filter_info[["filter_default_state"]]

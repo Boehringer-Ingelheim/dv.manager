@@ -39,7 +39,7 @@ run_mock_app_tab_group <- function() {
         )
       )
     ),
-    filter_data = "adsl",
+    filter_dataset_name = "adsl",
     filter_key = "USUBJID"
   )
 }

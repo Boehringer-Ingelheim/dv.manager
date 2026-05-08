@@ -101,7 +101,7 @@ module_list <- list(
 run_app(
   data = data_list,
   module_list = module_list,
-  filter_data = "adsl",
+  filter_dataset_name = "adsl",
   filter_key = "USUBJID"
 )
 ```
@@ -137,7 +137,7 @@ module_list <- list(
 run_app(
   data = data_list,
   module_list = module_list,
-  filter_data = "adsl",
+  filter_dataset_name = "adsl",
   filter_key = "USUBJID"
 )
 ```
@@ -186,7 +186,7 @@ run_app(
   module_list = list(
     "Dataset Name" = mod_dataset_name("mod1")
   ),
-  filter_data = "adsl",
+  filter_dataset_name = "adsl",
   filter_key = "USUBJID"
 )
 ```
@@ -258,7 +258,7 @@ run_app(
       mod_id = "mod_2"
     )
   ),
-  filter_data = ""
+  filter_dataset_name = ""
 )
 ```
 
@@ -315,7 +315,7 @@ run_app(
     "Mod 1" = mod_switch("Mod 1", "mod2", "mod1"),
     "Mod 2" = mod_switch("Mod 2", "mod1", "mod2")
   ),
-  filter_data = "",
+  filter_dataset_name = "",
   filter_key = "USUBJID"
 )
 ```

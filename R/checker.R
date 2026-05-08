@@ -65,7 +65,7 @@ check_data <- function(data) {
   data
 }
 
-check_filter_data <- function(filter_data, datasets) {
+check_filter_dataset_name <- function(filter_data, datasets) {
   if (length(datasets) == 0) {
     return(filter_data)
   }

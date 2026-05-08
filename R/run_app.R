@@ -15,16 +15,17 @@
 #'
 #' @param module_list a list of the modules to be included in the Shiny application
 #' @param title title to be displayed in the browser tab
-#' @param filter_data a string indicating which of the loaded datasets is used for filtering.
-#' @param filter_key a string specifying a common field across all datasets that will be used to expand the filtering.
+#' @param filter_data ( **DEPRECATED** , see `filter_dataset_name`)
+#' @param filter_dataset_name a string indicating the name of the dataset used for population filtering.
+#' @param filter_key a string specifying a common field across all datasets that will be used for population filtering.
 #'  Default = "USUBJID" or NULL if no data = NULL
 #' @param startup_msg a message to be displayed at the start of the application. It can be either NULL or a modal
 #' message defined with shiny::modalDialog.
 #' @param reload_period Either a lubridate object to specify a duration
 #' or a positive numeric value which is then interpreted as a lubridate duration object in days. By default NULL
-#' @param filter_type **DEPRECATED** Indicates which filter type, `simple`, `datasets`, `development`, will be used in the application.
+#' @param filter_type ( **DEPRECATED** )
 #' @param filter_default_state A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for `development` filters).
-#' @param enable_dataset_filter **DEPRECATED** A boolean flag indicating if dataset filters are enabled. The default value is FALSE.
+#' @param enable_dataset_filter ( **DEPRECATED** )
 #' @param enable_subgroup  A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.
 #' @param .launch by default it should always be TRUE. It should only be false for debugging and testing.
 #' When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.
@@ -42,6 +43,7 @@ run_app <- function(
   module_list = list(),
   title = "Untitled",
   filter_data = NULL,
+  filter_dataset_name = NULL,
   filter_key = if (!is.null(data)) {
     "USUBJID"
   } else {
@@ -66,6 +68,12 @@ run_app <- function(
   if (!missing(filter_type)) {
     stop(
       "`filter_type` argument has been removed. Filter types cannot be selected any more. This error will disappear in future releases"
+    )
+  }
+
+  if (!missing(filter_data)) {
+    stop(
+      "`filter_data` argument has been replaced by `filter_dataset_name`. This error will disappear in future releases"
     )
   }
 
@@ -95,7 +103,7 @@ run_app <- function(
     log_inform("EEF checkers disabled!")
   }
 
-  config[["filter_data"]] <- check_filter_data(filter_data, dataset_lists)
+  config[["filter_dataset_name"]] <- check_filter_dataset_name(filter_dataset_name, dataset_lists)
   config[["filter_key"]] <- check_filter_key(filter_key, dataset_lists)
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
