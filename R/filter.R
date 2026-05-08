@@ -1359,9 +1359,13 @@ get_filtered_dataset_ <- function(
     # microbenchmark::microbenchmark(iris[mask, cols, drop = FALSE], iris[mask,,drop = FALSE][cols], iris[cols][mask,,drop = FALSE], times = 1e4)
     # nolint end
     fd <- unfiltered_dataset_list[[name]][ds_mask, vars, drop = FALSE]
-    fd <- apply_lvls_info_to_ds(ufd, fd, ds_lvl)
-    fd <- copy_labels_from_dataset(ufd, fd)
   }
+
+  # Even when the mask is all TRUE levels may change, e.g.: dropping a level, that is not present in any rows
+  # As modifying the level may imply label lost, label copy is also required
+  # Both functions below do only create copies when, levels or labels change.
+  fd <- apply_lvls_info_to_ds(ufd, fd, ds_lvl)
+  fd <- copy_labels_from_dataset(ufd, fd)
 
   if (!is.null(ds_lbl)) {
     attr(fd, "label") <- ds_lbl
