@@ -173,21 +173,6 @@ resolve_module_list <- function(module_list) {
   res
 }
 
-
-process_module_list <- function(module_list) {
-  resolved_module_list <- resolve_module_list(module_list)
-
-  # We need the ns to be able to invoke all ui functions
-  # TODO: Consider removing namespacing it would make all these simpler
-
-  res <- resolved_module_list
-  res[["ui_fn"]] <- function(ns, footer, top_buttons) {
-    compose_ui(resolved_module_list[["hierarchy"]], resolved_module_list[["ui"]], ns, footer, top_buttons)
-  }
-
-  return(res)
-}
-
 compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
   mod_ui_containers <- vector(mode = "list", length = length(ui_fn_list))
   mod_ids <- names(ui_fn_list)

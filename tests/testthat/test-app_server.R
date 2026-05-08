@@ -15,10 +15,18 @@ test_that(
       DS1 = domain_list,
       DS2 = domain_list
     )
-    testing_options <- list(
+
+    module_info <- resolve_module_list(list())
+
+    afmm_static <- list(
       data = datasets,
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
       filter_data = "a",
-      module_info = resolve_module_list(list()),
+      module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
@@ -48,10 +56,17 @@ test_that(
         domain_list
       }
     )
-    testing_options <- list(
+    module_info <- resolve_module_list(list())
+
+    afmm_static <- list(
       data = datasets,
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
       filter_data = "a",
-      module_info = resolve_module_list(list()),
+      module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
@@ -77,12 +92,19 @@ test_that(
     )
   ),
   {
-    testing_options <- list(
+    module_info <- resolve_module_list(list(
+      "mod_1" = mod_identity(1, from = NULL, "mod_1"),
+      "mod_2" = mod_identity(2, from = NULL, "mod_2")
+    ))
+
+    afmm_static <- list(
       data = list(),
-      module_info = resolve_module_list(list(
-        "mod_1" = mod_identity(1, from = NULL, "mod_1"),
-        "mod_2" = mod_identity(2, from = NULL, "mod_2")
-      )),
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
+      module_info = module_info,
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
     )
@@ -101,10 +123,17 @@ test_that(
       DS1 = domain_list,
       DS2 = domain_list
     )
-    testing_options <- list(
+    module_info <- resolve_module_list(list())
+
+    afmm_static <- list(
       data = datasets,
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
       filter_data = "a",
-      module_info = resolve_module_list(list()),
+      module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
@@ -126,10 +155,16 @@ test_that(
     c(specs$DATASETS$DATASET_ENTRY_STRUCTURE, specs$DATASETS$DATASET_LIST_EMPTY_ALLOWED)
   ),
   {
-    testing_options <- list(
+    module_info <- resolve_module_list(list("mod_1" = mod_identity(1, mod_id = "mod_1")))
+    afmm_static <- list(
       data = list(),
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
       filter_data = NULL,
-      module_info = resolve_module_list(list("mod_1" = mod_identity(1, mod_id = "mod_1"))),
+      module_info = module_info,
       filter_key = NULL,
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
@@ -151,9 +186,15 @@ test_that(
     )
   ),
   {
-    testing_options <- list(
+    module_info <- resolve_module_list(list())
+    afmm_static <- list(
       data = list(),
-      module_info = resolve_module_list(list()),
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
+      module_info = module_info,
       filter_key = NULL,
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
@@ -192,10 +233,17 @@ test_that(
       DS1 = domain_list,
       DS2 = domain_list
     )
-    testing_options <- list(
+
+    module_info <- resolve_module_list(list())
+    afmm_static <- list(
       data = datasets,
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
       filter_data = "a",
-      module_info = resolve_module_list(list()),
+      module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
@@ -235,10 +283,17 @@ test_that(
       DS1 = domain_list,
       DS2 = domain_list
     )
-    testing_options <- list(
+
+    module_info <- resolve_module_list(list())
+    afmm_static <- list(
       data = datasets,
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
       filter_data = "a",
-      module_info = resolve_module_list(list()),
+      module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
@@ -281,10 +336,16 @@ test_that(
 
     attr(datasets[["DS2"]][["a"]], "meta") <- list(mtime = NULL)
 
-    testing_options <- list(
+    module_info <- resolve_module_list(list())
+    afmm_static <- list(
       data = datasets,
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
       filter_data = "a",
-      module_info = resolve_module_list(list()),
+      module_info = module_info,
       filter_key = "mpg",
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
@@ -318,10 +379,17 @@ test_that(
         domain_list
       }
     )
-    testing_options <- list(
+
+    module_info <- resolve_module_list(list())
+    afmm_static <- list(
       data = datasets,
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
       filter_data = "a",
-      module_info = resolve_module_list(list()),
+      module_info = module_info,
       filter_key = "mpg",
       reload_period = lubridate::duration(1, "seconds"),
       filter_info = list(filter_default_state = NULL),

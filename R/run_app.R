@@ -28,6 +28,9 @@
 #' @param enable_subgroup  A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.
 #' @param .launch by default it should always be TRUE. It should only be false for debugging and testing.
 #' When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.
+#' @param .enable_EEF by default it should always be TRUE. Only for advanced use. If set to FALSE, the app creator must make sure that
+#' modules are correctly configured for all trials loaded in the application, otherwise application may fail. Configuration errors can be checked with a
+#' dry run. To do a dry run use the parameter `.launch = FALSE`.
 #' @inheritParams shiny::shinyApp
 #'
 #'
@@ -51,7 +54,8 @@ run_app <- function(
   enable_dataset_filter = NULL,
   enable_subgroup = FALSE,
   filter_default_state = NULL,
-  .launch = TRUE
+  .launch = TRUE,
+  .enable_EEF = TRUE
 ) {
   dataset_lists <- data
 
@@ -72,15 +76,24 @@ run_app <- function(
   )
 
   config <- list()
-  config[["module_info"]] <- check_resolved_modules(process_module_list(module_list))
-
+  config[["module_info"]] <- check_resolved_modules(resolve_module_list(module_list))
   # The automatic mapping will influence reporting when it is implemented in the future
-  config[["data"]] <- local({
+  config[["afmm_static"]] <- local({
     check_data(dataset_lists)
     d <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
     d <- ungroup2df_datasets_dataset_lists(d)
-    d
+    list(
+      data = d,
+      module_names = config[["module_info"]][["module_name"]]
+    )
   })
+
+  if (!isFALSE(.enable_EEF)) {
+    log_inform("Running EEF checkers")
+    config[["module_info"]] <- check_EEF(config[["module_info"]], config[["afmm_static"]])
+  } else {
+    log_inform("EEF checkers disabled!")
+  }
 
   config[["filter_data"]] <- check_filter_data(filter_data, dataset_lists)
   config[["filter_key"]] <- check_filter_key(filter_key, dataset_lists)

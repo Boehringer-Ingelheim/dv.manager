@@ -53,15 +53,22 @@ test_that("integration with dv.loader;
     )
   }
 
-  testing_options <- list(
+  module_info <- resolve_module_list(list(
+    "identity" = mod_identity(
+      "unfiltered_dataset_list",
+      "id_1"
+    )
+  ))
+
+  afmm_static <- list(
     data = datasets,
+    module_names = module_info[["module_name"]]
+  )
+
+  testing_options <- list(
+    afmm_static = afmm_static,
     filter_data = "mpg",
-    module_list = list(
-      "identity" = mod_identity(
-        "unfiltered_dataset_list",
-        "id_1"
-      )
-    ),
+    module_info = module_info,
     filter_key = "car",
     filter_info = list(filter_default_state = NULL),
     enable_subgroup = FALSE

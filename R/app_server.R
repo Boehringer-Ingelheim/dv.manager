@@ -1,7 +1,7 @@
 app_server <- function(input = NULL, output = NULL, session = NULL) {
   opts <- list(
+    "afmm_static" = get_config("afmm_static"),
     "module_info" = get_config("module_info"),
-    "data" = get_config("data"),
     "filter_data" = get_config("filter_data"),
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
@@ -15,8 +15,8 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
 
 app_server_module <- function(id) {
   opts <- list(
+    "afmm_static" = get_config("afmm_static"),
     "module_info" = get_config("module_info"),
-    "data" = get_config("data"),
     "filter_data" = get_config("filter_data"),
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
@@ -27,8 +27,6 @@ app_server_module <- function(id) {
   shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
 }
 
-
-# nolint start cyclocomp_linter
 app_server_ <- function(input, output, session, opts) {
   ns <- session[["ns"]]
 
@@ -46,11 +44,14 @@ app_server_ <- function(input, output, session, opts) {
     }
   )
 
+  afmm_static <- opts[["afmm_static"]]
+  dataset_lists <- afmm_static[["data"]]
+  module_names <- afmm_static[["module_names"]]
+
   module_server <- opts[["module_info"]][["server"]]
   module_meta <- opts[["module_info"]][["meta"]]
-  module_names <- opts[["module_info"]][["module_name"]]
   module_hierarchy_list <- opts[["module_info"]][["hierarchy"]]
-  dataset_lists <- opts[["data"]]
+
   subject_filter_dataset_name <- opts[["filter_data"]]
   filter_key_var <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
@@ -219,8 +220,7 @@ app_server_ <- function(input, output, session, opts) {
     as_dv_manager_module_output_safe_list(module_output)
   }
 
-  afmm <- list(
-    data = dataset_lists,
+  afmm_reactive <- list(
     unfiltered_dataset = shiny::reactive({
       log_warn(
         "(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]]."
@@ -256,7 +256,6 @@ app_server_ <- function(input, output, session, opts) {
       })
     ),
     module_output = module_output_fn,
-    module_names = module_names,
     utils = list(
       switch2 = function(selected) {
         .Defunct(
@@ -303,6 +302,11 @@ app_server_ <- function(input, output, session, opts) {
         dataset_list_filter()
       })
     )
+  )
+
+  afmm <- c(
+    afmm_static,
+    afmm_reactive
   )
 
   used_datasets <- list()
@@ -360,8 +364,6 @@ app_server_ <- function(input, output, session, opts) {
     shiny::showModal(create_info_modal(session = session, input = input, ns = ns))
   })
 }
-
-# nolint end cyclocomp_linter
 
 # Convoluted way of having a testable server function
 # TestServer reads the caller environment

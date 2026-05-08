@@ -11,11 +11,11 @@ app_ui <- function(request_id) {
   ..t$add_period("app_ui", TRUE)
   on.exit(..t$add_period("app_ui", FALSE))
   if (is.environment(request_id)) {
-    log_inform("I am the ui of an app")
+    log_inform("Running app_ui as an app")
     id <- character(0)
   } else if (is.character(id)) {
     id <- request_id
-    log_inform(glue::glue("I am the ui of the module: {ns('')}"))
+    log_inform(glue::glue("Running app_ui as a module with id: {ns('')}"))
   } else {
     stop("Unknown value type in request_id")
   }
@@ -24,7 +24,7 @@ app_ui <- function(request_id) {
 
   ######################################
 
-  dataset_lists <- get_config("data")
+  dataset_lists <- get_config("afmm_static")[["data"]]
   module_info <- get_config("module_info")
   subject_filter_dataset_name <- get_config("filter_data")
   filter_info <- get_config("filter_info")
@@ -32,9 +32,8 @@ app_ui <- function(request_id) {
   filter_default_state <- filter_info[["filter_default_state"]]
   enable_subgroup <- get_config("subgroup")[["enable"]]
 
-  log_inform("Initializing HTML template UI")
-  log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
-  log_inform(glue::glue("Dataset options (N): {length(data)}"))
+  log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui\"]])}"))
+  log_inform(glue::glue("Dataset options (N): {length(dataset_lists)}"))
 
   if (enable_subgroup) {
     filter_ui <- shiny::tabsetPanel(
@@ -117,7 +116,7 @@ app_ui <- function(request_id) {
     sidebar,
     list(
       overlay_script,
-      module_info[["ui_fn"]](ns, dataset_name, top_buttons)
+      compose_ui(module_info[["hierarchy"]], module_info[["ui"]], ns, dataset_name, top_buttons)
     )
   )
 }

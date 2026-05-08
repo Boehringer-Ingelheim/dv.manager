@@ -1,3 +1,9 @@
+# dv.manager 3.0.0-9006
+ - Moves early error feedback to run app
+
+# dv.manager 3.0.0-9005
+ - Integrates early error feedback wrappers
+
 # dv.manager 3.0.0-9004
  - Bugfix: dataset labels were not retained after filtering
 
