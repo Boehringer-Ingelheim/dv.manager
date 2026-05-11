@@ -192,6 +192,8 @@ app_server_ <- function(input, output, session, opts) {
       all_nm <- names(selected_dataset_list())
       current_tab <- input[[ID$NAV_HEADER]]
 
+      # stop("FAILS ON MODULE IS REMOVED AND BOOKMARKED IS USED")
+
       if (!is.null(current_tab)) {
         used_ds <- used_datasets[[current_tab]]
       } else {

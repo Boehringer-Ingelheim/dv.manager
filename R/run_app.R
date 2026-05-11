@@ -90,6 +90,7 @@ run_app <- function(
     check_data(dataset_lists)
     d <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
     d <- ungroup2df_datasets_dataset_lists(d)
+    d <- attach_computed_filter_data_as_attribute(d)
     list(
       data = d,
       module_names = config[["module_info"]][["module_name"]]
