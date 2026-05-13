@@ -650,6 +650,7 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
   complete_subject_list <- character(0)
 
   for (current_dataset in dataset_list) {
+    assert(subj_var %in% names(current_dataset), paste("subj_var not present"))
     complete_subject_list <- union(complete_subject_list, as.character(unique(current_dataset[[subj_var]])))
   }
 
