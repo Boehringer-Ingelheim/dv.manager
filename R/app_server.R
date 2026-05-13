@@ -109,16 +109,14 @@ app_server_ <- function(input, output, session, opts) {
   })
 
   if (enable_subgroup) {
-    apply_subgroups <- mod_subgroup_server(
+    subgroups <- mod_subgroup_server(
       ID$SUBGROUP,
       selected_dataset_list,
       subject_filter_dataset_name,
       filter_key_var
     )
   } else {
-    apply_subgroups <- shiny::reactive(function(d, ...) {
-      list(result = list(dataset_list = d), error_list = new_error_list())
-    })
+    subgroups <- shiny::reactive(list())
   }
 
   unfiltered_dataset_list_ <- shinymeta::metaReactive2(
@@ -128,12 +126,13 @@ app_server_ <- function(input, output, session, opts) {
 
       res_apply_subgroups <- shinymeta::metaExpr(
         {
-          r_selected_dataset_list <- shinymeta::..(selected_dataset_list())
-          r_apply_subgroups <- shinymeta::..(apply_subgroups())
-          res_apply_subgroups <- r_apply_subgroups(
+          r_subgroups <- ..(subgroups())
+          r_selected_dataset_list <- ..(selected_dataset_list())
+          res_apply_subgroups <- apply_subgroups(
             r_selected_dataset_list,
-            shinymeta::..(subject_filter_dataset_name),
-            shinymeta::..(filter_key_var)
+            ..(subject_filter_dataset_name),
+            ..(filter_key_var),
+            subgroups = r_subgroups
           )
           attr(res_apply_subgroups, "dataset_list_name") <- attr(r_selected_dataset_list, "dataset_list_name")
           res_apply_subgroups

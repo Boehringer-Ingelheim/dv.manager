@@ -200,6 +200,7 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
   subject_dataset <- dataset_list[[subject_filter_dataset_name]]
   error_list <- new_error_list()
   correct_subgroups <- names(subgroups)
+  dataset_list_name <- attr(dataset_list, "dataset_list_name")
 
   for (subgroup_idx in seq_along(subgroups)) {
     name <- names(subgroups)[[subgroup_idx]]
@@ -273,7 +274,7 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
 
   dataset_list[[subject_filter_dataset_name]] <- subject_dataset
   incorrect_subgroups <- setdiff(names(subgroups), correct_subgroups)
-
+  attr(dataset_list, "dataset_list_name") <- dataset_list_name
   return(
     list(
       result = list(
@@ -621,16 +622,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       subgroups = subgroups
     )
 
-    res <- shiny::reactive({
-      r_subgroups <- subgroups()
-      function(...) {
-        x <- apply_subgroups(..., subgroups = r_subgroups)
-        # FIXME: (Or learn to live with me) When subgroups are applied we store which could not be applied so it is reflected in the UI
-        incorrect_subgroups(x[["result"]][["incorrect_subgroups"]])
-
-        x
-      }
-    })
+    res <- subgroups
 
     return(res)
   }
