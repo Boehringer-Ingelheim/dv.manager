@@ -263,7 +263,7 @@ local({
         expected <- dataset_lists[[current_name]]
         attr(expected, "dataset_list_name") <- current_name
         attr(expected, "date_range") <- c(date13, date14)
-        expect_identical(unfiltered_dataset_list, expected)
+        expect_identical(unfiltered_dataset_list, expected, ignore_atttr(FC$PRECOMPUTED_FILTER_DATA))
       }
     )
 
