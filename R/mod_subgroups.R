@@ -277,7 +277,7 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
   attr(dataset_list, "dataset_list_name") <- dataset_list_name
   return(
     list(
-      result = list(
+      result = safe_list(
         dataset_list = dataset_list,
         correct_subgroups = correct_subgroups,
         incorrect_subgroups = incorrect_subgroups
@@ -385,7 +385,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
     })
 
     shiny::onBookmark(function(state) {
-      state$values$subgroups <- I(subgroups())
+      state$values$subgroups <- subgroups()
     })
 
     shiny::onRestore(function(state) {
@@ -546,11 +546,11 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
         cat_filters <- c(json_subject_filter)
 
         if (!errors$any()) {
-          new_subgroup <- I(list(
+          new_subgroup <- list(
             label = r_subgroup_label,
             cat_labels = cat_labels,
             cat_filters = cat_filters
-          ))
+          )
         } else {
           new_subgroup <- NULL
         }
@@ -582,11 +582,11 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
         cat_labels[[length(cat_labels)]] <- r_others_label
 
         if (!errors$any()) {
-          new_subgroup <- I(list(
+          new_subgroup <- list(
             label = r_subgroup_label,
             cat_labels = cat_labels,
             cat_filters = cat_filters
-          ))
+          )
         } else {
           new_subgroup <- NULL
         }
@@ -622,7 +622,10 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       subgroups = subgroups
     )
 
-    res <- subgroups
+    res <- list(
+      subgroups = subgroups,
+      set_incorrect_subgroups = incorrect_subgroups
+    )
 
     return(res)
   }

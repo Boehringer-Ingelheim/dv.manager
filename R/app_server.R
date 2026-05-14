@@ -116,7 +116,10 @@ app_server_ <- function(input, output, session, opts) {
       filter_key_var
     )
   } else {
-    subgroups <- shiny::reactive(list())
+    subgroups <- list(
+      set_incorrect_subgroups = function(...) {},
+      subgroups = shiny::reactive(list())
+    )
   }
 
   unfiltered_dataset_list_ <- shinymeta::metaReactive2(
@@ -126,17 +129,14 @@ app_server_ <- function(input, output, session, opts) {
 
       res_apply_subgroups <- shinymeta::metaExpr(
         {
-          r_subgroups <- ..(subgroups())
-          r_selected_dataset_list <- ..(selected_dataset_list())
-          res_apply_subgroups <- apply_subgroups(
-            r_selected_dataset_list,
+          apply_subgroups(
+            ..(selected_dataset_list()),
             ..(subject_filter_dataset_name),
             ..(filter_key_var),
-            subgroups = r_subgroups
+            subgroups = ..(subgroups[["subgroups"]]())
           )
-          attr(res_apply_subgroups, "dataset_list_name") <- attr(r_selected_dataset_list, "dataset_list_name")
-          res_apply_subgroups
-        }
+        },
+        bindToReturn = TRUE
       )
 
       res_apply_subgroups
@@ -151,10 +151,14 @@ app_server_ <- function(input, output, session, opts) {
     for (error in unfiltered_dataset_list_()[["error_list"]]$get_messages()) {
       shiny::showNotification(error, type = "warning")
     }
+    subgroups[["set_incorrect_subgroups"]](unfiltered_dataset_list_()[["result"]][["incorrect_subgroups"]])
 
-    shinymeta::metaExpr({
-      ..(unfiltered_dataset_list_())[["result"]][["dataset_list"]]
-    })
+    shinymeta::metaExpr(
+      {
+        ..(unfiltered_dataset_list_())[["result"]][["dataset_list"]]
+      },
+      localize = TRUE
+    )
   })
 
   unfiltered_dataset_list_with_filter_info_ <- shinymeta::metaReactive2(
@@ -164,23 +168,26 @@ app_server_ <- function(input, output, session, opts) {
       # Place reqs here so all elements are synchronized before going forward
       # Consider generation counters (Check current approach)
 
-      res <- shinymeta::metaExpr({
-        r_unfiltered_dataset_list <- ..(shiny::isolate(unfiltered_dataset_list()))
-        r_dataset_list_filter <- ..(dataset_list_filter()) # List that describes the filter no need of solving it in shinymeta
-        filter_key_var <- ..(filter_key_var)
-        filter_info <- combine_filter_info(get_filter_info(
-          r_unfiltered_dataset_list,
-          r_dataset_list_filter,
-          filter_key_var
-        ))
+      res <- shinymeta::metaExpr(
+        {
+          r_unfiltered_dataset_list <- ..(shiny::isolate(unfiltered_dataset_list()))
+          r_dataset_list_filter <- ..(dataset_list_filter()) # List that describes the filter no need of solving it in shinymeta
+          filter_key_var <- ..(filter_key_var)
+          filter_info <- combine_filter_info(get_filter_info(
+            r_unfiltered_dataset_list,
+            r_dataset_list_filter,
+            filter_key_var
+          ))
 
-        list(
-          unfiltered_dataset_list = r_unfiltered_dataset_list,
-          filter_info = filter_info[["result"]][["filter_info"]],
-          get_filtered_dataset = get_filtered_dataset,
-          error_list = filter_info[["error_list"]]
-        )
-      })
+          list(
+            unfiltered_dataset_list = r_unfiltered_dataset_list,
+            filter_info = filter_info[["result"]][["filter_info"]],
+            get_filtered_dataset = get_filtered_dataset,
+            error_list = filter_info[["error_list"]]
+          )
+        },
+        localize = TRUE
+      )
 
       res
     },
