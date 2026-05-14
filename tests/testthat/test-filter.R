@@ -2466,7 +2466,7 @@ local({
         dv.manager:::run_app(
           data = dataset_lists,
           module_list = list(
-            Simple3 = dv.manager:::mod_0simple(
+            Simple3 = dv.manager:::mod_simple(
               dataset = "ds2",
               module_id = "mod",
               from = "filtered_dataset_list"
