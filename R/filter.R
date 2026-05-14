@@ -96,12 +96,27 @@ get_single_filter_data <- function(dataset, precomputed_data = NULL) {
   FDF <- FC$FDF
   K <- FC$KIND
 
+  used_precomputed <- character(length(n_var))
+  n_used_precomputed <- 0
+  not_used_precomputed <- character(length(n_var))
+  n_not_used_precomputed <- 0
+
+  found_precomputed <- !is.null(precomputed_data)
+
   for (idx in seq_len(n_var)) {
-    if (!is.null(precomputed_data)) {
-      if (identical(precomputed_data[[idx]][[FDF$NAME]], nm_var[[idx]])) {
-        l <- precomputed_data[[idx]]
-      }
+    if (
+      found_precomputed &&
+        idx <= length(precomputed_data) &&
+        identical(precomputed_data[[idx]][[FDF$NAME]], nm_var[[idx]])
+    ) {
+      n_used_precomputed <- n_used_precomputed + 1
+      used_precomputed[[n_used_precomputed]] <- nm_var[[idx]]
+
+      l <- precomputed_data[[idx]]
     } else {
+      n_not_used_precomputed <- n_not_used_precomputed + 1
+      not_used_precomputed[[n_not_used_precomputed]] <- nm_var[[idx]]
+
       var <- dataset[[idx]]
       # Logical is treated as a factor in the client
       if (is.logical(var)) {
@@ -185,6 +200,15 @@ get_single_filter_data <- function(dataset, precomputed_data = NULL) {
 
     res[[idx]] <- l
   }
+
+  log_inform(paste(
+    "Pre computed data found for",
+    paste0("`", used_precomputed[seq_len(n_used_precomputed)], "`", collapse = ",")
+  ))
+  log_inform(paste(
+    "Pre computed data not found for",
+    paste0("`", not_used_precomputed[seq_len(n_not_used_precomputed)], "`", collapse = ",")
+  ))
   return(res)
 }
 
@@ -973,7 +997,7 @@ new_filter_server <- function(
       # Not convinced as it is removed somewhere else (app_server) (gvbu)
       session[["sendCustomMessage"]]("dv_manager_show_overlay", list(message = "Setting up filter"))
 
-      log_inform(paste0("Send init message to: ", ns_id))
+      log_inform(paste0("Preparing init message for: ", ns_id))
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
       current_dataset_lists <- stats::setNames(list(selected_dataset_list()), dataset_list_name)
 
@@ -984,6 +1008,7 @@ new_filter_server <- function(
         skip_dataset_filters = skip_dataset_filters
       )
 
+      log_inform(paste0("Sending init message for: ", ns_id))
       session[["sendCustomMessage"]](
         "init_filter",
         msg
