@@ -232,10 +232,20 @@ get_filter_data_dataset_lists <- function(dataset_lists) {
 }
 
 attach_computed_filter_data_as_attribute <- function(dataset_lists) {
-  filter_data <- get_filter_data_dataset_lists(dataset_lists)
-
   for (idx in seq_along(dataset_lists)) {
-    attr(dataset_lists[[idx]], FC$PRECOMPUTED_FILTER_DATA) <- filter_data[[FC$FDF$DATASET_LISTS]][[idx]][[
+    dsl <- dataset_lists[[idx]]
+    if (!is.function(dsl)) {
+      log_inform(paste("Attaching filter data to", names(dataset_lists)[[idx]]))
+      filter_data <- get_filter_data_dataset_lists(dataset_lists[idx])
+      attr(dataset_lists[[idx]], FC$PRECOMPUTED_FILTER_DATA) <- filter_data[[FC$FDF$DATASET_LISTS]][[1]][[
+        FC$FDF$DATASET_LIST
+      ]]
+    } else {
+      log_inform(paste("Skipping attaching filter data to", names(dataset_lists)[[idx]]))
+      filter_data <- NULL
+    }
+
+    attr(dataset_lists[[idx]], FC$PRECOMPUTED_FILTER_DATA) <- filter_data[[FC$FDF$DATASET_LISTS]][[1]][[
       FC$FDF$DATASET_LIST
     ]]
   }
