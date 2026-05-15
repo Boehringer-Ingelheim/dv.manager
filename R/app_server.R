@@ -192,7 +192,8 @@ app_server_ <- function(input, output, session, opts) {
       all_nm <- names(selected_dataset_list())
       current_tab <- input[[ID$NAV_HEADER]]
 
-      if (!is.null(current_tab) && current_tab %in% names(module_names)) {
+      exists_current_module <- !is.null(current_tab) && current_tab %in% names(module_names)
+      if (exists_current_module) {
         used_ds <- used_datasets[[current_tab]]
       } else {
         used_ds <- NULL
