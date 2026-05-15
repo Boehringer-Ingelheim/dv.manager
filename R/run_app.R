@@ -42,7 +42,7 @@ run_app <- function(
   data = NULL,
   module_list = list(),
   title = "Untitled",
-  filter_data = NULL,
+  filter_data,
   filter_dataset_name = NULL,
   filter_key = if (!is.null(data)) {
     "USUBJID"
@@ -71,10 +71,17 @@ run_app <- function(
     )
   }
 
-  if (!missing(filter_data)) {
+  if (!missing(filter_data) && !missing(filter_dataset_name)) {
     stop(
-      "`filter_data` argument has been replaced by `filter_dataset_name`. This error will disappear in future releases"
+      "`filter_data` argument has been replaced by `filter_dataset_name`. Both arguments cannot be specified at the same time"
     )
+  }
+
+  if (!missing(filter_data) && missing(filter_dataset_name)) {
+    warning(
+      "`filter_data` argument has been replaced by `filter_dataset_name`. This warning will disappear in future releases"
+    )
+    filter_dataset_name <- filter_data
   }
 
   app_args <- list(
