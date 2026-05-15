@@ -2129,7 +2129,7 @@ local({
   )
 
   test_that(
-    "get_filter_data returns one entry per dataset_list and dataset" |>
+    "get_filter_data_dataset_lists returns one entry per dataset_list and dataset" |>
       vdoc[["add_spec"]](c(
         specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
         specs$FILTERING$FILTER_SUPPORTED_TYPES,
@@ -2147,7 +2147,7 @@ local({
         )
       )
 
-      r <- get_filter_data(dataset_lists)
+      r <- get_filter_data_dataset_lists(dataset_lists)
 
       expect_length(r[[FC$FDF$DATASET_LISTS]], 2)
       expect_length(r[[FC$FDF$DATASET_LISTS]][[1]][[FC$FDF$DATASET_LIST]], 2)
@@ -2331,7 +2331,7 @@ local({
               from = "filtered_dataset_list"
             )
           ),
-          filter_data = "ds1",
+          filter_dataset_name = "ds1",
           filter_key = "sbj_var",
           filter_default_state = !!absolute_state_file
         )
@@ -2362,7 +2362,7 @@ local({
               from = "filtered_dataset_list"
             )
           ),
-          filter_data = "ds1",
+          filter_dataset_name = "ds1",
           filter_key = "sbj_var",
           filter_default_state = !!string_state
         )
@@ -2391,7 +2391,7 @@ local({
               from = "filtered_dataset_list"
             )
           ),
-          filter_data = "ds1",
+          filter_dataset_name = "ds1",
           filter_key = "sbj_var",
         )
       }))
@@ -2415,7 +2415,7 @@ local({
             from = "filtered_dataset_list"
           )
         ),
-        filter_data = "ds1",
+        filter_dataset_name = "ds1",
         filter_key = "sbj_var",
         filter_default_state = !!absolute_state_file
       )
@@ -2472,7 +2472,7 @@ local({
               from = "filtered_dataset_list"
             )
           ),
-          filter_data = "ds1",
+          filter_dataset_name = "ds1",
           filter_key = "sbj_var",
           filter_default_state = '{
     "filters": {
@@ -2527,7 +2527,7 @@ local({
               from = "filtered_dataset_list"
             )
           ),
-          filter_data = "ds1",
+          filter_dataset_name = "ds1",
           filter_key = "sbj_var",
           filter_default_state = '  {
     "filters": {
@@ -2567,7 +2567,7 @@ local({
             from = "filtered_dataset_list"
           )
         ),
-        filter_data = "ds1",
+        filter_dataset_name = "ds1",
         filter_key = "sbj_var",
         enableBookmarking = "url",
         filter_default_state = !!absolute_state_file
@@ -2620,7 +2620,7 @@ local({
           module_list = list(
             AFMM = dv.manager:::mod_afmm_export("afmm")
           ),
-          filter_data = "ds1",
+          filter_dataset_name = "ds1",
           filter_key = "sbj_var",
           enableBookmarking = "url"
         )
@@ -2645,7 +2645,7 @@ local({
           module_list = list(
             AFMM = dv.manager:::mod_afmm_export("afmm")
           ),
-          filter_data = "ds1",
+          filter_dataset_name = "ds1",
           filter_key = "sbj_var",
           enableBookmarking = "url",
           filter_default_state = '{
@@ -2740,7 +2740,7 @@ local({
           module_list = list(
             AFMM = dv.manager:::mod_afmm_export("afmm")
           ),
-          filter_data = "ds1",
+          filter_dataset_name = "ds1",
           filter_key = "sbj_var",
           enableBookmarking = "url"
         )
@@ -2769,7 +2769,7 @@ local({
           module_list = list(
             AFMM = dv.manager:::mod_afmm_export("afmm")
           ),
-          filter_data = "ds1",
+          filter_dataset_name = "ds1",
           filter_key = "sbj_var",
           enableBookmarking = "url"
         )
@@ -2802,7 +2802,7 @@ local({
           module_list = list(
             Labels = dv.manager:::mod_dataset_labels("ds1", "labels")
           ),
-          filter_data = "ds1",
+          filter_dataset_name = "ds1",
           filter_key = "sbj_var",
           enableBookmarking = "url"
         )

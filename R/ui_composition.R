@@ -39,7 +39,7 @@ run_mock_app_tab_group <- function() {
         )
       )
     ),
-    filter_data = "adsl",
+    filter_dataset_name = "adsl",
     filter_key = "USUBJID"
   )
 }
@@ -190,7 +190,21 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
 
   tab_menus_container <- shiny::div(class = "dv_tab_menu_container")
 
-  default_tab <- shiny::restoreInput(ns(ID$NAV_HEADER), NA)
+  first_leaf <- local({
+    first_leaf <- "__tabset_0__"
+    while (hierarchy[[first_leaf]][["kind"]] != "module" && length(hierarchy[[first_leaf]][["children"]]) > 0) {
+      first_leaf <- hierarchy[[first_leaf]][["children"]][[1]]
+    }
+    if (hierarchy[[first_leaf]][["kind"]] != "module") {
+      first_leaf <- NA
+    }
+    first_leaf
+  })
+
+  default_tab <- shiny::restoreInput(
+    ns(ID$NAV_HEADER),
+    first_leaf
+  )
 
   top_buttons_div <- shiny::div(
     shiny::div(

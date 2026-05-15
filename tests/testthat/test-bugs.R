@@ -10,7 +10,7 @@ test_that(
       dv.manager::run_app(
         data = list(one_dataset = list(a = data.frame(a = 1), empty = tibble::tibble(a = numeric(0)))),
         module_list = list(module = dv.manager::mod_simple2(dataset_name = "empty", module_id = "module")),
-        filter_data = "a",
+        filter_dataset_name = "a",
         filter_key = "a"
       )
     }) |>

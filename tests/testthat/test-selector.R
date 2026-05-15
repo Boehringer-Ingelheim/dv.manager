@@ -1,5 +1,8 @@
 test_that(
-  vdoc[["add_spec"]]("dataset selector is removed when only one dataset is passed", c(specs$DATASETS$DATASET_LIST_SELECTOR_VISIBLE)),
+  vdoc[["add_spec"]](
+    "dataset selector is removed when only one dataset is passed",
+    c(specs$DATASETS$DATASET_LIST_SELECTOR_VISIBLE)
+  ),
   {
     skip_if_not_running_shiny_tests()
 
@@ -7,10 +10,11 @@ test_that(
       dv.manager::run_app(
         data = list(one_dataset = list(a = data.frame(a = 1))),
         module_list = list(),
-        filter_data = "a",
+        filter_dataset_name = "a",
         filter_key = "a"
       )
-    }) |> suppressWarnings()
+    }) |>
+      suppressWarnings()
 
     expect_true(
       app_one$get_js("$('#dataset_selector').length") == 1 &&

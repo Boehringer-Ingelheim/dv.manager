@@ -39,7 +39,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -71,7 +71,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -106,7 +106,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -136,7 +136,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -172,7 +172,7 @@ dv.manager::run_app(
     "DS2" = data2
   ),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -228,7 +228,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl_filter"
+  filter_dataset_name = "adsl_filter"
 ) # We have changed the data source for the filtering
 ```
 
@@ -277,6 +277,6 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl_mod"
+  filter_dataset_name = "adsl_mod"
 ) # We have changed the data source for the filtering
 ```

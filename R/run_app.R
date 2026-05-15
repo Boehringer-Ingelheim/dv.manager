@@ -15,21 +15,22 @@
 #'
 #' @param module_list a list of the modules to be included in the Shiny application
 #' @param title title to be displayed in the browser tab
-#' @param filter_data a string indicating which of the loaded datasets is used for filtering.
-#' @param filter_key a string specifying a common field across all datasets that will be used to expand the filtering.
+#' @param filter_data ( **DEPRECATED** , see `filter_dataset_name`)
+#' @param filter_dataset_name a string indicating the name of the dataset used for population filtering.
+#' @param filter_key a string specifying a common field across all datasets that will be used for population filtering.
 #'  Default = "USUBJID" or NULL if no data = NULL
 #' @param startup_msg a message to be displayed at the start of the application. It can be either NULL or a modal
 #' message defined with shiny::modalDialog.
 #' @param reload_period Either a lubridate object to specify a duration
 #' or a positive numeric value which is then interpreted as a lubridate duration object in days. By default NULL
-#' @param filter_type **DEPRECATED** Indicates which filter type, `simple`, `datasets`, `development`, will be used in the application.
+#' @param filter_type ( **DEPRECATED** )
 #' @param filter_default_state A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for `development` filters).
-#' @param enable_dataset_filter **DEPRECATED** A boolean flag indicating if dataset filters are enabled. The default value is FALSE.
+#' @param enable_dataset_filter ( **DEPRECATED** )
 #' @param enable_subgroup  A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.
 #' @param .launch by default it should always be TRUE. It should only be false for debugging and testing.
 #' When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.
-#' @param .enable_EEF by default it should always be TRUE. Only for advanced use. If set to FALSE, the app creator must make sure that
-#' modules are correctly configured for all trials loaded in the application, otherwise application may fail. Configuration errors can be checked with a
+#' @param .bypass_checks by default it should always be FALSE. Only for advanced use. If set to TRUE, the app creator must make sure that
+#' application parameters and modules are correctly configured for all trials loaded in the application, otherwise application may fail. Configuration errors can be checked with a
 #' dry run. To do a dry run use the parameter `.launch = FALSE`.
 #' @inheritParams shiny::shinyApp
 #'
@@ -41,7 +42,8 @@ run_app <- function(
   data = NULL,
   module_list = list(),
   title = "Untitled",
-  filter_data = NULL,
+  filter_data,
+  filter_dataset_name = NULL,
   filter_key = if (!is.null(data)) {
     "USUBJID"
   } else {
@@ -55,7 +57,7 @@ run_app <- function(
   enable_subgroup = FALSE,
   filter_default_state = NULL,
   .launch = TRUE,
-  .enable_EEF = TRUE
+  .bypass_checks = FALSE
 ) {
   dataset_lists <- data
 
@@ -67,6 +69,19 @@ run_app <- function(
     stop(
       "`filter_type` argument has been removed. Filter types cannot be selected any more. This error will disappear in future releases"
     )
+  }
+
+  if (!missing(filter_data) && !missing(filter_dataset_name)) {
+    stop(
+      "`filter_data` argument has been replaced by `filter_dataset_name`. Both arguments cannot be specified at the same time"
+    )
+  }
+
+  if (!missing(filter_data) && missing(filter_dataset_name)) {
+    warning(
+      "`filter_data` argument has been replaced by `filter_dataset_name`. This warning will disappear in future releases"
+    )
+    filter_dataset_name <- filter_data
   }
 
   app_args <- list(
@@ -82,21 +97,25 @@ run_app <- function(
     check_data(dataset_lists)
     d <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
     d <- ungroup2df_datasets_dataset_lists(d)
+    d <- attach_computed_filter_data_as_attribute(d)
     list(
       data = d,
       module_names = config[["module_info"]][["module_name"]]
     )
   })
 
-  if (!isFALSE(.enable_EEF)) {
+  if (!isTRUE(.bypass_checks)) {
     log_inform("Running EEF checkers")
     config[["module_info"]] <- check_EEF(config[["module_info"]], config[["afmm_static"]])
+    config[["filter_dataset_name"]] <- check_filter_dataset_name(filter_dataset_name, dataset_lists)
+    config[["filter_key"]] <- check_filter_key(filter_key, dataset_lists)
+    check_meta_mtime_attribute(dataset_lists)
   } else {
+    config[["filter_dataset_name"]] <- filter_dataset_name
+    config[["filter_key"]] <- filter_key
     log_inform("EEF checkers disabled!")
   }
 
-  config[["filter_data"]] <- check_filter_data(filter_data, dataset_lists)
-  config[["filter_key"]] <- check_filter_key(filter_key, dataset_lists)
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
@@ -104,8 +123,6 @@ run_app <- function(
   config[["subgroup"]] <- check_set_subgroup_info(enable_subgroup)
 
   assert_not_shiny_1_11_0()
-
-  check_meta_mtime_attribute(dataset_lists)
 
   # Add logging
   call_args <- list(

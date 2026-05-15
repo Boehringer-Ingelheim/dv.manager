@@ -2,7 +2,7 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
   opts <- list(
     "afmm_static" = get_config("afmm_static"),
     "module_info" = get_config("module_info"),
-    "filter_data" = get_config("filter_data"),
+    "filter_dataset_name" = get_config("filter_dataset_name"),
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
@@ -17,7 +17,7 @@ app_server_module <- function(id) {
   opts <- list(
     "afmm_static" = get_config("afmm_static"),
     "module_info" = get_config("module_info"),
-    "filter_data" = get_config("filter_data"),
+    "filter_dataset_name" = get_config("filter_dataset_name"),
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
@@ -52,7 +52,7 @@ app_server_ <- function(input, output, session, opts) {
   module_meta <- opts[["module_info"]][["meta"]]
   module_hierarchy_list <- opts[["module_info"]][["hierarchy"]]
 
-  subject_filter_dataset_name <- opts[["filter_data"]]
+  subject_filter_dataset_name <- opts[["filter_dataset_name"]]
   filter_key_var <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
@@ -192,7 +192,8 @@ app_server_ <- function(input, output, session, opts) {
       all_nm <- names(selected_dataset_list())
       current_tab <- input[[ID$NAV_HEADER]]
 
-      if (!is.null(current_tab)) {
+      exists_current_module <- !is.null(current_tab) && current_tab %in% names(module_names)
+      if (exists_current_module) {
         used_ds <- used_datasets[[current_tab]]
       } else {
         used_ds <- NULL

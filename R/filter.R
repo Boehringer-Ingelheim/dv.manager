@@ -2,7 +2,7 @@ toJSON <- function(x) unclass(jsonlite::toJSON(x))
 fromJSON <- function(x) jsonlite::fromJSON(x, simplifyVector = TRUE, simplifyDataFrame = FALSE)
 as_scalar <- jsonlite::unbox
 serialize_filter_data_to_client_bin64 <- function(x) {
-  fd <- get_filter_data(x)
+  fd <- get_filter_data_dataset_lists(x)
   bin <- binary_serialize_filter_data_C(fd)
   ..t$add_period("jsonlite::base64_enc(bin)", TRUE)
   enc <- jsonlite::base64_enc(bin)
@@ -84,8 +84,10 @@ FC <- poc(
       class = "GENERIC_FILTER_APPLICATION",
       message = NA
     )
-  )
+  ),
+  PRECOMPUTED_FILTER_DATA = "..precomputed_filter_data.."
 )
+
 
 get_single_filter_data <- function(dataset) {
   nm_var <- names(dataset)
@@ -95,96 +97,126 @@ get_single_filter_data <- function(dataset) {
   FDF <- FC$FDF
   K <- FC$KIND
 
+  used_precomputed <- character(length(n_var))
+  n_used_precomputed <- 0
+  not_used_precomputed <- character(length(n_var))
+  n_not_used_precomputed <- 0
+
+  precomputed_data <- attr(dataset, FC$PRECOMPUTED_FILTER_DATA)
+  found_precomputed <- !is.null(precomputed_data)
+
   for (idx in seq_len(n_var)) {
-    start <- Sys.time()
-    var <- dataset[[idx]]
-    # Logical is treated as a factor in the client
-    if (is.logical(var)) {
-      var <- factor(var)
-    }
+    if (
+      found_precomputed &&
+        idx <= length(precomputed_data) &&
+        identical(precomputed_data[[idx]][[FDF$NAME]], nm_var[[idx]])
+    ) {
+      n_used_precomputed <- n_used_precomputed + 1
+      used_precomputed[[n_used_precomputed]] <- nm_var[[idx]]
 
-    if (is.character(var) || is.factor(var)) {
-      l <- vector(mode = "list", length = 7)
-      l[[FDF$NAME]] <- nm_var[[idx]]
-      l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
-      l[[FDF$CLASS]] <- class(var)[[1]]
-      l[[FDF$KIND]] <- K$CATEGORICAL
+      l <- precomputed_data[[idx]]
+    } else {
+      n_not_used_precomputed <- n_not_used_precomputed + 1
+      not_used_precomputed[[n_not_used_precomputed]] <- nm_var[[idx]]
 
-      if (is.character(var)) {
+      var <- dataset[[idx]]
+      # Logical is treated as a factor in the client
+      if (is.logical(var)) {
         var <- factor(var)
       }
-      C <- count_factor_C(var)
-      l[[FDF$NA_COUNT]] <- C[[1]]
 
-      if (length(C) > 1) {
-        C <- C[2:length(C)]
-        names(C) <- levels(var)
-        C <- sort(C, decreasing = TRUE)
-        l[[FDF$COUNT]] <- unname(C)
-        l[[FDF$VALUE]] <- names(C)
+      if (is.character(var) || is.factor(var)) {
+        l <- vector(mode = "list", length = 7)
+        l[[FDF$NAME]] <- nm_var[[idx]]
+        l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
+        l[[FDF$CLASS]] <- class(var)[[1]]
+        l[[FDF$KIND]] <- K$CATEGORICAL
+
+        if (is.character(var)) {
+          var <- factor(var)
+        }
+        C <- count_factor_C(var)
+        l[[FDF$NA_COUNT]] <- C[[1]]
+
+        if (length(C) > 1) {
+          C <- C[2:length(C)]
+          names(C) <- levels(var)
+          C <- sort(C, decreasing = TRUE)
+          l[[FDF$COUNT]] <- unname(C)
+          l[[FDF$VALUE]] <- names(C)
+        } else {
+          l[[FDF$COUNT]] <- integer(0)
+          l[[FDF$VALUE]] <- character(0)
+        }
+      } else if (is.numeric(var)) {
+        l <- vector(mode = "list", length = 8)
+        l[[FDF$NAME]] <- nm_var[[idx]]
+        l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
+        l[[FDF$CLASS]] <- class(var)[[1]]
+
+        var <- as.numeric(var)
+        max_min_na <- max_min_count_na_C(var)
+        l[[FDF$KIND]] <- K$NUMERICAL
+        l[[FDF$NA_COUNT]] <- max_min_na[[3]]
+
+        l[[FDF$MIN]] <- max_min_na[[2]]
+        l[[FDF$MAX]] <- max_min_na[[1]]
+
+        if (length(var) > 0 && has_finite_C(var) && l[[FDF$NA_COUNT]] != length(var)) {
+          hist_info <- graphics::hist(var, plot = FALSE)
+        } else {
+          hist_info <- list(density = numeric(0))
+        }
+
+        l[[FDF$DENSITY]] <- hist_info[["density"]]
+      } else if (inherits(var, "POSIXct") || inherits(var, "Date")) {
+        l <- vector(mode = "list", length = 7)
+        l[[FDF$NAME]] <- nm_var[[idx]]
+        l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
+        l[[FDF$CLASS]] <- class(var)[[1]]
+
+        if (inherits(var, "POSIXct")) {
+          var <- as.Date(var)
+        }
+
+        var <- as.numeric(var)
+        inf_date <- Inf
+        minus_inf_date <- -Inf
+
+        l[[FDF$KIND]] <- K$DATE
+        l[[FDF$NA_COUNT]] <- sum(is.na(var))
+        na_clean_var <- var[!is.na(var)]
+
+        l[[FDF$MIN]] <- min(inf_date, na_clean_var, na.rm = TRUE)
+        l[[FDF$MAX]] <- max(minus_inf_date, na_clean_var, na.rm = TRUE)
       } else {
-        l[[FDF$COUNT]] <- integer(0)
-        l[[FDF$VALUE]] <- character(0)
+        l <- vector(mode = "list", length = 5)
+        l[[FDF$NAME]] <- nm_var[[idx]]
+        l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
+        l[[FDF$CLASS]] <- class(var)[[1]]
+
+        l[[FDF$KIND]] <- K$UNKNOWN
+        l[[FDF$NA_COUNT]] <- NA_integer_
       }
-    } else if (is.numeric(var)) {
-      l <- vector(mode = "list", length = 8)
-      l[[FDF$NAME]] <- nm_var[[idx]]
-      l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
-      l[[FDF$CLASS]] <- class(var)[[1]]
-
-      var <- as.numeric(var)
-      max_min_na <- max_min_count_na_C(var)
-      l[[FDF$KIND]] <- K$NUMERICAL
-      l[[FDF$NA_COUNT]] <- max_min_na[[3]]
-
-      l[[FDF$MIN]] <- max_min_na[[2]]
-      l[[FDF$MAX]] <- max_min_na[[1]]
-
-      if (length(var) > 0 && has_finite_C(var) && l[[FDF$NA_COUNT]] != length(var)) {
-        hist_info <- graphics::hist(var, plot = FALSE)
-      } else {
-        hist_info <- list(density = numeric(0))
-      }
-
-      l[[FDF$DENSITY]] <- hist_info[["density"]]
-    } else if (inherits(var, "POSIXct") || inherits(var, "Date")) {
-      l <- vector(mode = "list", length = 7)
-      l[[FDF$NAME]] <- nm_var[[idx]]
-      l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
-      l[[FDF$CLASS]] <- class(var)[[1]]
-
-      if (inherits(var, "POSIXct")) {
-        var <- as.Date(var)
-      }
-
-      var <- as.numeric(var)
-      inf_date <- Inf
-      minus_inf_date <- -Inf
-
-      l[[FDF$KIND]] <- K$DATE
-      l[[FDF$NA_COUNT]] <- sum(is.na(var))
-      na_clean_var <- var[!is.na(var)]
-
-      l[[FDF$MIN]] <- min(inf_date, na_clean_var, na.rm = TRUE)
-      l[[FDF$MAX]] <- max(minus_inf_date, na_clean_var, na.rm = TRUE)
-    } else {
-      l <- vector(mode = "list", length = 5)
-      l[[FDF$NAME]] <- nm_var[[idx]]
-      l[[FDF$LABEL]] <- attr(var, "label") %||% l[[FDF$NAME]] # FIXME: This is done to maintain the same behavior as jsonlite. Should be reviewed with the js code that uses labels
-      l[[FDF$CLASS]] <- class(var)[[1]]
-
-      l[[FDF$KIND]] <- K$UNKNOWN
-      l[[FDF$NA_COUNT]] <- NA_integer_
     }
 
     res[[idx]] <- l
   }
+
+  log_inform(paste(
+    "Pre computed data found for",
+    paste0("`", used_precomputed[seq_len(n_used_precomputed)], "`", collapse = ",")
+  ))
+  log_inform(paste(
+    "Pre computed data not found for",
+    paste0("`", not_used_precomputed[seq_len(n_not_used_precomputed)], "`", collapse = ",")
+  ))
   return(res)
 }
 
-get_filter_data <- function(dataset_lists) {
-  ..t$add_period("get_filter_data", TRUE)
-  on.exit(..t$add_period("get_filter_data", FALSE), add = TRUE)
+get_filter_data_dataset_lists <- function(dataset_lists) {
+  ..t$add_period("get_filter_data_dataset_lists", TRUE)
+  on.exit(..t$add_period("get_filter_data_dataset_lists", FALSE), add = TRUE)
   FDF <- FC$FDF
 
   nm_dataset_list <- names(dataset_lists)
@@ -195,27 +227,67 @@ get_filter_data <- function(dataset_lists) {
     current_dataset_list_name <- nm_dataset_list[[idx]]
     nm_datasets <- names(current_dataset_list)
     n_datasets <- length(nm_datasets)
-    current_dataset_res <- vector(mode = "list", length = n_datasets)
-    for (jdx in seq_len(n_datasets)) {
-      current_dataset <- current_dataset_list[[jdx]]
-      current_dataset_name <- nm_datasets[[jdx]]
-      current_dataset_label <- attr(current_dataset_list[[jdx]], "label") %||% current_dataset_name
-
-      current_dataset_res[[jdx]] <- vector(mode = "list", length = 4)
-      current_dataset_res[[jdx]][[FDF$NAME]] <- nm_datasets[[jdx]]
-      current_dataset_res[[jdx]][[FDF$LABEL]] <- attr(current_dataset_list[[jdx]], "label") %||% current_dataset_name
-      current_dataset_res[[jdx]][[FDF$NROW]] <- nrow(current_dataset)
-      ..t$add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[jdx]]), TRUE)
-      current_dataset_res[[jdx]][[FDF$VARIABLES]] <- get_single_filter_data(current_dataset)
-      ..t$add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[jdx]]), FALSE)
-    }
 
     res[[idx]] <- vector(mode = "list", length = 2)
     res[[idx]][[FDF$NAME]] <- current_dataset_list_name
-    res[[idx]][[FDF$DATASET_LIST]] <- current_dataset_res
+    res[[idx]][[FDF$DATASET_LIST]] <- get_filter_data_dataset_list(current_dataset_list)
   }
 
   return(list(res))
+}
+
+get_filter_data_dataset_list <- function(dataset_list) {
+  ..t$add_period("get_filter_data_dataset_list", TRUE)
+  on.exit(..t$add_period("get_filter_data_dataset_list", FALSE), add = TRUE)
+  FDF <- FC$FDF
+
+  nm_datasets <- names(dataset_list)
+  n_datasets <- length(nm_datasets)
+  res <- vector(mode = "list", length = n_datasets)
+  for (idx in seq_len(n_datasets)) {
+    current_dataset <- dataset_list[[idx]]
+    current_dataset_name <- nm_datasets[[idx]]
+    current_dataset_label <- attr(dataset_list[[idx]], "label") %||% current_dataset_name
+
+    res[[idx]] <- vector(mode = "list", length = 4)
+    res[[idx]][[FDF$NAME]] <- nm_datasets[[idx]]
+    res[[idx]][[FDF$LABEL]] <- attr(dataset_list[[idx]], "label") %||% current_dataset_name
+    res[[idx]][[FDF$NROW]] <- nrow(current_dataset)
+    ..t$add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[idx]]), TRUE)
+
+    # Datasets may change because additional may be added (subgrouping)
+    # Adding columns loses attributes, therefore FC$PRECOMPUTED_FILTER_DATA cannot be attached to dataset itself
+    # Ideally they should be attached to the dataset, and not the dataset list
+    # Meanwhile we attach them here the dataset
+
+    attr(current_dataset, FC$PRECOMPUTED_FILTER_DATA) <- attr(
+      dataset_list,
+      FC$PRECOMPUTED_FILTER_DATA
+    )[[idx]][[FDF$VARIABLES]]
+
+    res[[idx]][[FDF$VARIABLES]] <- get_single_filter_data(current_dataset)
+
+    ..t$add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[jdx]]), FALSE)
+  }
+
+  return(res)
+}
+
+attach_computed_filter_data_as_attribute <- function(dataset_lists) {
+  for (idx in seq_along(dataset_lists)) {
+    dsl <- dataset_lists[[idx]]
+    if (!is.function(dsl)) {
+      log_inform(paste("Attaching filter data to", names(dataset_lists)[[idx]]))
+      filter_data <- get_filter_data_dataset_list(dataset_lists[[idx]])
+    } else {
+      log_inform(paste("Skipping attaching filter data to", names(dataset_lists)[[idx]]))
+      filter_data <- NULL
+    }
+
+    attr(dataset_lists[[idx]], FC$PRECOMPUTED_FILTER_DATA) <- filter_data
+  }
+
+  dataset_lists
 }
 
 subject_filter_operations <- local({
@@ -938,7 +1010,7 @@ new_filter_server <- function(
       # Not convinced as it is removed somewhere else (app_server) (gvbu)
       session[["sendCustomMessage"]]("dv_manager_show_overlay", list(message = "Setting up filter"))
 
-      log_inform(paste0("Send init message to: ", ns_id))
+      log_inform(paste0("Preparing init message for: ", ns_id))
       dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
       current_dataset_lists <- stats::setNames(list(selected_dataset_list()), dataset_list_name)
 
@@ -949,6 +1021,7 @@ new_filter_server <- function(
         skip_dataset_filters = skip_dataset_filters
       )
 
+      log_inform(paste0("Sending init message for: ", ns_id))
       session[["sendCustomMessage"]](
         "init_filter",
         msg

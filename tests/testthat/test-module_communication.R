@@ -54,7 +54,7 @@ test_that(
 
     testing_options <- list(
       afmm_static = afmm_static,
-      filter_data = "a",
+      filter_dataset_name = "a",
       filter_key = "A",
       module_info = module_info,
       filter_info = list(filter_default_state = NULL),
@@ -119,7 +119,7 @@ test_that(
 
     testing_options <- list(
       afmm_static = afmm_static,
-      filter_data = "a",
+      filter_dataset_name = "a",
       filter_key = "A",
       module_info = module_info,
       filter_info = list(filter_default_state = NULL),
@@ -226,7 +226,7 @@ test_that(
 
     testing_options <- list(
       afmm_static = afmm_static,
-      filter_data = "a",
+      filter_dataset_name = "a",
       filter_key = "A",
       module_info = module_info,
       filter_info = list(filter_default_state = NULL),

@@ -66,7 +66,7 @@ test_that(
             from = "filtered_dataset_list"
           )
         ),
-        filter_data = "ds1",
+        filter_dataset_name = "ds1",
         filter_key = "sbj_var",
         enableBookmarking = "url"
       )

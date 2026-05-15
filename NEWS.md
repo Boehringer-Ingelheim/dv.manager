@@ -1,3 +1,6 @@
+# dv.manager 3.0.0-9007
+ - Filter data computation is done once on app start.
+
 # dv.manager 3.0.0-9006
  - Moves early error feedback to run app
 

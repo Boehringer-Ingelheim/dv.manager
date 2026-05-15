@@ -192,11 +192,11 @@ test_that(
   }
 )
 
-## Testing check_filter_data ----
+## Testing check_filter_dataset_name ----
 
 test_that(
   vdoc[["add_spec"]](
-    "check_filter_data should pass when all datasets contain the filter_data field. Should return the checked element",
+    "check_filter_dataset_name should pass when all datasets contain the filter_data field. Should return the checked element",
     c(specs$FILTERING$FILTER_GLOBAL_TABLE)
   ),
   {
@@ -206,16 +206,19 @@ test_that(
       D3 = list(a = 1, b = 2)
     )
 
-    check_filter_data("a", data) |>
+    check_filter_dataset_name("a", data) |>
       expect_error(regexp = NA) |>
       expect_equal("a")
   }
 )
 
 test_that(
-  vdoc[["add_spec"]]("check_filter_data should pass when data is empty", c(specs$FILTERING$FILTER_GLOBAL_TABLE)),
+  vdoc[["add_spec"]](
+    "check_filter_dataset_name should pass when data is empty",
+    c(specs$FILTERING$FILTER_GLOBAL_TABLE)
+  ),
   {
-    check_filter_data("A", list()) |>
+    check_filter_dataset_name("A", list()) |>
       expect_error(regexp = NA) |>
       expect_equal("A")
   }
@@ -223,7 +226,7 @@ test_that(
 
 test_that(
   vdoc[["add_spec"]](
-    "check_filter_data should fail when at least 1 dataset does not contain the filter_data field",
+    "check_filter_dataset_name should fail when at least 1 dataset does not contain the filter_data field",
     c(specs$FILTERING$FILTER_GLOBAL_TABLE)
   ),
   {
@@ -232,21 +235,24 @@ test_that(
       D2 = list(a = 1, b = 2),
       D3 = list(c = 1, b = 2)
     )
-    check_filter_data("a", data) |>
+    check_filter_dataset_name("a", data) |>
       expect_error(regexp = "D3 has no 'a' table", fixed = TRUE)
   }
 )
 
 test_that(
-  vdoc[["add_spec"]]("check_filter_data should fail when filter_data is NULL", c(specs$FILTERING$FILTER_GLOBAL_TABLE)),
+  vdoc[["add_spec"]](
+    "check_filter_dataset_name should fail when filter_data is NULL",
+    c(specs$FILTERING$FILTER_GLOBAL_TABLE)
+  ),
   {
     data <- list(
       D1 = list(a = 1, b = 2),
       D2 = list(a = 1, b = 2),
       D3 = list(c = 1, b = 2)
     )
-    check_filter_data(NULL, data) |>
-      expect_error(regexp = "No filter_data specified!")
+    check_filter_dataset_name(NULL, data) |>
+      expect_error(regexp = "No filter_dataset_name specified!")
   }
 )
 

@@ -193,7 +193,7 @@ run_mock_app <- function() {
       "Simple" = mod_simple("adsl", "filtered_dataset_list", "mod1"),
       "Simple2" = mod_simple("adsl", "unfiltered_dataset_list", "mod2")
     ),
-    filter_data = "adsl",
+    filter_dataset_name = "adsl",
     filter_key = "USUBJID"
   )
 }
@@ -216,7 +216,7 @@ run_mock_app_two_datasets <- function() {
       "Simple2" = mod_simple("adsl", "unfiltered_dataset_list", "mod2"),
       "Simple3" = mod_simple("adae", "filtered_dataset_list", "mod3")
     ),
-    filter_data = "adsl",
+    filter_dataset_name = "adsl",
     filter_key = "USUBJID"
   )
 }
@@ -287,7 +287,7 @@ run_mock_com_app <- function() {
       ),
       "Simple" = mod_simple("adsl", "unfiltered_dataset_list", "modSimp")
     ),
-    filter_data = "adsl",
+    filter_dataset_name = "adsl",
     filter_key = "USUBJID"
   )
 }
@@ -356,7 +356,7 @@ run_mock_combined_app <- function() {
         dataset = "adae"
       )
     ),
-    filter_data = "adsl",
+    filter_dataset_name = "adsl",
     filter_key = "USUBJID"
   )
 }
@@ -402,7 +402,7 @@ run_mock_dataset_name_app <- function() {
     module_list = list(
       "Dataset Name" = mod_dataset_name("mod1")
     ),
-    filter_data = "adsl",
+    filter_dataset_name = "adsl",
     filter_key = "USUBJID"
   )
 }
@@ -478,7 +478,7 @@ run_mock_switch_app <- function() {
       "Mod 1" = mod_switch("Mod 1", "mod2", "mod1"),
       "Mod 2" = mod_switch("Mod 2", "mod1", "mod2")
     ),
-    filter_data = "adsl",
+    filter_dataset_name = "adsl",
     filter_key = "USUBJID"
   )
 }
@@ -532,7 +532,7 @@ run_mock_print_afmm <- function() {
       "Simple" = mod_simple("adsl", "unfiltered_dataset_list", "modSimp"),
       "afmm" = mod_print_afmm("mod_afmm")
     ),
-    filter_data = "adsl",
+    filter_dataset_name = "adsl",
     filter_key = "USUBJID"
   )
 }
@@ -594,7 +594,7 @@ run_mock_app_impl_msg <- function() {
     module_list = list(
       "msg" = mod_impl_msg("mod1")
     ),
-    filter_data = "",
+    filter_dataset_name = "",
     filter_key = "USUBJID"
   )
 }
@@ -606,7 +606,7 @@ run_mock_startup_msg <- function() {
     data = list(),
     module_list = list(),
     startup_msg = shiny::modalDialog("Sample startup message"),
-    filter_data = "",
+    filter_dataset_name = "",
     filter_key = "USUBJID"
   )
 }
@@ -669,7 +669,7 @@ printer_app <- function() {
     module_list = list(
       "Dataset Name" = mod_dataset_name_date("mod1")
     ),
-    filter_data = "adsl",
+    filter_dataset_name = "adsl",
     filter_key = "USUBJID"
   )
 }
@@ -740,7 +740,7 @@ run_mock_app_css <- function() {
       "no css" = mod_button_no_css("mod1"),
       "css" = mod_button_css("mod2")
     ),
-    filter_data = "",
+    filter_dataset_name = "",
     filter_key = ""
   )
 }
@@ -858,7 +858,7 @@ run_mock_app_labels <- function(data) {
     module_list = list(
       "Labels" = mod_dataset_labels(names(data[[1]]), "mod1")
     ),
-    filter_data = names(data[[1]])[[1]],
+    filter_dataset_name = names(data[[1]])[[1]],
     filter_key = names(data[[1]][[1]])[[1]]
   )
 }
