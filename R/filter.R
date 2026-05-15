@@ -88,7 +88,8 @@ FC <- poc(
   PRECOMPUTED_FILTER_DATA = "..precomputed_filter_data.."
 )
 
-get_single_filter_data <- function(dataset, precomputed_data = NULL) {
+
+get_single_filter_data <- function(dataset) {
   nm_var <- names(dataset)
   n_var <- length(nm_var)
   res <- vector(mode = "list", length = n_var)
@@ -101,6 +102,7 @@ get_single_filter_data <- function(dataset, precomputed_data = NULL) {
   not_used_precomputed <- character(length(n_var))
   n_not_used_precomputed <- 0
 
+  precomputed_data <- attr(dataset, FC$PRECOMPUTED_FILTER_DATA)
   found_precomputed <- !is.null(precomputed_data)
 
   for (idx in seq_len(n_var)) {
@@ -225,34 +227,50 @@ get_filter_data_dataset_lists <- function(dataset_lists) {
     current_dataset_list_name <- nm_dataset_list[[idx]]
     nm_datasets <- names(current_dataset_list)
     n_datasets <- length(nm_datasets)
-    current_dataset_res <- vector(mode = "list", length = n_datasets)
-    for (jdx in seq_len(n_datasets)) {
-      current_dataset <- current_dataset_list[[jdx]]
-      current_dataset_name <- nm_datasets[[jdx]]
-      current_dataset_label <- attr(current_dataset_list[[jdx]], "label") %||% current_dataset_name
-
-      current_dataset_res[[jdx]] <- vector(mode = "list", length = 4)
-      current_dataset_res[[jdx]][[FDF$NAME]] <- nm_datasets[[jdx]]
-      current_dataset_res[[jdx]][[FDF$LABEL]] <- attr(current_dataset_list[[jdx]], "label") %||% current_dataset_name
-      current_dataset_res[[jdx]][[FDF$NROW]] <- nrow(current_dataset)
-      ..t$add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[jdx]]), TRUE)
-
-      precomputed_filter_data <- attr(dataset_lists[[idx]], FC$PRECOMPUTED_FILTER_DATA)[[jdx]][[FDF$VARIABLES]]
-
-      current_dataset_res[[jdx]][[FDF$VARIABLES]] <- get_single_filter_data(
-        current_dataset,
-        precomputed_filter_data
-      )
-
-      ..t$add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[jdx]]), FALSE)
-    }
 
     res[[idx]] <- vector(mode = "list", length = 2)
     res[[idx]][[FDF$NAME]] <- current_dataset_list_name
-    res[[idx]][[FDF$DATASET_LIST]] <- current_dataset_res
+    res[[idx]][[FDF$DATASET_LIST]] <- get_filter_data_dataset_list(current_dataset_list)
   }
 
   return(list(res))
+}
+
+get_filter_data_dataset_list <- function(dataset_list) {
+  ..t$add_period("get_filter_data_dataset_list", TRUE)
+  on.exit(..t$add_period("get_filter_data_dataset_list", FALSE), add = TRUE)
+  FDF <- FC$FDF
+
+  nm_datasets <- names(dataset_list)
+  n_datasets <- length(nm_datasets)
+  res <- vector(mode = "list", length = n_datasets)
+  for (idx in seq_len(n_datasets)) {
+    current_dataset <- dataset_list[[idx]]
+    current_dataset_name <- nm_datasets[[idx]]
+    current_dataset_label <- attr(dataset_list[[idx]], "label") %||% current_dataset_name
+
+    res[[idx]] <- vector(mode = "list", length = 4)
+    res[[idx]][[FDF$NAME]] <- nm_datasets[[idx]]
+    res[[idx]][[FDF$LABEL]] <- attr(dataset_list[[idx]], "label") %||% current_dataset_name
+    res[[idx]][[FDF$NROW]] <- nrow(current_dataset)
+    ..t$add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[idx]]), TRUE)
+
+    # Datasets may change because additional may be added (subgrouping)
+    # Adding columns loses attributes, therefore FC$PRECOMPUTED_FILTER_DATA cannot be attached to dataset itself
+    # Ideally they should be attached to the dataset, and not the dataset list
+    # Meanwhile we attach them here the dataset
+
+    attr(current_dataset, FC$PRECOMPUTED_FILTER_DATA) <- attr(
+      dataset_list,
+      FC$PRECOMPUTED_FILTER_DATA
+    )[[idx]][[FDF$VARIABLES]]
+
+    res[[idx]][[FDF$VARIABLES]] <- get_single_filter_data(current_dataset)
+
+    ..t$add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[jdx]]), FALSE)
+  }
+
+  return(res)
 }
 
 attach_computed_filter_data_as_attribute <- function(dataset_lists) {
@@ -260,18 +278,13 @@ attach_computed_filter_data_as_attribute <- function(dataset_lists) {
     dsl <- dataset_lists[[idx]]
     if (!is.function(dsl)) {
       log_inform(paste("Attaching filter data to", names(dataset_lists)[[idx]]))
-      filter_data <- get_filter_data_dataset_lists(dataset_lists[idx])
-      attr(dataset_lists[[idx]], FC$PRECOMPUTED_FILTER_DATA) <- filter_data[[FC$FDF$DATASET_LISTS]][[1]][[
-        FC$FDF$DATASET_LIST
-      ]]
+      filter_data <- get_filter_data_dataset_list(dataset_lists[[idx]])
     } else {
       log_inform(paste("Skipping attaching filter data to", names(dataset_lists)[[idx]]))
       filter_data <- NULL
     }
 
-    attr(dataset_lists[[idx]], FC$PRECOMPUTED_FILTER_DATA) <- filter_data[[FC$FDF$DATASET_LISTS]][[1]][[
-      FC$FDF$DATASET_LIST
-    ]]
+    attr(dataset_lists[[idx]], FC$PRECOMPUTED_FILTER_DATA) <- filter_data
   }
 
   dataset_lists
