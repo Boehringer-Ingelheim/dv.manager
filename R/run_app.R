@@ -29,7 +29,7 @@
 #' @param enable_subgroup  A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.
 #' @param .launch by default it should always be TRUE. It should only be false for debugging and testing.
 #' When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.
-#' @param .enable_checks by default it should always be TRUE. Only for advanced use. If set to FALSE, the app creator must make sure that
+#' @param .bypass_checks by default it should always be FALSE. Only for advanced use. If set to TRUE, the app creator must make sure that
 #' application parameters and modules are correctly configured for all trials loaded in the application, otherwise application may fail. Configuration errors can be checked with a
 #' dry run. To do a dry run use the parameter `.launch = FALSE`.
 #' @inheritParams shiny::shinyApp
@@ -57,7 +57,7 @@ run_app <- function(
   enable_subgroup = FALSE,
   filter_default_state = NULL,
   .launch = TRUE,
-  .enable_checks = TRUE
+  .bypass_checks = FALSE
 ) {
   dataset_lists <- data
 
@@ -104,7 +104,7 @@ run_app <- function(
     )
   })
 
-  if (!isFALSE(.enable_checks)) {
+  if (!isTRUE(.bypass_checks)) {
     log_inform("Running EEF checkers")
     config[["module_info"]] <- check_EEF(config[["module_info"]], config[["afmm_static"]])
     config[["filter_dataset_name"]] <- check_filter_dataset_name(filter_dataset_name, dataset_lists)
