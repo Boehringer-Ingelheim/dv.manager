@@ -65,13 +65,13 @@ check_data <- function(data) {
   data
 }
 
-check_filter_dataset_name <- function(filter_data, datasets) {
+check_filter_dataset_name <- function(filter_dataset_name, datasets) {
   if (length(datasets) == 0) {
-    return(filter_data)
+    return(filter_dataset_name)
   }
 
-  if (is.null(filter_data)) {
-    msg <- "No filter_data specified!"
+  if (is.null(filter_dataset_name)) {
+    msg <- "No filter_dataset_name specified!"
     rlang::abort(msg)
   }
 
@@ -83,7 +83,7 @@ check_filter_dataset_name <- function(filter_data, datasets) {
       } else {
         dataset_list <- .x
       }
-      filter_data %in% names(dataset_list)
+      filter_dataset_name %in% names(dataset_list)
     }
   ) |>
     purrr::keep(~ !.x)
@@ -91,13 +91,13 @@ check_filter_dataset_name <- function(filter_data, datasets) {
   if (length(filter_data_check) > 0) {
     purrr::iwalk(
       filter_data_check,
-      ~ rlang::abort(glue::glue("{.y} has no '{filter_data}' table"))
+      ~ rlang::abort(glue::glue("{.y} has no '{filter_dataset_name}' table"))
     )
-    msg <- glue::glue("Not all datasets have a '{filter_data}' table")
+    msg <- glue::glue("Not all datasets have a '{filter_dataset_name}' table")
     rlang::abort(msg)
   }
 
-  filter_data
+  filter_dataset_name
 }
 
 check_filter_key <- function(filter_key, datasets) {

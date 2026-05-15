@@ -252,7 +252,7 @@ test_that(
       D3 = list(c = 1, b = 2)
     )
     check_filter_dataset_name(NULL, data) |>
-      expect_error(regexp = "No filter_data specified!")
+      expect_error(regexp = "No filter_dataset_name specified!")
   }
 )
 

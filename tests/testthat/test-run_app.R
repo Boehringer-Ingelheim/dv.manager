@@ -61,7 +61,7 @@ test_that(
       filter_key = "C",
       .launch = FALSE
     ) |>
-      expect_error(regexp = "No filter_data specified!")
+      expect_error(regexp = "No filter_dataset_name specified!")
   }
 )
 
