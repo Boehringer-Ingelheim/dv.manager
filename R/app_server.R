@@ -79,33 +79,40 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  selected_dataset_list <- shinymeta::metaReactive2({
-    dataset_list_name <- input[["selector"]]
-    shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
-    ..t$add_period("selected_dataset_list", TRUE)
-    on.exit(..t$add_period("selected_dataset_list", FALSE))
-    assert(dataset_list_name %in% names(dataset_lists))
+  selected_dataset_list <- shinymeta::metaReactive2(
+    {
+      dataset_list_name <- input[["selector"]]
+      shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
+      ..t$add_period("selected_dataset_list", TRUE)
+      on.exit(..t$add_period("selected_dataset_list", FALSE))
+      assert(dataset_list_name %in% names(dataset_lists))
 
-    if (is.function(dataset_lists[[dataset_list_name]])) {
-      d <- dataset_lists[[dataset_list_name]]()
-    } else {
-      d <- dataset_lists[[dataset_list_name]]
-    }
+      if (is.function(dataset_lists[[dataset_list_name]])) {
+        d <- dataset_lists[[dataset_list_name]]()
+      } else {
+        d <- dataset_lists[[dataset_list_name]]
+      }
 
-    if (identical(shinymeta:::metaMode(), "mixed")) {
-      res <- shinymeta::metaExpr(
-        {
-          df <- ..(body(attr(d, "load_fn")))
-          attr(df, "dataset_list_name") <- ..(dataset_list_name)
-          df
-        },
-        localize = TRUE
-      )
-    } else {
       df <- add_date_range(d)
       attr(df, "dataset_list_name") <- dataset_list_name
       df
     }
+  )
+
+  dv_manager_ec <- shinymeta::metaReactive2({
+    shiny::isolate({
+      ec <- shinymeta::newExpansionContext()
+      fn <- body(attr(selected_dataset_list(), "load_fn"))
+      dln <- attr(selected_dataset_list(), "dataset_list_name")
+      ec$substituteMetaReactive(selected_dataset_list, function() {
+        shinymeta::metaExpr({
+          df <- ..(fn)
+          attr(df, "dataset_list_name") <- ..(dln)
+          df
+        })
+      })
+      ec
+    })
   })
 
   if (enable_subgroup) {
@@ -194,19 +201,20 @@ app_server_ <- function(input, output, session, opts) {
     inline = TRUE
   )
 
-  unfiltered_dataset_list_with_filter_info <- shinymeta::metaReactive2({
-    ..t$add_period("unfiltered_dataset_list_with_filter_info", TRUE)
-    on.exit(..t$add_period("unfiltered_dataset_list_with_filter_info", FALSE))
-    # Place reqs here so all elements are synchronized before going forward
-    # Consider generation counters (Check current approach)
+  unfiltered_dataset_list_with_filter_info <- shinymeta::metaReactive2(
+    {
+      ..t$add_period("unfiltered_dataset_list_with_filter_info", TRUE)
+      on.exit(..t$add_period("unfiltered_dataset_list_with_filter_info", FALSE))
+      # Place reqs here so all elements are synchronized before going forward
+      # Consider generation counters (Check current approach)
 
-    shiny::req(
-      # Wait until filter info is ready
-      !unfiltered_dataset_list_with_filter_info_()[["error_list"]]$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
-        !unfiltered_dataset_list_with_filter_info_()[["error_list"]]$any_has_class(
-          FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class
-        )
-    )
+      shiny::req(
+        # Wait until filter info is ready
+        !unfiltered_dataset_list_with_filter_info_()[["error_list"]]$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
+          !unfiltered_dataset_list_with_filter_info_()[["error_list"]]$any_has_class(
+            FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class
+          )
+      )
 
     if (unfiltered_dataset_list_with_filter_info_()[["error_list"]]$any()) {
       msg <- shiny::div(
@@ -222,10 +230,11 @@ app_server_ <- function(input, output, session, opts) {
       shinymeta::..(unfiltered_dataset_list_with_filter_info_())
     })
 
-    ..t$add_event("received unfiltered_dataset_list_with_filter_info")
+      ..t$add_event("received unfiltered_dataset_list_with_filter_info")
 
-    res
-  })
+      res
+    },
+  )
 
   filtered_dataset_list <- shinymeta::metaReactive2({
     ..t$add_period("filtered_dataset_list", TRUE)
@@ -371,7 +380,8 @@ app_server_ <- function(input, output, session, opts) {
         )
         dataset_list_filter()
       })
-    )
+    ),
+    expansion_context = dv_manager_ec
   )
 
   afmm <- c(
