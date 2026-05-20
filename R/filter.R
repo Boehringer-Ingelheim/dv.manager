@@ -940,7 +940,7 @@ new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states =
         escape_special_chars(ns(ID$FILTER_STATE_JSON_INPUT)),
         escape_special_chars(ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)),
         escape_special_chars(ns(ID$FILTER_MODE_INPUT)),
-        escape_special_chars(ns(ID$EXPORT_CODE_INPUT)),
+        escape_special_chars(ns(ID$EXPORT_FILTER_CODE_INPUT)),
         escape_special_chars(ns(ID$FILTER_LOG_INPUT))
       )
     )
@@ -1102,7 +1102,7 @@ new_filter_server <- function(
       res
     })
 
-    output[[ID$EXPORT_CODE_INPUT]] <- shiny::downloadHandler(
+    output[[ID$EXPORT_FILTER_CODE_INPUT]] <- shiny::downloadHandler(
       filename = "filter.txt",
       content = function(file) {
         if (!checkmate::test_string(input[[ID$FILTER_STATE_JSON_INPUT]])) {
@@ -1118,7 +1118,7 @@ new_filter_server <- function(
       },
       contentType = "application/json"
     )
-    shiny::outputOptions(output, ID$EXPORT_CODE_INPUT, suspendWhenHidden = FALSE)
+    shiny::outputOptions(output, ID$EXPORT_FILTER_CODE_INPUT, suspendWhenHidden = FALSE)
 
     return(
       structure(res, raw = shiny::reactive(input[[ID$FILTER_STATE_JSON_INPUT]]))

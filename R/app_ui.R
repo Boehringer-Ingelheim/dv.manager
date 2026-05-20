@@ -66,7 +66,8 @@ app_ui <- function(request_id) {
     )
 
   top_buttons <- list(
-    shiny::bookmarkButton("", class = "navbar-btn")
+    shiny::bookmarkButton("", class = "navbar-btn"),
+    shiny::downloadButton(ns(ID$EXPORT_CODE), "Export")
     # Remove export functionality until new order
     # shiny::actionButton(ns("open_report_modal"), shiny::span(shiny::icon("download")), class = "navbar-btn"), # nolint
     # shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("question")), class = "navbar-btn"), # nolint

@@ -99,7 +99,7 @@ app_server_ <- function(input, output, session, opts) {
     }
   )
 
-  dv_manager_ec <- shinymeta::metaReactive2({
+  dv_manager_ec <- function() {
     shiny::isolate({
       ec <- shinymeta::newExpansionContext()
       fn <- body(attr(selected_dataset_list(), "load_fn"))
@@ -113,7 +113,7 @@ app_server_ <- function(input, output, session, opts) {
       })
       ec
     })
-  })
+  }
 
   if (enable_subgroup) {
     subgroups <- mod_subgroup_server(
@@ -443,6 +443,52 @@ app_server_ <- function(input, output, session, opts) {
   shiny::observeEvent(input$open_options_modal, {
     shiny::showModal(create_info_modal(session = session, input = input, ns = ns))
   })
+
+  ### Export
+  output[[ID$EXPORT_CODE]] <- shiny::downloadHandler(
+    filename = "code.zip",
+    content = function(filename) {
+      expansion_args <- list(
+        .expansionContext = quote(shiny::isolate(afmm[["expansion_context"]]())),
+        "# Data source",
+        quote(invisible(unfiltered_dataset_list_with_filter_info()))
+      )
+
+      for (idx in seq_along(module_output)) {
+        mo <- module_output[[idx]]
+        mo_id <- names(module_output)[[idx]]
+        mo_nm <- module_names[[mo_id]]
+        if ("to_report" %in% names(mo)) {
+          ctr <- mo[["to_report"]]
+          for (jdx in seq_along(ctr)) {
+            ta <- list(
+              bquote(paste("#", .(mo_nm), .(names(ctr)[[jdx]]))),
+              local({
+                el_nm <- names(ctr)[[jdx]]
+                mo_nm <- mo_nm
+                el <- ctr[[jdx]]
+
+                tryCatch(
+                  {
+                    el()
+                    bquote(module_output[[.(mo_id)]][["to_report"]][[.(el_nm)]]())
+                  },
+                  error = function(e) {
+                    bquote(paste("# Error creating", .(mo_nm), .(el_nm), .(e$message)))
+                  }
+                )
+              })
+            )
+            expansion_args <- c(expansion_args, ta)
+          }
+        }
+      }
+
+      code <- do.call(shinymeta::expandChain, expansion_args, quote = FALSE) |>
+        shinymeta::formatCode(formatter = format_with_air, width = 400L)
+      shinymeta::buildScriptBundle(code, filename, render_args = list(output_format = "pdf_document"))
+    }
+  )
 }
 
 # Convoluted way of having a testable server function
