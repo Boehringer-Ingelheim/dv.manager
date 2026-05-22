@@ -445,50 +445,113 @@ app_server_ <- function(input, output, session, opts) {
   })
 
   ### Export
-  output[[ID$EXPORT_CODE]] <- shiny::downloadHandler(
-    filename = "code.zip",
-    content = function(filename) {
-      expansion_args <- list(
-        .expansionContext = quote(shiny::isolate(afmm[["expansion_context"]]())),
-        "# Data source",
-        quote(invisible(unfiltered_dataset_list_with_filter_info()))
+
+  local({
+    selected <- list()
+    ui <- list()
+    for (idx in seq_along(module_output)) {
+      mo <- module_output[[idx]]
+      mo_id <- names(module_output)[[idx]]
+      mo_nm <- module_names[[mo_id]]
+      mod_ui_list <- list(
+        shiny::p(mo_nm)
       )
-
-      for (idx in seq_along(module_output)) {
-        mo <- module_output[[idx]]
-        mo_id <- names(module_output)[[idx]]
-        mo_nm <- module_names[[mo_id]]
-        if ("to_report" %in% names(mo)) {
-          ctr <- mo[["to_report"]]
-          for (jdx in seq_along(ctr)) {
-            ta <- list(
-              bquote(paste("#", .(mo_nm), .(names(ctr)[[jdx]]))),
-              local({
-                el_nm <- names(ctr)[[jdx]]
-                mo_nm <- mo_nm
-                el <- ctr[[jdx]]
-
-                tryCatch(
-                  {
-                    el()
-                    bquote(module_output[[.(mo_id)]][["to_report"]][[.(el_nm)]]())
-                  },
-                  error = function(e) {
-                    bquote(paste("# Error creating", .(mo_nm), .(el_nm), .(e$message)))
-                  }
-                )
-              })
-            )
-            expansion_args <- c(expansion_args, ta)
-          }
+      if ("to_report" %in% names(mo)) {
+        ctr <- mo[["to_report"]]
+        for (jdx in seq_along(ctr)) {
+          el_nm <- names(ctr)[[jdx]]
+          el_id <- paste0(mo_nm, "-", el_nm)
+          mod_ui_list[[length(mod_ui_list) + 1]] <- shiny::p(shiny::tags[["label"]](
+            shiny::tags[["input"]](
+              type = "checkbox",
+              checked = NA,
+              onclick = sprintf(
+                "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
+                ns("export_menu_input"),
+                el_id
+              )
+            ),
+            el_nm
+          ))
+          selected[[el_id]] <- TRUE
         }
       }
-
-      code <- do.call(shinymeta::expandChain, expansion_args, quote = FALSE) |>
-        shinymeta::formatCode(formatter = format_with_air, width = 400L)
-      shinymeta::buildScriptBundle(code, filename, render_args = list(output_format = "html_document"))
+      ui[[length(ui) + 1]] <- mod_ui_list
     }
-  )
+
+    shiny::observeEvent(input[["export_menu_input"]], {
+      selected[[input[["export_menu_input"]][["id"]]]] <<- input[["export_menu_input"]][["value"]]
+    })
+
+    shiny::observeEvent(input[[ID$EXPORT_CODE_MENU]], {
+      shiny::showModal(
+        shiny::modalDialog(
+          shiny::div(
+            class = "d-flex flex-column vh-25",
+            style = "max-height: 90vh",
+            shiny::div(
+              class = "overflow-auto flex-grow-1 p-3 min-h-0",
+              list(
+                ui
+              )
+            ),
+            shiny::downloadButton(ns(ID$EXPORT_CODE), "Export")
+          ),
+          easyClose = TRUE,
+          footer = NULL
+        )
+      )
+    })
+
+    output[[ID$EXPORT_CODE]] <- shiny::downloadHandler(
+      filename = "code.zip",
+      content = function(filename) {
+        expansion_args <- list(
+          .expansionContext = quote(shiny::isolate(afmm[["expansion_context"]]())),
+          "# Data source",
+          quote(invisible(unfiltered_dataset_list_with_filter_info()))
+        )
+
+        for (idx in seq_along(module_output)) {
+          mo <- module_output[[idx]]
+          mo_id <- names(module_output)[[idx]]
+          mo_nm <- module_names[[mo_id]]
+          if ("to_report" %in% names(mo)) {
+            ctr <- mo[["to_report"]]
+            for (jdx in seq_along(ctr)) {
+              el_nm <- names(ctr)[[jdx]]
+              el_id <- paste0(mo_nm, "-", el_nm)
+              if (selected[[el_id]]) {
+                ta <- list(
+                  bquote(paste("#", .(mo_nm), .(names(ctr)[[jdx]]))),
+                  local({
+                    el_nm <- names(ctr)[[jdx]]
+                    mo_nm <- mo_nm
+                    el <- ctr[[jdx]]
+
+                    tryCatch(
+                      {
+                        el()
+                        bquote(module_output[[.(mo_id)]][["to_report"]][[.(el_nm)]]())
+                      },
+                      error = function(e) {
+                        bquote(paste("# Error creating", .(mo_nm), .(el_nm), .(e$message)))
+                      }
+                    )
+                  })
+                )
+                expansion_args <- c(expansion_args, ta)
+              }
+            }
+          }
+        }
+
+        code <- do.call(shinymeta::expandChain, expansion_args, quote = FALSE) |>
+          shinymeta::formatCode(formatter = format_with_air, width = 400L)
+        shinymeta::buildScriptBundle(code, filename, render_args = list(output_format = "html_document"))
+      }
+    )
+  })
 }
 
 # Convoluted way of having a testable server function
