@@ -486,7 +486,7 @@ app_server_ <- function(input, output, session, opts) {
 
       code <- do.call(shinymeta::expandChain, expansion_args, quote = FALSE) |>
         shinymeta::formatCode(formatter = format_with_air, width = 400L)
-      shinymeta::buildScriptBundle(code, filename, render_args = list(output_format = "pdf_document"))
+      shinymeta::buildScriptBundle(code, filename, render_args = list(output_format = "html_document"))
     }
   )
 }
