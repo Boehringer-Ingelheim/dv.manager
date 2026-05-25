@@ -506,11 +506,22 @@ app_server_ <- function(input, output, session, opts) {
     output[[ID$EXPORT_CODE]] <- shiny::downloadHandler(
       filename = "report.zip",
       content = function(filename) {
-        expansion_args <- list(
-          .expansionContext = quote(shiny::isolate(afmm[["expansion_context"]]())),
-          "# Data source",
-          quote(invisible(unfiltered_dataset_list_with_filter_info()))
+        ec <- shiny::isolate(afmm[["expansion_context"]]())
+        baked_expand_chain <- function(...) {
+          shinymeta::expandChain(
+            ...,
+            .expansionContext = ec
+          ) |>
+            shinymeta::formatCode(formatter = format_with_air, width = 400L) |>
+            as.character() |>
+            paste(collapse = "\n")
+        }
+
+        data_code <- list(
+          data_code = baked_expand_chain(invisible(unfiltered_dataset_list_with_filter_info()))
         )
+
+        report_elements <- list()
 
         for (idx in seq_along(module_output)) {
           current_module_output <- module_output[[idx]]
@@ -521,27 +532,106 @@ app_server_ <- function(input, output, session, opts) {
             for (jdx in seq_along(list_to_report)) {
               report_element_nm <- names(list_to_report)[[jdx]]
               report_element_id <- paste0(module_name, "-", report_element_nm)
-              report_element <- list_to_report[[jdx]]
+              curr_report_element <- list_to_report[[jdx]]
               if (selected[[report_element_id]]) {
-                header_quote <- bquote(paste("#", .(module_name), .(names(list_to_report)[[jdx]])))
-                code_quote <- tryCatch(
+                element_header <- paste("#", module_name, names(list_to_report)[[jdx]])
+                element_code <- tryCatch(
                   {
-                    report_element()
-                    bquote(module_output[[.(module_id)]][["to_report"]][[.(report_element_nm)]]())
+                    curr_report_element()
+                    baked_expand_chain(curr_report_element())
                   },
                   error = function(e) {
-                    bquote(paste("# Error creating", .(module_name), .(report_element_nm), .(e$message)))
+                    paste("# Error creating", module_name, report_element_nm, e$message)
                   }
                 )
-                expansion_args <- c(expansion_args, list(header_quote, code_quote))
+                curr_report_elements <- list(element_header, element_code)
+                names(curr_report_elements) <- paste0("el_", length(report_elements) + 1:2)
+                report_elements <- c(report_elements, curr_report_elements)
               }
             }
           }
         }
 
-        code <- do.call(shinymeta::expandChain, expansion_args, quote = FALSE) |>
-          shinymeta::formatCode(formatter = format_with_air, width = 400L)
-        shinymeta::buildScriptBundle(code, filename, render_args = list(output_format = "html_document"))
+        header_template <- r"--(
+---
+title: "A report"
+author: "A user"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    code_folding: "hide"
+    code_download: true
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: false
+    df_print: paged    
+    self_contained: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  out.width = "100%", 
+  tidy = TRUE
+)
+```
+        
+```{css, echo=FALSE}
+body::before {
+  content: "UNVALIDATED CONTENT";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  font-size: 8rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+  pointer-events: none;   /* clicks/selection pass through */
+  z-index: 9999;
+  user-select: none;
+}
+        
+@media print {
+  body::before { position: fixed; }  /* most browsers repeat fixed bg per page */
+}
+```
+
+# Data source
+
+```{r}
+{{data_code}}
+```
+          )--"
+
+        markdown_template <- header_template
+
+        idx <- 1
+
+        while (idx <= length(report_elements)) {
+          el_name1 <- names(report_elements)[[idx]]
+          el_name2 <- names(report_elements)[[idx + 1]]
+          el <- report_elements[[idx]]
+          markdown_template <- sprintf("%s\n{{%s}}\n```{r}\n{{%s}}\n```\n", markdown_template, el_name1, el_name2)
+          idx <- idx + 2
+        }
+
+        report_file <- tempfile(fileext = ".Rmd")
+        writeLines(markdown_template, report_file)
+
+        shinymeta::buildRmdBundle(
+          report_file,
+          filename,
+          vars = c(
+            data_code,
+            report_elements
+          ),
+          render = TRUE
+        )
+
+        # code <- do.call(shinymeta::expandChain, expansion_args, quote = FALSE) |>
+        #   shinymeta::formatCode(formatter = format_with_air, width = 400L)
+        # shinymeta::buildScriptBundle(code, filename, render_args = list(output_format = "html_document"))
       }
     )
   })
