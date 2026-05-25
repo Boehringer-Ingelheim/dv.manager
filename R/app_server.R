@@ -504,7 +504,7 @@ app_server_ <- function(input, output, session, opts) {
     })
 
     output[[ID$EXPORT_CODE]] <- shiny::downloadHandler(
-      filename = "code.zip",
+      filename = "report.zip",
       content = function(filename) {
         expansion_args <- list(
           .expansionContext = quote(shiny::isolate(afmm[["expansion_context"]]())),
@@ -513,34 +513,27 @@ app_server_ <- function(input, output, session, opts) {
         )
 
         for (idx in seq_along(module_output)) {
-          mo <- module_output[[idx]]
-          mo_id <- names(module_output)[[idx]]
-          mo_nm <- module_names[[mo_id]]
-          if ("to_report" %in% names(mo)) {
-            ctr <- mo[["to_report"]]
-            for (jdx in seq_along(ctr)) {
-              el_nm <- names(ctr)[[jdx]]
-              el_id <- paste0(mo_nm, "-", el_nm)
-              if (selected[[el_id]]) {
-                ta <- list(
-                  bquote(paste("#", .(mo_nm), .(names(ctr)[[jdx]]))),
-                  local({
-                    el_nm <- names(ctr)[[jdx]]
-                    mo_nm <- mo_nm
-                    el <- ctr[[jdx]]
-
-                    tryCatch(
-                      {
-                        el()
-                        bquote(module_output[[.(mo_id)]][["to_report"]][[.(el_nm)]]())
-                      },
-                      error = function(e) {
-                        bquote(paste("# Error creating", .(mo_nm), .(el_nm), .(e$message)))
-                      }
-                    )
-                  })
+          current_module_output <- module_output[[idx]]
+          module_id <- names(module_output)[[idx]]
+          module_name <- module_names[[module_id]]
+          if ("to_report" %in% names(current_module_output)) {
+            list_to_report <- current_module_output[["to_report"]]
+            for (jdx in seq_along(list_to_report)) {
+              report_element_nm <- names(list_to_report)[[jdx]]
+              report_element_id <- paste0(module_name, "-", report_element_nm)
+              report_element <- list_to_report[[jdx]]
+              if (selected[[report_element_id]]) {
+                header_quote <- bquote(paste("#", .(module_name), .(names(list_to_report)[[jdx]])))
+                code_quote <- tryCatch(
+                  {
+                    report_element()
+                    bquote(module_output[[.(module_id)]][["to_report"]][[.(report_element_nm)]]())
+                  },
+                  error = function(e) {
+                    bquote(paste("# Error creating", .(module_name), .(report_element_nm), .(e$message)))
+                  }
                 )
-                expansion_args <- c(expansion_args, ta)
+                expansion_args <- c(expansion_args, list(header_quote, code_quote))
               }
             }
           }
