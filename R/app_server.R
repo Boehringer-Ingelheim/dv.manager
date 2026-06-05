@@ -680,12 +680,14 @@ app_server_ <- function(input, output, session, opts) {
 
           element_formatters <- list()
           element_formatters[[REPORT$OUTPUT_FORMAT$PDF]] <- list()
-          element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$ERROR]] <- function(x) sprintf("%s", x)
+          element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$ERROR]] <- function(x) sprintf("\\alertwarning{%s}", x)
           element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$TABLE]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
           element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
 
           element_formatters[[REPORT$OUTPUT_FORMAT$HTML]] <- list()
-          element_formatters[[REPORT$OUTPUT_FORMAT$HTML]][[REK$ERROR]] <- function(x) sprintf("%s", x)
+          element_formatters[[REPORT$OUTPUT_FORMAT$HTML]][[REK$ERROR]] <- function(x) {
+            sprintf("<div class = \"alert alert-warning\" role = \"alert\">%s</div>", x)
+          }
           element_formatters[[REPORT$OUTPUT_FORMAT$HTML]][[REK$TABLE]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
           element_formatters[[REPORT$OUTPUT_FORMAT$HTML]][[REK$DEFAULT]] <- function(x) {
             sprintf("```{r}\n{{%s}}\n```", x)
