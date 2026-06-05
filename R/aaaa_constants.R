@@ -74,12 +74,12 @@ header-includes:
   - \usepackage{graphicx}
   - \usepackage{xcolor}
   - \AtBeginShipout{\AtBeginShipoutUpperLeft{\put(25,-420){\rotatebox{90}{\color{red}\fontsize{20pt}{24pt}\selectfont UNVALIDATED CONTENT}}\put(570,-420){\rotatebox{90}{\color{red}\fontsize{20pt}{24pt}\selectfont UNVALIDATED CONTENT}}}}
-  - \newcommand{\alertwarning}[1]{\par\vspace{4pt}\noindent\fcolorbox{yellow!70!black}{yellow!20}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\color{yellow!60!black}#1}}\par\vspace{4pt}}
+  - \newcommand{\alertwarning}[1]{\par\vspace{4pt}\noindent\fcolorbox{yellow!70!black}{yellow!20}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\color{yellow!60!black}\detokenize{#1}}}\par\vspace{4pt}}
 
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, tidy = TRUE, tidy.opts = list(width.cutoff = 60))
 ```
 
 )--"
