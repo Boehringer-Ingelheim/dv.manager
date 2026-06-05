@@ -448,36 +448,59 @@ app_server_ <- function(input, output, session, opts) {
 
   local({
     selected <- list()
-    ui <- list()
+    ui <- list(
+      shiny::h3("Export menu")
+    )
+
     for (idx in seq_along(module_output)) {
       mo <- module_output[[idx]]
       mo_id <- names(module_output)[[idx]]
       mo_nm <- module_names[[mo_id]]
-      mod_ui_list <- list(
-        shiny::p(mo_nm)
-      )
+
+      card_items <- list(bslib::card_header(mo_nm))
+
       if ("to_report" %in% names(mo)) {
         ctr <- mo[["to_report"]]
+
         for (jdx in seq_along(ctr)) {
           el_nm <- names(ctr)[[jdx]]
           el_id <- paste0(mo_nm, "-", el_nm)
-          mod_ui_list[[length(mod_ui_list) + 1]] <- shiny::p(shiny::tags[["label"]](
-            shiny::tags[["input"]](
-              type = "checkbox",
-              checked = NA,
-              onclick = sprintf(
-                "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
-                ns("export_menu_input"),
-                el_id
-              )
-            ),
-            el_nm
-          ))
+
           selected[[el_id]] <- TRUE
+
+          card_items[[length(card_items) + 1]] <-
+            shiny::div(
+              class = "form-check form-switch",
+              shiny::tags[["label"]](
+                class = "form-check-label",
+                shiny::tags[["input"]](
+                  class = "form-check-input",
+                  type = "checkbox",
+                  role = "switch",
+                  checked = NA,
+                  onchange = sprintf(
+                    "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
+                    ns("export_menu_input"),
+                    el_id
+                  )
+                ),
+                el_nm
+              )
+            )
         }
       }
-      ui[[length(ui) + 1]] <- mod_ui_list
+
+      ui[[length(ui) + 1]] <- do.call(bslib::card, card_items)
     }
+
+    ui[[length(ui) + 1]] <- bslib::card(
+      bslib::card_header("Output format"),
+      shiny::radioButtons(
+        ns("output_format"),
+        label = NULL,
+        choices = REPORT$OUTPUT_FORMAT
+      )
+    )
 
     shiny::observeEvent(input[["export_menu_input"]], {
       selected[[input[["export_menu_input"]][["id"]]]] <<- input[["export_menu_input"]][["value"]]
@@ -506,7 +529,7 @@ app_server_ <- function(input, output, session, opts) {
     output[[ID$EXPORT_CODE]] <- shiny::downloadHandler(
       filename = "report.zip",
       content = function(filename) {
-        output_format <- "pdf"
+        output_format <- input[["output_format"]]
 
         RATTR <- REPORT$ATTR
         REK <- REPORT$ELEMENT_KIND
@@ -572,7 +595,7 @@ app_server_ <- function(input, output, session, opts) {
               header = el_header,
               el = local({
                 msg <- attr(el_resolved, "condition")$message
-                paste("# Error creating", module_name, report_element_nm, msg)
+                paste("Error creating", module_name, report_element_nm, msg)
               }),
               kind = REK$ERROR
             )
@@ -616,11 +639,7 @@ app_server_ <- function(input, output, session, opts) {
           return(el_processed)
         }
 
-        data_code <- list(
-          data_code = get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
-        )
-
-        output_format <- REPORT$OUTPUT_FORMAT$PDF
+        data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
 
         report_elements <- list()
 
@@ -650,7 +669,7 @@ app_server_ <- function(input, output, session, opts) {
           }
         }
 
-        rmarkdown <- REPORT$TEMPLATES[[output_format]]
+        rmarkdown <- REPORT$TEMPLATES$HEADER[[output_format]]
 
         rmarkdown <- sprintf("%s\n# Data source\n```{r}\n%s\n```\n", rmarkdown, data_code)
 
@@ -660,17 +679,22 @@ app_server_ <- function(input, output, session, opts) {
           kind <- report_elements[[idx]][["kind"]]
 
           element_formatters <- list()
-          element_formatters[[REK$ERROR]] <- function(x) sprintf("%s", x)
-          element_formatters[[REK$TABLE]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
-          element_formatters[[REK$DEFAULT]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
-          element_formatters <- as_safe_list(element_formatters)
+          element_formatters[[REPORT$OUTPUT_FORMAT$PDF]] <- list()
+          element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$ERROR]] <- function(x) sprintf("%s", x)
+          element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$TABLE]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
+          element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
 
-          rmarkdown <- sprintf("%s\n%s\n%s\n", rmarkdown, header, element_formatters[[kind]](el))
+          element_formatters[[REPORT$OUTPUT_FORMAT$HTML]] <- list()
+          element_formatters[[REPORT$OUTPUT_FORMAT$HTML]][[REK$ERROR]] <- function(x) sprintf("%s", x)
+          element_formatters[[REPORT$OUTPUT_FORMAT$HTML]][[REK$TABLE]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
+          element_formatters[[REPORT$OUTPUT_FORMAT$HTML]][[REK$DEFAULT]] <- function(x) {
+            sprintf("```{r}\n{{%s}}\n```", x)
+          }
+
+          rmarkdown <- sprintf("%s\n%s\n%s\n", rmarkdown, header, element_formatters[[output_format]][[kind]](el))
         }
 
-        if (identical(output_format, REPORT$OUTPUT_FORMAT$PDF)) {
-          rmarkdown <- paste(rmarkdown, REPORT$TEMPLATES[["pdf_footer"]])
-        }
+        rmarkdown <- sprintf("%s\n%s", rmarkdown, REPORT$TEMPLATES$FOOTER[[output_format]])
 
         report_dir <- tempfile(pattern = "report")
         dir.create(report_dir)

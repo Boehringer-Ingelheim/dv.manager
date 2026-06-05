@@ -52,7 +52,9 @@ REPORT <- poc(
   )
 )
 
-REPORT[["TEMPLATES"]] <- local({
+REPORT[["TEMPLATES"]] <- list()
+
+REPORT[["TEMPLATES"]][["HEADER"]] <- local({
   templates <- character(0)
   templates[[REPORT$OUTPUT_FORMAT$PDF]] <- r"--(
 ---
@@ -79,6 +81,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 )--"
+
   templates[[REPORT$OUTPUT_FORMAT$HTML]] <- r"--(
 ---
 title: "A report"
@@ -126,12 +129,19 @@ body::before {
 
 )--"
 
-  templates[["pdf_footer"]] <- r"--(
+  templates
+})
+
+REPORT[["TEMPLATES"]][["FOOTER"]] <- local({
+  templates <- character(0)
+  templates[[REPORT$OUTPUT_FORMAT$PDF]] <- r"--(
 # Annex: Code
 
 ```{r show-code, ref.label = setdiff(knitr::all_labels(), c("setup", "show-code")), echo=TRUE, eval=FALSE}
 ```
 )--"
+
+  templates[[REPORT$OUTPUT_FORMAT$HTML]] <- ""
 
   templates
 })
