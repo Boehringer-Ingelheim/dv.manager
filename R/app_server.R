@@ -506,10 +506,16 @@ app_server_ <- function(input, output, session, opts) {
     output[[ID$EXPORT_CODE]] <- shiny::downloadHandler(
       filename = "report.zip",
       content = function(filename) {
+        output_format <- "pdf"
+
+        RATTR <- REPORT$ATTR
+        REK <- REPORT$ELEMENT_KIND
+
         ec <- shiny::isolate(afmm[["expansion_context"]]())
-        baked_expand_chain <- function(...) {
+
+        get_code_in_context <- function(x) {
           shinymeta::expandChain(
-            ...,
+            x,
             .expansionContext = ec
           ) |>
             shinymeta::formatCode(formatter = format_with_air, width = 400L) |>
@@ -517,9 +523,104 @@ app_server_ <- function(input, output, session, opts) {
             paste(collapse = "\n")
         }
 
+        # Replaces metareactives with other metareactives
+        replace_if_htmlwidget <- function(x) {
+          if (!inherits(x(), "htmlwidget")) {
+            return(x)
+          }
+
+          supported_htmlwidgets <- list(
+            "datatables" = function(x) {
+              shinymeta::metaReactive(
+                {
+                  ..(x())$x$data
+                },
+                inline = TRUE
+              )
+            }
+          )
+
+          supported_type <- inherits(x(), names(supported_htmlwidgets))
+
+          if (!identical(supported_type, 0L)) {
+            replaced_x <- supported_htmlwidgets[[supported_type[[1]]]](x)
+          } else {
+            replaced_x <- shinymeta::metaReactive(
+              {
+                stop("Unsupported htmlwidget", paste(class("`", x()), "`", collapse = ", "))
+              },
+              inline = TRUE
+            )
+          }
+
+          return(replaced_x)
+        }
+
+        process_report_element <- function(el, module_name, el_name, output_format) {
+          el_header <- paste("#", module_name, el_name)
+          log_inform(paste("Processing:", el_header))
+
+          stopifnot(output_format %in% REPORT$OUTPUT_FORMAT)
+          el_resolved <- try(el(), silent = TRUE)
+
+          if (identical(output_format, REPORT$OUTPUT_FORMAT$PDF) && !inherits(el_resolved, "try-error")) {
+            el <- replace_if_htmlwidget(el)
+          }
+
+          if (inherits(el_resolved, "try-error")) {
+            el_processed <- list(
+              header = el_header,
+              el = local({
+                msg <- attr(el_resolved, "condition")$message
+                paste("# Error creating", module_name, report_element_nm, msg)
+              }),
+              kind = REK$ERROR
+            )
+          } else if (identical(output_format, REPORT$OUTPUT_FORMAT$HTML)) {
+            el_processed <- list(
+              header = el_header,
+              el = get_code_in_context(el()),
+              kind = REK$DEFAULT
+            )
+          } else if (identical(output_format, REPORT$OUTPUT_FORMAT$PDF)) {
+            if (is.data.frame(el_resolved)) {
+              el_ <- shinymeta::metaReactive(
+                {
+                  ..(el())
+                  gt::gt() |>
+                    gt::tab_options(
+                      latex.use_longtable = TRUE,
+                      table.font.size = gt::px(9),
+                      latex.header_repeat = TRUE
+                    )
+                },
+                inline = TRUE
+              )
+
+              el_processed <- list(
+                header = el_header,
+                el = get_code_in_context(el_()),
+                kind = REK$DEFAULT
+              )
+            } else {
+              el_processed <- list(
+                header = el_header,
+                el = get_code_in_context(el()),
+                kind = REK$DEFAULT
+              )
+            }
+          }
+
+          log_inform(paste("Processed:", el_header))
+
+          return(el_processed)
+        }
+
         data_code <- list(
-          data_code = baked_expand_chain(invisible(unfiltered_dataset_list_with_filter_info()))
+          data_code = get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
         )
+
+        output_format <- REPORT$OUTPUT_FORMAT$PDF
 
         report_elements <- list()
 
@@ -527,111 +628,74 @@ app_server_ <- function(input, output, session, opts) {
           current_module_output <- module_output[[idx]]
           module_id <- names(module_output)[[idx]]
           module_name <- module_names[[module_id]]
+
           if ("to_report" %in% names(current_module_output)) {
             list_to_report <- current_module_output[["to_report"]]
+
             for (jdx in seq_along(list_to_report)) {
               report_element_nm <- names(list_to_report)[[jdx]]
               report_element_id <- paste0(module_name, "-", report_element_nm)
               curr_report_element <- list_to_report[[jdx]]
+
               if (selected[[report_element_id]]) {
-                element_header <- paste("#", module_name, names(list_to_report)[[jdx]])
-                element_code <- tryCatch(
-                  {
-                    curr_report_element()
-                    baked_expand_chain(curr_report_element())
-                  },
-                  error = function(e) {
-                    paste("# Error creating", module_name, report_element_nm, e$message)
-                  }
+                element <- process_report_element(
+                  curr_report_element,
+                  module_name,
+                  names(list_to_report)[[jdx]],
+                  output_format
                 )
-                curr_report_elements <- list(element_header, element_code)
-                names(curr_report_elements) <- paste0("el_", length(report_elements) + 1:2)
-                report_elements <- c(report_elements, curr_report_elements)
+                report_elements <- c(report_elements, list(element))
               }
             }
           }
         }
 
-        header_template <- r"--(
----
-title: "A report"
-author: "A user"
-date: "`r format(Sys.Date(), '%B %d, %Y')`"
-output:
-  html_document:
-    code_folding: "hide"
-    code_download: true
-    toc: true
-    toc_float: true
-    toc_depth: 3
-    number_sections: false
-    df_print: paged    
-    self_contained: true
----
+        rmarkdown <- REPORT$TEMPLATES[[output_format]]
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  out.width = "100%", 
-  tidy = TRUE
-)
-```
-        
-```{css, echo=FALSE}
-body::before {
-  content: "UNVALIDATED CONTENT";
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-45deg);
-  font-size: 8rem;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.08);
-  white-space: nowrap;
-  pointer-events: none;   /* clicks/selection pass through */
-  z-index: 9999;
-  user-select: none;
-}
-        
-@media print {
-  body::before { position: fixed; }  /* most browsers repeat fixed bg per page */
-}
-```
+        rmarkdown <- sprintf("%s\n# Data source\n```{r}\n%s\n```\n", rmarkdown, data_code)
 
-# Data source
+        for (idx in seq_along(report_elements)) {
+          header <- report_elements[[idx]][["header"]]
+          el <- report_elements[[idx]][["el"]]
+          kind <- report_elements[[idx]][["kind"]]
 
-```{r}
-{{data_code}}
-```
-          )--"
+          element_formatters <- list()
+          element_formatters[[REK$ERROR]] <- function(x) sprintf("%s", x)
+          element_formatters[[REK$TABLE]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
+          element_formatters[[REK$DEFAULT]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
+          element_formatters <- as_safe_list(element_formatters)
 
-        markdown_template <- header_template
-
-        idx <- 1
-
-        while (idx <= length(report_elements)) {
-          el_name1 <- names(report_elements)[[idx]]
-          el_name2 <- names(report_elements)[[idx + 1]]
-          el <- report_elements[[idx]]
-          markdown_template <- sprintf("%s\n{{%s}}\n```{r}\n{{%s}}\n```\n", markdown_template, el_name1, el_name2)
-          idx <- idx + 2
+          rmarkdown <- sprintf("%s\n%s\n%s\n", rmarkdown, header, element_formatters[[kind]](el))
         }
 
-        report_file <- tempfile(fileext = ".Rmd")
-        writeLines(markdown_template, report_file)
+        if (identical(output_format, REPORT$OUTPUT_FORMAT$PDF)) {
+          rmarkdown <- paste(rmarkdown, REPORT$TEMPLATES[["pdf_footer"]])
+        }
 
-        shinymeta::buildRmdBundle(
-          report_file,
-          filename,
-          vars = c(
-            data_code,
-            report_elements
-          ),
-          render = TRUE
+        report_dir <- tempfile(pattern = "report")
+        dir.create(report_dir)
+        curr_dir <- getwd()
+        on.exit(
+          {
+            if (dir.exists(report_dir)) {
+              unlink(report_dir, recursive = TRUE)
+            }
+            setwd(curr_dir)
+          },
+          add = TRUE
         )
 
-        # code <- do.call(shinymeta::expandChain, expansion_args, quote = FALSE) |>
-        #   shinymeta::formatCode(formatter = format_with_air, width = 400L)
-        # shinymeta::buildScriptBundle(code, filename, render_args = list(output_format = "html_document"))
+        report_rmd <- file.path(report_dir, "report.Rmd")
+        writeLines(rmarkdown, report_rmd)
+
+        callr::r(
+          function(report_rmd, report_dir, filename) {
+            setwd(report_dir)
+            rmarkdown::render(input = report_rmd, output_dir = report_dir)
+            utils::zip(filename, list.files(report_dir))
+          },
+          args = list(report_rmd = report_rmd, report_dir = report_dir, filename = filename)
+        )
       }
     )
   })
