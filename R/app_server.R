@@ -717,7 +717,14 @@ app_server_ <- function(input, output, session, opts) {
         callr::r(
           function(report_rmd, report_dir, filename) {
             setwd(report_dir)
-            rmarkdown::render(input = report_rmd, output_dir = report_dir)
+            output_file <- rmarkdown::render(input = report_rmd, output_dir = report_dir)
+            if (endsWith(output_file, "pdf")) {
+              preattach_file <- paste0("preattach_", basename(output_file))
+              file.copy(output_file, preattach_file)
+              unlink(output_file)
+              system2("pdfattach", args = c(preattach_file, report_rmd, output_file))
+              unlink(preattach_file)
+            }
             utils::zip(filename, list.files(report_dir))
           },
           args = list(report_rmd = report_rmd, report_dir = report_dir, filename = filename)
