@@ -609,8 +609,8 @@ app_server_ <- function(input, output, session, opts) {
             if (is.data.frame(el_resolved)) {
               el_ <- shinymeta::metaReactive(
                 {
-                  ..(el())
-                  gt::gt() |>
+                  ..(el()) |>
+                    gt::gt() |>
                     gt::tab_options(
                       latex.use_longtable = TRUE,
                       table.font.size = gt::px(9),
