@@ -91,10 +91,10 @@ check_filter_dataset_name <- function(filter_dataset_name, datasets) {
   if (length(filter_data_check) > 0) {
     purrr::iwalk(
       filter_data_check,
-      ~ rlang::abort(glue::glue("{.y} has no '{filter_dataset_name}' table"))
+      stop(sprintf("%s has no `%s%` table", .y, filter_dataset_name))
     )
-    msg <- glue::glue("Not all datasets have a '{filter_dataset_name}' table")
-    rlang::abort(msg)
+    msg <- sprintf("Not all datasets have a `%s%` table", filter_dataset_name)
+    stop(msg)
   }
 
   filter_dataset_name
@@ -138,7 +138,7 @@ check_meta_mtime_attribute <- function(datasets) {
   check_warning <- purrr::imap(
     datasets,
     function(x, y) {
-      log_inform(glue::glue("Checking date for dataset {y}"))
+      log_inform(sprintf("Checking date for dataset %s", y))
       if (is.function(x)) {
         d <- x()
       } else {
@@ -162,7 +162,7 @@ check_meta_mtime_attribute <- function(datasets) {
       warned_dataset,
       ~ {
         purrr::walk(.x[["warnings"]], function(wm) {
-          log_warn(glue::glue("{.y} -> {wm}"))
+          log_warn(sprintf("%s -> %s", .y, wm))
         })
       }
     )

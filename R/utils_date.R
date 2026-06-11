@@ -13,7 +13,6 @@
 #'
 #' @export
 
-
 add_date_range <- function(dataset) {
   attr(dataset, "date_range") <- get_date_range(purrr::map(dataset, ~ attr(.x, "meta")[["mtime"]]))
   return(dataset)
@@ -38,7 +37,7 @@ get_date_range <- function(x) {
   purrr::iwalk(
     with_attr,
     ~ if (!lubridate::is.POSIXct(.x)) {
-      msg <- glue::glue("{.y} mtime in meta attribute is not a date-object.")
+      msg <- sprintf("%s mtime in meta attribute is not a date-object.", .y)
       rlang::abort(msg)
     }
   )
@@ -46,12 +45,13 @@ get_date_range <- function(x) {
   purrr::iwalk(
     without_attr,
     function(.x, .y) {
-      warn_string <- glue::glue("{.y} has no date. no meta attribute or no mtime entry")
+      warn_string <- sprintf("%s has no date. no meta attribute or no mtime entry", .y)
       log_warn(warn_string)
     }
   )
 
-  if (length(without_attr) > 0) { # If there is no date in any of the data tables
+  if (length(without_attr) > 0) {
+    # If there is no date in any of the data tables
     date_range <- c(NA, NA)
   } else {
     # Date lists are weird to work with, we need as a vector of dates to apply min and max below
