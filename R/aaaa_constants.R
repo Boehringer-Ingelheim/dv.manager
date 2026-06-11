@@ -69,6 +69,7 @@ output:
     number_sections: false
     df_print: kable
     latex_engine: xelatex
+    extra_dependencies: ["pdflscape"]
 header-includes:
   - \usepackage{atbegshi}
   - \usepackage{graphicx}

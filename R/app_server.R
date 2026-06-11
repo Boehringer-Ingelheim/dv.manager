@@ -681,7 +681,9 @@ app_server_ <- function(input, output, session, opts) {
           element_formatters <- list()
           element_formatters[[REPORT$OUTPUT_FORMAT$PDF]] <- list()
           element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$ERROR]] <- function(x) sprintf("\\alertwarning{%s}", x)
-          element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$TABLE]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
+          element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$TABLE]] <- function(x) {
+            sprintf("\\newpage\n\\begin{landscape}\n```{r}\n{{%s}}\n```\n\\end{landscape}\n\\newpage\n", x)
+          }
           element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
 
           element_formatters[[REPORT$OUTPUT_FORMAT$HTML]] <- list()
