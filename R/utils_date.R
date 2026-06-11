@@ -38,7 +38,7 @@ get_date_range <- function(x) {
     with_attr,
     ~ if (!lubridate::is.POSIXct(.x)) {
       msg <- sprintf("%s mtime in meta attribute is not a date-object.", .y)
-      rlang::abort(msg)
+      stop(msg)
     }
   )
 

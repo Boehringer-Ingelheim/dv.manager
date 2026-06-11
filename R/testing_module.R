@@ -568,7 +568,7 @@ msg_impl_server <- function(id) {
       )
       shiny::observeEvent(
         input[["send_abort"]],
-        rlang::abort(paste("error", input[["msg"]]))
+        stop(paste("error", input[["msg"]]))
       )
       shiny::observeEvent(
         input[["send_not"]],

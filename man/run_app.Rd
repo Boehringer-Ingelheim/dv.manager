@@ -8,7 +8,8 @@ run_app(
   data = NULL,
   module_list = list(),
   title = "Untitled",
-  filter_data = NULL,
+  filter_data,
+  filter_dataset_name = NULL,
   filter_key = if (!is.null(data)) {
      "USUBJID"
  } else {
@@ -21,7 +22,8 @@ run_app(
   enable_dataset_filter = NULL,
   enable_subgroup = FALSE,
   filter_default_state = NULL,
-  .launch = TRUE
+  .launch = TRUE,
+  .bypass_checks = FALSE
 )
 }
 \arguments{
@@ -38,9 +40,11 @@ All \code{character} variables will be automatically mapped into \code{factors}.
 
 \item{title}{title to be displayed in the browser tab}
 
-\item{filter_data}{a string indicating which of the loaded datasets is used for filtering.}
+\item{filter_data}{( \strong{DEPRECATED} , see \code{filter_dataset_name})}
 
-\item{filter_key}{a string specifying a common field across all datasets that will be used to expand the filtering.
+\item{filter_dataset_name}{a string indicating the name of the dataset used for population filtering.}
+
+\item{filter_key}{a string specifying a common field across all datasets that will be used for population filtering.
 Default = "USUBJID" or NULL if no data = NULL}
 
 \item{startup_msg}{a message to be displayed at the start of the application. It can be either NULL or a modal
@@ -54,9 +58,9 @@ or a positive numeric value which is then interpreted as a lubridate duration ob
 any previous calls to  \code{\link[shiny:enableBookmarking]{enableBookmarking()}}. See \code{\link[shiny:enableBookmarking]{enableBookmarking()}}
 for more information on bookmarking your app.}
 
-\item{filter_type}{\strong{DEPRECATED} Indicates which filter type, \code{simple}, \code{datasets}, \code{development}, will be used in the application.}
+\item{filter_type}{( \strong{DEPRECATED} )}
 
-\item{enable_dataset_filter}{\strong{DEPRECATED} A boolean flag indicating if dataset filters are enabled. The default value is FALSE.}
+\item{enable_dataset_filter}{( \strong{DEPRECATED} )}
 
 \item{enable_subgroup}{A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.}
 
@@ -64,6 +68,10 @@ for more information on bookmarking your app.}
 
 \item{.launch}{by default it should always be TRUE. It should only be false for debugging and testing.
 When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.}
+
+\item{.bypass_checks}{by default it should always be FALSE. Only for advanced use. If set to TRUE, the app creator must make sure that
+application parameters and modules are correctly configured for all trials loaded in the application, otherwise application may fail. Configuration errors can be checked with a
+dry run. To do a dry run use the parameter \code{.launch = FALSE}.}
 }
 \description{
 This function serves as an entry point for the applications created by the user.

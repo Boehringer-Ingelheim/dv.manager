@@ -6,22 +6,22 @@ check_resolved_modules <- function(resolved_module_list) {
 
   if (!all(is.character(resolved_module_list[["module_id"]]))) {
     msg <- "module_list has at least one module_id that is not of type character"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   if (any(duplicated(resolved_module_list[["module_id"]]))) {
     msg <- "module_list has repeated module_ids"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   if (any(nchar(resolved_module_list[["module_id"]]) == 0)) {
     msg <- "module ids must have at least one character"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   if (any(duplicated(resolved_module_list[["module_name"]]))) {
     msg <- "module_list has repeated module_names"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   return(resolved_module_list)
@@ -31,7 +31,7 @@ check_data <- function(data) {
   # NULL data is disallowed
   if (is.null(data)) {
     msg <- "data argument is NULL. If you are trying to run an application without data, use an empty list 'dv.manager::run_app(data = list(), ...)'" # nolint
-    rlang::abort(msg)
+    stop(msg)
   }
 
   if (length(data) > 0) {
@@ -52,14 +52,14 @@ check_data <- function(data) {
 
     if (!is_expected) {
       msg <- "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes"
-      rlang::abort(msg)
+      stop(msg)
     }
   }
 
   # Check we are passing a named list
   if (!has_all_items_named(data)) {
     msg <- "All entries in data must be named"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   data
@@ -72,7 +72,7 @@ check_filter_dataset_name <- function(filter_dataset_name, datasets) {
 
   if (is.null(filter_dataset_name)) {
     msg <- "No filter_dataset_name specified!"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   filter_data_check <- purrr::map(
@@ -107,7 +107,7 @@ check_filter_key <- function(filter_key, datasets) {
 
   if (is.null(filter_key)) {
     msg <- "filter_key is not specified"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   filter_key_present <- all(
@@ -125,7 +125,7 @@ check_filter_key <- function(filter_key, datasets) {
   )
   if (!filter_key_present) {
     msg <- "Selected filtering key is not present in all datasets"
-    rlang::abort(msg)
+    stop(msg)
     stop(msg)
   } else {
     log_inform("Filter Key is present in all datasets")
@@ -179,7 +179,7 @@ check_startup_msg <- function(startup_msg) {
   is_modal <- purrr::pluck(startup_msg, "attribs", "class", .default = "not modal") != "modal"
   if (!is.null(startup_msg) && (!inherits(startup_msg, "shiny.tag") || is_modal)) {
     msg <- "Startup msg is not a shiny.tag or a shiny modal element"
-    rlang::abort(msg)
+    stop(msg)
   }
   startup_msg
 }
@@ -188,7 +188,7 @@ check_startup_msg <- function(startup_msg) {
 check_reload_period <- function(reload_period) {
   if (!is.null(reload_period) && (!is.numeric(reload_period) || reload_period < 0)) {
     msg <- "reload_period has to be a positive numeric value larger than zero or a lubridate duration object"
-    rlang::abort(msg)
+    stop(msg)
   }
   reload_period
 }

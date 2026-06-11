@@ -10,6 +10,55 @@
 #'
 NULL
 
+
+logdec <- local({
+  n_printable_char <- function(x) {
+    x <- gsub("\033\\[[0-9;]*m", "", x) # Remove ANSI codes
+    x <- gsub("[\n\r\t\v\f]", "", x) # Remove whitespace
+    nchar(x)
+  }
+
+  cat_ <- function(x) {
+    cat(x, file = stderr())
+  }
+
+  cat_line <- function(x) {
+    cat_(sprintf("%s\n", x))
+  }
+
+  h1 <- function(x) {
+    cat_line(paste0(rep("-", min(20, n_printable_char(x))), collapse = ""))
+    cat_line(x)
+    cat_line(paste0(rep("-", min(20, n_printable_char(x))), collapse = ""))
+  }
+
+  alert_info <- function(x) {
+    cat_line(sprintf("[*] INFO: %s", x))
+  }
+
+  alert_warning <- function(x) {
+    cat_line(sprintf("[!] WARNING: %s", x))
+  }
+
+  code <- function(x) {
+    cat_line("-- START CODE BLOCK -----")
+    cat_line(x)
+    cat_line("-- END  CODE  BLOCK -----")
+  }
+
+  text <- cat_line
+
+  safe_list(
+    cat = cat_,
+    cat_line = cat_line,
+    h1 = h1,
+    alert_info = alert_info,
+    alert_warning = alert_warning,
+    code = code,
+    text = text
+  )
+})
+
 #' @describeIn logging Activate logging
 #' @param h `[function(0+)]`
 #'
@@ -22,14 +71,14 @@ NULL
 #'
 log_activate <- function(h = log_default_handlers(), .rm_gh = TRUE) {
   globalCallingHandlers(NULL)
-  cli::cli_h1("dv.manager logging is {.emph ACTIVATED}")
-  cli::cli_text("By default dv.manager logging removes all globalCallingHandlers from the environment")
-  cli::cli_text("")
-  cli::cli_text("If you find an error similar to the one below, this logging feature is probably the responsible:")
-  cli::cli_code(
+  logdec$h1("dv.manager logging is ACTIVATED")
+  logdec$text("By default dv.manager logging removes all globalCallingHandlers from the environment")
+  logdec$text("")
+  logdec$text("If you find an error similar to the one below, this logging feature is probably the responsible:")
+  logdec$code(
     "Error in globalCallingHandlers(foo = function(c) NULL) : should not be called with handlers on the stack"
   )
-  cli::cli_text("")
+  logdec$text("")
 
   # If an error occurs while logging it is captured so the application does not stop because of it
   safe_handler <- function(h) {
@@ -37,7 +86,7 @@ log_activate <- function(h = log_default_handlers(), .rm_gh = TRUE) {
       tryCatch(
         h(e),
         error = function(err) {
-          rlang::inform(paste(err[["message"]], "| while logging:", e[["message"]]))
+          message(paste(err[["message"]], "| while logging:", e[["message"]]))
         }
       )
     }
@@ -53,7 +102,7 @@ log_activate <- function(h = log_default_handlers(), .rm_gh = TRUE) {
 log_deactivate <- function(h, .rm_gh = TRUE) {
   options("dv.mm.log_handlers" = NULL)
   globalCallingHandlers(NULL)
-  cli::cli_h1("dv.manager logging is {.emph DEACTIVATED}")
+  logdec$h1("dv.manager logging is DEACTIVATED")
 }
 
 #' globalCallinHandlers do not capture the output of UI and Server for some reason therefore
@@ -71,50 +120,79 @@ log_with_logging_handlers <- function(fnc) {
 #'
 #' @export
 log_default_handlers <- function(level = 999) {
-  format_str <- "[{date}][{package}|{short_sess_id}|{ns}]:{message}"
-
   cnd_to_str <- function(cnd) {
-    cnd |>
-      log_add_date() |>
-      log_add_ns() |>
-      log_add_sess_id() |>
-      log_add_short_sess_id() |>
-      log_format(format_str)
+    date <- local({
+      if (!"date" %in% names(cnd)) {
+        format(Sys.time(), "%d-%m-%Y %H:%M:%S%z")
+      } else {
+        cnd[["date"]]
+      }
+    })
+
+    ns <- local({
+      if (!"ns" %in% names(cnd)) {
+        session <- shiny::getDefaultReactiveDomain()
+        if (!is.null(session)) {
+          ns <- session[["ns"]]("")
+          ns <- substring(ns, 1, nchar(ns) - 1)
+          ns <- if (nchar(ns) == 0) "(Root)" else ns
+        } else {
+          ns <- NA_character_
+        }
+      } else {
+        ns <- cnd[["ns"]]
+      }
+      ns
+    })
+
+    short_sess_id <- local({
+      if (!"sess_id" %in% names(cnd)) {
+        session <- shiny::getDefaultReactiveDomain()
+        if (!is.null(session)) {
+          sess_id <- session[["token"]]
+        } else {
+          sess_id <- NA_character_
+        }
+      } else {
+        sess_id <- cnd[["sess_id"]]
+      }
+
+      substring(sess_id, 1, 6)
+    })
+
+    package <- local({
+      if ("package" %in% names(cnd)) {
+        cnd[["package"]]
+      } else {
+        NA_character_
+      }
+    })
+
+    message <- local({
+      if ("message" %in% names(cnd)) {
+        cnd[["message"]]
+      } else {
+        NA_character_
+      }
+    })
+
+    sprintf("[%s][%s|%s|%s]:%s", date, package, short_sess_id, ns, message)
   }
 
   list(
     message = function(cnd) {
       if (log_test_level(cnd, level)) {
-        cli::cli_alert_info(cnd_to_str(cnd))
+        logdec$alert_info(cnd_to_str(cnd))
       }
-
-      rlang::cnd_muffle(cnd)
+      invokeRestart("muffleMessage")
     },
     warning = function(cnd) {
       if (log_test_level(cnd, level)) {
-        cli::cli_alert_warning(cnd_to_str(cnd))
+        logdec$alert_warning(cnd_to_str(cnd))
       }
-      rlang::cnd_muffle(cnd)
+      invokeRestart("muffleWarning")
     }
   )
-}
-
-#' @describeIn logging add date field to a condition
-#' @export
-log_add_date <- function(cnd) {
-  if (!"date" %in% names(cnd)) {
-    cnd[["date"]] <- format(Sys.time(), "%d-%m-%Y %H:%M:%S%z")
-  }
-  cnd
-}
-
-#' @describeIn logging add short_sess_id to a condition
-#' @export
-log_add_short_sess_id <- function(cnd) {
-  if (!"short_sess_id" %in% names(cnd)) {
-    cnd[["short_sess_id"]] <- substring(cnd[["sess_id"]], 1, 6)
-  }
-  cnd
 }
 
 #' @describeIn logging Tests if the cnd level is lower than the logger level
@@ -147,54 +225,6 @@ log_test_level <- function(cnd, level, .default = TRUE) {
   }
 }
 
-#' @describeIn logging creates a log string according to a format.
-#' @param ... parameter passed to glue
-#' @export
-log_format <- function(cnd, ...) {
-  # No need of glue_safe as the problem is providing the string to be formatted itself
-  # Nonetheless we provide a transformer to cover the case in which log_format tries to use
-  # a non-existent variable.
-
-  safe_transformer <- function(text, envir) {
-    t <- if (text %in% names(cnd)) cnd[[text]] else NA_character_
-    t <- if (length(t) == 0) NA_character_ else t
-    t
-  }
-  glue::glue(..., .transformer = safe_transformer)
-}
-
-#' @describeIn logging add sess_id to a condition
-#' @export
-log_add_sess_id <- function(cnd) {
-  if (!"sess_id" %in% names(cnd)) {
-    session <- shiny::getDefaultReactiveDomain()
-    if (!is.null(session)) {
-      sess_id <- session[["token"]]
-    } else {
-      sess_id <- NA_character_
-    }
-    cnd[["sess_id"]] <- sess_id
-  }
-  cnd
-}
-
-#' @describeIn logging add ns to a condition
-#' @export
-log_add_ns <- function(cnd) {
-  if (!"ns" %in% names(cnd)) {
-    session <- shiny::getDefaultReactiveDomain()
-    if (!is.null(session)) {
-      ns <- session[["ns"]]("")
-      ns <- substring(ns, 1, nchar(ns) - 1)
-      ns <- if (nchar(ns) == 0) "(Root)" else ns
-    } else {
-      ns <- NA_character_
-    }
-    cnd[["ns"]] <- ns
-  }
-  cnd
-}
-
 #' @describeIn logging List of levels in the logger
 #' @export
 log_get_level_list <- function() {
@@ -214,8 +244,8 @@ log_use_log <- function() {
   origin <- system.file("templates/utils_logging.R", package = "dv.manager", mustWork = TRUE)
   target <- "R/utils_logging.R"
   if (file.exists(target)) {
-    rlang::abort(paste(target, "already exists"))
+    stop(paste(target, "already exists"))
   }
   file.copy(origin, target)
-  rlang::inform(paste("Added file:", target))
+  message(paste("Added file:", target))
 }
