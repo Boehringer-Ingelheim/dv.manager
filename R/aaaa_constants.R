@@ -136,12 +136,15 @@ body::before {
 
 REPORT[["TEMPLATES"]][["FOOTER"]] <- local({
   templates <- character(0)
-  templates[[REPORT$OUTPUT_FORMAT$PDF]] <- r"--(
-# Annex: Code
+  templates[[REPORT$OUTPUT_FORMAT$PDF]] <- ""
 
-```{r show-code, ref.label = setdiff(knitr::all_labels(), c("setup", "show-code")), echo=TRUE, eval=FALSE}
-```
-)--"
+  # Currently code is attached to the PDF file
+  #   r"--(
+  # # Annex: Code
+
+  # ```{r show-code, ref.label = setdiff(knitr::all_labels(), c("setup", "show-code")), echo=TRUE, eval=FALSE}
+  # ```
+  # )--"
 
   templates[[REPORT$OUTPUT_FORMAT$HTML]] <- ""
 
