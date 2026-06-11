@@ -8,8 +8,7 @@ Authors@R: c(person("Boehringer-Ingelheim Pharma GmbH & Co.KG", role = c("cph", 
 Description: DaVinci Module Manager.
 License: Apache License (>= 2)
 Imports:
-    shiny (>= 1.7.0),
-    glue (>= 1.4.2),
+    shiny (>= 1.7.0),    
     htmltools (>= 0.5.2),
     rlang (>= 0.4.10),
     sass (>= 0.4.0),
@@ -18,8 +17,7 @@ Imports:
     dplyr (>= 1.0.3),
     lubridate (>= 1.7.9.2),    
     shinyjs (>= 2.0.0),
-    checkmate (>= 2.1.0),
-    cli (>= 3.3.0),
+    checkmate (>= 2.1.0),    
     jsonlite,
     jsonvalidate,
     shinyWidgets
