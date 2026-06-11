@@ -606,7 +606,7 @@ app_server_ <- function(input, output, session, opts) {
               kind = REK$DEFAULT
             )
           } else if (identical(output_format, REPORT$OUTPUT_FORMAT$PDF)) {
-            if (is.data.frame(el_resolved)) {
+            if (is.data.frame(el())) {
               el_ <- shinymeta::metaReactive(
                 {
                   ..(el()) |>
@@ -623,7 +623,7 @@ app_server_ <- function(input, output, session, opts) {
               el_processed <- list(
                 header = el_header,
                 el = get_code_in_context(el_()),
-                kind = REK$DEFAULT
+                kind = REK$TABLE
               )
             } else {
               el_processed <- list(
