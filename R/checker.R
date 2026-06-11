@@ -91,7 +91,7 @@ check_filter_dataset_name <- function(filter_dataset_name, datasets) {
   if (length(filter_data_check) > 0) {
     purrr::iwalk(
       filter_data_check,
-      stop(sprintf("%s has no `%s%` table", .y, filter_dataset_name))
+      ~ stop(sprintf("%s has no `%s` table", .y, filter_dataset_name))
     )
     msg <- sprintf("Not all datasets have a `%s%` table", filter_dataset_name)
     stop(msg)
