@@ -32,7 +32,7 @@ app_ui <- function(request_id) {
   filter_default_state <- filter_info[["filter_default_state"]]
   enable_subgroup <- get_config("subgroup")[["enable"]]
 
-  log_inform(sprintf("Available modules (N): %d", length(module_info[[ui]])))
+  log_inform(sprintf("Available modules (N): %d", length(module_info[["ui"]])))
   log_inform(sprintf("Dataset options (N): %d", length(dataset_lists)))
 
   if (enable_subgroup) {
