@@ -675,10 +675,32 @@ app_server_ <- function(input, output, session, opts) {
 
         rmarkdown <- REPORT$TEMPLATES$HEADER[[output_format]]
 
+        dataset_list_hash <- vector(mode = "list", length = length(selected_dataset_list()))
+
+        for (idx in seq_along(selected_dataset_list())) {
+          dataset_list_hash[[idx]] <- digest::digest(selected_dataset_list()[[idx]])
+        }
+
+        names(dataset_list_hash) <- names(selected_dataset_list())
+
+        hash_section <- local({
+          section <- "## Data hash:"
+          for (idx in seq_along(dataset_list_hash)) {
+            section <- sprintf(
+              "%s\n\n **name**: `%s` **hash**: %s",
+              section,
+              names(dataset_list_hash)[[idx]],
+              dataset_list_hash[[idx]]
+            )
+          }
+          section
+        })
+
         rmarkdown <- sprintf(
-          "%s\n# Data source\n Data Snapshot Date: %s\n```{r}\n%s\n```\n",
+          "%s\n# Data source\n**Data Snapshot Date:** %s\n\n%s\n\n```{r}\n%s\n```\n",
           rmarkdown,
           date_range(),
+          hash_section,
           data_code
         )
 
