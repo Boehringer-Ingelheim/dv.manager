@@ -422,7 +422,7 @@ app_server_ <- function(input, output, session, opts) {
     paste0("Dataset name: ", input$selector)
   })
 
-  output[["dataset_date"]] <- shiny::renderText({
+  date_range <- shiny::reactive({
     date_range <- attr(unfiltered_dataset_list(), "date_range")
 
     if (!any(is.na(date_range))) {
@@ -435,7 +435,11 @@ app_server_ <- function(input, output, session, opts) {
     } else {
       date_string <- "Date unavailable"
     }
-    paste0("Dataset date: ", date_string)
+    date_string
+  })
+
+  output[["dataset_date"]] <- shiny::renderText({
+    paste0("Dataset date: ", date_range())
   })
 
   #### Options modal
@@ -671,7 +675,12 @@ app_server_ <- function(input, output, session, opts) {
 
         rmarkdown <- REPORT$TEMPLATES$HEADER[[output_format]]
 
-        rmarkdown <- sprintf("%s\n# Data source\n```{r}\n%s\n```\n", rmarkdown, data_code)
+        rmarkdown <- sprintf(
+          "%s\n# Data source\n Data Snapshot Date: %s\n```{r}\n%s\n```\n",
+          rmarkdown,
+          date_range(),
+          data_code
+        )
 
         for (idx in seq_along(report_elements)) {
           header <- report_elements[[idx]][["header"]]
