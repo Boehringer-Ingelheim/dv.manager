@@ -683,8 +683,8 @@ app_server_ <- function(input, output, session, opts) {
 
         names(dataset_list_hash) <- names(selected_dataset_list())
 
-        hash_section <- local({
-          section <- "## Data hash:"
+        hardcoded_hash_section <- local({
+          section <- "## Hardcoded Data hash:"
           for (idx in seq_along(dataset_list_hash)) {
             section <- sprintf(
               "%s\n\n **name**: `%s` **hash**: %s",
@@ -693,15 +693,31 @@ app_server_ <- function(input, output, session, opts) {
               dataset_list_hash[[idx]]
             )
           }
-          section
+          note <- "These hashes are calculated in-app, they correspond to the data loaded in the app that created the report."
+          sprintf("%s\n\n%s\n\n", section, note)
+        })
+
+        dynamic_hash_section <- local({
+          section <- "## Dynamic Data hash:"
+          for (idx in seq_along(dataset_list_hash)) {
+            section <- sprintf(
+              "%s\n\n **name**: ``r names(selected_dataset_list)[[%d]]`` **hash**: `r digest::digest(selected_dataset_list[[%d]])`",
+              section,
+              idx,
+              idx
+            )
+          }
+          note <- "These hashes are calculated during report rendering, and should match those in the **Hardcoded Data hash** section."
+          sprintf("%s\n\n%s\n\n", section, note)
         })
 
         rmarkdown <- sprintf(
-          "%s\n# Data source\n**Data Snapshot Date:** %s\n\n%s\n\n```{r}\n%s\n```\n",
+          "%s\n# Data source\n**Data Snapshot Date:** %s\n\n%s\n\n```{r}\n%s\n```\n\n%s\n\n",
           rmarkdown,
           date_range(),
-          hash_section,
-          data_code
+          hardcoded_hash_section,
+          data_code,
+          dynamic_hash_section
         )
 
         for (idx in seq_along(report_elements)) {
