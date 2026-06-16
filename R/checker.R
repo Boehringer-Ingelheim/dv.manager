@@ -28,29 +28,25 @@ check_resolved_modules <- function(resolved_module_list) {
 }
 
 check_data <- function(data) {
+  # TODO: This function let functions passed unchecked. IT should be checked if this functios returns list of dataframes
+  # keep in mind that it should be possible to bypass this check.
   # NULL data is disallowed
   if (is.null(data)) {
     msg <- "data argument is NULL. If you are trying to run an application without data, use an empty list 'dv.manager::run_app(data = list(), ...)'" # nolint
     stop(msg)
   }
 
-  if (length(data) > 0) {
-    is_expected <- all(
-      purrr::map_lgl(
-        data,
-        function(el) {
-          if (is.list(el)) {
-            return(all(purrr::map_lgl(el, ~ is.data.frame(.x))))
-          }
-          if (is.function(el)) {
-            return(TRUE)
-          }
-          return(FALSE)
-        }
-      )
-    )
-
-    if (!is_expected) {
+  ok <- TRUE
+  for (idx in seq_along(data)) {
+    dataset_list <- data[[idx]]
+    if (is.list(dataset_list)) {
+      for (jdx in seq_along(dataset_list)) {
+        ok <- ok && is.data.frame(dataset_list[[jdx]])
+      }
+    } else if (!is.function(dataset_list)) {
+      ok <- FALSE
+    }
+    if (!ok) {
       msg <- "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes"
       stop(msg)
     }
