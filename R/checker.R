@@ -93,8 +93,8 @@ check_filter_dataset_name <- function(filter_dataset_name, dataset_lists) {
   filter_dataset_name
 }
 
-check_filter_key <- function(filter_key, datasets) {
-  if (length(datasets) == 0) {
+check_filter_key <- function(filter_key, dataset_lists) {
+  if (length(dataset_lists) == 0) {
     return(filter_key)
   }
 
@@ -103,22 +103,27 @@ check_filter_key <- function(filter_key, datasets) {
     stop(msg)
   }
 
-  filter_key_present <- all(
-    purrr::map_lgl(
-      datasets,
-      function(x) {
-        if (is.function(x)) {
-          d <- x()
-        } else {
-          d <- x
-        }
-        all(purrr::map_lgl(d, ~ filter_key %in% names(.x)))
+  filter_key_present <- TRUE
+
+  for (idx in seq_along(dataset_lists)) {
+    dataset_list <- dataset_lists[[idx]]
+    dataset_list_name <- names(dataset_lists)[[idx]]
+    if (is.function(dataset_list)) {
+      dataset_list <- dataset_list()
+    } else {
+      dataset_list <- dataset_list
+    }
+
+    for (jdx in seq_along(dataset_list)) {
+      if (!filter_key %in% names(dataset_list[[jdx]])) {
+        filter_key_present <- FALSE
+        break
       }
-    )
-  )
+    }
+  }
+
   if (!filter_key_present) {
     msg <- "Selected filtering key is not present in all datasets"
-    stop(msg)
     stop(msg)
   } else {
     log_inform("Filter Key is present in all datasets")
