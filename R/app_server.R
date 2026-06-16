@@ -72,10 +72,6 @@ app_server_ <- function(input, output, session, opts) {
 
   url_parameters <- shiny::reactiveVal()
 
-  if (length(dataset_lists) > 1) {
-    shinyjs::toggle(id = "dataset_selector")
-  }
-
   shiny::observe({
     url_parameters(shiny::parseQueryString(session$clientData$url_search))
     if (!is.null(url_parameters()[["data_name"]])) {

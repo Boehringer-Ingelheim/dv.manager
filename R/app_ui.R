@@ -55,11 +55,12 @@ app_ui <- function(request_id) {
       class = "menu-contents",
       shiny::div(
         id = ns("shiny_filter_panel"),
-        shinyjs::hidden(shiny::div(
+        shiny::div(
           id = ns("dataset_selector"),
           class = "ps-3 pe-3 pt-3 m-3 bg-light border rounded",
-          shiny::selectInput(ns("selector"), label = NULL, choices = names(dataset_lists))
-        )),
+          shiny::selectInput(ns("selector"), label = NULL, choices = names(dataset_lists)),
+          style = if (length(dataset_lists) <= 1) "display: none" else NULL
+        ),
         filter_ui
       )
     )
