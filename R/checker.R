@@ -61,8 +61,11 @@ check_data <- function(data) {
   data
 }
 
-check_filter_dataset_name <- function(filter_dataset_name, datasets) {
-  if (length(datasets) == 0) {
+check_filter_dataset_name <- function(filter_dataset_name, dataset_lists) {
+  # TODO it is possible to improve the feedback from this function. It stops in the first error found. We could check
+  # all of them at once. This way the app creator can correct all the errors in one go.
+
+  if (length(dataset_lists) == 0) {
     return(filter_dataset_name)
   }
 
@@ -71,26 +74,20 @@ check_filter_dataset_name <- function(filter_dataset_name, datasets) {
     stop(msg)
   }
 
-  filter_data_check <- purrr::map(
-    datasets,
-    function(.x) {
-      if (is.function(.x)) {
-        dataset_list <- .x()
-      } else {
-        dataset_list <- .x
-      }
-      filter_dataset_name %in% names(dataset_list)
-    }
-  ) |>
-    purrr::keep(~ !.x)
+  error_messages <- character(0)
 
-  if (length(filter_data_check) > 0) {
-    purrr::iwalk(
-      filter_data_check,
-      ~ stop(sprintf("%s has no `%s` table", .y, filter_dataset_name))
-    )
-    msg <- sprintf("Not all datasets have a `%s%` table", filter_dataset_name)
-    stop(msg)
+  for (idx in seq_along(dataset_lists)) {
+    dataset_list <- dataset_lists[[idx]]
+    dataset_list_name <- names(dataset_lists)[[idx]]
+    if (is.function(dataset_list)) {
+      dataset_list <- dataset_list()
+    } else {
+      dataset_list <- dataset_list
+    }
+
+    if (!filter_dataset_name %in% names(dataset_list)) {
+      stop(sprintf("%s has no `%s` table", dataset_list_name, filter_dataset_name))
+    }
   }
 
   filter_dataset_name
