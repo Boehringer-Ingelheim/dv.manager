@@ -33,11 +33,11 @@ logdec <- local({
   }
 
   alert_info <- function(x) {
-    cat_line(sprintf("[*] INFO: %s", x))
+    cat_line(sprintf("[*]INFO %s", x))
   }
 
   alert_warning <- function(x) {
-    cat_line(sprintf("[!] WARNING: %s", x))
+    cat_line(sprintf("[!]WARN %s", x))
   }
 
   code <- function(x) {
