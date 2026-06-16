@@ -15,7 +15,7 @@ app_ui <- function(request_id) {
     id <- character(0)
   } else if (is.character(id)) {
     id <- request_id
-    log_inform(sprintf("Running app_ui as a module with id: %s", ns('')))
+    log_inform(sprintf("Running app_ui as a module with id: %s", ns("")))
   } else {
     stop("Unknown value type in request_id")
   }
