@@ -33,11 +33,11 @@ logdec <- local({
   }
 
   alert_info <- function(x) {
-    cat_line(sprintf("[*] INFO: %s", x))
+    cat_line(sprintf("[*]INFO %s", x))
   }
 
   alert_warning <- function(x) {
-    cat_line(sprintf("[!] WARNING: %s", x))
+    cat_line(sprintf("[!]WARN %s", x))
   }
 
   code <- function(x) {
@@ -133,9 +133,9 @@ log_default_handlers <- function(level = 999) {
       if (!"ns" %in% names(cnd)) {
         session <- shiny::getDefaultReactiveDomain()
         if (!is.null(session)) {
-          ns <- session[["ns"]]("")
-          ns <- substring(ns, 1, nchar(ns) - 1)
-          ns <- if (nchar(ns) == 0) "(Root)" else ns
+          ns <- session[["ns"]](NULL)
+          ns <- substring(ns, 1, nchar(ns))
+          ns <- if (length(ns) == 0) "(Root)" else ns
         } else {
           ns <- NA_character_
         }

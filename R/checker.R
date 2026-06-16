@@ -28,7 +28,7 @@ check_resolved_modules <- function(resolved_module_list) {
 }
 
 check_data <- function(data) {
-  # TODO: This function let functions passed unchecked. IT should be checked if this functios returns list of dataframes
+  # TODO: This function lets functions pass unchecked. It should be checked if these functions return lists of dataframes
   # keep in mind that it should be possible to bypass this check.
   # NULL data is disallowed
   if (is.null(data)) {
@@ -107,7 +107,6 @@ check_filter_key <- function(filter_key, dataset_lists) {
 
   for (idx in seq_along(dataset_lists)) {
     dataset_list <- dataset_lists[[idx]]
-    dataset_list_name <- names(dataset_lists)[[idx]]
     if (is.function(dataset_list)) {
       dataset_list <- dataset_list()
     } else {
