@@ -16,7 +16,7 @@ test_that(
       filter_key = "C",
       .launch = FALSE
     ) |>
-      expect_error(regexp = "D2 has no 'DD1' table")
+      expect_error(regexp = "D2 has no `DD1` table")
   }
 )
 

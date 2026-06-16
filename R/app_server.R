@@ -68,13 +68,9 @@ app_server_ <- function(input, output, session, opts) {
     shiny::showModal(startup_msg)
   }
 
-  log_inform(glue::glue("Filtering key: {filter_key_var}"))
+  log_inform(sprintf("Filtering key: %s", filter_key_var))
 
   url_parameters <- shiny::reactiveVal()
-
-  if (length(dataset_lists) > 1) {
-    shinyjs::toggle(id = "dataset_selector")
-  }
 
   shiny::observe({
     url_parameters(shiny::parseQueryString(session$clientData$url_search))
@@ -349,12 +345,12 @@ app_server_ <- function(input, output, session, opts) {
     if (!any(is.na(date_range))) {
       date_range <- format(date_range, "%Y-%b-%d (%Z)")
       if (date_range[1] != date_range[2]) {
-        date_string <- glue::glue("{date_range[1]} - {date_range[2]}")
+        date_string <- sprintf("%s - %s", date_range[1], date_range[2])
       } else {
-        date_string <- glue::glue("{date_range[1]}")
+        date_string <- date_range[1]
       }
     } else {
-      date_string <- glue::glue("Date unavailable")
+      date_string <- "Date unavailable"
     }
     paste0("Dataset date: ", date_string)
   })

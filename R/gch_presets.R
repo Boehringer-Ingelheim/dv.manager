@@ -4,7 +4,7 @@ gch_debug <- list(
       withCallingHandlers(
         shiny::showNotification(cnd$message, type = "message"),
         error = function(e) {
-          rlang::abort(
+          stop(
             "Could not show notification for message:",
             parent = e
           )
@@ -17,7 +17,7 @@ gch_debug <- list(
       withCallingHandlers(
         shiny::showNotification(cnd$message, type = "warning"),
         error = function(e) {
-          rlang::abort(
+          stop(
             "Could not show notification for warning:",
             parent = e
           )
@@ -30,7 +30,7 @@ gch_debug <- list(
       withCallingHandlers(
         shiny::showNotification(cnd$message, type = "error"),
         error = function(e) {
-          rlang::abort(
+          stop(
             "Could not show notification for error:",
             parent = e
           )

@@ -15,7 +15,7 @@ app_ui <- function(request_id) {
     id <- character(0)
   } else if (is.character(id)) {
     id <- request_id
-    log_inform(glue::glue("Running app_ui as a module with id: {ns('')}"))
+    log_inform(sprintf("Running app_ui as a module with id: %s", ns("")))
   } else {
     stop("Unknown value type in request_id")
   }
@@ -32,8 +32,8 @@ app_ui <- function(request_id) {
   filter_default_state <- filter_info[["filter_default_state"]]
   enable_subgroup <- get_config("subgroup")[["enable"]]
 
-  log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui\"]])}"))
-  log_inform(glue::glue("Dataset options (N): {length(dataset_lists)}"))
+  log_inform(sprintf("Available modules (N): %d", length(module_info[["ui"]])))
+  log_inform(sprintf("Dataset options (N): %d", length(dataset_lists)))
 
   if (enable_subgroup) {
     filter_ui <- shiny::tabsetPanel(
@@ -55,11 +55,12 @@ app_ui <- function(request_id) {
       class = "menu-contents",
       shiny::div(
         id = ns("shiny_filter_panel"),
-        shinyjs::hidden(shiny::div(
+        shiny::div(
           id = ns("dataset_selector"),
           class = "ps-3 pe-3 pt-3 m-3 bg-light border rounded",
-          shiny::selectInput(ns("selector"), label = NULL, choices = names(dataset_lists))
-        )),
+          shiny::selectInput(ns("selector"), label = NULL, choices = names(dataset_lists)),
+          style = if (length(dataset_lists) <= 1) "display: none" else NULL
+        ),
         filter_ui
       )
     )

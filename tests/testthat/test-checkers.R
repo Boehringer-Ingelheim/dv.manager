@@ -236,7 +236,7 @@ test_that(
       D3 = list(c = 1, b = 2)
     )
     check_filter_dataset_name("a", data) |>
-      expect_error(regexp = "D3 has no 'a' table", fixed = TRUE)
+      expect_error(regexp = "D3 has no `a` table", fixed = TRUE)
   }
 )
 
