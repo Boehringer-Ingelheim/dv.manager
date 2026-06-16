@@ -133,9 +133,9 @@ log_default_handlers <- function(level = 999) {
       if (!"ns" %in% names(cnd)) {
         session <- shiny::getDefaultReactiveDomain()
         if (!is.null(session)) {
-          ns <- session[["ns"]]("")
+          ns <- session[["ns"]](NULL)
           ns <- substring(ns, 1, nchar(ns) - 1)
-          ns <- if (nchar(ns) == 0) "(Root)" else ns
+          ns <- if (length(ns) == 0) "(Root)" else ns
         } else {
           ns <- NA_character_
         }
