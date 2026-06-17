@@ -729,31 +729,35 @@ app_server_ <- function(input, output, session, opts) {
           element_formatters[[REPORT$OUTPUT_FORMAT$PDF]] <- list()
           element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$ERROR]] <- function(x) sprintf("\\alertwarning{%s}", x)
           element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$TABLE]] <- function(x) {
-            sprintf("\\newpage\n\\begin{landscape}\n```{r}\n{{%s}}\n```\n\\end{landscape}\n\\newpage\n", x)
+            sprintf("\\newpage\n\\begin{landscape}\n```{r}\n%s\n```\n\\end{landscape}\n\\newpage\n", x)
           }
-          element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
+          element_formatters[[REPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]] <- function(x) sprintf("```{r}\n%s\n```", x)
 
           element_formatters[[REPORT$OUTPUT_FORMAT$HTML]] <- list()
           element_formatters[[REPORT$OUTPUT_FORMAT$HTML]][[REK$ERROR]] <- function(x) {
             sprintf("<div class = \"alert alert-warning\" role = \"alert\">%s</div>", x)
           }
-          element_formatters[[REPORT$OUTPUT_FORMAT$HTML]][[REK$TABLE]] <- function(x) sprintf("```{r}\n{{%s}}\n```", x)
+          element_formatters[[REPORT$OUTPUT_FORMAT$HTML]][[REK$TABLE]] <- function(x) sprintf("```{r}\n%s\n```", x)
           element_formatters[[REPORT$OUTPUT_FORMAT$HTML]][[REK$DEFAULT]] <- function(x) {
-            sprintf("```{r}\n{{%s}}\n```", x)
+            sprintf("```{r}\n%s\n```", x)
           }
 
           rmarkdown <- sprintf("%s\n%s\n%s\n", rmarkdown, header, element_formatters[[output_format]][[kind]](el))
         }
 
+        rmarkdown <- sprintf("%s\n%s", rmarkdown, REPORT$TEMPLATES$SESSION_INFO[[output_format]])
+
         rmarkdown <- sprintf("%s\n%s", rmarkdown, REPORT$TEMPLATES$FOOTER[[output_format]])
 
         report_dir <- tempfile(pattern = "report")
+        log_inform(sprintf("Creating report in %s", report_dir))
         dir.create(report_dir)
         curr_dir <- getwd()
         on.exit(
           {
             if (dir.exists(report_dir)) {
               unlink(report_dir, recursive = TRUE)
+              log_inform(sprintf("Removing dir %s", report_dir))
             }
             setwd(curr_dir)
           },
@@ -763,21 +767,53 @@ app_server_ <- function(input, output, session, opts) {
         report_rmd <- file.path(report_dir, "report.Rmd")
         writeLines(rmarkdown, report_rmd)
 
-        callr::r(
+        zip_filename <- callr::r(
           function(report_rmd, report_dir, filename) {
-            setwd(report_dir)
-            output_file <- rmarkdown::render(input = report_rmd, output_dir = report_dir)
+            setwd(report_dir) # All file writing happens in report_dir
+
+            error_msg <- character(0)
+            output_file <- tryCatch(
+              rmarkdown::render(input = report_rmd, output_dir = report_dir),
+              error = function(e) {
+                error_msg <<- e$message
+                warning(sprintf("Error rendering report in %s", report_dir))
+                error_file_name <- file.path(report_dir, "error.txt")
+                writeLines("Error rendering report", error_file_name)
+                error_file_name
+              }
+            )
             if (endsWith(output_file, "pdf")) {
-              preattach_file <- paste0("preattach_", basename(output_file))
-              file.copy(output_file, preattach_file)
-              unlink(output_file)
-              system2("pdfattach", args = c(preattach_file, report_rmd, output_file))
-              unlink(preattach_file)
+              attach_file <- function(attachment_file, destiny_file) {
+                preattach_file <- paste0("preattach_", basename(destiny_file))
+                file.copy(destiny_file, preattach_file)
+                unlink(destiny_file)
+                system2("pdfattach", args = c(preattach_file, attachment_file, destiny_file))
+                unlink(preattach_file)
+              }
+
+              session_info_file <- "session_info.txt"
+
+              writeLines(
+                capture.output(devtools::session_info()),
+                session_info_file
+              )
+
+              attach_file(report_rmd, output_file)
+              attach_file(session_info_file, output_file)
             }
-            utils::zip(filename, list.files(report_dir))
+            zip_filename <- utils::zip(filename, list.files(report_dir))
+            structure(
+              zip_filename,
+              error_msg = error_msg
+            )
           },
           args = list(report_rmd = report_rmd, report_dir = report_dir, filename = filename)
         )
+        if (length(attr(zip_filename, "error_msg")) > 0) {
+          log_warn(sprintf("Error while rendering report: %s", attr(zip_filename, "error_msg")))
+        }
+        attr(zip_filename, "error_msg") <- NULL
+        zip_filename
       }
     )
   })

@@ -135,6 +135,36 @@ body::before {
   templates
 })
 
+
+session_info_section <-
+  REPORT[["TEMPLATES"]][["SESSION_INFO"]] <- local({
+    templates <- character(0)
+    templates[[REPORT$OUTPUT_FORMAT$PDF]] <- r"--(
+\begin{landscape}
+        
+\section{Session Info}
+        
+\begin{verbatim}
+        
+```{r session_info, results = 'asis'}
+  devtools::session_info()
+```
+\end{verbatim}        
+\end{landscape}
+)--"
+
+    templates[[REPORT$OUTPUT_FORMAT$HTML]] <- r"--(        
+# Session Info
+        
+```{r session_info}
+  devtools::session_info()
+```
+
+)--"
+
+    templates
+  })
+
 REPORT[["TEMPLATES"]][["FOOTER"]] <- local({
   templates <- character(0)
   templates[[REPORT$OUTPUT_FORMAT$PDF]] <- ""
