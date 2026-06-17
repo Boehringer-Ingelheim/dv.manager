@@ -44,3 +44,7 @@ format_with_air <- function(text, line_width = 80L) {
 
   readLines(stdout_file)
 }
+
+# TODO: An overkill but for the moment we depend on gt to print latex table
+# IN the future we can do our own implementation
+escape_latex <- gt::escape_latex
