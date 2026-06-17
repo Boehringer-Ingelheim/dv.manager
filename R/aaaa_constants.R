@@ -80,7 +80,11 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, tidy = TRUE, tidy.opts = list(width.cutoff = 60))
+  knitr::opts_chunk$set(
+  echo = FALSE,
+  out.width = "100%", 
+  tidy = TRUE
+)
 ```
 
 )--"
