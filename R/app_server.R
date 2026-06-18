@@ -830,7 +830,9 @@ app_server_ <- function(input, output, session, opts) {
 
           zip_filename <- callr::r(
             function(report_rmd, report_dir, filename) {
-              setwd(report_dir) # All file writing happens in report_dir
+              # All file writing happens in report_dir
+              # Directory is  removed after returning so there is no need of intermediate cleaning
+              setwd(report_dir)
 
               error_msg <- character(0)
               output_file <- tryCatch(
@@ -861,6 +863,7 @@ app_server_ <- function(input, output, session, opts) {
 
                 attach_file(report_rmd, output_file)
                 attach_file(session_info_file, output_file)
+                unlink(session_info_file)
               }
               zip_filename <- utils::zip(filename, list.files(report_dir))
               structure(
