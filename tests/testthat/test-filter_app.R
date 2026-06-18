@@ -706,7 +706,7 @@ local({
   test_that("filters can be exported", {
     app <- shinytest2::AppDriver$new(root_app$get_url())
     on.exit(app$stop(), add = TRUE, after = FALSE)
-    file_dwnld <- paste(readLines(app$get_download("filter-export_code_button_input")), collapse = "\n")
+    file_dwnld <- paste(readLines(app$get_download("filter-export_filter_code_button_input")), collapse = "\n")
     empty_filter_json <- r"--({"filters":{"datasets_filter":{"children":[]},"subject_filter":{"children":[]}},"dataset_list_name":"dataset_list_1"})--"
     expect_identical(gsub("[[:space:]]", "", file_dwnld), empty_filter_json)
 
