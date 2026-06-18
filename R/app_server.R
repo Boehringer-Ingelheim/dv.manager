@@ -451,32 +451,60 @@ app_server_ <- function(input, output, session, opts) {
   ### Export
 
   local({
-    selected <- list()
-    ui <- list(
-      shiny::h3("Export menu")
-    )
+    # Flatten exportable elements and set defaults for missing entries
+    exportable_elements <- local({
+      res <- list()
+      for (idx in seq_along(module_output)) {
+        mo <- module_output[[idx]]
 
-    for (idx in seq_along(module_output)) {
-      mo <- module_output[[idx]]
-      mo_id <- names(module_output)[[idx]]
-      mo_nm <- module_names[[mo_id]]
+        if ("to_report" %in% names(mo)) {
+          to_report_elements <- mo[["to_report"]]
+          module_id <- names(module_output)[[idx]]
+          module_name <- module_names[[module_id]]
 
-      card_items <- list(bslib::card_header(mo_nm))
+          for (jdx in seq_along(to_report_elements)) {
+            if (!checkmate::test_named(to_report_elements[[jdx]], type = "unique")) {
+              stop(sprintf("Reported elements for module %s are not named or names are not unique", module_id))
+            }
 
-      if ("to_report" %in% names(mo)) {
-        ctr <- mo[["to_report"]]
+            current_element_list_nm <- names(to_report_elements)[[jdx]]
+            current_element <- to_report_elements[[jdx]]
 
-        for (jdx in seq_along(ctr)) {
-          el_nm <- names(ctr)[[jdx]]
-          el_id <- paste0(mo_nm, "-", el_nm)
+            first_module_element <- jdx == 1
+            current_element[["label"]] <- current_element[["label"]] %||% current_element_list_nm
+            current_element[["info"]] <- current_element[["info"]] %||% current_element[["label"]]
+            current_element[["id"]] <- paste0(module_id, "-", current_element_list_nm)
+            current_element[["is_first_module_element"]] <- first_module_element
+            current_element[["module_name"]] <- module_name
+            res[[current_element[["id"]]]] <- current_element
+          }
+        }
+      }
+      res
+    })
 
-          selected[[el_id]] <- TRUE
+    export_modal_ui <- local({
+      card_ui <- list(shiny::h3("Export menu"))
+
+      if (length(exportable_elements) > 0) {
+        card_items <- NULL
+
+        for (idx in seq_along(exportable_elements)) {
+          curr_el <- exportable_elements[[idx]]
+
+          if (curr_el[["is_first_module_element"]]) {
+            if (!is.null(card_items)) {
+              card_ui[[length(card_ui) + 1]] <- do.call(bslib::card, card_items)
+            }
+            card_items <- list(bslib::card_header(curr_el[["module_name"]]))
+          }
 
           card_items[[length(card_items) + 1]] <-
             shiny::div(
               class = "form-check form-switch",
               shiny::tags[["label"]](
                 class = "form-check-label",
+                title = curr_el[["info"]],
                 shiny::tags[["input"]](
                   class = "form-check-input",
                   type = "checkbox",
@@ -485,25 +513,49 @@ app_server_ <- function(input, output, session, opts) {
                   onchange = sprintf(
                     "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
                     ns("export_menu_input"),
-                    el_id
+                    curr_el[["id"]]
                   )
                 ),
-                el_nm
+                curr_el[["label"]]
               )
             )
         }
+      } else {
+        card_ui[[length(card_ui) + 1]] <- bslib::card(
+          bslib::card_header("No elements available for report")
+        )
       }
 
-      ui[[length(ui) + 1]] <- do.call(bslib::card, card_items)
-    }
-
-    ui[[length(ui) + 1]] <- bslib::card(
-      bslib::card_header("Output format"),
-      shiny::radioButtons(
-        ns("output_format"),
-        label = NULL,
-        choices = REPORT$OUTPUT_FORMAT
+      card_ui[[length(card_ui) + 1]] <- bslib::card(
+        bslib::card_header("Output format"),
+        shiny::radioButtons(
+          ns("output_format"),
+          label = NULL,
+          choices = REPORT$OUTPUT_FORMAT
+        )
       )
+
+      res <- shiny::modalDialog(
+        shiny::div(
+          class = "d-flex flex-column vh-25",
+          style = "max-height: 90vh",
+          shiny::div(
+            class = "overflow-auto flex-grow-1 p-3 min-h-0",
+            list(
+              card_ui
+            )
+          ),
+          shiny::downloadButton(ns(ID$EXPORT_CODE), "Export")
+        ),
+        easyClose = TRUE,
+        footer = NULL
+      )
+      res
+    })
+
+    selected <- stats::setNames(
+      rep(TRUE, length(exportable_elements)),
+      names(exportable_elements)
     )
 
     shiny::observeEvent(input[["export_menu_input"]], {
@@ -512,21 +564,7 @@ app_server_ <- function(input, output, session, opts) {
 
     shiny::observeEvent(input[[ID$EXPORT_CODE_MENU]], {
       shiny::showModal(
-        shiny::modalDialog(
-          shiny::div(
-            class = "d-flex flex-column vh-25",
-            style = "max-height: 90vh",
-            shiny::div(
-              class = "overflow-auto flex-grow-1 p-3 min-h-0",
-              list(
-                ui
-              )
-            ),
-            shiny::downloadButton(ns(ID$EXPORT_CODE), "Export")
-          ),
-          easyClose = TRUE,
-          footer = NULL
-        )
+        export_modal_ui
       )
     })
 
@@ -551,7 +589,7 @@ app_server_ <- function(input, output, session, opts) {
               paste(collapse = "\n")
           }
 
-          # Replaces metareactives with other metareactives
+          # Replaces reactives that return no htmlwidgets with PDF compatible options
           replace_if_htmlwidget <- function(x) {
             if (!inherits(x(), "htmlwidget")) {
               return(x)
@@ -584,38 +622,33 @@ app_server_ <- function(input, output, session, opts) {
             return(replaced_x)
           }
 
-          process_report_element <- function(el, module_name, el_name, output_format, first_element) {
-            el_header <- list(module_name = module_name, el_name = el_name, first_element = first_element)
-            log_inform(paste0("Processing:", paste(el_header, collapse = "-")))
+          process_report_element <- function(report_element, output_format) {
+            el_processed <- report_element
+            log_inform(paste0("Processing:", el_processed[["id"]]))
+            checkmate::assert_subset(output_format, as.character(unclass(REPORT$OUTPUT_FORMAT)))
 
-            stopifnot(output_format %in% REPORT$OUTPUT_FORMAT)
-            el_resolved <- try(el(), silent = TRUE)
+            reactive <- el_processed[["reactive"]]
+            resolved <- try(reactive(), silent = TRUE)
 
-            if (identical(output_format, REPORT$OUTPUT_FORMAT$PDF) && !inherits(el_resolved, "try-error")) {
-              el <- replace_if_htmlwidget(el)
+            if (identical(output_format, REPORT$OUTPUT_FORMAT$PDF) && !inherits(resolved, "try-error")) {
+              reactive <- replace_if_htmlwidget(reactive)
             }
 
-            if (inherits(el_resolved, "try-error")) {
-              el_processed <- list(
-                header = el_header,
-                el = local({
-                  msg <- attr(el_resolved, "condition")$message
-                  paste("Error creating", module_name, report_element_nm, msg)
-                }),
-                kind = REK$ERROR
-              )
+            if (inherits(resolved, "try-error")) {
+              code <- local({
+                msg <- attr(resolved, "condition")$message
+                paste("Error creating", el_processed[["id"]], msg)
+              })
+              kind <- REK$ERROR
             } else if (identical(output_format, REPORT$OUTPUT_FORMAT$HTML)) {
-              el_processed <- list(
-                header = el_header,
-                el = get_code_in_context(el()),
-                kind = REK$DEFAULT
-              )
+              code <- get_code_in_context(reactive())
+              kind <- REK$DEFAULT
             } else if (identical(output_format, REPORT$OUTPUT_FORMAT$PDF)) {
               # TODO: This could be moved to the formatter section
-              if (is.data.frame(el())) {
-                el_ <- shinymeta::metaReactive(
+              if (is.data.frame(reactive())) {
+                reactive_ <- shinymeta::metaReactive(
                   {
-                    ..(el()) |>
+                    ..(reactive()) |>
                       gt::gt() |>
                       gt::tab_options(
                         latex.use_longtable = TRUE,
@@ -626,68 +659,52 @@ app_server_ <- function(input, output, session, opts) {
                   inline = TRUE
                 )
 
-                el_processed <- list(
-                  header = el_header,
-                  el = get_code_in_context(el_()),
-                  kind = REK$TABLE
-                )
+                code <- get_code_in_context(reactive_())
+                kind <- REK$TABLE
               } else {
-                el_processed <- list(
-                  header = el_header,
-                  el = get_code_in_context(el()),
-                  kind = REK$DEFAULT
-                )
+                code <- get_code_in_context(reactive())
+                kind <- REK$DEFAULT
               }
             }
 
-            log_inform(paste0("Processed:", paste(el_header, collapse = "-")))
+            el_processed[["reactive"]] <- NULL
+            el_processed[["code"]] <- code
+            el_processed[["kind"]] <- kind
+
+            log_inform(paste0("Processed:", el_processed[["id"]]))
 
             return(el_processed)
           }
 
           data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
 
-          report_elements <- list()
+          log_inform("Processing report elements")
+          report_elements <- local({
+            selected_exportable_elements <- exportable_elements[names(selected)[selected]]
 
-          for (idx in seq_along(module_output)) {
-            current_module_output <- module_output[[idx]]
-            module_id <- names(module_output)[[idx]]
-            module_name <- module_names[[module_id]]
-
-            if ("to_report" %in% names(current_module_output)) {
-              list_to_report <- current_module_output[["to_report"]]
-
-              for (jdx in seq_along(list_to_report)) {
-                first_element <- jdx == 1
-                report_element_nm <- names(list_to_report)[[jdx]]
-                report_element_id <- paste0(module_name, "-", report_element_nm)
-                curr_report_element <- list_to_report[[jdx]]
-
-                if (selected[[report_element_id]]) {
-                  element <- process_report_element(
-                    curr_report_element,
-                    module_name,
-                    names(list_to_report)[[jdx]],
-                    output_format,
-                    first_element
-                  )
-                  report_elements <- c(report_elements, list(element))
-                }
+            res <- list()
+            for (idx in seq_along(selected_exportable_elements)) {
+              log_inform(sprintf("Processing element (%d)", idx))
+              curr_el <- selected_exportable_elements[[idx]]
+              if (selected[[curr_el[["id"]]]]) {
+                element <- process_report_element(
+                  curr_el,
+                  output_format
+                )
+                res <- c(res, list(element))
               }
             }
-          }
+            res
+          })
 
-          rmarkdown <- REPORT$TEMPLATES$HEADER[[output_format]]
-
-          dataset_list_hash <- vector(mode = "list", length = length(selected_dataset_list()))
-
-          for (idx in seq_along(selected_dataset_list())) {
-            dataset_list_hash[[idx]] <- digest::digest(selected_dataset_list()[[idx]])
-          }
-
-          names(dataset_list_hash) <- names(selected_dataset_list())
-
+          log_inform("Creating hardcoded dataset hash section")
           hardcoded_hash_section <- local({
+            dataset_list_hash <- vector(mode = "list", length = length(selected_dataset_list()))
+            for (idx in seq_along(selected_dataset_list())) {
+              dataset_list_hash[[idx]] <- digest::digest(selected_dataset_list()[[idx]])
+            }
+            names(dataset_list_hash) <- names(selected_dataset_list())
+
             section <- "## Hardcoded Data hash:"
             for (idx in seq_along(dataset_list_hash)) {
               section <- sprintf(
@@ -701,9 +718,10 @@ app_server_ <- function(input, output, session, opts) {
             sprintf("%s\n\n%s\n\n", section, note)
           })
 
+          log_inform("Creating dynamic dataset hash section")
           dynamic_hash_section <- local({
             section <- "## Dynamic Data hash:"
-            for (idx in seq_along(dataset_list_hash)) {
+            for (idx in seq_along(selected_dataset_list())) {
               section <- sprintf(
                 "%s\n\n **name**: ``r names(selected_dataset_list)[[%d]]`` **hash**: `r digest::digest(selected_dataset_list[[%d]])`",
                 section,
@@ -715,169 +733,181 @@ app_server_ <- function(input, output, session, opts) {
             sprintf("%s\n\n%s\n\n", section, note)
           })
 
-          rmarkdown <- sprintf(
-            "%s\n# Data source\n**Data Snapshot Date:** %s\n\n%s\n\n```{r}\n%s\n```\n\n%s\n\n",
-            rmarkdown,
-            date_range(),
-            hardcoded_hash_section,
-            data_code,
-            dynamic_hash_section
-          )
+          log_inform("Creating rmarkdown")
+          rmarkdown <- local({
+            rmd <- REPORT$TEMPLATES$HEADER[[output_format]]
+            rmd <- sprintf(
+              "%s\n# Data source\n**Data Snapshot Date:** %s\n\n%s\n\n```{r}\n%s\n```\n\n%s\n\n",
+              rmd,
+              date_range(),
+              hardcoded_hash_section,
+              data_code,
+              dynamic_hash_section
+            )
 
-          current_module <- NA
-          for (idx in seq_along(report_elements)) {
-            el <- report_elements[[idx]]
-            log_inform(paste0("Processing idx: ", idx))
+            for (idx in seq_along(report_elements)) {
+              curr_el <- report_elements[[idx]]
+              log_inform(paste0("Processing idx: ", idx))
 
-            element_formatters <- local({
-              res <- list()
-              res[[REPORT$OUTPUT_FORMAT$PDF]] <- list()
-              res[[REPORT$OUTPUT_FORMAT$PDF]][["header"]] <- function(header) {
-                if (header[["first_element"]]) {
+              element_formatters <- local({
+                res <- list()
+                res[[REPORT$OUTPUT_FORMAT$PDF]] <- list()
+                res[[REPORT$OUTPUT_FORMAT$PDF]][["header"]] <- function(x) {
+                  if (x[["is_first_module_element"]]) {
+                    sprintf(
+                      "\\section{%s}\n\n\\subsection{%s}\n\n",
+                      escape_latex(x[["module_name"]]),
+                      escape_latex(x[["label"]])
+                    )
+                  } else {
+                    sprintf("\\subsection{%s}\n\n", escape_latex(x[["label"]]))
+                  }
+                }
+                res[[REPORT$OUTPUT_FORMAT$PDF]][[REK$ERROR]] <- function(x) {
+                  fmt <- "\n%s\n\n\\alertwarning{%s}\n\n"
                   sprintf(
-                    "\\section{%s}\n\n\\subsection{%s}\n\n",
-                    escape_latex(header[["module_name"]]),
-                    escape_latex(header[["el_name"]])
+                    fmt,
+                    res[[REPORT$OUTPUT_FORMAT$PDF]][["header"]](x),
+                    x[["code"]]
                   )
-                } else {
-                  sprintf("\\subsection{%s}\n\n", escape_latex(header[["el_name"]]))
                 }
-              }
-              res[[REPORT$OUTPUT_FORMAT$PDF]][[REK$ERROR]] <- function(x) {
-                fmt <- "\n%s\n\n\\alertwarning{%s}\n\n"
-                sprintf(
-                  fmt,
-                  res[[REPORT$OUTPUT_FORMAT$PDF]][["header"]](x[["header"]]),
-                  x[["el"]]
-                )
-              }
 
-              res[[REPORT$OUTPUT_FORMAT$PDF]][[REK$TABLE]] <- function(x) {
-                fmt <- "\n\\newpage\n\\begin{landscape}\n\n%s\n\n\\end{landscape}\n\\newpage\n\n"
-                sprintf(
-                  fmt,
-                  res[[REPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]](x)
-                )
-              }
-
-              res[[REPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]] <- function(x) {
-                fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
-                sprintf(
-                  fmt,
-                  res[[REPORT$OUTPUT_FORMAT$PDF]][["header"]](x[["header"]]),
-                  paste0(x[["header"]][c("module_name", "el_name")], collapse = "-"),
-                  x[["el"]]
-                )
-              }
-
-              res[[REPORT$OUTPUT_FORMAT$HTML]] <- list()
-              res[[REPORT$OUTPUT_FORMAT$HTML]][["header"]] <- function(header) {
-                if (header[["first_element"]]) {
-                  sprintf("# %s\n\n## %s\n\n", header[["module_name"]], header[["el_name"]])
-                } else {
-                  sprintf("## %s\n\n", header[["el_name"]])
+                res[[REPORT$OUTPUT_FORMAT$PDF]][[REK$TABLE]] <- function(x) {
+                  fmt <- "\n\\newpage\n\\begin{landscape}\n\n%s\n\n\\end{landscape}\n\\newpage\n\n"
+                  sprintf(
+                    fmt,
+                    res[[REPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]](x)
+                  )
                 }
-              }
-              res[[REPORT$OUTPUT_FORMAT$HTML]][[REK$ERROR]] <- function(x) {
-                fmt <- "\n%s\n\n<div class = \"alert alert-warning\" role = \"alert\">%s</div>\n\n"
 
-                sprintf(
-                  fmt,
-                  res[[REPORT$OUTPUT_FORMAT$HTML]][["header"]](x[["header"]]),
-                  x[["el"]]
-                )
-              }
-
-              res[[REPORT$OUTPUT_FORMAT$HTML]][[REK$TABLE]] <- function(x) {
-                res[[REPORT$OUTPUT_FORMAT$HTML]][[REK$DEFAULT]](x)
-              }
-              res[[REPORT$OUTPUT_FORMAT$HTML]][[REK$DEFAULT]] <- function(x) {
-                fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
-                sprintf(
-                  fmt,
-                  res[[REPORT$OUTPUT_FORMAT$HTML]][["header"]](x[["header"]]),
-                  paste0(x[["header"]][c("module_name", "el_name")], collapse = "-"),
-                  x[["el"]]
-                )
-              }
-              res
-            })
-
-            rmarkdown <- sprintf("%s\n%s\n", rmarkdown, element_formatters[[output_format]][[el[["kind"]]]](el))
-          }
-
-          rmarkdown <- sprintf("%s\n%s", rmarkdown, REPORT$TEMPLATES$SESSION_INFO[[output_format]])
-
-          rmarkdown <- sprintf("%s\n%s", rmarkdown, REPORT$TEMPLATES$FOOTER[[output_format]])
-
-          report_dir <- tempfile(pattern = "report")
-          log_inform(sprintf("Creating report in %s", report_dir))
-          dir.create(report_dir)
-          curr_dir <- getwd()
-          on.exit(
-            {
-              if (dir.exists(report_dir)) {
-                unlink(report_dir, recursive = TRUE)
-                log_inform(sprintf("Removing dir %s", report_dir))
-              }
-              setwd(curr_dir)
-            },
-            add = TRUE
-          )
-
-          report_rmd <- file.path(report_dir, "report.Rmd")
-          writeLines(rmarkdown, report_rmd)
-
-          zip_filename <- callr::r(
-            function(report_rmd, report_dir, filename) {
-              # All file writing happens in report_dir
-              # Directory is  removed after returning so there is no need of intermediate cleaning
-              setwd(report_dir)
-
-              error_msg <- character(0)
-              output_file <- tryCatch(
-                rmarkdown::render(input = report_rmd, output_dir = report_dir),
-                error = function(e) {
-                  error_msg <<- e$message
-                  warning(sprintf("Error rendering report in %s", report_dir))
-                  error_file_name <- file.path(report_dir, "error.txt")
-                  writeLines("Error rendering report", error_file_name)
-                  error_file_name
+                res[[REPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]] <- function(x) {
+                  fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
+                  sprintf(
+                    fmt,
+                    res[[REPORT$OUTPUT_FORMAT$PDF]][["header"]](x),
+                    x[["id"]],
+                    x[["code"]]
+                  )
                 }
+
+                res[[REPORT$OUTPUT_FORMAT$HTML]] <- list()
+                res[[REPORT$OUTPUT_FORMAT$HTML]][["header"]] <- function(x) {
+                  if (x[["is_first_module_element"]]) {
+                    sprintf("# %s\n\n## %s\n\n", x[["module_name"]], x[["label"]])
+                  } else {
+                    sprintf("## %s\n\n", x[["label"]])
+                  }
+                }
+                res[[REPORT$OUTPUT_FORMAT$HTML]][[REK$ERROR]] <- function(x) {
+                  fmt <- "\n%s\n\n<div class = \"alert alert-warning\" role = \"alert\">%s</div>\n\n"
+
+                  sprintf(
+                    fmt,
+                    res[[REPORT$OUTPUT_FORMAT$HTML]][["header"]](x),
+                    x[["code"]]
+                  )
+                }
+
+                res[[REPORT$OUTPUT_FORMAT$HTML]][[REK$TABLE]] <- function(x) {
+                  res[[REPORT$OUTPUT_FORMAT$HTML]][[REK$DEFAULT]](x)
+                }
+                res[[REPORT$OUTPUT_FORMAT$HTML]][[REK$DEFAULT]] <- function(x) {
+                  fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
+                  sprintf(
+                    fmt,
+                    res[[REPORT$OUTPUT_FORMAT$HTML]][["header"]](x),
+                    x[["id"]],
+                    x[["code"]]
+                  )
+                }
+                res
+              })
+
+              rmd <- sprintf(
+                "%s\n%s\n",
+                rmd,
+                element_formatters[[output_format]][[curr_el[["kind"]]]](curr_el)
               )
-              if (endsWith(output_file, "pdf")) {
-                attach_file <- function(attachment_file, destiny_file) {
-                  preattach_file <- paste0("preattach_", basename(destiny_file))
-                  file.copy(destiny_file, preattach_file)
-                  unlink(destiny_file)
-                  system2("pdfattach", args = c(preattach_file, attachment_file, destiny_file))
-                  unlink(preattach_file)
+            }
+
+            rmd <- sprintf("%s\n%s", rmd, REPORT$TEMPLATES$SESSION_INFO[[output_format]])
+
+            rmd <- sprintf("%s\n%s", rmd, REPORT$TEMPLATES$FOOTER[[output_format]])
+
+            rmd
+          })
+
+          log_inform("Rendering rmarkdown")
+          rendered_filename <- local({
+            report_dir <- tempfile(pattern = "report")
+            log_inform(sprintf("Creating report in %s", report_dir))
+            dir.create(report_dir)
+            curr_dir <- getwd()
+            on.exit(
+              {
+                if (dir.exists(report_dir)) {
+                  unlink(report_dir, recursive = TRUE)
+                  log_inform(sprintf("Removing dir %s", report_dir))
                 }
+                setwd(curr_dir)
+              },
+              add = TRUE
+            )
 
-                session_info_file <- "session_info.txt"
+            report_rmd <- file.path(report_dir, "report.Rmd")
+            writeLines(rmarkdown, report_rmd)
 
-                writeLines(
-                  capture.output(devtools::session_info()),
-                  session_info_file
+            zip_filename <- callr::r(
+              function(report_rmd, report_dir, filename) {
+                # All file writing happens in report_dir
+                # Directory is  removed after returning so there is no need of intermediate cleaning
+                setwd(report_dir)
+
+                error_msg <- character(0)
+                output_file <- tryCatch(
+                  rmarkdown::render(input = report_rmd, output_dir = report_dir),
+                  error = function(e) {
+                    error_msg <<- e$message
+                    warning(sprintf("Error rendering report in %s", report_dir))
+                    error_file_name <- file.path(report_dir, "error.txt")
+                    writeLines("Error rendering report", error_file_name)
+                    error_file_name
+                  }
                 )
+                if (endsWith(output_file, "pdf")) {
+                  attach_file <- function(attachment_file, destiny_file) {
+                    preattach_file <- paste0("preattach_", basename(destiny_file))
+                    file.copy(destiny_file, preattach_file)
+                    unlink(destiny_file)
+                    system2("pdfattach", args = c(preattach_file, attachment_file, destiny_file))
+                    unlink(preattach_file)
+                  }
 
-                attach_file(report_rmd, output_file)
-                attach_file(session_info_file, output_file)
-                unlink(session_info_file)
-              }
-              zip_filename <- utils::zip(filename, list.files(report_dir))
-              structure(
-                zip_filename,
-                error_msg = error_msg
-              )
-            },
-            args = list(report_rmd = report_rmd, report_dir = report_dir, filename = filename)
-          )
-          if (length(attr(zip_filename, "error_msg")) > 0) {
-            log_warn(sprintf("Error while rendering report: %s", attr(zip_filename, "error_msg")))
-          }
-          attr(zip_filename, "error_msg") <- NULL
-          zip_filename
+                  session_info_file <- "session_info.txt"
+
+                  writeLines(
+                    capture.output(devtools::session_info()),
+                    session_info_file
+                  )
+
+                  attach_file(report_rmd, output_file)
+                  attach_file(session_info_file, output_file)
+                  unlink(session_info_file)
+                }
+                zip_filename <- utils::zip(filename, list.files(report_dir))
+                structure(
+                  zip_filename,
+                  error_msg = error_msg
+                )
+              },
+              args = list(report_rmd = report_rmd, report_dir = report_dir, filename = filename)
+            )
+            if (length(attr(zip_filename, "error_msg")) > 0) {
+              log_warn(sprintf("Error while rendering report: %s", attr(zip_filename, "error_msg")))
+            }
+            attr(zip_filename, "error_msg") <- NULL
+            zip_filename
+          })
         })
       }
     )
