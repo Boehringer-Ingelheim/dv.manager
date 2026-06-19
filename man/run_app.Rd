@@ -72,10 +72,10 @@ When TRUE it will return the app. When FALSE it will return the options with whi
 
 \item{.bypass_checks}{by default it should always be FALSE. Only for advanced use. If set to TRUE, the app creator must make sure that
 application parameters and modules are correctly configured for all trials loaded in the application, otherwise application may fail. Configuration errors can be checked with a
-dry run. To do a dry run use the parameter \code{.launch = FALSE}.
-#' @param .bypass_filter_precomputation by default it should always be FALSE. Only for advanced use. If set to TRUE, filters are not precomputed per datasetlist.
-this increases the app start time and the time required to do a dataset switch.
 dry run. To do a dry run use the parameter \code{.launch = FALSE}.}
+
+\item{.bypass_filter_precomputation}{by default it should always be FALSE. Only for advanced use. If set to TRUE, filters are not precomputed per datasetlist.
+this increases the app start time and the time required to do a dataset switch.}
 }
 \description{
 This function serves as an entry point for the applications created by the user.
