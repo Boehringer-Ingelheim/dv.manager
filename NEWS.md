@@ -1,7 +1,9 @@
+# dv.manager 3.0.0-9009
+ - Allow bypassing filter data computation on app start
+
 # dv.manager 3.0.0-9008
  - Remove minimally used dependencies, `glue`, `cli`, `shinyjs`
     
-
 # dv.manager 3.0.0-9007
  - Filter data computation is done once on app start.
 
