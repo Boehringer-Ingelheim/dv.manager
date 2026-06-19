@@ -75,7 +75,7 @@ rpl_nulls_name <- function(l) {
 
 swap_val_names <- function(l) {
   if (any(purrr::map_lgl(l, is.null))) {
-    rlang::abort("NULL values are not allowed in l")
+    stop("NULL values are not allowed in l")
   }
 
   v <- if (is.list(l)) as.list(names(l)) else names(l) # maintain type
