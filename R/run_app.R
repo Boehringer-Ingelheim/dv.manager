@@ -32,6 +32,9 @@
 #' @param .bypass_checks by default it should always be FALSE. Only for advanced use. If set to TRUE, the app creator must make sure that
 #' application parameters and modules are correctly configured for all trials loaded in the application, otherwise application may fail. Configuration errors can be checked with a
 #' dry run. To do a dry run use the parameter `.launch = FALSE`.
+#' @param .bypass_filter_precomputation by default it should always be FALSE. Only for advanced use. If set to TRUE, filters are not precomputed per datasetlist.
+#' this increases the app start time and the time required to do a dataset switch.
+#'
 #' @inheritParams shiny::shinyApp
 #'
 #'
@@ -57,7 +60,8 @@ run_app <- function(
   enable_subgroup = FALSE,
   filter_default_state = NULL,
   .launch = TRUE,
-  .bypass_checks = FALSE
+  .bypass_checks = FALSE,
+  .bypass_filter_precomputation = FALSE
 ) {
   dataset_lists <- data
 
@@ -97,7 +101,9 @@ run_app <- function(
     check_data(dataset_lists)
     d <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
     d <- ungroup2df_datasets_dataset_lists(d)
-    d <- attach_computed_filter_data_as_attribute(d)
+    if (!.bypass_filter_precomputation) {
+      d <- attach_computed_filter_data_as_attribute(d)
+    }
     list(
       data = d,
       module_names = config[["module_info"]][["module_name"]]
