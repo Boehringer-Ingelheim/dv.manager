@@ -80,10 +80,14 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-  knitr::opts_chunk$set(
+knitr::opts_chunk$set(
   echo = FALSE,
-  out.width = "100%", 
-  tidy = TRUE
+  tidy = TRUE,
+  fig.width = 10,
+  fig.height = 6,
+  out.width = "90%",
+  dpi = 300,
+  dev = "cairo_pdf"     # vector output, sharp text
 )
 ```
 
