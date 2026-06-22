@@ -107,6 +107,7 @@ app_server_ <- function(input, output, session, opts) {
       ec$substituteMetaReactive(selected_dataset_list, function() {
         shinymeta::metaExpr({
           df <- ..(fn)
+          df <- add_date_range(df)
           attr(df, "dataset_list_name") <- ..(dln)
           df
         })
@@ -422,8 +423,8 @@ app_server_ <- function(input, output, session, opts) {
     paste0("Dataset name: ", input$selector)
   })
 
-  date_range <- shiny::reactive({
-    date_range <- attr(unfiltered_dataset_list(), "date_range")
+  date_range <- shinymeta::metaReactive({
+    date_range <- attr(..(unfiltered_dataset_list()), "date_range")
 
     if (!any(is.na(date_range))) {
       date_range <- format(date_range, "%Y-%b-%d (%Z)")
@@ -733,15 +734,36 @@ app_server_ <- function(input, output, session, opts) {
             sprintf("%s\n\n%s\n\n", section, note)
           })
 
+          log_inform("Creating date section")
+          date_section <- local({
+            section <- "## Data Modification Dates:"
+            section <- sprintf(
+              "%s\n\n **Date range**:\n\n`r %s`",
+              section,
+              get_code_in_context(date_range())
+            )
+
+            for (idx in seq_along(selected_dataset_list())) {
+              section <- sprintf(
+                "%s\n\n **name**: ``r names(selected_dataset_list)[[%d]]`` **modification time**: `r attr(selected_dataset_list[[%d]], \"meta\")[[\"mtime\"]]`",
+                section,
+                idx,
+                idx
+              )
+            }
+            note <- "These dates are calculated during report rendering."
+            sprintf("%s\n\n%s\n\n", section, note)
+          })
+
           log_inform("Creating rmarkdown")
           rmarkdown <- local({
             rmd <- REPORT$TEMPLATES$HEADER[[output_format]]
             rmd <- sprintf(
-              "%s\n# Data source\n**Data Snapshot Date:** %s\n\n%s\n\n```{r}\n%s\n```\n\n%s\n\n",
+              "%s\n# Data source\n\n```{r}\n%s\n```\n\n%s\n\n%s\n\n%s\n\n",
               rmd,
-              date_range(),
-              hardcoded_hash_section,
               data_code,
+              date_section,
+              hardcoded_hash_section,
               dynamic_hash_section
             )
 
