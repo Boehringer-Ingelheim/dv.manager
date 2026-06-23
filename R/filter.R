@@ -267,7 +267,7 @@ get_filter_data_dataset_list <- function(dataset_list) {
 
     res[[idx]][[FDF$VARIABLES]] <- get_single_filter_data(current_dataset)
 
-    ..t$add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[jdx]]), FALSE)
+    ..t$add_period(sprintf("get_single_filter_data (%s)", current_dataset_name), FALSE)
   }
 
   return(res)
