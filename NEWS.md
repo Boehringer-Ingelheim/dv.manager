@@ -1,41 +1,26 @@
-# dv.manager 3.0.0-9009
- - Allow bypassing filter data computation on app start
+# dv.manager 3.1.0
 
-# dv.manager 3.0.0-9008
- - Remove minimally used dependencies, `glue`, `cli`, `shinyjs`
-    
-# dv.manager 3.0.0-9007
- - Filter data computation is done once on app start.
+ - Performance: 
+    - Filter data computation is done once on app start.
+    - Improves performance of filter set up
+    - Moves early error feedback to run app and integrates early error feedback wrappers
+    - Includes code for instrumenting code for time measurements    
+    - Allow bypassing filter data computation, early error feedback and some checks on app start
+    - Includes an experimental `afmm` mask approach to improve memory performance
 
-# dv.manager 3.0.0-9006
- - Moves early error feedback to run app
+ - UI and functionality:
+   - Introduces collapsed tab menus
+   - Bookmarks filter type
 
-# dv.manager 3.0.0-9005
- - Integrates early error feedback wrappers
+ - Bugfix:
+    - Dataset labels were not retained after filtering
 
-# dv.manager 3.0.0-9004
- - Bugfix: dataset labels were not retained after filtering
-
-# dv.manager 3.0.0-9003
- - Introduces collapsed tab menus
-
-# dv.manager 3.0.0-9002
- - Bookmarks filter type
-
-# dv.manager 3.0.0-9001
- - Improves performance of filter set up
- - Includes code for instrumenting code for time measurements
-    - Includes an attempt of a graphical output in mod_app_info
- - Includes an experimental `afmm` mask approach to improve memory performance
- 
-# dv.manager 3.0.0-9000
- - Includes mod_app_info 
-
-# dv.manager 3.0.0-9000
-
-- Fixes dataset selection error when instead of using dataset objects, functions are passed instead. 
+ - Maintenance:
+   - Remove minimally used dependencies, `glue`, `cli`, `shinyjs`
+   - fixes dataset selection error when instead of using dataset objects, functions are passed instead. 
 
 # dv.manager 3.0.0
+
     - Upgrades Bootstrap to version 5.0.0
         - Switches to a green color palette
     - Moves the development filter into production, replacing dv.filter
