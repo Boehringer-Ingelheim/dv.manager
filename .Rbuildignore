@@ -19,3 +19,4 @@ node_modules*
 blockly_sandbox
 IGNORE
 makefile
+instrument.R
