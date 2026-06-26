@@ -12,11 +12,11 @@ test_that(
         "D2" = list(DC1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
       ),
       module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
-      filter_data = "DD1",
+      filter_dataset_name = "DD1",
       filter_key = "C",
       .launch = FALSE
     ) |>
-      expect_error(regexp = "D2 has no 'DD1' table")
+      expect_error(regexp = "D2 has no `DD1` table")
   }
 )
 
@@ -33,7 +33,7 @@ test_that(
         "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, B = 2))
       ),
       module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
-      filter_data = "DD1",
+      filter_dataset_name = "DD1",
       filter_key = "A",
       .launch = FALSE
     ) |>
@@ -61,7 +61,7 @@ test_that(
       filter_key = "C",
       .launch = FALSE
     ) |>
-      expect_error(regexp = "No filter_data specified!")
+      expect_error(regexp = "No filter_dataset_name specified!")
   }
 )
 
@@ -77,7 +77,7 @@ test_that(
         "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
       ),
       module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
-      filter_data = "DD1",
+      filter_dataset_name = "DD1",
       filter_key = "C",
       .launch = FALSE
     ) |>
@@ -97,7 +97,7 @@ test_that(
         "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
       ),
       module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
-      filter_data = "DD1",
+      filter_dataset_name = "DD1",
       filter_key = "A",
       .launch = FALSE
     ) |>
@@ -119,7 +119,7 @@ test_that(
         "D2" = list(DD1 = tibble::tibble(USUBJID = 1, B = 2), DD2 = tibble::tibble(A = 1, USUBJID = 2))
       ),
       module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
-      filter_data = "DD1",
+      filter_dataset_name = "DD1",
       .launch = FALSE
     )[["config"]][["filter_key"]] |>
       expect_equal("USUBJID") |>
@@ -165,7 +165,7 @@ test_that(
       run_app(
         data = datasets,
         module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
-        filter_data = "a",
+        filter_dataset_name = "a",
         filter_key = "mpg"
       ),
       "shiny.appobj"
@@ -205,7 +205,7 @@ test_that(
     run_app(
       data = datasets,
       module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
-      filter_data = "a",
+      filter_dataset_name = "a",
       filter_key = "mpg",
       .launch = FALSE
     ) |>
@@ -247,7 +247,7 @@ test_that(
     run_app(
       data = datasets,
       module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
-      filter_data = "a",
+      filter_dataset_name = "a",
       filter_key = "mpg",
       .launch = FALSE
     ) |>
@@ -262,7 +262,7 @@ test_that(
     run_app(
       data = NULL,
       module_list = list(),
-      filter_data = "",
+      filter_dataset_name = "",
       filter_key = ""
     ) |>
       expect_error(
@@ -282,7 +282,7 @@ test_that(
       data = list(),
       module_list = list("Empty" = mod_empty("a")),
       startup_msg = shiny::h1("Sample startup message"),
-      filter_data = "",
+      filter_dataset_name = "",
       filter_key = "USUBJID"
     ) |>
       expect_error(regexp = "Startup msg is not a shiny.tag or a shiny modal element")
@@ -291,7 +291,7 @@ test_that(
       data = list(),
       module_list = list("Empty" = mod_empty("a")),
       startup_msg = "Sample startup message",
-      filter_data = "",
+      filter_dataset_name = "",
       filter_key = "USUBJID"
     ) |>
       expect_error(regexp = "Startup msg is not a shiny.tag or a shiny modal element")
@@ -308,7 +308,7 @@ test_that(
       data = list(),
       module_list = list("Empty" = mod_empty("a")),
       startup_msg = shiny::modalDialog("Sample startup message"),
-      filter_data = "",
+      filter_dataset_name = "",
       filter_key = "USUBJID"
     ) |>
       expect_error(regexp = NA)

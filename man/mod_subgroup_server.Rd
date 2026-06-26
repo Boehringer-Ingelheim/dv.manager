@@ -30,7 +30,7 @@ dataset list. The returned function takes the same arguments as \code{apply_subg
 and returns a list with components:
 \itemize{
 \item \code{dataset_list} The input dataset list with subgroup variables added
-\item \code{errors} A list of error conditions encountered during application
+\item \code{error_list} A list of error conditions encountered during application
 }
 }
 \description{

@@ -90,7 +90,7 @@ local({
   args <- list(
     data = dataset_lists,
     module_list = module_list,
-    filter_data = "ds1",
+    filter_dataset_name = "ds1",
     filter_key = "a",
     title = "Custom title",
     startup_msg = shiny::modalDialog("Sample startup message")
@@ -263,7 +263,7 @@ local({
         expected <- dataset_lists[[current_name]]
         attr(expected, "dataset_list_name") <- current_name
         attr(expected, "date_range") <- c(date13, date14)
-        expect_identical(unfiltered_dataset_list, expected)
+        expect_identical(unfiltered_dataset_list, expected, ignore_attr = FC$PRECOMPUTED_FILTER_DATA)
       }
     )
 

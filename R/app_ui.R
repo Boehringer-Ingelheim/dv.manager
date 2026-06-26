@@ -8,12 +8,14 @@
 #' @keywords internal
 
 app_ui <- function(request_id) {
+  ..t$add_period("app_ui", TRUE)
+  on.exit(..t$add_period("app_ui", FALSE))
   if (is.environment(request_id)) {
-    log_inform("I am the ui of an app")
+    log_inform("Running app_ui as an app")
     id <- character(0)
   } else if (is.character(id)) {
     id <- request_id
-    log_inform(glue::glue("I am the ui of the module: {ns('')}"))
+    log_inform(sprintf("Running app_ui as a module with id: %s", ns(NULL)))
   } else {
     stop("Unknown value type in request_id")
   }
@@ -22,17 +24,16 @@ app_ui <- function(request_id) {
 
   ######################################
 
-  dataset_lists <- get_config("data")
+  dataset_lists <- get_config("afmm_static")[["data"]]
   module_info <- get_config("module_info")
-  subject_filter_dataset_name <- get_config("filter_data")
+  subject_filter_dataset_name <- get_config("filter_dataset_name")
   filter_info <- get_config("filter_info")
 
   filter_default_state <- filter_info[["filter_default_state"]]
   enable_subgroup <- get_config("subgroup")[["enable"]]
 
-  log_inform("Initializing HTML template UI")
-  log_inform(glue::glue("Available modules (N): {length(module_info[[\"ui_list\"]])}"))
-  log_inform(glue::glue("Dataset options (N): {length(data)}"))
+  log_inform(sprintf("Available modules (N): %d", length(module_info[["ui"]])))
+  log_inform(sprintf("Dataset options (N): %d", length(dataset_lists)))
 
   if (enable_subgroup) {
     filter_ui <- shiny::tabsetPanel(
@@ -54,21 +55,21 @@ app_ui <- function(request_id) {
       class = "menu-contents",
       shiny::div(
         id = ns("shiny_filter_panel"),
-        shinyjs::hidden(shiny::div(
+        shiny::div(
           id = ns("dataset_selector"),
           class = "ps-3 pe-3 pt-3 m-3 bg-light border rounded",
-          shiny::selectInput(ns("selector"), label = NULL, choices = names(dataset_lists))
-        )),
+          shiny::selectInput(ns("selector"), label = NULL, choices = names(dataset_lists)),
+          style = if (length(dataset_lists) <= 1) "display: none" else NULL
+        ),
         filter_ui
       )
     )
 
-  top_buttons <- shiny::div(
-    shiny::bookmarkButton("", class = "navbar-btn"),
+  top_buttons <- list(
+    shiny::bookmarkButton("", class = "navbar-btn")
     # Remove export functionality until new order
     # shiny::actionButton(ns("open_report_modal"), shiny::span(shiny::icon("download")), class = "navbar-btn"), # nolint
     # shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("question")), class = "navbar-btn"), # nolint
-    class = "dv_top_button_group"
   )
 
   dataset_name <-
@@ -116,7 +117,7 @@ app_ui <- function(request_id) {
     sidebar,
     list(
       overlay_script,
-      module_info[["ui_fn"]](ns, dataset_name, top_buttons)
+      compose_ui(module_info[["hierarchy"]], module_info[["ui"]], ns, dataset_name, top_buttons)
     )
   )
 }

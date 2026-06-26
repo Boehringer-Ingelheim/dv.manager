@@ -21,7 +21,6 @@ insert_header_add_resources <- function(app_title = NULL, ...) {
   shiny::tags$head(
     shiny::tags$title(app_title),
     shiny::tags[["link"]](rel = "icon", href = "icons/dv_icon.svg", sizes = "any", type = "image/svg+xml"),
-    shinyjs::useShinyjs(),
     add_manager_dependency(),
     add_scoper_dependency(),
     ...

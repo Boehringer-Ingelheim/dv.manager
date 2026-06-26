@@ -1,8 +1,12 @@
 get_pharmaverse_data <- function(dataset) {
-  if (!rlang::is_installed("pharmaverseadam")) stop("Please, install.package('pharmaverseadam')")
+  if (!requireNamespace("pharmaverseadam", quietly = TRUE)) {
+    stop("Please, install.package('pharmaverseadam')")
+  }
 
   res <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae, adlb = pharmaverseadam::adlb)[[dataset]]
-  if (is.null(res)) stop("Unknown dataset")
+  if (is.null(res)) {
+    stop("Unknown dataset")
+  }
 
   for (col in names(res)) {
     if (endsWith(col, "DTC")) {

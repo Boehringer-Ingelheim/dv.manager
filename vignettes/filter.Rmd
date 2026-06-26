@@ -89,7 +89,6 @@ You can also clear all filters or export the current filter state to a file.
 The exported file can then be reused in the application as a preset filter.
 
 ``` {r, eval = FALSE}
-
 dv.manager::run_app(
   ...,
   filter_default_state = "path/to/filter/file.json"
@@ -230,7 +229,7 @@ dv.manager::run_app(
   module_list = list(
     "Listing" = dv.listings::mod_listings("mod_listing", c("adsl", "adae"))
   ),
-  filter_data = "adsl",
+  filter_dataset_name = "adsl",
   filter_key = "USUBJID"
 )
 ```

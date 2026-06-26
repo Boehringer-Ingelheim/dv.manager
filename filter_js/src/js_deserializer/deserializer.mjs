@@ -1,30 +1,24 @@
 // node filter_js/src/js_deserializer/deserializer.js
 
+const decoder = new TextDecoder("utf-8");
 
 let buf_read_int32 = function(b_struct) {
-  const size_of_int32 = 4;
-
   const int = b_struct.data.getInt32(b_struct.offset, true); // true = little-endian
-  b_struct.offset += size_of_int32;
+  b_struct.offset += 4; // size of int32
 
   return int;
 };
 
-let buf_read_double = function(b_struct) {
-  const size_of_double = 8;
-
+let buf_read_double = function(b_struct) {  
   const double = b_struct.data.getFloat64(b_struct.offset, true); // true = little-endian
-  b_struct.offset += size_of_double;
+  b_struct.offset += 8; //size of float64
 
   return double;
 };
 
 let buf_read_str = function(b_struct) {
   const size_of_str = buf_read_int32(b_struct);
-
-  const bytes = new Uint8Array(b_struct.data.buffer, b_struct.data.byteOffset + b_struct.offset, size_of_str - 1); // remove null terminator
-  const str = new TextDecoder("utf-8").decode(bytes);
-
+  const str = decoder.decode(b_struct.bytes.subarray(b_struct.offset, b_struct.offset + size_of_str - 1));
   b_struct.offset += size_of_str;
   return str;
 };
@@ -43,12 +37,13 @@ let deserialize_binary_filter_data = function(buf) {
 
   let b_struct = {
     offset: 0,
-    data: new DataView(buf.buffer)
+    data: new DataView(buf.buffer, buf.byteOffset, buf.byteLength),
+    bytes: new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength)
   }
 
   const size_of_magic_num = 8;
   const bytes = new Uint8Array(b_struct.data.buffer, b_struct.data.byteOffset + b_struct.offset, size_of_magic_num); // remove null terminator
-  const magic = new TextDecoder("utf-8").decode(bytes);
+  const magic = decoder.decode(bytes);
   b_struct.offset += size_of_magic_num + 1;
   
   log("offset: ", b_struct.offset);
@@ -65,7 +60,7 @@ let deserialize_binary_filter_data = function(buf) {
   log("DSLS_LEN", dataset_lists_len);
 
   let deser = {
-    dataset_lists: []
+    dataset_lists: new Array(dataset_lists_len)
   };
 
   for (let dataset_list_idx = 0; dataset_list_idx < dataset_lists_len; dataset_list_idx++) {
@@ -76,7 +71,7 @@ let deserialize_binary_filter_data = function(buf) {
     
     let dataset_list = {
       name: dataset_list_name,
-      dataset_list: []
+      dataset_list: new Array(dataset_list_len)
     };
 
     for (let dataset_idx = 0; dataset_idx < dataset_list_len; dataset_idx++) {
@@ -96,21 +91,21 @@ let deserialize_binary_filter_data = function(buf) {
         name: dataset_name,
         label: dataset_label,
         nrow: dataset_nrow,
-        variables: []
+        variables: new Array(dataset_nvar)
       }
 
       for(let variable_idx = 0; variable_idx < dataset_nvar; variable_idx++){        
         let variable_name = buf_read_str(b_struct);
-        log("VN:", variable_name);
+        // log("VN:", variable_name);
 
         let variable_label = buf_read_str(b_struct);
-        log("VL:", variable_label);
+        // log("VL:", variable_label);
 
         let variable_class = buf_read_str(b_struct);
-        log("VC:", variable_class);
+        // log("VC:", variable_class);
 
         let variable_kind = buf_read_str(b_struct);
-        log("VK:", variable_kind);
+        // log("VK:", variable_kind);
 
         let NA_count = buf_read_int32(b_struct);
 
@@ -124,22 +119,23 @@ let deserialize_binary_filter_data = function(buf) {
 
         if(variable_kind === "categorical") {
           let value_len = buf_read_int32(b_struct);
-          variable.value = [];
-          variable.count = [];
+          variable.value = new Array(value_len);
+          variable.count = new Array(value_len);
           for(let value_idx = 0; value_idx < value_len; value_idx++) {
-            variable.value.push(buf_read_str(b_struct));
+            variable.value[value_idx] = buf_read_str(b_struct);
           }
 
-          for(let count_idx = 0; count_idx < value_len; count_idx++) {
-            variable.count.push(buf_read_int32(b_struct));
+          for(let count_idx = 0; count_idx < value_len; count_idx++) { // TODO: Bulk read could be possible if elements were aligned, not currently
+            variable.count[count_idx] = buf_read_int32(b_struct);
           }          
         } else if (variable_kind === "numerical") {
           variable.min = buf_read_double(b_struct);
           variable.max = buf_read_double(b_struct);
-          variable.density = [];
           let density_len = buf_read_int32(b_struct);
-          for(let density_idx = 0; density_idx < density_len; density_idx++) {
-            variable.density.push(buf_read_double(b_struct));
+          variable.density = new Array(density_len);
+          
+          for (let density_idx = 0; density_idx < density_len; density_idx++) {  // TODO: Bulk read could be possible if elements were aligned, not currently
+            variable.density[density_idx] = buf_read_double(b_struct);
           }
         } else if (variable_kind === "date") {
           variable.min = buf_read_double(b_struct);
@@ -152,16 +148,16 @@ let deserialize_binary_filter_data = function(buf) {
         } else {
           console.warn("Unknown kind variable: " + variable_name);         
         }
-        log("Pushing variable:", variable_name);
-        dataset.variables.push(variable);
-        log("Pushed");
+        // log("Pushing variable:", variable_name);
+        dataset.variables[variable_idx] = variable;
+        // log("Pushed");
       }
       log("Pushing dataset:", dataset_name);
-      dataset_list.dataset_list.push(dataset);
+      dataset_list.dataset_list[dataset_idx] = dataset;
       log("Pushed");
     }
     log("Pushing dataset_list:", dataset_list_name);
-    deser.dataset_lists.push(dataset_list);
+    deser.dataset_lists[dataset_list_idx] = dataset_list;
     log("Pushed");
   }
 
@@ -173,24 +169,17 @@ let deserialize_binary_filter_data = function(buf) {
 
 let R_numeric_date_JS_Date = function(days_since_epoch, default_if_nan) {
 
-  let MILISECONDS_PER_DAY = 86400000;    
+  let MILISECONDS_PER_DAY = 86400000;
   const date = new Date(days_since_epoch * MILISECONDS_PER_DAY);  
 
-  let res;
-
-  if(!isNaN(date.getTime())) {
-    res = date;
-  } else {
-    res = default_if_nan;
-  }
-  return(res);  
+  return isNaN(date.getTime()) ? default_if_nan : date 
 }
 
 let format_date_yyyy_mm_dd = function(date){
-  day = String(date.getDate()).padStart(2, '0');
-  month = String(date.getMonth() + 1).padStart(2, '0');
-  year = date.getFullYear();
-  formatted = `${year}-${month}-${day}`;
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const formatted = `${year}-${month}-${day}`;
   return(formatted);
 }
 

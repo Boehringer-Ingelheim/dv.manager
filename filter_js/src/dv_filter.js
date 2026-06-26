@@ -2071,7 +2071,7 @@ let update_filter_result_handler = function(msg, root_el){
   console.log(parsed_msg);
 
   let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
-  let current_dataset_list = get_filter_property(root_el, FC.PROPERTY.DATA).dataset_lists.find(obj=>obj.name === dataset_list_name);
+  let current_dataset_list = get_filter_property(root_el, FC.PROPERTY.DATA, clone = false).dataset_lists.find(obj=>obj.name === dataset_list_name);
 
   
   let row_count = parsed_msg.row_count; 
@@ -2202,7 +2202,7 @@ let init_filter_property_field = function(el) {
   get_root_el(el)[FC.PROPERTY.FIELD] = {};
 }
 
-const init = function(root_id, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_state_json_input_id, saved_filter_state_json_msg_input_id, export_button_id, filter_log_input_id) {  
+const init = function (root_id, filter_state_json, saved_filter_states_json, subject_dataset_name, filter_mode, filter_state_json_input_id, saved_filter_state_json_msg_input_id, filter_mode_input_id, export_button_id, filter_log_input_id) {  
   let filter_state = JSON.parse(filter_state_json);
   let saved_filter_states = JSON.parse(saved_filter_states_json);
 
@@ -2319,7 +2319,7 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
   static_ret[FC.MODE.BLOCKLY] = blockly_static_init(blockly_div, root_id);
   set_filter_property(root_el, FC.PROPERTY.STATIC_RET, static_ret);
   
-  select.value = FC.MODE.SIMPLE;
+  select.value = filter_mode;
   set_filter_property(root_el, FC.PROPERTY.FILTER_MODE, select.value);
 
   let dev_current_filter_div;
@@ -2351,7 +2351,8 @@ const init = function(root_id, filter_state_json, saved_filter_states_json, subj
 
   select.addEventListener('change', function(){
     set_filter_property(root_el, FC.PROPERTY.FILTER_MODE, select.value);
-    root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));    
+    root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));
+    Shiny.setInputValue(filter_mode_input_id, select.value, { priority: 'event' });    
   });
 
   root_el.addEventListener(FC.EVENT.NEW_FILTER_VALUE, function(event){

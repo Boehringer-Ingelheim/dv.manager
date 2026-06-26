@@ -36,20 +36,27 @@ test_that(
       )
     }
 
-    testing_options <- list(
+    module_info <- resolve_module_list(list(
+      "id 1" = mod_return_reactive(
+        mod_id = "mod_1"
+      ),
+      "id 2" = mod_identity(
+        value = "mod_1",
+        from = "module_output",
+        mod_id = "mod_2"
+      )
+    ))
+
+    afmm_static <- list(
       data = datasets,
-      filter_data = "a",
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
+      filter_dataset_name = "a",
       filter_key = "A",
-      module_info = resolve_module_list(list(
-        "id 1" = mod_return_reactive(
-          mod_id = "mod_1"
-        ),
-        "id 2" = mod_identity(
-          value = "mod_1",
-          from = "module_output",
-          mod_id = "mod_2"
-        )
-      )),
+      module_info = module_info,
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
     )
@@ -94,20 +101,27 @@ test_that(
       )
     }
 
-    testing_options <- list(
+    module_info <- resolve_module_list(list(
+      "id 1" = mod_return_static(
+        mod_id = "mod_1"
+      ),
+      "id 2" = mod_identity(
+        value = "mod_1",
+        from = "module_output",
+        mod_id = "mod_2"
+      )
+    ))
+
+    afmm_static <- list(
       data = datasets,
-      filter_data = "a",
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
+      filter_dataset_name = "a",
       filter_key = "A",
-      module_info = resolve_module_list(list(
-        "id 1" = mod_return_static(
-          mod_id = "mod_1"
-        ),
-        "id 2" = mod_identity(
-          value = "mod_1",
-          from = "module_output",
-          mod_id = "mod_2"
-        )
-      )),
+      module_info = module_info,
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
     )
@@ -199,15 +213,22 @@ test_that(
       )
     }
 
-    testing_options <- list(
+    module_info <- resolve_module_list(list(
+      "id 1" = mod_return_reactive("mod_1"),
+      "id 3" = mod_return_static("mod_3"),
+      "id 2" = mod_return_output("mod_2")
+    ))
+
+    afmm_static <- list(
       data = datasets,
-      filter_data = "a",
+      module_names = module_info[["module_name"]]
+    )
+
+    testing_options <- list(
+      afmm_static = afmm_static,
+      filter_dataset_name = "a",
       filter_key = "A",
-      module_info = resolve_module_list(list(
-        "id 1" = mod_return_reactive("mod_1"),
-        "id 3" = mod_return_static("mod_3"),
-        "id 2" = mod_return_output("mod_2")
-      )),
+      module_info = module_info,
       filter_info = list(filter_default_state = NULL),
       enable_subgroup = FALSE
     )

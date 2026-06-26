@@ -77,7 +77,7 @@ dv.manager::run_app(
     ),
     "Simple" = dv.manager::mod_simple("adsl", "filtered_dataset_list", "modSimp")
   ),
-  filter_data = "adsl",
+  filter_dataset_name = "adsl",
   filter_key = "USUBJID"
 )
 ```

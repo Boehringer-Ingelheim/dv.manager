@@ -53,15 +53,22 @@ test_that("integration with dv.loader;
     )
   }
 
-  testing_options <- list(
+  module_info <- resolve_module_list(list(
+    "identity" = mod_identity(
+      "unfiltered_dataset_list",
+      "id_1"
+    )
+  ))
+
+  afmm_static <- list(
     data = datasets,
-    filter_data = "mpg",
-    module_list = list(
-      "identity" = mod_identity(
-        "unfiltered_dataset_list",
-        "id_1"
-      )
-    ),
+    module_names = module_info[["module_name"]]
+  )
+
+  testing_options <- list(
+    afmm_static = afmm_static,
+    filter_dataset_name = "mpg",
+    module_info = module_info,
     filter_key = "car",
     filter_info = list(filter_default_state = NULL),
     enable_subgroup = FALSE
@@ -71,7 +78,7 @@ test_that("integration with dv.loader;
   attr(dated_dataset, "dataset_list_name") <- "mpg_carb"
   date_range <- attr(dated_dataset, "date_range")
   date_range <- format(date_range, "%Y-%b-%d (%Z)")
-  expected_date_string <- as.character(glue::glue("Dataset date: {date_range[1]}"))
+  expected_date_string <- as.character(sprintf("Dataset date: %s", date_range[1]))
 
   testServer(app_server_test(testing_options), {
     session$setInputs(selector = "mpg_carb")

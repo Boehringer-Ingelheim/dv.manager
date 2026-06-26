@@ -1,4 +1,26 @@
+# dv.manager 3.1.0
+
+ - Performance: 
+    - Filter data computation is done once on app start.
+    - Improves performance of filter set up
+    - Moves early error feedback to run app and integrates early error feedback wrappers
+    - Includes code for instrumenting code for time measurements    
+    - Allow bypassing filter data computation, early error feedback and some checks on app start
+    - Includes an experimental `afmm` mask approach to improve memory performance
+
+ - UI and functionality:
+   - Introduces collapsed tab menus
+   - Bookmarks filter type
+
+ - Bugfix:
+    - Dataset labels were not retained after filtering
+
+ - Maintenance:
+   - Remove minimally used dependencies, `glue`, `cli`, `shinyjs`
+   - fixes dataset selection error when instead of using dataset objects, functions are passed instead. 
+
 # dv.manager 3.0.0
+
     - Upgrades Bootstrap to version 5.0.0
         - Switches to a green color palette
     - Moves the development filter into production, replacing dv.filter

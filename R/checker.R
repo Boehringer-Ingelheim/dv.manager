@@ -6,126 +6,123 @@ check_resolved_modules <- function(resolved_module_list) {
 
   if (!all(is.character(resolved_module_list[["module_id"]]))) {
     msg <- "module_list has at least one module_id that is not of type character"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   if (any(duplicated(resolved_module_list[["module_id"]]))) {
     msg <- "module_list has repeated module_ids"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   if (any(nchar(resolved_module_list[["module_id"]]) == 0)) {
     msg <- "module ids must have at least one character"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   if (any(duplicated(resolved_module_list[["module_name"]]))) {
     msg <- "module_list has repeated module_names"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   return(resolved_module_list)
 }
 
 check_data <- function(data) {
+  # TODO: This function lets functions pass unchecked. It should be checked if these functions return lists of dataframes
+  # keep in mind that it should be possible to bypass this check.
   # NULL data is disallowed
   if (is.null(data)) {
     msg <- "data argument is NULL. If you are trying to run an application without data, use an empty list 'dv.manager::run_app(data = list(), ...)'" # nolint
-    rlang::abort(msg)
+    stop(msg)
   }
 
-  if (length(data) > 0) {
-    is_expected <- all(
-      purrr::map_lgl(
-        data,
-        function(el) {
-          if (is.list(el)) {
-            return(all(purrr::map_lgl(el, ~ is.data.frame(.x))))
-          }
-          if (is.function(el)) {
-            return(TRUE)
-          }
-          return(FALSE)
-        }
-      )
-    )
-
-    if (!is_expected) {
+  ok <- TRUE
+  for (idx in seq_along(data)) {
+    dataset_list <- data[[idx]]
+    if (is.list(dataset_list)) {
+      for (jdx in seq_along(dataset_list)) {
+        ok <- ok && is.data.frame(dataset_list[[jdx]])
+      }
+    } else if (!is.function(dataset_list)) {
+      ok <- FALSE
+    }
+    if (!ok) {
       msg <- "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes"
-      rlang::abort(msg)
+      stop(msg)
     }
   }
 
   # Check we are passing a named list
   if (!has_all_items_named(data)) {
     msg <- "All entries in data must be named"
-    rlang::abort(msg)
+    stop(msg)
   }
 
   data
 }
 
-check_filter_data <- function(filter_data, datasets) {
-  if (length(datasets) == 0) {
-    return(filter_data)
+check_filter_dataset_name <- function(filter_dataset_name, dataset_lists) {
+  # TODO it is possible to improve the feedback from this function. It stops in the first error found. We could check
+  # all of them at once. This way the app creator can correct all the errors in one go.
+
+  if (length(dataset_lists) == 0) {
+    return(filter_dataset_name)
   }
 
-  if (is.null(filter_data)) {
-    msg <- "No filter_data specified!"
-    rlang::abort(msg)
+  if (is.null(filter_dataset_name)) {
+    msg <- "No filter_dataset_name specified!"
+    stop(msg)
   }
 
-  filter_data_check <- purrr::map(
-    datasets,
-    function(.x) {
-      if (is.function(.x)) {
-        dataset_list <- .x()
-      } else {
-        dataset_list <- .x
-      }
-      filter_data %in% names(dataset_list)
+  error_messages <- character(0)
+
+  for (idx in seq_along(dataset_lists)) {
+    dataset_list <- dataset_lists[[idx]]
+    dataset_list_name <- names(dataset_lists)[[idx]]
+    if (is.function(dataset_list)) {
+      dataset_list <- dataset_list()
+    } else {
+      dataset_list <- dataset_list
     }
-  ) |>
-    purrr::keep(~ !.x)
 
-  if (length(filter_data_check) > 0) {
-    purrr::iwalk(
-      filter_data_check,
-      ~ rlang::abort(glue::glue("{.y} has no '{filter_data}' table"))
-    )
-    msg <- glue::glue("Not all datasets have a '{filter_data}' table")
-    rlang::abort(msg)
+    if (!filter_dataset_name %in% names(dataset_list)) {
+      stop(sprintf("%s has no `%s` table", dataset_list_name, filter_dataset_name))
+    }
   }
 
-  filter_data
+  filter_dataset_name
 }
 
-check_filter_key <- function(filter_key, datasets) {
-  if (length(datasets) == 0) {
+check_filter_key <- function(filter_key, dataset_lists) {
+  if (length(dataset_lists) == 0) {
     return(filter_key)
   }
 
   if (is.null(filter_key)) {
     msg <- "filter_key is not specified"
-    rlang::abort(msg)
+    stop(msg)
   }
 
-  filter_key_present <- all(
-    purrr::map_lgl(
-      datasets,
-      function(x) {
-        if (is.function(x)) {
-          d <- x()
-        } else {
-          d <- x
-        }
-        all(purrr::map_lgl(d, ~ filter_key %in% names(.x)))
+  filter_key_present <- TRUE
+
+  for (idx in seq_along(dataset_lists)) {
+    dataset_list <- dataset_lists[[idx]]
+    if (is.function(dataset_list)) {
+      dataset_list <- dataset_list()
+    } else {
+      dataset_list <- dataset_list
+    }
+
+    for (jdx in seq_along(dataset_list)) {
+      if (!filter_key %in% names(dataset_list[[jdx]])) {
+        filter_key_present <- FALSE
+        break
       }
-    )
-  )
+    }
+  }
+
   if (!filter_key_present) {
     msg <- "Selected filtering key is not present in all datasets"
-    rlang::abort(msg)
     stop(msg)
   } else {
     log_inform("Filter Key is present in all datasets")
@@ -138,7 +135,7 @@ check_meta_mtime_attribute <- function(datasets) {
   check_warning <- purrr::imap(
     datasets,
     function(x, y) {
-      log_inform(glue::glue("Checking date for dataset {y}"))
+      log_inform(sprintf("Checking date for dataset %s", y))
       if (is.function(x)) {
         d <- x()
       } else {
@@ -162,7 +159,7 @@ check_meta_mtime_attribute <- function(datasets) {
       warned_dataset,
       ~ {
         purrr::walk(.x[["warnings"]], function(wm) {
-          log_warn(glue::glue("{.y} -> {wm}"))
+          log_warn(sprintf("%s -> %s", .y, wm))
         })
       }
     )
@@ -179,7 +176,7 @@ check_startup_msg <- function(startup_msg) {
   is_modal <- purrr::pluck(startup_msg, "attribs", "class", .default = "not modal") != "modal"
   if (!is.null(startup_msg) && (!inherits(startup_msg, "shiny.tag") || is_modal)) {
     msg <- "Startup msg is not a shiny.tag or a shiny modal element"
-    rlang::abort(msg)
+    stop(msg)
   }
   startup_msg
 }
@@ -188,7 +185,7 @@ check_startup_msg <- function(startup_msg) {
 check_reload_period <- function(reload_period) {
   if (!is.null(reload_period) && (!is.numeric(reload_period) || reload_period < 0)) {
     msg <- "reload_period has to be a positive numeric value larger than zero or a lubridate duration object"
-    rlang::abort(msg)
+    stop(msg)
   }
   reload_period
 }

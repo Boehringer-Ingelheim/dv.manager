@@ -158,7 +158,7 @@ local({
           afmm = mod_afmm_export("afmm")
         ),
         enable_subgroup = TRUE,
-        filter_data = "dataset1",
+        filter_dataset_name = "dataset1",
         filter_key = "var1"
       )
 

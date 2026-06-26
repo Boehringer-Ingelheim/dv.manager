@@ -39,7 +39,7 @@ run_mock_app_tab_group <- function() {
         )
       )
     ),
-    filter_data = "adsl",
+    filter_dataset_name = "adsl",
     filter_key = "USUBJID"
   )
 }
@@ -173,21 +173,6 @@ resolve_module_list <- function(module_list) {
   res
 }
 
-
-process_module_list <- function(module_list) {
-  resolved_module_list <- resolve_module_list(module_list)
-
-  # We need the ns to be able to invoke all ui functions
-  # TODO: Consider removing namespacing it would make all these simpler
-
-  res <- resolved_module_list
-  res[["ui_fn"]] <- function(ns, footer, top_buttons) {
-    compose_ui(resolved_module_list[["hierarchy"]], resolved_module_list[["ui"]], ns, footer, top_buttons)
-  }
-
-  return(res)
-}
-
 compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
   mod_ui_containers <- vector(mode = "list", length = length(ui_fn_list))
   mod_ids <- names(ui_fn_list)
@@ -201,95 +186,117 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
     )
   }
 
-  buttons_hierarchy <- list()
-
-  for (idx in seq_along(hierarchy)) {
-    curr_el <- hierarchy[[idx]]
-    curr_el_id <- names(hierarchy)[[idx]]
-    is_el_root <- identical(curr_el[["kind"]], "root")
-    is_el_tab_group <- identical(curr_el[["kind"]], "tab_group")
-    is_el_module <- identical(curr_el[["kind"]], "module")
-
-    if (is_el_root || is_el_tab_group) {
-      curr_level <- list()
-      for (jdx in seq_along(curr_el[["children"]])) {
-        curr_child_id <- curr_el[["children"]][[jdx]]
-        curr_child <- hierarchy[[curr_child_id]]
-        curr_child_name <- curr_child[["name"]]
-        is_child_tab_group <- identical(curr_child[["kind"]], "tab_group")
-        is_child_module <- identical(curr_child[["kind"]], "module")
-        if (is_child_tab_group) {
-          curr_level[[jdx]] <- shiny::tags[["button"]](
-            "data-value" = curr_child_id,
-            "data-type" = "hier-button",
-            curr_child_name,
-            type = "button",
-            class = "dv_tab_activate_button btn btn-primary"
-          )
-        } else if (is_child_module) {
-          curr_level[[jdx]] <- shiny::tags[["button"]](
-            "data-value" = ns(curr_child_id),
-            "data-type" = "tab-button",
-            curr_child_name,
-            type = "button",
-            class = "dv_tab_activate_button btn btn-primary"
-          )
-        } else {
-          stop(paste("Unknown kind", idx, jdx))
-        }
-
-        if (jdx == 1) {
-          curr_level[[jdx]] <- htmltools::tagAppendAttributes(curr_level[[jdx]], class = "clicked")
-        }
-      }
-
-      buttons_hierarchy[[curr_el_id]] <- shiny::div("value" = curr_el_id, curr_level, class = "dv_button_level")
-
-      if (is_el_root) {
-        buttons_hierarchy[[curr_el_id]] <- htmltools::tagAppendAttributes(
-          buttons_hierarchy[[curr_el_id]],
-          class = "dv_root_button_level"
-        )
-      } else if (is_el_tab_group) {
-        buttons_hierarchy[[curr_el_id]] <- htmltools::tagAppendAttributes(
-          buttons_hierarchy[[curr_el_id]],
-          class = "dv_child_button_level"
-        )
-      } else {
-        stop(paste("Unknown kind", idx, jdx))
-      }
-    } else if (is_el_module) {
-      next
-    } else {
-      stop(paste("Unknown kind", idx))
-    }
-  }
-
   tabs <- shiny::div(class = "dv_tab_container", mod_ui_containers)
 
-  buttons_hierarchy_container <- shiny::div(
-    buttons_hierarchy,
-    class = "dv_button_container",
-    id = ns(ID$NAV_HEADER)
+  tab_menus_container <- shiny::div(class = "dv_tab_menu_container")
+
+  first_leaf <- local({
+    first_leaf <- "__tabset_0__"
+    while (hierarchy[[first_leaf]][["kind"]] != "module" && length(hierarchy[[first_leaf]][["children"]]) > 0) {
+      first_leaf <- hierarchy[[first_leaf]][["children"]][[1]]
+    }
+    if (hierarchy[[first_leaf]][["kind"]] != "module") {
+      first_leaf <- NA
+    }
+    first_leaf
+  })
+
+  default_tab <- shiny::restoreInput(
+    ns(ID$NAV_HEADER),
+    first_leaf
   )
 
-  default_tab <- shiny::restoreInput(ns(ID$NAV_HEADER), NA)
-  default_tab <- if (!default_tab %in% names(ui_fn_list)) NA else default_tab
-  if (!is.na(default_tab)) {
-    buttons_hierarchy_container <- htmltools::tagAppendAttributes(
-      buttons_hierarchy_container,
-      "default-tab" = default_tab
-    )
-  }
+  top_buttons_div <- shiny::div(
+    shiny::div(
+      id = ns("dv_expanded_tab_container"),
+      style = "display:inline",
+      shiny::div(
+        shiny::checkboxInput(ns("expanded_tab"), label = NULL, TRUE),
+        style = "display:none"
+      ),
+      shiny::tags[["label"]](
+        shiny::icon("compress"),
+        class = "btn btn-primary compress-icon",
+        "for" = ns("expanded_tab"),
+        title = "Collapse Navigation Bar"
+      ),
+      shiny::tags[["label"]](
+        shiny::icon("expand"),
+        class = "btn btn-primary expand-icon",
+        "for" = ns("expanded_tab"),
+        title = "Expand Navigation Bar"
+      )
+    ),
+    top_buttons,
+    class = "dv_top_button_group"
+  )
 
   header <- shiny::div(
-    buttons_hierarchy_container,
-    top_buttons,
+    tab_menus_container,
+    top_buttons_div,
+    id = ns(ID$NAV_HEADER),
     class = "dv_manager_top_bar"
   )
 
+  json_hierarchy <- character(length(hierarchy))
+  for (idx in seq_along(hierarchy)) {
+    entry <- hierarchy[[idx]]
+    parent_id <- if (!is.na(entry[["parent"]])) paste0('"', entry[["parent"]], '"') else "null"
+    kind <- if (!is.na(entry[["kind"]])) paste0('"', entry[["kind"]], '"') else "null"
+    name <- if (!is.na(entry[["name"]])) paste0('"', entry[["name"]], '"') else "null"
+    children <- if (entry[["kind"]] != "module" && length(entry[["children"]]) > 0) {
+      paste0(", \"children\":[", paste0("\"", ns(entry[["children"]]), "\"", collapse = ","), "]")
+    } else {
+      paste0(", \"children\":[]")
+    }
+
+    json_hierarchy[[idx]] <- paste0(
+      paste0("\"", names(hierarchy)[[idx]], "\":"),
+      "{",
+      "\"parent_id\":",
+      ns(parent_id),
+      ", \"kind\":",
+      kind,
+      ", \"name\":",
+      name,
+      children,
+      "}"
+    )
+  }
+
+  json_hierarchy <- paste0("{", paste0(json_hierarchy, collapse = ","), "}")
+  default_tab <- if (!is.na(default_tab)) {
+    paste0("\"", default_tab, "\"")
+  } else {
+    "null"
+  }
+
+  json_module_tab_selector_state <- paste0(
+    "{",
+    "\"default_tab\":",
+    default_tab,
+    ",",
+    "\"hierarchy\":",
+    json_hierarchy,
+    "}"
+  )
+
+  escape_special_chars <- function(x) {
+    y <- gsub("\\\\", "\\\\\\\\", x)
+    y <- gsub('"', '\\\\"', y)
+    y <- gsub("'", "\\\\'", y)
+    y <- gsub("\n", "\\\\n", y)
+    y <- gsub("\r", "\\\\r", y)
+    y <- gsub("\t", "\\\\t", y)
+    y
+  }
+
   script <- shiny::tags[["script"]](
-    sprintf("dv_tab.init(\"%s\")", ns(ID$NAV_HEADER))
+    sprintf(
+      "dv_tab.init('%s', '%s')",
+      ns(ID$NAV_HEADER),
+      escape_special_chars(json_module_tab_selector_state)
+    )
   )
 
   ui <- shiny::div(header, script, tabs, footer, class = "dv_main_panel")

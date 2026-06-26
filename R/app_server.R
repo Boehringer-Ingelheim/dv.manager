@@ -1,8 +1,8 @@
 app_server <- function(input = NULL, output = NULL, session = NULL) {
   opts <- list(
+    "afmm_static" = get_config("afmm_static"),
     "module_info" = get_config("module_info"),
-    "data" = get_config("data"),
-    "filter_data" = get_config("filter_data"),
+    "filter_dataset_name" = get_config("filter_dataset_name"),
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
@@ -15,9 +15,9 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
 
 app_server_module <- function(id) {
   opts <- list(
+    "afmm_static" = get_config("afmm_static"),
     "module_info" = get_config("module_info"),
-    "data" = get_config("data"),
-    "filter_data" = get_config("filter_data"),
+    "filter_dataset_name" = get_config("filter_dataset_name"),
     "filter_key" = get_config("filter_key"),
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
@@ -27,9 +27,11 @@ app_server_module <- function(id) {
   shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
 }
 
-# nolint start cyclocomp_linter
 app_server_ <- function(input, output, session, opts) {
   ns <- session[["ns"]]
+
+  ..t$add_period("app_server_", TRUE)
+  on.exit(..t$add_period("app_server_", FALSE), add = TRUE)
 
   # Inject tools available for the rest of modules
   session$userData$manager_utils <- list(
@@ -42,12 +44,15 @@ app_server_ <- function(input, output, session, opts) {
     }
   )
 
+  afmm_static <- opts[["afmm_static"]]
+  dataset_lists <- afmm_static[["data"]]
+  module_names <- afmm_static[["module_names"]]
+
   module_server <- opts[["module_info"]][["server"]]
   module_meta <- opts[["module_info"]][["meta"]]
-  module_names <- opts[["module_info"]][["module_name"]]
   module_hierarchy_list <- opts[["module_info"]][["hierarchy"]]
-  dataset_lists <- opts[["data"]]
-  subject_filter_dataset_name <- opts[["filter_data"]]
+
+  subject_filter_dataset_name <- opts[["filter_dataset_name"]]
   filter_key_var <- opts[["filter_key"]]
   startup_msg <- opts[["startup_msg"]]
   reload_period <- opts[["reload_period"]]
@@ -63,13 +68,9 @@ app_server_ <- function(input, output, session, opts) {
     shiny::showModal(startup_msg)
   }
 
-  log_inform(glue::glue("Filtering key: {filter_key_var}"))
+  log_inform(sprintf("Filtering key: %s", filter_key_var))
 
   url_parameters <- shiny::reactiveVal()
-
-  if (length(dataset_lists) > 1) {
-    shinyjs::toggle(id = "dataset_selector")
-  }
 
   shiny::observe({
     url_parameters(shiny::parseQueryString(session$clientData$url_search))
@@ -79,8 +80,10 @@ app_server_ <- function(input, output, session, opts) {
   })
 
   selected_dataset_list <- shiny::reactive({
-    dataset_list_name <- input$selector
+    dataset_list_name <- input[["selector"]]
     shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
+    ..t$add_period("selected_dataset_list", TRUE)
+    on.exit(..t$add_period("selected_dataset_list", FALSE))
     assert(dataset_list_name %in% names(dataset_lists))
 
     if (is.function(dataset_lists[[dataset_list_name]])) {
@@ -100,54 +103,79 @@ app_server_ <- function(input, output, session, opts) {
       subject_filter_dataset_name,
       filter_key_var
     )
+  } else {
+    apply_subgroups <- shiny::reactive(function(d, ...) {
+      list(result = list(dataset_list = d), error_list = new_error_list())
+    })
   }
 
   unfiltered_dataset_list <- shiny::reactive({
+    ..t$add_period("unfiltered_dataset_list", TRUE)
+    on.exit(..t$add_period("unfiltered_dataset_list", FALSE))
     r_selected_dataset_list <- selected_dataset_list()
+    r_apply_subgroups <- apply_subgroups()
+    res_apply_subgroups <- r_apply_subgroups(r_selected_dataset_list, subject_filter_dataset_name, filter_key_var)
 
-    if (enable_subgroup) {
-      r_apply_subgroups <- apply_subgroups()
-      res_apply_subgroups <- r_apply_subgroups(r_selected_dataset_list, subject_filter_dataset_name, filter_key_var)
-
-      for (error in res_apply_subgroups[["errors"]]$get_messages()) {
-        shiny::showNotification(error, type = "warning")
-      }
-
-      subgrouped_dataset_list <- res_apply_subgroups[["dataset_list"]]
-    } else {
-      subgrouped_dataset_list <- r_selected_dataset_list
+    for (error in res_apply_subgroups[["error_list"]]$get_messages()) {
+      shiny::showNotification(error, type = "warning")
     }
+
+    subgrouped_dataset_list <- res_apply_subgroups[["result"]][["dataset_list"]]
+
     attr(subgrouped_dataset_list, "dataset_list_name") <- attr(r_selected_dataset_list, "dataset_list_name")
     subgrouped_dataset_list
+  })
+
+  unfiltered_dataset_list_with_filter_info <- shiny::reactive({
+    ..t$add_period("unfiltered_dataset_list_with_filter_info", TRUE)
+    on.exit(..t$add_period("unfiltered_dataset_list_with_filter_info", FALSE))
+    # Place reqs here so all elements are synchronized before going forward
+    # Consider generation counters (Check current approach)
+    r_unfiltered_dataset_list <- shiny::isolate(unfiltered_dataset_list())
+    r_dataset_list_filter <- dataset_list_filter()
+    filter_info <- combine_filter_info(get_filter_info(
+      r_unfiltered_dataset_list,
+      r_dataset_list_filter,
+      filter_key_var
+    ))
+
+    shiny::req(
+      # Wait until filter info is ready
+      !filter_info[["error_list"]]$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
+        !filter_info[["error_list"]]$any_has_class(
+          FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class
+        )
+    )
+    res <- list(
+      unfiltered_dataset_list = r_unfiltered_dataset_list,
+      filter_info = filter_info[["result"]][["filter_info"]],
+      get_filtered_dataset = get_filtered_dataset
+    )
+
+    ..t$add_event("received unfiltered_dataset_list_with_filter_info")
+
+    res
+  })
+
+  filtered_dataset_list <- shiny::reactive({
+    ..t$add_period("filtered_dataset_list", TRUE)
+    on.exit(..t$add_period("filtered_dataset_list", FALSE))
+    r_unfiltered_dataset_list_with_filter_info <- unfiltered_dataset_list_with_filter_info()
+    fd <- get_filtered_dataset_list(r_unfiltered_dataset_list_with_filter_info)
+    ..t$add_event("received filtered_dataset_list")
+    fd
   })
 
   dataset_list_filter <- new_filter_server(
     ID$FILTER,
     unfiltered_dataset_list,
     subject_filter_dataset_name,
-    filtered_dataset_list
+    unfiltered_dataset_list_with_filter_info
   )
 
-  filtered_dataset_list <- shiny::reactive({
-    unfiltered_dataset_list_r <- shiny::isolate(unfiltered_dataset_list())
-    dataset_list_filter_r <- dataset_list_filter()
-
-    res <- apply_filter_to_dataset_list(unfiltered_dataset_list_r, dataset_list_filter_r, filter_key_var)
-
-    error_list <- res$error_list
-    fd <- res$fd
-
-    shiny::req(
-      !error_list$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
-        !error_list$any_has_class(FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class)
-    )
-
-    for (error_message in error_list$get_messages()) {
-      warning(error_message)
-      shiny::showNotification(error_message, type = "error")
-    }
-
-    fd
+  shiny::observeEvent(unfiltered_dataset_list_with_filter_info(), {
+    # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
+    session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
   })
 
   shiny::observeEvent(
@@ -160,7 +188,8 @@ app_server_ <- function(input, output, session, opts) {
       all_nm <- names(selected_dataset_list())
       current_tab <- input[[ID$NAV_HEADER]]
 
-      if (!is.null(current_tab)) {
+      exists_current_module <- !is.null(current_tab) && current_tab %in% names(module_names)
+      if (exists_current_module) {
         used_ds <- used_datasets[[current_tab]]
       } else {
         used_ds <- NULL
@@ -188,31 +217,42 @@ app_server_ <- function(input, output, session, opts) {
     as_dv_manager_module_output_safe_list(module_output)
   }
 
-  afmm <- list(
-    data = dataset_lists,
+  afmm_reactive <- list(
     unfiltered_dataset = shiny::reactive({
-      # log_warn("(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]].") # nolintr
+      log_warn(
+        "(Message for the module developer) afmm[[\"unfiltered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"unfiltered_dataset_list\"]]."
+      ) # nolintr
       unfiltered_dataset_list()
     }),
-    unfiltered_dataset_list = unfiltered_dataset_list,
     filtered_dataset = shiny::reactive({
-      #log_warn("(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]].") # nolintr
+      log_warn(
+        "(Message for the module developer) afmm[[\"filtered_dataset\"]] will be deprecated in future versions. Please replace by afmm[[\"filtered_dataset_list\"]]."
+      ) # nolintr
       filtered_dataset_list()
     }),
+    unfiltered_dataset_list = unfiltered_dataset_list,
     filtered_dataset_list = filtered_dataset_list,
+    unfiltered_dataset_list_with_filter_info = unfiltered_dataset_list_with_filter_info,
     url_parameters = url_parameters,
     dataset_name = shiny::reactive({
-      # log_warn("(Message for the module developer) afmm[[\"dataset_name\"]] will be deprecated in future versions. Please replace by afmm[[\"dataset_metadata\"]][[\"name\"]].") # nolintr
+      log_warn(
+        "(Message for the module developer) afmm[[\"dataset_name\"]]() will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_plus_info\"]]()[[\"unfiltered_dataset_list\"]], \"dataset_list_name\")."
+      )
       input$selector
     }),
     dataset_metadata = list(
       name = shiny::reactive({
+        log_warn(
+          "(Message for the module developer) afmm[[\"dataset_metadata\"]][[\"name\"]]() will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_plus_info\"]]()[[\"unfiltered_dataset_list\"]], \"dataset_list_name\")."
+        ) # nolintr
         attr(unfiltered_dataset_list(), "dataset_list_name")
       }),
-      date_range = shiny::reactive(attr(unfiltered_dataset_list(), "date_range"))
+      date_range = shiny::reactive({
+        "(Message for the module developer) afmm[[\"dataset_metadata\"]][[\"date_range\"]] will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_plus_info\"]]()[[\"unfiltered_dataset_list\"]], \"date_range\")."
+        attr(unfiltered_dataset_list(), "date_range")
+      })
     ),
     module_output = module_output_fn,
-    module_names = module_names,
     utils = list(
       switch2 = function(selected) {
         .Defunct(
@@ -261,24 +301,32 @@ app_server_ <- function(input, output, session, opts) {
     )
   )
 
-  used_datasets <- list()
+  afmm <- c(
+    afmm_static,
+    afmm_reactive
+  )
 
+  used_datasets <- list()
   module_output <- list()
+
   for (idx in seq_along(module_server)) {
     fn <- module_server[[idx]]
     id <- names(module_server)[[idx]]
+
+    ..t$add_period(id, TRUE)
 
     assert(is.character(id), "id must be a character")
     assert(is.function(fn), "fn must be a function")
 
     module_output[[id]] <- fn(afmm)
     used_datasets[[id]] <- module_meta[[id]][["dataset_info"]][["all"]]
+    ..t$add_period(id, FALSE)
   }
 
   # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
   if (length(dataset_lists) > 0) {
     # Otherwise when no dataset_list is loaded in the app the overlay remains in screen
-    shiny::observeEvent(filtered_dataset_list(), {
+    shiny::observeEvent(unfiltered_dataset_list_with_filter_info(), {
       session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
     })
   } else {
@@ -297,12 +345,12 @@ app_server_ <- function(input, output, session, opts) {
     if (!any(is.na(date_range))) {
       date_range <- format(date_range, "%Y-%b-%d (%Z)")
       if (date_range[1] != date_range[2]) {
-        date_string <- glue::glue("{date_range[1]} - {date_range[2]}")
+        date_string <- sprintf("%s - %s", date_range[1], date_range[2])
       } else {
-        date_string <- glue::glue("{date_range[1]}")
+        date_string <- date_range[1]
       }
     } else {
-      date_string <- glue::glue("Date unavailable")
+      date_string <- "Date unavailable"
     }
     paste0("Dataset date: ", date_string)
   })
@@ -313,8 +361,6 @@ app_server_ <- function(input, output, session, opts) {
     shiny::showModal(create_info_modal(session = session, input = input, ns = ns))
   })
 }
-
-# nolint end cyclocomp_linter
 
 # Convoluted way of having a testable server function
 # TestServer reads the caller environment
