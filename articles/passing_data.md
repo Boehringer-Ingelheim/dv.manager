@@ -6,7 +6,6 @@ In the following app you can select a value in one the modules and use
 its value in another module.
 
 ``` r
-
 com_test_UI <- function(id, choices = c(1, 2, 3), message) {
   # nolint
   ns <- shiny::NS(id)
@@ -64,7 +63,7 @@ dv.manager::run_app(
     ),
     "Simple" = dv.manager::mod_simple("adsl", "filtered_dataset_list", "modSimp")
   ),
-  filter_data = "adsl",
+  filter_dataset_name = "adsl",
   filter_key = "USUBJID"
 )
 ```

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -222,7 +222,7 @@ explained in <code><a href="../articles/arguments_from_module_manager.html">vign
 <span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"DS"</span> <span class="op">=</span> <span class="va">dataset</span><span class="op">)</span>,</span>
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
-<span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span></span>
+<span>  filter_dataset_name <span class="op">=</span> <span class="st">"adsl"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Also notice how <strong>dv.manager</strong> provides us with a
 <strong>dv.filter</strong> on the left-hand side and a module selection
@@ -346,7 +346,7 @@ new data set to the data set list.</p>
 <span><span class="fu">dv.manager</span><span class="fu">::</span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"DS1"</span> <span class="op">=</span> <span class="va">datasets</span><span class="op">)</span>,</span>
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
-<span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span></span>
+<span>  filter_dataset_name <span class="op">=</span> <span class="st">"adsl"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Please, notice that the module resets its interface whenever we
 change the data table. This occurs because we observe a change in the

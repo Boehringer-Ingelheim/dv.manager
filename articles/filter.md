@@ -67,7 +67,7 @@ example](images/simple_filter.gif)](images/simple_filter.gif)
 
 Notice filters can be collapsed by clicking the dataset name.
 
-**Note:**\
+**Note:**  
 Datasets can be assigned a human readable label by adding an attribute
 `label` to the datasets inside a dataset_list.
 
@@ -79,7 +79,6 @@ to a file. The exported file can then be reused in the application as a
 preset filter.
 
 ``` r
-
 dv.manager::run_app(
   ...,
   filter_default_state = "path/to/filter/file.json"
@@ -225,7 +224,6 @@ You must enter at least three characters before the search will begin.
 Below is an example application that allows testing the Advanced filter:
 
 ``` r
-
 # Note ::: is used as several of the functions are not exported yet
 # until a final version of the filter is provided
 
@@ -243,7 +241,7 @@ dv.manager::run_app(
   module_list = list(
     "Listing" = dv.listings::mod_listings("mod_listing", c("adsl", "adae"))
   ),
-  filter_data = "adsl",
+  filter_dataset_name = "adsl",
   filter_key = "USUBJID"
 )
 ```

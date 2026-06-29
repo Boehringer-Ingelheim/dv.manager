@@ -14,7 +14,6 @@ Opposed to pure Shiny modules, DaVinci modules are defined in a single
 call such as the one created in the main example of this documentation.
 
 ``` r
-
 data <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 
 module_list <- list(
@@ -27,7 +26,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -43,8 +42,8 @@ a list containing:
 See below an example with a simple module
 
 ``` r
-
-table_UI <- function(id) { # nolint
+table_UI <- function(id) {
+  # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     DT::DTOutput(ns("table"))

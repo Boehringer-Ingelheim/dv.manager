@@ -10,7 +10,8 @@ run_app(
   data = NULL,
   module_list = list(),
   title = "Untitled",
-  filter_data = NULL,
+  filter_data,
+  filter_dataset_name = NULL,
   filter_key = if (!is.null(data)) {
      "USUBJID"
  } else {
@@ -23,7 +24,9 @@ run_app(
   enable_dataset_filter = NULL,
   enable_subgroup = FALSE,
   filter_default_state = NULL,
-  .launch = TRUE
+  .launch = TRUE,
+  .bypass_checks = FALSE,
+  .bypass_filter_precomputation = FALSE
 )
 ```
 
@@ -53,14 +56,18 @@ run_app(
 
 - filter_data:
 
-  a string indicating which of the loaded datasets is used for
+  ( **DEPRECATED** , see `filter_dataset_name`)
+
+- filter_dataset_name:
+
+  a string indicating the name of the dataset used for population
   filtering.
 
 - filter_key:
 
   a string specifying a common field across all datasets that will be
-  used to expand the filtering. Default = "USUBJID" or NULL if no data =
-  NULL
+  used for population filtering. Default = "USUBJID" or NULL if no data
+  = NULL
 
 - startup_msg:
 
@@ -84,13 +91,11 @@ run_app(
 
 - filter_type:
 
-  **DEPRECATED** Indicates which filter type, `simple`, `datasets`,
-  `development`, will be used in the application.
+  ( **DEPRECATED** )
 
 - enable_dataset_filter:
 
-  **DEPRECATED** A boolean flag indicating if dataset filters are
-  enabled. The default value is FALSE.
+  ( **DEPRECATED** )
 
 - enable_subgroup:
 
@@ -108,3 +113,18 @@ run_app(
   by default it should always be TRUE. It should only be false for
   debugging and testing. When TRUE it will return the app. When FALSE it
   will return the options with which the app will be launched.
+
+- .bypass_checks:
+
+  by default it should always be FALSE. Only for advanced use. If set to
+  TRUE, the app creator must make sure that application parameters and
+  modules are correctly configured for all trials loaded in the
+  application, otherwise application may fail. Configuration errors can
+  be checked with a dry run. To do a dry run use the parameter
+  `.launch = FALSE`.
+
+- .bypass_filter_precomputation:
+
+  by default it should always be FALSE. Only for advanced use. If set to
+  TRUE, filters are not precomputed per datasetlist. this increases the
+  app start time and the time required to do a dataset switch.

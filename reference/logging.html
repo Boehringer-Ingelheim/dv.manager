@@ -9,7 +9,7 @@ Please refer to vignette("logging").'></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,17 +71,7 @@ Please refer to <code><a href="../articles/logging.html">vignette("logging")</a>
 <span></span>
 <span><span class="fu">log_default_handlers</span><span class="op">(</span>level <span class="op">=</span> <span class="fl">999</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">log_add_date</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">log_add_short_sess_id</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span></span>
-<span></span>
 <span><span class="fu">log_test_level</span><span class="op">(</span><span class="va">cnd</span>, <span class="va">level</span>, .default <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">log_format</span><span class="op">(</span><span class="va">cnd</span>, <span class="va">...</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">log_add_sess_id</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">log_add_ns</span><span class="op">(</span><span class="va">cnd</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">log_get_level_list</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -116,10 +106,6 @@ Please refer to <code><a href="../articles/logging.html">vignette("logging")</a>
 <dd><p><code>[logical(1)]</code></p>
 <p>default behavior when level is not found in the condition</p></dd>
 
-
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>parameter passed to glue</p></dd>
-
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -131,12 +117,7 @@ Please refer to <code><a href="../articles/logging.html">vignette("logging")</a>
 <ul><li><p><code>log_activate()</code>: Activate logging</p></li>
 <li><p><code>log_deactivate()</code>: deactivate logging</p></li>
 <li><p><code>log_default_handlers()</code>: get default handlers</p></li>
-<li><p><code>log_add_date()</code>: add date field to a condition</p></li>
-<li><p><code>log_add_short_sess_id()</code>: add short_sess_id to a condition</p></li>
 <li><p><code>log_test_level()</code>: Tests if the cnd level is lower than the logger level</p></li>
-<li><p><code>log_format()</code>: creates a log string according to a format.</p></li>
-<li><p><code>log_add_sess_id()</code>: add sess_id to a condition</p></li>
-<li><p><code>log_add_ns()</code>: add ns to a condition</p></li>
 <li><p><code>log_get_level_list()</code>: List of levels in the logger</p></li>
 <li><p><code>log_use_log()</code>: Adds the utils_logging file to the package</p></li>
 </ul></div>

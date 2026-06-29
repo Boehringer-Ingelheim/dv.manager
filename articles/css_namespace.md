@@ -11,14 +11,12 @@ There are multiple ways of adding custom CSS styles to a Shiny module:
 1.  insert the style at the tag level, through the style attribute
 
 ``` r
-
 p(style = "color:red;", "Red text")
 ```
 
 2.  insert the style at the `head` level, through the style tag
 
 ``` r
-
 ui <- fluidPage(
   tags$head(
     tags$style(HTML("
@@ -36,7 +34,6 @@ ui <- fluidPage(
 1.  Insert the style in the `head` of the HTML page
 
 ``` r
-
 ui <- fluidPage(
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "custom_file.css")
@@ -47,7 +44,6 @@ ui <- fluidPage(
 2.  Insert the style via `includeCSS()` function call
 
 ``` r
-
 ui <- fluidPage(
   includeCSS("www/custom_file.css")
 )
@@ -73,7 +69,6 @@ application unintentionally).
     pointing to that file
 
 ``` r
-
 ui <- function(id) {
   dependency <- htmltools::htmlDependency(
     name = "custom-package_name_dep", # use a name that includes your package name,
@@ -94,7 +89,6 @@ documentation page.
 3.  Attach the dependency variable to the UI structure. For example:
 
 ``` r
-
 ui <- function(id) {
   dependency <- htmltools::htmlDependency(
     # ...

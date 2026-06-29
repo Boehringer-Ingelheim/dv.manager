@@ -7,7 +7,6 @@ duration after which the datasets should be reloaded via the
 `reload_period` parameter.
 
 ``` r
-
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
@@ -17,7 +16,7 @@ dv.manager::run_app(
 
 The `reload_data` parameter is specified as either a lubridate object to
 specify a duration or a positive numeric value which then is interpreted
-as a lubridate duration object in days.\
+as a lubridate duration object in days.  
 By default the **dv.manager** does not reload the datasets after a
 specific time, as the `reload_data` parameter is NULL.
 

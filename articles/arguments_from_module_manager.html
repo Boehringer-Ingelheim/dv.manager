@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -190,7 +190,7 @@ dataset.</p>
 <span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">data_list</span>,</span>
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
-<span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span>,</span>
+<span>  filter_dataset_name <span class="op">=</span> <span class="st">"adsl"</span>,</span>
 <span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>When creating the module list we can select which of the tables
@@ -225,7 +225,7 @@ toggling the logical <code>filtered</code> parameter.</p>
 <span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">data_list</span>,</span>
 <span>  module_list <span class="op">=</span> <span class="va">module_list</span>,</span>
-<span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span>,</span>
+<span>  filter_dataset_name <span class="op">=</span> <span class="st">"adsl"</span>,</span>
 <span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>A note on reactives</strong></p>
@@ -276,7 +276,7 @@ does not differ from usual reactive programming.</p>
 <span>  module_list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    <span class="st">"Dataset Name"</span> <span class="op">=</span> <span class="fu">mod_dataset_name</span><span class="op">(</span><span class="st">"mod1"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  filter_data <span class="op">=</span> <span class="st">"adsl"</span>,</span>
+<span>  filter_dataset_name <span class="op">=</span> <span class="st">"adsl"</span>,</span>
 <span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Note how in this case we did not manipulate the dataset_name and
@@ -358,7 +358,7 @@ value from another module.</p>
 <span>      mod_id <span class="op">=</span> <span class="st">"mod_2"</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  filter_data <span class="op">=</span> <span class="st">""</span></span>
+<span>  filter_dataset_name <span class="op">=</span> <span class="st">""</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>See how, we wrap everything in a reactive, make the call to
 module_output and then resolve the reactive once we have subsetted. Note
@@ -417,7 +417,7 @@ programmatic manner.</p>
 <span>    <span class="st">"Mod 1"</span> <span class="op">=</span> <span class="fu"><a href="../reference/mod_switch.html">mod_switch</a></span><span class="op">(</span><span class="st">"Mod 1"</span>, <span class="st">"mod2"</span>, <span class="st">"mod1"</span><span class="op">)</span>,</span>
 <span>    <span class="st">"Mod 2"</span> <span class="op">=</span> <span class="fu"><a href="../reference/mod_switch.html">mod_switch</a></span><span class="op">(</span><span class="st">"Mod 2"</span>, <span class="st">"mod1"</span>, <span class="st">"mod2"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  filter_data <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  filter_dataset_name <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  filter_key <span class="op">=</span> <span class="st">"USUBJID"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>

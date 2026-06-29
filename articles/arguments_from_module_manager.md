@@ -47,7 +47,6 @@ Firstly, we will declare a simple module that creates a table, and a
 dataset. These will be the basis for our examples.
 
 ``` r
-
 # Module
 table_ui <- function(id) {
   ns <- shiny::NS(id)
@@ -78,7 +77,6 @@ table_server <- function(id, dataset) {
 Below we can see a wrapper that allow us to access the filtered dataset.
 
 ``` r
-
 mod_table <- function(table_name, mod_id) {
   mod <- list(
     ui = table_ui,
@@ -103,7 +101,7 @@ module_list <- list(
 run_app(
   data = data_list,
   module_list = module_list,
-  filter_data = "adsl",
+  filter_dataset_name = "adsl",
   filter_key = "USUBJID"
 )
 ```
@@ -115,7 +113,6 @@ select either the filtered or unfiltered dataset input by toggling the
 logical `filtered` parameter.
 
 ``` r
-
 mod_table <- function(table_name, filtered = FALSE, mod_id) {
   mod <- list(
     ui = table_ui,
@@ -142,7 +139,7 @@ module_list <- list(
 run_app(
   data = data_list,
   module_list = module_list,
-  filter_data = "adsl",
+  filter_dataset_name = "adsl",
   filter_key = "USUBJID"
 )
 ```
@@ -161,7 +158,6 @@ does not differ from usual reactive programming.
 Find below an example on how to access the dataset_name
 
 ``` r
-
 dataset_name_UI <- function(id) {
   # nolint
   ns <- shiny::NS(id)
@@ -197,7 +193,7 @@ run_app(
   module_list = list(
     "Dataset Name" = mod_dataset_name("mod1")
   ),
-  filter_data = "adsl",
+  filter_dataset_name = "adsl",
   filter_key = "USUBJID"
 )
 ```
@@ -225,7 +221,6 @@ receives a value and displays it. In this case we will receive that
 value from another module.
 
 ``` r
-
 com_UI <- function(id, choices = c(1, 2, 3), message) {
   # nolint
   ns <- shiny::NS(id)
@@ -282,7 +277,7 @@ run_app(
       mod_id = "mod_2"
     )
   ),
-  filter_data = ""
+  filter_dataset_name = ""
 )
 ```
 
@@ -302,7 +297,6 @@ cases as it is just a list of functions.
 manner.
 
 ``` r
-
 ########### Switch module
 
 switch_UI <- function(id, name) {
@@ -344,7 +338,7 @@ run_app(
     "Mod 1" = mod_switch("Mod 1", "mod2", "mod1"),
     "Mod 2" = mod_switch("Mod 2", "mod1", "mod2")
   ),
-  filter_data = "",
+  filter_dataset_name = "",
   filter_key = "USUBJID"
 )
 ```

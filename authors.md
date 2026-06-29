@@ -12,11 +12,11 @@
 ## Citation
 
 Morís Fernández L, Voicu S (2026). *dv.manager: DaVinci Module Manager*.
-R package version 3.0.0.
+R package version 3.1.0.
 
     @Manual{,
       title = {dv.manager: DaVinci Module Manager},
       author = {Luis {Morís Fernández} and Sorin Voicu},
       year = {2026},
-      note = {R package version 3.0.0},
+      note = {R package version 3.1.0},
     }

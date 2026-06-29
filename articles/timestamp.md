@@ -9,7 +9,6 @@ list and that it has an entry `mtime` which contains a POSIXct date
 time.
 
 ``` r
-
 data <- list(
   dummy = list(
     adsl = tibble::tibble(
@@ -26,7 +25,7 @@ attr(data[["dummy"]][["adsl"]], "meta") <- list(mtime = as.POSIXct("2023-02-28 1
 dv.manager::run_app(
   data = data,
   module_list = list(),
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -37,7 +36,6 @@ example below, and it is necessary to keep track of it and reset it when
 needed.
 
 ``` r
-
 data <- list(
   dummy = list(
     adsl = tibble::tibble(
@@ -67,6 +65,6 @@ attr(data[["dummy"]][["adsl"]], "meta") <- adsl_date
 dv.manager::run_app(
   data = data,
   module_list = list(),
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```

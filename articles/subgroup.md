@@ -1,6 +1,6 @@
 # (DEVELOPMENT) Subgrouping
 
-**Note:**\
+**Note:**  
 This feature is currently under development. Its behaviour may change
 without notice.
 
@@ -57,7 +57,7 @@ It is possible to create a subgroup with more than two categories.
 - All subjects not included in any of the categories will automatically
   be assigned to the last one.
 
-  **Note:**\
+  **Note:**  
   Subjects cannot belong to two subgroups at once.
 
 In the image we create a subgroup with three categories **\>80**,

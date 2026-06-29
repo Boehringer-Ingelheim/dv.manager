@@ -47,7 +47,7 @@ dataset list. The returned function takes the same arguments as
 
 - `dataset_list` The input dataset list with subgroup variables added
 
-- `errors` A list of error conditions encountered during application
+- `error_list` A list of error conditions encountered during application
 
 ## Details
 

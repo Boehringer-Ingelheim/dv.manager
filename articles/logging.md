@@ -3,53 +3,29 @@
 ## How to use it
 
 You can start using the logger simply by activating it and sending a
-message.
+message. Notice we are using internal function `:::` as the loggers are
+not exported by dv.manager. See in the sections below how you can use
 
 ``` r
-
 dv.manager::log_activate()
-rlang::inform("Logged message")
+message("Logged message")
 dv.manager::log_deactivate()
 ```
 
 In its default state, the logger will capture and decorate any ‘message’
-or ‘warning’ condition. Simply put, any message you send using
-`message`, `warning`,
+or ‘warning’ condition. Simply put, any message you send using `message`
+or `warning` or other packages sending signaling similar conditions
 [`rlang::inform`](https://rlang.r-lib.org/reference/abort.html) and
 [`rlang::warn`](https://rlang.r-lib.org/reference/abort.html).
-
-## Using logging levels
-
-The logger can have different print granularities depending on the
-logging level selected. A different level can be specified in each of
-the logging messages sent by including a logging level field in it.
-
-``` r
-
-dv.manager::log_activate(dv.manager:::log_default_handlers(level = "info"))
-rlang::inform("This will be printed", level = "info")
-rlang::inform("This will not", level = "debug")
-dv.manager::log_deactivate()
-```
-
-The logging levels and their numerical value can be checked with:
-
-``` r
-
-dv.manager::log_get_level_list()
-```
 
 ## Logging messages sent from your module
 
 A common use case will be using the logger to send messages from inside
-your module. To do this you can include the package name as an argument
-when you send the message. This can be done in a simple way using
-`rlang`
+your module.
 
 ``` r
-
 dv.manager::log_activate()
-rlang::inform("An inform with package name", package = "my_package")
+message("An inform")
 dv.manager::log_deactivate()
 ```
 
@@ -61,20 +37,40 @@ your package.
 You can also call `log_use_log` from `dv.manager` in the root of the
 package containing the module. This will add a file to your `R/`
 directory with two convenience functions. These convenience functions
-`log_inform` and `log_warn` are aliases of `rlang` that also
-automatically add the package name and require the option
+`log_inform` and `log_warn` create `message` and `warning` conditions
+that also automatically add the package name and require the option
 `dv.logging.active` to be set to `TRUE`. From now on these function will
 be used. Notice in some of the examples we use them with a `:::` as they
 are internal to the `dv.manager` and are not exported.
 
 ``` r
-
 # Will create an R/utils_logging.R file with two convenience functions
 dv.manager::log_use_log()
+options("dv.logging.active" = TRUE)
 dv.manager::log_activate()
 log_inform("An inform with package name")
 log_warn("A warning with package name")
 dv.manager::log_deactivate()
+```
+
+## Using logging levels
+
+The logger can have different print granularities depending on the
+logging level selected. A different level can be specified in each of
+the logging messages sent by including a logging level field in it.
+
+``` r
+options("dv.logging.active" = TRUE)
+dv.manager::log_activate(dv.manager:::log_default_handlers(level = "info"))
+dv.manager:::log_inform("This will be printed", level = "info")
+dv.manager:::log_inform("This will not", level = "debug")
+dv.manager::log_deactivate()
+```
+
+The logging levels and their numerical value can be checked with:
+
+``` r
+dv.manager::log_get_level_list()
 ```
 
 ## Advanced logging
@@ -88,10 +84,7 @@ log the messages, warnings and/or errors as specified by the handlers.
 
 This is a low level logging and that makes it very flexible.
 
-By default, the condition will contain the same fields as any standard
-[`rlang::inform`](https://rlang.r-lib.org/reference/abort.html) or
-[`rlang::warn`](https://rlang.r-lib.org/reference/abort.html) being the
-most important:
+By default, the condition will contain these fields:
 
 - message: \[character(1)\] The message to be logged
 
@@ -116,30 +109,77 @@ before formatting:
 The default handlers present and format this information.
 
 ``` r
-
 log_default_handlers <- function(level = 999) {
-  format_str <- "[{date}][{package}|{short_sess_id}|{ns}]:{message}"
-
   cnd_to_str <- function(cnd) {
-    cnd |>
-      dv.manager::log_add_date() |>
-      dv.manager::log_add_ns() |>
-      dv.manager::log_add_sess_id() |>
-      dv.manager::log_add_short_sess_id() |>
-      dv.manager::log_format(format_str)
+    date <- local({
+      if (!"date" %in% names(cnd)) {
+        format(Sys.time(), "%d-%m-%Y %H:%M:%S%z")
+      } else {
+        cnd[["date"]]
+      }
+    })
+
+    ns <- local({
+      if (!"ns" %in% names(cnd)) {
+        session <- shiny::getDefaultReactiveDomain()
+        if (!is.null(session)) {
+          ns <- session[["ns"]]("")
+          ns <- substring(ns, 1, nchar(ns) - 1)
+          ns <- if (nchar(ns) == 0) "(Root)" else ns
+        } else {
+          ns <- NA_character_
+        }
+      } else {
+        ns <- cnd[["ns"]]
+      }
+      ns
+    })
+
+    short_sess_id <- local({
+      if (!"sess_id" %in% names(cnd)) {
+        session <- shiny::getDefaultReactiveDomain()
+        if (!is.null(session)) {
+          sess_id <- session[["token"]]
+        } else {
+          sess_id <- NA_character_
+        }
+      } else {
+        sess_id <- cnd[["sess_id"]]
+      }
+
+      substring(sess_id, 1, 6)
+    })
+
+    package <- local({
+      if (!"package" %in% names(cnd)) {
+        cnd[["package"]]
+      } else {
+        NA_character_
+      }
+    })
+
+    message <- local({
+      if (!"message" %in% names(cnd)) {
+        cnd[["message"]]
+      } else {
+        NA_character_
+      }
+    })
+
+    sprintf("[%s][%s|%s|%s]:%s", date, package, short_sess_id, ns, message)
   }
 
   list(
     message = function(cnd) {
-      if (dv.manager::log_check_print(cnd, level)) {
-        cli::cli_alert_info(cnd_to_str(cnd))
+      if (log_test_level(cnd, level)) {
+        logdec$alert_info(cnd_to_str(cnd))
       }
 
       rlang::cnd_muffle(cnd)
     },
     warning = function(cnd) {
-      if (dv.manager::log_check_print(cnd, level)) {
-        cli::cli_alert_warning(cnd_to_str(cnd))
+      if (log_test_level(cnd, level)) {
+        logdec$alert_warning(cnd_to_str(cnd))
       }
       rlang::cnd_muffle(cnd)
     }
@@ -147,40 +187,45 @@ log_default_handlers <- function(level = 999) {
 }
 ```
 
-The `log_add*` functions add extra fields to the condition that can be
-used later by [`log_format()`](../reference/logging.md) to create a
-logging message. To print these messages we use the
-[`cli`](https://cli.r-lib.org/) package. The `log_format` function is a
-convenience function that allows quick formatting of the condition. It
-allows using a [`glue`](https://glue.tidyverse.org/)-like string where
-the parameters are fields in the condition. If a field used in the
-format is not present an `NA` value is returned instead.
-
 ### Creating custom handlers
 
 The default handlers are convenient, but the logging behavior can be
-modified by using a different set of handlers…
+modified by using a different set of handlers.
 
 ``` r
-
-my_handlers <- function() {
-  format_str <- "Date:{date}|Pkg:{package}|{custom_field}:{message}"
-
+my_handlers <- function(level = 999) {
   cnd_to_str <- function(cnd) {
-    cnd |>
-      dv.manager::log_add_date() |>
-      dv.manager::log_format(format_str)
+    date <- local({
+      if (!"date" %in% names(cnd)) {
+        format(Sys.time(), "%d-%m-%Y %H:%M:%S%z")
+      } else {
+        cnd[["date"]]
+      }
+    })
+
+    message <- local({
+      if (!"message" %in% names(cnd)) {
+        cnd[["message"]]
+      } else {
+        NA_character_
+      }
+    })
+
+    sprintf("Date: %s | %s", date, message)
   }
 
   list(
     message = function(cnd) {
-      if (cnd[["print_me"]]) {
-        cli::cli_alert_info(cnd_to_str(cnd))
+      if (log_test_level(cnd, level)) {
+        logdec$alert_info(cnd_to_str(cnd))
       }
+
       rlang::cnd_muffle(cnd)
     },
     warning = function(cnd) {
-      cli::cli_alert_warning(cnd_to_str(cnd))
+      if (log_test_level(cnd, level)) {
+        logdec$alert_warning(cnd_to_str(cnd))
+      }
       rlang::cnd_muffle(cnd)
     }
   )
@@ -188,9 +233,7 @@ my_handlers <- function() {
 
 options("dv.logging.active" = TRUE)
 dv.manager::log_activate(my_handlers())
-dv.manager:::log_inform("I will print this and its custom_field will be 1", print_me = TRUE, custom_field = "1")
-dv.manager:::log_inform("I will print this and its custom_field will be NA", print_me = TRUE)
-dv.manager:::log_inform("I will not print this", print_me = FALSE)
+dv.manager:::log_inform("I will print this")
 dv.manager::log_deactivate()
 options("dv.logging.active" = NULL)
 ```

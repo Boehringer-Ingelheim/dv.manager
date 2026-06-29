@@ -13,7 +13,6 @@ modules is data loaded from SDTM or ADAM datasets. We will use two dummy
 datasets in the dv.manager for illustration purposes.
 
 ``` r
-
 data <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 ```
 
@@ -36,8 +35,9 @@ install *dv.listings* an other modules in:
 If you already have **dv.listings** installed you can skip this step.
 
 ``` r
-
-if (!require("remotes")) install.packages("remotes")
+if (!require("remotes")) {
+  install.packages("remotes")
+}
 remotes::install_github("Boehringer-Ingelheim/dv.listings")
 ```
 
@@ -48,7 +48,6 @@ For example, we can use the *listings* module from the **dv.listings**
 package.
 
 ``` r
-
 module_list <- list(
   "My First listing" = dv.listings::mod_listings(
     dataset_names = "adsl",
@@ -69,10 +68,9 @@ To launch our the application we now just need to call the run_app
 function in **dv.manager**.
 
 ``` r
-
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```

@@ -8,7 +8,6 @@ and deploy Shiny applications using the modules from DaVinci.
 # Installation
 
 ``` r
-
 if (!require("remotes")) install.packages("remotes")
 remotes::install_github("Boehringer-Ingelheim/dv.manager")
 ```
@@ -26,12 +25,9 @@ remotes::install_github("Boehringer-Ingelheim/dv.manager")
 - [`add_date_range()`](add_date_range.md) : Add a date_range attribute
   to a dataset
 - [`log_activate()`](logging.md) [`log_deactivate()`](logging.md)
-  [`log_default_handlers()`](logging.md) [`log_add_date()`](logging.md)
-  [`log_add_short_sess_id()`](logging.md)
-  [`log_test_level()`](logging.md) [`log_format()`](logging.md)
-  [`log_add_sess_id()`](logging.md) [`log_add_ns()`](logging.md)
-  [`log_get_level_list()`](logging.md) [`log_use_log()`](logging.md) :
-  logger
+  [`log_default_handlers()`](logging.md)
+  [`log_test_level()`](logging.md) [`log_get_level_list()`](logging.md)
+  [`log_use_log()`](logging.md) : logger
 
 ## Dummy modules
 

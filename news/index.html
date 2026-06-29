@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,6 +55,29 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.1.0" id="dvmanager-310">dv.manager 3.1.0<a class="anchor" aria-label="anchor" href="#dvmanager-310"></a></h2>
+<ul><li>Performance:
+<ul><li>Filter data computation is done once on app start.</li>
+<li>Improves performance of filter set up</li>
+<li>Moves early error feedback to run app and integrates early error feedback wrappers</li>
+<li>Includes code for instrumenting code for time measurements<br></li>
+<li>Allow bypassing filter data computation, early error feedback and some checks on app start</li>
+<li>Includes an experimental <code>afmm</code> mask approach to improve memory performance</li>
+</ul></li>
+<li>UI and functionality:
+<ul><li>Introduces collapsed tab menus</li>
+<li>Bookmarks filter type</li>
+</ul></li>
+<li>Bugfix:
+<ul><li>Dataset labels were not retained after filtering</li>
+</ul></li>
+<li>Maintenance:
+<ul><li>Remove minimally used dependencies, <code>glue</code>, <code>cli</code>, <code>shinyjs</code>
+</li>
+<li>fixes dataset selection error when instead of using dataset objects, functions are passed instead.</li>
+</ul></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="3.0.0" id="dvmanager-300">dv.manager 3.0.0<a class="anchor" aria-label="anchor" href="#dvmanager-300"></a></h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="sc">-</span> Upgrades Bootstrap to version <span class="dv">5</span>.<span class="fl">0.0</span></span>

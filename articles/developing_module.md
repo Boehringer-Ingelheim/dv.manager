@@ -33,7 +33,6 @@ Of course, this module is not very useful, but for the purposes of
 explaining how **dv.manager** works, it will suffice.
 
 ``` r
-
 library(shiny)
 
 module_ui <- function(id, column_names) {
@@ -75,7 +74,6 @@ reactive value. As it will be the case inside module.manager.
 We could run this module in an application without using dv.manager.
 
 ``` r
-
 dataset <- pharmaverseadam::adsl
 
 ui <- fluidPage(
@@ -110,7 +108,6 @@ We name the function `mod_uniq_values` to indicate that it is a module
 and what it does.
 
 ``` r
-
 mod_uniq_values <- function(table_name, column_names, module_id) {
   mod <- list(
     # UI function
@@ -138,7 +135,6 @@ explained in
 [`vignette("arguments_from_module_manager")`](../articles/arguments_from_module_manager.md).
 
 ``` r
-
 dataset <- list(adsl = pharmaverseadam::adsl)
 module_list <- list(
   "First module" = mod_uniq_values(
@@ -150,7 +146,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = dataset),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -169,7 +165,6 @@ is not specified. These choices will be updated at run-time in the
 server function.
 
 ``` r
-
 library(shiny)
 
 module_ui <- function(id) {
@@ -196,7 +191,6 @@ the input to the:
 - names of the columns in the selected dataset
 
 ``` r
-
 module_server <- function(id, dataset_list) {
   module <- function(input, output, session) {
     observeEvent(
@@ -256,7 +250,6 @@ This allows us to remove all parameters from the `mod_uniq_values()`
 function definition with the exception of `module_id`.
 
 ``` r
-
 # Now, only the module_id parameter is needed
 mod_uniq_values <- function(module_id) {
   mod <- list(
@@ -278,7 +271,6 @@ modified the call in `module_list` and added a new data set to the data
 set list.
 
 ``` r
-
 datasets <- list(
   adsl = pharmaverseadam::adsl,
   adae = pharmaverseadam::adae
@@ -291,7 +283,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS1" = datasets),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 

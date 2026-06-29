@@ -5,7 +5,6 @@ Here we present examples of these options. For this example, we will use
 as a base the application below.
 
 ``` r
-
 data <- list(
   adsl = pharmaverseadam::adsl,
   adae = pharmaverseadam::adae
@@ -21,7 +20,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -38,7 +37,6 @@ To add a new module we just have to add a new entry to the
 application.
 
 ``` r
-
 data <- list(
   adsl = pharmaverseadam::adsl,
   adae = pharmaverseadam::adae
@@ -58,7 +56,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -82,7 +80,6 @@ module”, we just have to change the name of the entry in the
 module_list.
 
 ``` r
-
 data <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 
 module_list <- list(
@@ -99,7 +96,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -111,7 +108,6 @@ To modify a module so it has a different data source, we just have to
 modify the `dataset_names` parameter.
 
 ``` r
-
 data <- list(
   adsl = pharmaverseadam::adsl,
   adae = pharmaverseadam::adae
@@ -131,7 +127,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -152,7 +148,6 @@ to the list passed to the data parameter. This entry can be a list of
 dataframes, or a function that will return a list of dataframes.
 
 ``` r
-
 data1 <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 data2 <- list(adsl = pharmaverseadam::adsl, adae = pharmaverseadam::adae)
 
@@ -173,7 +168,7 @@ dv.manager::run_app(
     "DS2" = data2
   ),
   module_list = module_list,
-  filter_data = "adsl"
+  filter_dataset_name = "adsl"
 )
 ```
 
@@ -194,7 +189,6 @@ Please visit the `vignette("data_filtering")` to understand why USUBJID
 is kept within the dataset.
 
 ``` r
-
 data <- list(
   adsl = pharmaverseadam::adsl,
   adae = pharmaverseadam::adae
@@ -231,7 +225,7 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl_filter"
+  filter_dataset_name = "adsl_filter"
 ) # We have changed the data source for the filtering
 ```
 
@@ -249,7 +243,6 @@ Notice at the bottom of the code block below we use the modified dataset
 for filtering.
 
 ``` r
-
 data <- list(
   adsl = pharmaverseadam::adsl,
   adae = pharmaverseadam::adae
@@ -284,6 +277,6 @@ module_list <- list(
 dv.manager::run_app(
   data = list("DS" = data),
   module_list = module_list,
-  filter_data = "adsl_mod"
+  filter_dataset_name = "adsl_mod"
 ) # We have changed the data source for the filtering
 ```
