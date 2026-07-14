@@ -1,3 +1,5 @@
+# This file contains all export related code. Remove it if required.
+
 if (isTRUE(getOption("dv.export_enabled"))) {
   log_warn("Export has been enabled. This is an experimental feature.")
   # Code for exporting versions
@@ -697,22 +699,4 @@ body::before {
 
   # shinymeta::metaExpr
   sm_me <- shinymeta::metaExpr
-} else {
-  append_export_button <- identity
-  export_server_quote <- NULL
-
-  evaluate_in_caller <- function(expr) {
-    eval(substitute(expr), envir = parent.frame())
-  }
-
-  # shinymeta::metaReactive2
-  sm_mr2 <- shiny::reactive
-
-  # shinymeta::metaReactive
-  sm_mr <- shiny::reactive
-
-  # shinymeta::metaExpr
-  sm_me <- evaluate_in_caller
-
-  .. <- identity
 }
