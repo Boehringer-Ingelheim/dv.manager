@@ -158,6 +158,7 @@ run_app <- function(
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
   config[["filter_info"]] <- check_set_filter_info(filter_default_state)
   config[["subgroup"]] <- check_set_subgroup_info(enable_subgroup)
+  config[["export_enabled"]] <- isTRUE(getOption("dv.export_enabled"))
 
   assert_not_shiny_1_11_0()
 

@@ -28,6 +28,7 @@ app_ui <- function(request_id) {
   module_info <- get_config("module_info")
   subject_filter_dataset_name <- get_config("filter_dataset_name")
   filter_info <- get_config("filter_info")
+  export_enabled <- get_config("export_enabled")
 
   filter_default_state <- filter_info[["filter_default_state"]]
   enable_subgroup <- get_config("subgroup")[["enable"]]
@@ -66,12 +67,13 @@ app_ui <- function(request_id) {
     )
 
   top_buttons <- list(
-    shiny::bookmarkButton("", class = "navbar-btn"),
-    shiny::actionButton(ns(ID$EXPORT_CODE_MENU), "Export")
-    # Remove export functionality until new order
-    # shiny::actionButton(ns("open_report_modal"), shiny::span(shiny::icon("download")), class = "navbar-btn"), # nolint
+    shiny::bookmarkButton("", class = "navbar-btn")
     # shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("question")), class = "navbar-btn"), # nolint
   )
+
+  if (export_enabled) {
+    top_buttons <- append_export_button(top_buttons)
+  }
 
   dataset_name <-
     shiny::div(
