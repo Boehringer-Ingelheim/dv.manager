@@ -31,21 +31,44 @@ app_ui <- function(request_id) {
 
   filter_default_state <- filter_info[["filter_default_state"]]
   enable_subgroup <- get_config("subgroup")[["enable"]]
+  enable_querychat <- isTRUE(get_config("querychat")[["enable"]])
 
   log_inform(sprintf("Available modules (N): %d", length(module_info[["ui"]])))
   log_inform(sprintf("Dataset options (N): %d", length(dataset_lists)))
 
-  if (enable_subgroup) {
-    filter_ui <- shiny::tabsetPanel(
+  if (enable_subgroup || enable_querychat) {
+    tab_list <- list(
       shiny::tabPanel(
         title = "Filter",
         new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
-      ),
-      shiny::tabPanel(
-        title = "Subgroup",
-        shiny::div(class = "dv_subgroup_menu", mod_subgroup_ui(ns(ID$SUBGROUP), subject_filter_dataset_name))
       )
     )
+
+    if (enable_subgroup) {
+      tab_list <- c(
+        tab_list,
+        list(
+          shiny::tabPanel(
+            title = "Subgroup",
+            shiny::div(class = "dv_subgroup_menu", mod_subgroup_ui(ns(ID$SUBGROUP), subject_filter_dataset_name))
+          )
+        )
+      )
+    }
+
+    if (enable_querychat) {
+      tab_list <- c(
+        tab_list,
+        list(
+          shiny::tabPanel(
+            title = "Chat",
+            mod_querychat_ui(ns(ID$QUERYCHAT))
+          )
+        )
+      )
+    }
+
+    filter_ui <- do.call(shiny::tabsetPanel, tab_list)
   } else {
     filter_ui <- new_filter_ui(ns(ID$FILTER), subject_filter_dataset_name, state = filter_default_state)
   }

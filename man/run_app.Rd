@@ -21,6 +21,8 @@ run_app(
   filter_type = "simple",
   enable_dataset_filter = NULL,
   enable_subgroup = FALSE,
+  enable_querychat = FALSE,
+  querychat_args = list(),
   filter_default_state = NULL,
   .launch = TRUE,
   .bypass_checks = FALSE,
@@ -64,6 +66,17 @@ for more information on bookmarking your app.}
 \item{enable_dataset_filter}{( \strong{DEPRECATED} )}
 
 \item{enable_subgroup}{A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.}
+
+\item{enable_querychat}{A boolean flag indicating if a chat-based (natural language, powered by the
+\code{querychat} package) population filter tab is enabled. Default = FALSE. Requires the \code{querychat},
+\code{DBI} and \code{duckdb} packages (and a configured LLM client, see \code{querychat_args}). One chat covers the
+whole selected \code{dataset_list}: every dataset in it is written to a shared in-memory database so the
+chat can answer cross-dataset questions (e.g. combining \code{filter_dataset_name} with other datasets),
+while the resulting subject IDs (from \code{filter_dataset_name}/\code{filter_key}) filter the rest of datasets.}
+
+\item{querychat_args}{A named list of extra arguments forwarded to \code{querychat::QueryChat$new()},
+e.g. \code{list(client = "openai/gpt-4.1", greeting = "...", extra_instructions = "...")}. Only used
+when \code{enable_querychat = TRUE}.}
 
 \item{filter_default_state}{A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for \code{development} filters).}
 

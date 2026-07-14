@@ -1,0 +1,107 @@
+---
+title: "(DEVELOPMENT) Chat-based (natural language) filtering"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{(DEVELOPMENT) Chat-based (natural language) filtering}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<div class="alert alert-info">
+**Note:**
+This feature is currently under development. Its behaviour may change without notice.
+</div>
+
+`dv.manager` can offer a third, chat-based way of selecting the population/rows shown to modules,
+powered by the [`querychat`](https://posit-dev.github.io/querychat/r/) package. Instead of building
+a filter with the Filter or Subgroup tabs, users describe the subpopulation they want in natural
+language (e.g. *"subjects over 30 who had a serious adverse event"*), and the chat translates that
+request into a SQL query, applying the resulting subject IDs exactly like the existing population
+filter.
+
+## Enabling the feature
+
+Set `enable_querychat = TRUE` in the `run_app()` call. This requires:
+
+- The `querychat` package (>= 0.3.0) to be installed.
+- `filter_dataset_name` and `filter_key` to be set (the same subject/population dataset and join
+  key already used by the regular Filter tab).
+- A configured LLM client/credentials for `querychat` itself (see querychat's own
+  ["Models" article](https://posit-dev.github.io/querychat/r/) for API key setup) — this is not
+  validated by `dv.manager` at startup, only when the chat is actually used.
+
+```r
+run_app(
+  data = my_data,
+  filter_dataset_name = "adsl",
+  filter_key = "USUBJID",
+  enable_querychat = TRUE,
+  querychat_args = list(
+    greeting = "Ask me about the population you'd like to see, e.g. \"subjects over 30\"."
+  )
+)
+```
+
+`querychat_args` is a named list forwarded to `querychat::QueryChat$new()`. Common entries:
+
+- `client` — which LLM/model to use (see querychat's "Choosing a model" article).
+- `greeting` — an initial assistant message shown to the user.
+- `data_description` — a text description of the data handed to the LLM. If not supplied,
+  `dv.manager` builds one automatically describing every dataset in the current `dataset_list`
+  besides the subject/population dataset (see "How cross-dataset questions work" below).
+- `extra_instructions`, `categorical_threshold` — see `?querychat::QueryChat`.
+
+## How cross-dataset questions work
+
+A `dataset_list` in `dv.manager` frequently contains more than one dataset (e.g. `adsl` for
+subject-level data, `adae` for adverse events). To answer natural questions that span more than
+one dataset, `dv.manager`:
+
+1. Writes **every** dataset in the currently selected `dataset_list` into one shared, in-memory
+   database connection.
+2. Registers only the subject/population dataset (`filter_dataset_name`) as `querychat`'s "primary"
+   table — this is the table whose schema `querychat` automatically describes to the LLM, and the
+   one its filtering tool always returns full rows from.
+3. Describes the other tables' columns to the LLM via `data_description`, with instructions to
+   express population-defining criteria as `SELECT * FROM <subject_table> WHERE ... AND
+   <filter_key> IN (SELECT <filter_key> FROM <other_table> WHERE ...)`.
+
+Because the underlying database connection contains every table, the LLM's generated SQL can still
+freely join or subquery across all of them — the chat only needs to resolve, in the end, to a
+subject ID (`filter_key`) selection from the primary table. This subject ID set is then intersected
+(AND'd) with whatever the Filter tab and Subgroup tab already select — the chat can only narrow the
+population further, never widen it.
+
+## Dataset-switch behaviour
+
+`querychat` has no supported way of swapping the data source of an already-running chat instance.
+Because of this, switching the active `dataset_list` at runtime **fully resets the chat** — a fresh
+database connection is created and the conversation transcript starts over. This is a deliberate
+trade-off: there is currently no API in `querychat` that would allow preserving the transcript while
+safely swapping in a different set of tables.
+
+## What data is sent to the LLM provider
+
+With `enable_querychat = TRUE`, the LLM provider configured for `querychat` receives:
+
+- Schema/column metadata (column names, types, and — for low-cardinality columns — the list of
+  distinct values) for the subject/population dataset and, via the generated `data_description`,
+  column names for every other dataset in the `dataset_list`.
+- The text of the user's chat messages.
+
+Raw row-level data is **not** sent to the LLM as part of ordinary operation; only the generated SQL
+is executed locally against the shared database connection. Review this with your data governance
+process before enabling this feature on datasets containing sensitive information.
+
+## FAQ
+
+- **Can I ask about adverse events even though I'm filtering subjects?** Yes — every dataset in the
+  `dataset_list` is written into the same database connection and can be referenced in
+  subqueries/joins; phrase your question in terms of subjects for best results, e.g. *"subjects who
+  had a serious adverse event"*.
+- **Does switching the dataset selector reset my chat?** Yes, see "Dataset-switch behaviour" above.
+- **Does bookmarking work?** Yes — `querychat`'s own bookmarking support (`enable_bookmarking =
+  TRUE`) persists and restores the chat's SQL/title state.
+- **Can the chat modify or delete data?** No — `dv.manager` restricts `querychat` to its `"filter"`
+  tool set, which only allows read-only `SELECT` queries; DDL/DML statements are rejected.
+- **Is this enabled by default?** No, `enable_querychat` defaults to `FALSE`.

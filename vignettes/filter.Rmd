@@ -45,6 +45,13 @@ This filter will drop filtered levels from the factor variables.
 
 These filters apply across all datasets in the application. They are used to select a subpopulation that spans all datasets.
 
+<div class="alert alert-info" role="alert">
+Two other opt-in ways of selecting the subpopulation exist alongside the Filter tab: **Subgroup**
+(`enable_subgroup = TRUE`, see `vignette("subgroup")`) and **Chat** (`enable_querychat = TRUE`, a
+natural-language, `querychat`-powered filter, see `vignette("querychat_filter")`). All three combine
+via intersection — enabling more than one only ever narrows the resulting population further.
+</div>
+
 ## Basic filter
 
 The interface displays one filter box per dataset. Inside each box, you can add filters for the variables available in that dataset.

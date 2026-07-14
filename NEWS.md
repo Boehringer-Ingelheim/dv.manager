@@ -1,3 +1,12 @@
+# dv.manager 3.1.0.9000
+
+ - New feature:
+    - Adds a third, opt-in population-filtering option: a chat-based, natural-language filter
+      powered by the `querychat` package (`enable_querychat`, `querychat_args`). Enabling it adds
+      a "Chat" tab alongside the existing Filter/Subgroup tabs; the resulting subject selection is
+      intersected with the rest of the filtering pipeline, exactly like the existing Subgroup tab.
+      See `vignette("querychat_filter")`.
+
 # dv.manager 3.1.0
 
  - Performance: 

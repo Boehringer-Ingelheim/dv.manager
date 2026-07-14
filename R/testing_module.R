@@ -361,6 +361,47 @@ run_mock_combined_app <- function() {
   )
 }
 
+# Dummy/manual test app for the querychat-powered "Chat" filter tab (enable_querychat = TRUE).
+# Loads adsl + adae so cross-dataset natural-language questions (e.g. age from adsl combined
+# with an adverse event from adae) can be exercised manually, and shows the resulting filtered
+# adsl/adae tables side by side so the effect of the chat filter on every dataset is visible.
+# Requires the `querychat` (+ `duckdb`, `DBI`) packages and an LLM client configured for
+# `querychat` (see its "Models" article) to actually send chat messages; the Chat tab itself
+# renders without either.
+run_mock_app_querychat <- function() {
+  client <- ellmer::chat_github(model = "gpt-4.1")
+  run_app(
+    data = list(
+      "D1" = list(
+        adsl = get_pharmaverse_data("adsl"),
+        adae = get_pharmaverse_data("adae")
+      )
+    ),
+    module_list = list(
+      "ADSL Table" = mod_table(
+        mod_id = "mod_adsl",
+        from = "filtered_dataset_list",
+        dataset = "adsl"
+      ),
+      "ADAE Table" = mod_table(
+        mod_id = "mod_adae",
+        from = "filtered_dataset_list",
+        dataset = "adae"
+      )
+    ),
+    filter_dataset_name = "adsl",
+    filter_key = "USUBJID",
+    enable_querychat = TRUE,
+    querychat_args = list(
+      client = client,
+      greeting = paste(
+        "Describe, in natural language, the subpopulation you'd like to see.",
+        "Try: \"subjects over 60 years old\", or \"subjects who had a serious adverse event\"."
+      )
+    )
+  )
+}
+
 ########### Accessing dataset name
 
 dataset_name_UI <- function(id) {

@@ -7,7 +7,9 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
     "filter_info" = get_config("filter_info"),
-    "enable_subgroup" = get_config("subgroup")[["enable"]]
+    "enable_subgroup" = get_config("subgroup")[["enable"]],
+    "enable_querychat" = get_config("querychat")[["enable"]],
+    "querychat_args" = get_config("querychat")[["args"]]
   )
 
   app_server_(input, output, session, opts)
@@ -22,7 +24,9 @@ app_server_module <- function(id) {
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
     "filter_info" = get_config("filter_info"),
-    "enable_subgroup" = get_config("subgroup")[["enable"]]
+    "enable_subgroup" = get_config("subgroup")[["enable"]],
+    "enable_querychat" = get_config("querychat")[["enable"]],
+    "querychat_args" = get_config("querychat")[["args"]]
   )
   shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
 }
@@ -58,6 +62,8 @@ app_server_ <- function(input, output, session, opts) {
   reload_period <- opts[["reload_period"]]
   filter_info <- opts[["filter_info"]]
   enable_subgroup <- opts[["enable_subgroup"]]
+  enable_querychat <- isTRUE(opts[["enable_querychat"]])
+  querychat_args <- opts[["querychat_args"]] %||% list()
 
   ######################################
 
@@ -109,6 +115,18 @@ app_server_ <- function(input, output, session, opts) {
     })
   }
 
+  if (enable_querychat) {
+    chat_filter <- mod_querychat_server(
+      ID$QUERYCHAT,
+      selected_dataset_list,
+      subject_filter_dataset_name,
+      filter_key_var,
+      querychat_args
+    )
+  } else {
+    chat_filter <- shiny::reactive(list(result = list(subjects = NULL), error_list = new_error_list()))
+  }
+
   unfiltered_dataset_list <- shiny::reactive({
     ..t$add_period("unfiltered_dataset_list", TRUE)
     on.exit(..t$add_period("unfiltered_dataset_list", FALSE))
@@ -146,6 +164,29 @@ app_server_ <- function(input, output, session, opts) {
           FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class
         )
     )
+
+    if (enable_querychat) {
+      r_chat <- chat_filter()
+      for (msg in r_chat[["error_list"]]$get_messages()) {
+        shiny::showNotification(msg, type = "warning")
+      }
+      chat_subjects <- r_chat[["result"]][["subjects"]]
+      if (!is.null(chat_subjects)) {
+        filter_info[["result"]][["filter_info"]] <- lapply(
+          stats::setNames(
+            names(filter_info[["result"]][["filter_info"]]),
+            names(filter_info[["result"]][["filter_info"]])
+          ),
+          function(ds_name) {
+            entry <- filter_info[["result"]][["filter_info"]][[ds_name]]
+            chat_mask <- r_unfiltered_dataset_list[[ds_name]][[filter_key_var]] %in% chat_subjects
+            entry[["mask"]] <- entry[["mask"]] & chat_mask
+            entry
+          }
+        )
+      }
+    }
+
     res <- list(
       unfiltered_dataset_list = r_unfiltered_dataset_list,
       filter_info = filter_info[["result"]][["filter_info"]],

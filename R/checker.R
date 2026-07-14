@@ -213,6 +213,39 @@ check_set_subgroup_info <- function(enable_subgroup) {
   res
 }
 
+check_set_querychat_info <- function(enable_querychat, querychat_args, filter_dataset_name, filter_key) {
+  checkmate::assert_logical(enable_querychat, len = 1, any.missing = FALSE)
+  checkmate::assert_list(querychat_args, names = "unique")
+
+  if (enable_querychat) {
+    if (!requireNamespace("querychat", quietly = TRUE)) {
+      stop("Please install.packages('querychat') to use `enable_querychat = TRUE`")
+    }
+
+    if (!checkmate::test_string(filter_dataset_name, min.chars = 1)) {
+      stop("`enable_querychat = TRUE` requires `filter_dataset_name` to be set")
+    }
+
+    if (!checkmate::test_string(filter_key, min.chars = 1)) {
+      stop("`enable_querychat = TRUE` requires `filter_key` to be set")
+    }
+
+    if (!is_valid_sql_table_name(filter_dataset_name)) {
+      stop(sprintf(
+        "`filter_dataset_name` (`%s`) is not a valid SQL table name and cannot be used with `enable_querychat = TRUE`", # nolint
+        filter_dataset_name
+      ))
+    }
+  }
+
+  res <- list(enable = enable_querychat, args = querychat_args)
+  res
+}
+
+is_valid_sql_table_name <- function(x) {
+  checkmate::test_string(x, min.chars = 1, pattern = "^[A-Za-z_][A-Za-z0-9_]*$")
+}
+
 check_parsable_json_input <- function(x) {
   utils::capture.output(p <- try(deserialize_filter_state_from_client(x), silent = TRUE))
   if (inherits(p, "try-error")) {

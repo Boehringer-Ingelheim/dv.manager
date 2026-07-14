@@ -27,6 +27,15 @@
 #' @param filter_default_state A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for `development` filters).
 #' @param enable_dataset_filter ( **DEPRECATED** )
 #' @param enable_subgroup  A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.
+#' @param enable_querychat A boolean flag indicating if a chat-based (natural language, powered by the
+#'  `querychat` package) population filter tab is enabled. Default = FALSE. Requires the `querychat`,
+#'  `DBI` and `duckdb` packages (and a configured LLM client, see `querychat_args`). One chat covers the
+#'  whole selected `dataset_list`: every dataset in it is written to a shared in-memory database so the
+#'  chat can answer cross-dataset questions (e.g. combining `filter_dataset_name` with other datasets),
+#'  while the resulting subject IDs (from `filter_dataset_name`/`filter_key`) filter the rest of datasets.
+#' @param querychat_args A named list of extra arguments forwarded to `querychat::QueryChat$new()`,
+#'  e.g. `list(client = "openai/gpt-4.1", greeting = "...", extra_instructions = "...")`. Only used
+#'  when `enable_querychat = TRUE`.
 #' @param .launch by default it should always be TRUE. It should only be false for debugging and testing.
 #' When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.
 #' @param .bypass_checks by default it should always be FALSE. Only for advanced use. If set to TRUE, the app creator must make sure that
@@ -58,6 +67,8 @@ run_app <- function(
   filter_type = "simple",
   enable_dataset_filter = NULL,
   enable_subgroup = FALSE,
+  enable_querychat = FALSE,
+  querychat_args = list(),
   filter_default_state = NULL,
   .launch = TRUE,
   .bypass_checks = FALSE,
@@ -127,6 +138,12 @@ run_app <- function(
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
   config[["filter_info"]] <- check_set_filter_info(filter_default_state)
   config[["subgroup"]] <- check_set_subgroup_info(enable_subgroup)
+  config[["querychat"]] <- check_set_querychat_info(
+    enable_querychat,
+    querychat_args,
+    config[["filter_dataset_name"]],
+    config[["filter_key"]]
+  )
 
   assert_not_shiny_1_11_0()
 

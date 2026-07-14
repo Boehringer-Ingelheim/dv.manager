@@ -1,7 +1,7 @@
 Package: dv.manager
 Type: Package
 Title: DaVinci Module Manager
-Version: 3.1.0
+Version: 3.1.0.9000
 Authors@R: c(person("Boehringer-Ingelheim Pharma GmbH & Co.KG", role = c("cph", "fnd")),
     person('Luis', 'Morís Fernández', email = 'luis.moris.fernandez@gmail.com', role = c('cre', 'aut')),
     person('Sorin', 'Voicu', email = 'sorin.voicu.ext@boehringer-ingelheim.com', role = c('aut')))
@@ -36,7 +36,11 @@ Suggests:
     dv.loader (>= 1.0.0),
     fontawesome (>= 0.2.1),
     pharmaverseadam,
-    shinytest2
+    shinytest2,
+    querychat (>= 0.3.0),
+    DBI,
+    duckdb,
+    RSQLite
 Config/testthat/edition: 3
 Config/testthat/parallel: false
 Depends: R (>= 4.1.0)
