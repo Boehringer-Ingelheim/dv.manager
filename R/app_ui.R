@@ -72,7 +72,7 @@ app_ui <- function(request_id) {
   )
 
   if (export_enabled) {
-    top_buttons <- append_export_button(top_buttons)
+    top_buttons <- append_export_button(top_buttons, ns)
   }
 
   dataset_name <-

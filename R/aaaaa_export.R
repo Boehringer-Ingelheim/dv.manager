@@ -4,28 +4,29 @@ if (isTRUE(getOption("dv.export_enabled"))) {
   log_warn("Export has been enabled. This is an experimental feature.")
   # Code for exporting versions
 
-  EXPORT <- poc(
-    ID = poc(
-      EXPORT_CODE = "export_code",
-      EXPORT_CODE_MENU = "export_code_menu"
-    ),
-    ATTR = "export_element_type",
-    ELEMENT_KIND = poc(
-      ERROR = "error",
-      TABLE = "table",
-      DEFAULT = "default"
-    ),
-    OUTPUT_FORMAT = poc(
-      HTML = "html",
-      PDF = "pdf"
+  EXPORT <- local({
+    EXPORT <- poc(
+      ID = poc(
+        EXPORT_CODE = "export_code",
+        EXPORT_CODE_MENU = "export_code_menu"
+      ),
+      ATTR = "export_element_type",
+      ELEMENT_KIND = poc(
+        ERROR = "error",
+        TABLE = "table",
+        DEFAULT = "default"
+      ),
+      OUTPUT_FORMAT = poc(
+        HTML = "html",
+        PDF = "pdf"
+      )
     )
-  )
 
-  EXPORT[["TEMPLATES"]] <- list()
+    EXPORT[["TEMPLATES"]] <- list()
 
-  EXPORT[["TEMPLATES"]][["HEADER"]] <- local({
-    templates <- character(0)
-    templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
+    EXPORT[["TEMPLATES"]][["HEADER"]] <- local({
+      templates <- character(0)
+      templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
 ---
 title: "A export"
 author: "A user"
@@ -62,7 +63,7 @@ knitr::opts_chunk$set(
 
 )--"
 
-    templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(
+      templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(
 ---
 title: "A export"
 author: "A user"
@@ -109,13 +110,13 @@ body::before {
 
 )--"
 
-    templates
-  })
+      templates
+    })
 
-  session_info_section <-
-    EXPORT[["TEMPLATES"]][["SESSION_INFO"]] <- local({
-      templates <- character(0)
-      templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
+    session_info_section <-
+      EXPORT[["TEMPLATES"]][["SESSION_INFO"]] <- local({
+        templates <- character(0)
+        templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
 \begin{landscape}
         
 \section{Session Info}
@@ -129,7 +130,7 @@ body::before {
 \end{landscape}
 )--"
 
-      templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(        
+        templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(        
 # Session Info
         
 ```{r session_info}
@@ -138,45 +139,63 @@ body::before {
 
 )--"
 
+        templates
+      })
+
+    EXPORT[["TEMPLATES"]][["FOOTER"]] <- local({
+      templates <- character(0)
+      templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- ""
+
+      # Currently code is attached to the PDF file
+      #   r"--(
+      # # Annex: Code
+
+      # ```{r show-code, ref.label = setdiff(knitr::all_labels(), c("setup", "show-code")), echo=TRUE, eval=FALSE}
+      # ```
+      # )--"
+
+      templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- ""
+
       templates
     })
 
-  EXPORT[["TEMPLATES"]][["FOOTER"]] <- local({
-    templates <- character(0)
-    templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- ""
-
-    # Currently code is attached to the PDF file
-    #   r"--(
-    # # Annex: Code
-
-    # ```{r show-code, ref.label = setdiff(knitr::all_labels(), c("setup", "show-code")), echo=TRUE, eval=FALSE}
-    # ```
-    # )--"
-
-    templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- ""
-
-    templates
+    EXPORT
   })
 
-  append_export_button <- function(x) {
+  append_export_button <- function(x, ns) {
     log_inform("Attaching export button")
+
+    input_id <- ns(EXPORT$ID$EXPORT_CODE_MENU)
+    onclick_fmt <- "Shiny.setInputValue('%s', '%s', {priority: 'event'})"
+
     export_button <- local({
       t <- shiny::tags
       dd_div <- shiny::div(
         class = "btn-group",
         role = "group",
-        t[["button"]](type = "button", class = "btn btn-primary dropdown-toggle", "data-bs-toggle" = "dropdown"),
+        t[["button"]](type = "button", class = "btn btn-default dropdown-toggle btn-sm", "data-bs-toggle" = "dropdown"),
         t[["ul"]](
           class = "dropdown-menu",
-          t[["li"]](t[["a"]](class = "dropdown-item", href = "#", "Custom current")),
-          t[["li"]](t[["a"]](class = "dropdown-item", href = "#", "Custom All")),
+          t[["li"]](
+            t[["a"]](class = "dropdown-item", href = "#", "Custom current"),
+            onclick = sprintf(onclick_fmt, input_id, "current")
+          ),
+          t[["li"]](
+            t[["a"]](class = "dropdown-item", href = "#", "Custom All"),
+            onclick = sprintf(onclick_fmt, input_id, "all")
+          ),
         )
       )
 
       bg_d <- shiny::div(
         class = "btn-group",
         role = "group",
-        t[["button"]](type = "button", class = "btn btn-primary", "Export"),
+        t[["button"]](
+          type = "button",
+          class = "btn btn-default",
+          "Export",
+          onclick = sprintf(onclick_fmt, input_id, "current")
+        ),
         dd_div
       )
 
@@ -219,6 +238,7 @@ body::before {
               current_element[["id"]] <- paste0(module_id, "-", current_element_list_nm)
               current_element[["is_first_module_element"]] <- first_module_element
               current_element[["module_name"]] <- module_name
+              current_element[["module_id"]] <- module_id
               res[[current_element[["id"]]]] <- current_element
             }
           }
@@ -226,57 +246,73 @@ body::before {
         res
       })
 
-      export_modal_ui <- local({
+      export_modal_ui <- function(show_tab = NA) {
+        log_inform(paste("Showing", show_tab, "tab in menu"))
+
         card_ui <- list(shiny::h3("Export menu"))
 
-        if (length(exportable_elements) > 0) {
-          card_items <- NULL
+        card_items <- NULL
 
-          for (idx in seq_along(exportable_elements)) {
-            curr_el <- exportable_elements[[idx]]
+        for (idx in seq_along(exportable_elements)) {
+          curr_el <- exportable_elements[[idx]]
 
-            if (curr_el[["is_first_module_element"]]) {
-              if (!is.null(card_items)) {
-                card_ui[[length(card_ui) + 1]] <- do.call(bslib::card, card_items)
-              }
-              card_items <- list(bslib::card_header(curr_el[["module_name"]]))
-            }
-
-            card_items[[length(card_items) + 1]] <-
-              shiny::div(
-                class = "form-check form-switch",
-                shiny::tags[["label"]](
-                  class = "form-check-label",
-                  title = curr_el[["info"]],
-                  shiny::tags[["input"]](
-                    class = "form-check-input",
-                    type = "checkbox",
-                    role = "switch",
-                    checked = NA,
-                    onchange = sprintf(
-                      "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
-                      ns("export_menu_input"),
-                      curr_el[["id"]]
-                    )
-                  ),
-                  curr_el[["label"]]
-                )
-              )
+          if (!is.na(show_tab) && !curr_el[["module_id"]] == show_tab) {
+            next
           }
+          if (curr_el[["is_first_module_element"]]) {
+            if (!is.null(card_items)) {
+              card_ui[[length(card_ui) + 1]] <- do.call(bslib::card, card_items)
+            }
+          }
+
+          if (curr_el[["is_first_module_element"]]) {
+            card_items <- list(bslib::card_header(curr_el[["module_name"]]))
+          }
+          card_items[[length(card_items) + 1]] <-
+            shiny::div(
+              class = "form-check form-switch",
+              shiny::tags[["label"]](
+                class = "form-check-label",
+                title = curr_el[["info"]],
+                shiny::tags[["input"]](
+                  class = "form-check-input",
+                  type = "checkbox",
+                  role = "switch",
+                  checked = NA,
+                  onchange = sprintf(
+                    "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
+                    ns("export_menu_input"),
+                    curr_el[["id"]]
+                  )
+                ),
+                curr_el[["label"]]
+              )
+            )
+        }
+
+        # Last card is done post loop
+        if (!is.null(card_items)) {
+          card_ui[[length(card_ui) + 1]] <- do.call(bslib::card, card_items)
+        }
+
+        if (length(card_ui) > 0) {
+          card_ui[[length(card_ui) + 1]] <- bslib::card(
+            bslib::card_header("Output format"),
+            shiny::radioButtons(
+              ns("output_format"),
+              label = NULL,
+              choices = EXPORT$OUTPUT_FORMAT
+            )
+          )
+
+          download_button <- shiny::downloadButton(ns(EXPORT$ID$EXPORT_CODE), "Export")
         } else {
           card_ui[[length(card_ui) + 1]] <- bslib::card(
             bslib::card_header("No elements available for export")
           )
-        }
 
-        card_ui[[length(card_ui) + 1]] <- bslib::card(
-          bslib::card_header("Output format"),
-          shiny::radioButtons(
-            ns("output_format"),
-            label = NULL,
-            choices = EXPORT$OUTPUT_FORMAT
-          )
-        )
+          download_button <- NULL
+        }
 
         res <- shiny::modalDialog(
           shiny::div(
@@ -288,26 +324,34 @@ body::before {
                 card_ui
               )
             ),
-            shiny::downloadButton(ns(EXPORT$ID$EXPORT_CODE), "Export")
+            download_button
           ),
           easyClose = TRUE,
           footer = NULL
         )
         res
-      })
+      }
 
-      selected <- stats::setNames(
-        rep(TRUE, length(exportable_elements)),
-        names(exportable_elements)
-      )
+      selected <- NULL
 
       shiny::observeEvent(input[["export_menu_input"]], {
         selected[[input[["export_menu_input"]][["id"]]]] <<- input[["export_menu_input"]][["value"]]
       })
 
       shiny::observeEvent(input[[EXPORT$ID$EXPORT_CODE_MENU]], {
+        selected <<- stats::setNames(
+          rep(TRUE, length(exportable_elements)),
+          names(exportable_elements)
+        )
+
+        visible_export_tabs <- NA
+
+        if (input[[EXPORT$ID$EXPORT_CODE_MENU]] == "current") {
+          visible_export_tabs <- input[[ID$NAV_HEADER]]
+        }
+
         shiny::showModal(
-          export_modal_ui
+          export_modal_ui(visible_export_tabs)
         )
       })
 
