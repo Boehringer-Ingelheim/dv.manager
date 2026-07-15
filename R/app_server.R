@@ -99,7 +99,8 @@ app_server_ <- function(input, output, session, opts) {
       df <- add_date_range(d)
       attr(df, "dataset_list_name") <- dataset_list_name
       df
-    }
+    },
+    varname = "selected_dataset_list"
   )
 
   if (enable_subgroup) {
@@ -135,25 +136,29 @@ app_server_ <- function(input, output, session, opts) {
 
       res_apply_subgroups
     },
-    inline = TRUE
+    inline = TRUE,
+    varname = "unfiltered_dataset_list_"
   )
 
-  unfiltered_dataset_list <- sm_mr2({
-    ..t$add_period("unfiltered_dataset_list", TRUE)
-    on.exit(..t$add_period("unfiltered_dataset_list", FALSE))
+  unfiltered_dataset_list <- sm_mr2(
+    {
+      ..t$add_period("unfiltered_dataset_list", TRUE)
+      on.exit(..t$add_period("unfiltered_dataset_list", FALSE))
 
-    for (error in unfiltered_dataset_list_()[["error_list"]]$get_messages()) {
-      shiny::showNotification(error, type = "warning")
-    }
-    subgroups[["set_incorrect_subgroups"]](unfiltered_dataset_list_()[["result"]][["incorrect_subgroups"]])
+      for (error in unfiltered_dataset_list_()[["error_list"]]$get_messages()) {
+        shiny::showNotification(error, type = "warning")
+      }
+      subgroups[["set_incorrect_subgroups"]](unfiltered_dataset_list_()[["result"]][["incorrect_subgroups"]])
 
-    sm_me(
-      {
-        ..(unfiltered_dataset_list_())[["result"]][["dataset_list"]]
-      },
-      localize = TRUE
-    )
-  })
+      sm_me(
+        {
+          ..(unfiltered_dataset_list_())[["result"]][["dataset_list"]]
+        },
+        localize = TRUE
+      )
+    },
+    varname = "unfiltered_dataset_list"
+  )
 
   unfiltered_dataset_list_with_filter_info_ <- sm_mr2(
     {
@@ -185,7 +190,8 @@ app_server_ <- function(input, output, session, opts) {
 
       res
     },
-    inline = TRUE
+    inline = TRUE,
+    varname = "unfiltered_dataset_list_with_filter_info_ "
   )
 
   unfiltered_dataset_list_with_filter_info <- sm_mr2(
@@ -222,19 +228,23 @@ app_server_ <- function(input, output, session, opts) {
 
       res
     },
+    varname = "unfiltered_dataset_list_with_filter_info"
   )
 
-  filtered_dataset_list <- sm_mr2({
-    ..t$add_period("filtered_dataset_list", TRUE)
-    on.exit(..t$add_period("filtered_dataset_list", FALSE))
-    fd <- sm_me({
-      r_unfiltered_dataset_list_with_filter_info <- ..(unfiltered_dataset_list_with_filter_info())
+  filtered_dataset_list <- sm_mr2(
+    {
+      ..t$add_period("filtered_dataset_list", TRUE)
+      on.exit(..t$add_period("filtered_dataset_list", FALSE))
+      fd <- sm_me({
+        r_unfiltered_dataset_list_with_filter_info <- ..(unfiltered_dataset_list_with_filter_info())
 
-      get_filtered_dataset_list(r_unfiltered_dataset_list_with_filter_info)
-    })
-    ..t$add_event("received filtered_dataset_list")
-    fd
-  })
+        get_filtered_dataset_list(r_unfiltered_dataset_list_with_filter_info)
+      })
+      ..t$add_event("received filtered_dataset_list")
+      fd
+    },
+    varname = "filtered_dataset_list"
+  )
 
   dataset_list_filter <- new_filter_server(
     ID$FILTER,
@@ -409,21 +419,24 @@ app_server_ <- function(input, output, session, opts) {
     paste0("Dataset name: ", input$selector)
   })
 
-  date_range <- sm_mr({
-    date_range <- attr(..(unfiltered_dataset_list()), "date_range")
+  date_range <- sm_mr(
+    {
+      date_range <- attr(..(unfiltered_dataset_list()), "date_range")
 
-    if (!any(is.na(date_range))) {
-      date_range <- format(date_range, "%Y-%b-%d (%Z)")
-      if (date_range[1] != date_range[2]) {
-        date_string <- sprintf("%s - %s", date_range[1], date_range[2])
+      if (!any(is.na(date_range))) {
+        date_range <- format(date_range, "%Y-%b-%d (%Z)")
+        if (date_range[1] != date_range[2]) {
+          date_string <- sprintf("%s - %s", date_range[1], date_range[2])
+        } else {
+          date_string <- date_range[1]
+        }
       } else {
-        date_string <- date_range[1]
+        date_string <- "Date unavailable"
       }
-    } else {
-      date_string <- "Date unavailable"
-    }
-    date_string
-  })
+      date_string
+    },
+    varname = "date_range"
+  )
 
   output[["dataset_date"]] <- shiny::renderText({
     paste0("Dataset date: ", date_range())
