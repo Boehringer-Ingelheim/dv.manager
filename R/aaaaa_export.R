@@ -427,7 +427,12 @@ body::before {
               log_inform(paste0("Processing:", el_processed[["id"]]))
               checkmate::assert_subset(output_format, as.character(unclass(EXPORT$OUTPUT_FORMAT)))
 
-              reactive <- el_processed[["reactive"]]
+              if (identical(output_format, EXPORT$OUTPUT_FORMAT$HTML)) {
+                reactive <- el_processed[["reactive"]][["html"]]
+              } else if (identical(output_format, EXPORT$OUTPUT_FORMAT$PDF)) {
+                reactive <- el_processed[["reactive"]][["pdf"]]
+              }
+
               resolved <- try(reactive(), silent = TRUE)
 
               if (identical(output_format, EXPORT$OUTPUT_FORMAT$PDF) && !inherits(resolved, "try-error")) {
@@ -459,6 +464,15 @@ body::before {
                     inline = TRUE
                   )
 
+                  code <- get_code_in_context(reactive_())
+                  kind <- REK$TABLE
+                } else if (inherits(reactive(), "gt_tbl")) {
+                  reactive_ <- shinymeta::metaReactive(
+                    {
+                      ..(reactive()) |> gt::as_latex()
+                    },
+                    inline = TRUE
+                  )
                   code <- get_code_in_context(reactive_())
                   kind <- REK$TABLE
                 } else {
