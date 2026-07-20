@@ -243,6 +243,7 @@ body::before {
             }
           }
         }
+
         res
       })
 
@@ -250,8 +251,9 @@ body::before {
         log_inform(paste("Showing", show_tab, "tab in menu"))
 
         card_ui <- list(shiny::h3("Export menu"))
-
         card_items <- NULL
+        selected <- rep(FALSE, length(exportable_elements))
+        names(selected) <- names(exportable_elements)
 
         for (idx in seq_along(exportable_elements)) {
           curr_el <- exportable_elements[[idx]]
@@ -259,6 +261,7 @@ body::before {
           if (!is.na(show_tab) && !curr_el[["module_id"]] == show_tab) {
             next
           }
+
           if (curr_el[["is_first_module_element"]]) {
             if (!is.null(card_items)) {
               card_ui[[length(card_ui) + 1]] <- do.call(bslib::card, card_items)
@@ -288,6 +291,8 @@ body::before {
                 curr_el[["label"]]
               )
             )
+
+          selected[[curr_el[["id"]]]] <- TRUE
         }
 
         # Last card is done post loop
@@ -314,45 +319,57 @@ body::before {
           download_button <- NULL
         }
 
-        res <- shiny::modalDialog(
-          shiny::div(
-            class = "d-flex flex-column vh-25",
-            style = "max-height: 90vh",
+        res <- list(
+          modal_dialog = shiny::modalDialog(
             shiny::div(
-              class = "overflow-auto flex-grow-1 p-3 min-h-0",
-              list(
-                card_ui
-              )
+              class = "d-flex flex-column vh-25",
+              style = "max-height: 90vh",
+              shiny::div(
+                class = "overflow-auto flex-grow-1 p-3 min-h-0",
+                list(
+                  card_ui
+                )
+              ),
+              download_button
             ),
-            download_button
+            easyClose = TRUE,
+            footer = NULL
           ),
-          easyClose = TRUE,
-          footer = NULL
+          selected = selected
         )
         res
       }
 
-      selected <- NULL
+      selected_tabs_for_export <- NULL
 
       shiny::observeEvent(input[["export_menu_input"]], {
-        selected[[input[["export_menu_input"]][["id"]]]] <<- input[["export_menu_input"]][["value"]]
+        selected_tabs_for_export[[input[["export_menu_input"]][["id"]]]] <<- input[["export_menu_input"]][["value"]]
+        log_inform(
+          paste(
+            "Selected tabs for export",
+            paste(names(selected_tabs_for_export), selected_tabs_for_export, collapse = ", ")
+          )
+        )
       })
 
       shiny::observeEvent(input[[EXPORT$ID$EXPORT_CODE_MENU]], {
-        selected <<- stats::setNames(
-          rep(TRUE, length(exportable_elements)),
-          names(exportable_elements)
-        )
-
         visible_export_tabs <- NA
 
         if (input[[EXPORT$ID$EXPORT_CODE_MENU]] == "current") {
           visible_export_tabs <- input[[ID$NAV_HEADER]]
         }
 
-        shiny::showModal(
-          export_modal_ui(visible_export_tabs)
+        x <- export_modal_ui(visible_export_tabs)
+        selected_tabs_for_export <<- x[["selected"]]
+
+        log_inform(
+          paste(
+            "Selected tabs for export by default",
+            paste(names(selected_tabs_for_export), selected_tabs_for_export, collapse = ", ")
+          )
         )
+
+        shiny::showModal(x[["modal_dialog"]])
       })
 
       output[[EXPORT$ID$EXPORT_CODE]] <- shiny::downloadHandler(
@@ -494,13 +511,15 @@ body::before {
 
             log_inform("Processing export elements")
             export_elements <- local({
-              selected_exportable_elements <- exportable_elements[names(selected)[selected]]
+              selected_exportable_elements <- exportable_elements[names(selected_tabs_for_export)[
+                selected_tabs_for_export
+              ]]
 
               res <- list()
               for (idx in seq_along(selected_exportable_elements)) {
                 log_inform(sprintf("Processing element (%d)", idx))
                 curr_el <- selected_exportable_elements[[idx]]
-                if (selected[[curr_el[["id"]]]]) {
+                if (selected_tabs_for_export[[curr_el[["id"]]]]) {
                   element <- process_export_element(
                     curr_el,
                     output_format
