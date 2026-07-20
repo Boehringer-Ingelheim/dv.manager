@@ -608,7 +608,7 @@ body::before {
                   }
 
                   res[[EXPORT$OUTPUT_FORMAT$PDF]][[REK$TABLE]] <- function(x) {
-                    fmt <- "\n\\newpage\n\\begin{landscape}\n\n%s\n\n\\end{landscape}\n\\newpage\n\n"
+                    fmt <- "\n\\newpage\n\\begin{landscape}\n\nbegingroup\n\n\\fontfamily{lmtt}\\selectfont\n\n%s\n\n\\endgroup\n\n\\end{landscape}\n\\newpage\n\n"
                     sprintf(
                       fmt,
                       res[[EXPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]](x)
