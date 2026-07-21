@@ -1475,3 +1475,159 @@ apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) 
   }
   filtered_dataset
 }
+
+filter_to_txt <- function(filter, masks, dataset_list) {
+  f <- filter[["filters"]]
+
+  unicode_filter <- list()
+  unicode_filter[["sbj"]] <- "Subject_filter"
+
+  TC <- c(
+    horizontal = "\u2500\u2500", # ─
+    vertical = "\u2502 ", # │
+    vert_right = "\u251C\u2500", # ├
+    up_right = "\u2514\u2500", # └
+    space = "  "
+  )
+
+  actions <- local({
+    actions <- list()
+    actions[[FC$FE$COMB$AND]] <- function(el) {
+      curr_unicode_filter <- character(0)
+      curr_unicode_filter[[1]] <- paste0(" ", el[[FC$FE$F$OPERATION]])
+      children <- el[[FC$FE$F$CHILDREN]]
+      last_child_idx <- length(children)
+
+      for (idx in seq_along(children)) {
+        child <- children[[idx]]
+        if (idx == last_child_idx) {
+          tree_char <- TC[["up_right"]]
+          tree_prefix <- TC[["space"]]
+        } else {
+          tree_char <- TC[["vert_right"]]
+          tree_prefix <- TC[["vertical"]]
+        }
+        operation <- child[[FC$FE$F$OPERATION]]
+        child_unicode <- actions[[operation]](child)
+        child_unicode[[1]] <- paste0(" ", tree_char, child_unicode[[1]])
+        child_unicode[2:length(child_unicode)] <- paste0(" ", tree_prefix, child_unicode[2:length(child_unicode)])
+        curr_unicode_filter <- c(curr_unicode_filter, child_unicode)
+      }
+      curr_unicode_filter
+    }
+    actions[[FC$FE$COMB$OR]] <- actions[[FC$FE$COMB$AND]]
+    actions[[FC$FE$COMB$NOT]] <- actions[[FC$FE$COMB$AND]]
+    actions[[FC$SFE$COMB$UNION]] <- actions[[FC$FE$COMB$AND]]
+    actions[[FC$SFE$COMB$INTERSECT]] <- actions[[FC$FE$COMB$AND]]
+    actions[[FC$SFE$COMB$COMPLEMENT]] <- actions[[FC$FE$COMB$AND]]
+    actions[[FC$FE$OP$SUBSET]] <- function(el) {
+      curr_unicode_filter <- character(0)
+      curr_unicode_filter[[1]] <- paste0(" ", "Variable: ", el[[FC$FE$F$VARIABLE]])
+      curr_unicode_filter[[2]] <- paste0(" ", TC[["vert_right"]], " Dataset: ", el[[FC$FE$F$DATASET]])
+      curr_unicode_filter[[3]] <- paste0(
+        " ",
+        TC[["vert_right"]],
+        " Selected ",
+        length(el[[FC$FE$F$VALUES]]),
+        " value(s)"
+      )
+      curr_unicode_filter[[4]] <- paste0(" ", TC[["up_right"]], " Include NA: ", el[[FC$FE$F$INCLUDE_NA]])
+      curr_unicode_filter
+    }
+    actions[[FC$FE$OP$RANGE]] <- function(el, unicode_filter) {
+      curr_unicode_filter <- character(0)
+      curr_unicode_filter[[1]] <- paste0(" ", "Variable: ", el[[FC$FE$F$VARIABLE]])
+      curr_unicode_filter[[2]] <- paste0(" ", TC[["vert_right"]], " Dataset: ", el[[FC$FE$F$DATASET]])
+      curr_unicode_filter[[3]] <- paste0(" ", TC[["vert_right"]], " Min: ", el[[FC$FE$F$MIN]])
+      curr_unicode_filter[[4]] <- paste0(" ", TC[["vert_right"]], " Max: ", el[[FC$FE$F$MAX]])
+      curr_unicode_filter[[5]] <- paste0(" ", TC[["up_right"]], " Include NA: ", el[[FC$FE$F$INCLUDE_NA]])
+      curr_unicode_filter
+    }
+    actions[[FC$FE$OP$DATE]] <- function(el, unicode_filter) {
+      curr_unicode_filter <- character(0)
+      curr_unicode_filter[[1]] <- paste0(" ", "Variable: ", el[[FC$FE$F$VARIABLE]])
+      curr_unicode_filter[[2]] <- paste0(" ", TC[["vert_right"]], " Dataset: ", el[[FC$FE$F$DATASET]])
+      curr_unicode_filter[[3]] <- paste0(" ", TC[["vert_right"]], " Min: ", el[[FC$FE$F$MIN]])
+      curr_unicode_filter[[4]] <- paste0(" ", TC[["vert_right"]], " Max: ", el[[FC$FE$F$MAX]])
+      curr_unicode_filter[[5]] <- paste0(" ", TC[["up_right"]], " Include NA: ", el[[FC$FE$F$INCLUDE_NA]])
+      curr_unicode_filter
+    }
+    actions
+  })
+
+  create_single_unicode_filter <- function(el, root_el) {
+    curr_unicode_filter <- character(0)
+    curr_unicode_filter[[1]] <- root_el
+    children <- el[[FC$FE$F$CHILDREN]]
+    last_child_idx <- length(children)
+
+    for (idx in seq_along(children)) {
+      child <- children[[idx]]
+      if (idx == last_child_idx) {
+        tree_char <- TC[["up_right"]]
+        tree_prefix <- TC[["space"]]
+      } else {
+        tree_char <- TC[["vert_right"]]
+        tree_prefix <- TC[["vertical"]]
+      }
+      operation <- child[[FC$FE$F$OPERATION]]
+      child_unicode <- actions[[operation]](child)
+      child_unicode[[1]] <- paste0(tree_char, child_unicode[[1]])
+      child_unicode[2:length(child_unicode)] <- paste0(tree_prefix, child_unicode[2:length(child_unicode)])
+      curr_unicode_filter <- c(curr_unicode_filter, child_unicode)
+    }
+    curr_unicode_filter
+  }
+
+  filter_unicode <- create_single_unicode_filter(f[["subject_filter"]], "Subject filter")
+
+  for (ds_filter in f[["datasets_filter"]][["children"]]) {
+    nm <- ds_filter[[FC$FE$F$NAME]]
+    filter_unicode <- c(filter_unicode, "", create_single_unicode_filter(ds_filter, nm))
+  }
+
+  filter_unicode |> paste(collapse = "\n")
+}
+
+# TODO: Use labels instead of variable names, both dataset and variables
+# TODO: Add HTML spans with tooltip info
+# TODO: Add the state at each of the levels, it should be possible when we calculate the masks and the levels in the dataset
+# TODO: Add a summary of the operation on top each filter
+# TODO: Include in report HTML and latex
+# TODO: Check for good fonts to represent this
+
+# FE = poc(
+#   F = poc(
+#     NAME = "name",
+#     KIND = "kind",
+#     OPERATION = "operation",
+#     CHILDREN = "children",
+#     INCLUDE_NA = "include_NA",
+#     DATASET = "dataset",
+#     VARIABLE = "variable",
+#     VALUES = "values",
+#     MIN = "min",
+#     MAX = "max"
+#   ),
+#   OP = poc(
+#     OPERATION = "filter",
+#     SUBSET = "select_subset",
+#     RANGE = "select_range",
+#     DATE = "select_date"
+#   ),
+#   COMB = poc(
+#     OPERATION = "row_operation",
+#     AND = "and",
+#     OR = "or",
+#     NOT = "not"
+#   )
+# ),
+# SFE = poc(
+#   F = poc(NAME = "name", KIND = "kind", OPERATION = "operation", CHILDREN = "children"),
+#   COMB = poc(
+#     OPERATION = "set_operation",
+#     UNION = "union",
+#     INTERSECT = "intersect",
+#     COMPLEMENT = "complement"
+#   )
+# )
