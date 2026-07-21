@@ -8,6 +8,11 @@ test_that(
     DS1_call_count <- 0L
     DS2_call_count <- 0L
     
+    mod_simple_prime <- dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")
+    mod_simple_prime[["meta"]] <- list(
+      check_mod_fn = function(afmm, dataset_list) return(character(0))
+    )
+    
     run_app(
       data = list(
         "DS1" = function(){
@@ -19,7 +24,7 @@ test_that(
           return(list(DF = df))
         }
       ),
-      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
+      module_list = list("Simple" = mod_simple_prime),
       filter_dataset_name = "DF",
       filter_key = "ID",
       .launch = FALSE
