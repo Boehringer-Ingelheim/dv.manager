@@ -160,10 +160,10 @@ app_server_ <- function(input, output, session, opts) {
     varname = "unfiltered_dataset_list"
   )
 
-  unfiltered_dataset_list_with_filter_info_ <- sm_mr2(
+  unfiltered_dataset_list_with_filter_info <- sm_mr2(
     {
-      ..t$add_period("unfiltered_dataset_list_with_filter_info_", TRUE)
-      on.exit(..t$add_period("unfiltered_dataset_list_with_filter_info_", FALSE))
+      ..t$add_period("unfiltered_dataset_list_with_filter_info", TRUE)
+      on.exit(..t$add_period("unfiltered_dataset_list_with_filter_info", FALSE))
       # Place reqs here so all elements are synchronized before going forward
       # Consider generation counters (Check current approach)
 
@@ -188,23 +188,10 @@ app_server_ <- function(input, output, session, opts) {
         localize = TRUE
       )
 
-      res
-    },
-    inline = TRUE,
-    varname = "unfiltered_dataset_list_with_filter_info_ "
-  )
-
-  unfiltered_dataset_list_with_filter_info <- sm_mr2(
-    {
-      ..t$add_period("unfiltered_dataset_list_with_filter_info", TRUE)
-      on.exit(..t$add_period("unfiltered_dataset_list_with_filter_info", FALSE))
-      # Place reqs here so all elements are synchronized before going forward
-      # Consider generation counters (Check current approach)
-
       shiny::req(
         # Wait until filter info is ready
-        !unfiltered_dataset_list_with_filter_info_()[["error_list"]]$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
-          !unfiltered_dataset_list_with_filter_info_()[["error_list"]]$any_has_class(
+        !res[["error_list"]]$any_has_class(FC$ERRORS$FILTER_IS_NA$class) &&
+          !res[["error_list"]]$any_has_class(
             FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class
           )
       )
