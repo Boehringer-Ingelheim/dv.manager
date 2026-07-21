@@ -225,8 +225,6 @@ get_filter_data_dataset_lists <- function(dataset_lists) {
   for (idx in seq_len(n_dataset_list)) {
     current_dataset_list <- dataset_lists[[idx]]
     current_dataset_list_name <- nm_dataset_list[[idx]]
-    nm_datasets <- names(current_dataset_list)
-    n_datasets <- length(nm_datasets)
 
     res[[idx]] <- vector(mode = "list", length = 2)
     res[[idx]][[FDF$NAME]] <- current_dataset_list_name
@@ -247,7 +245,6 @@ get_filter_data_dataset_list <- function(dataset_list) {
   for (idx in seq_len(n_datasets)) {
     current_dataset <- dataset_list[[idx]]
     current_dataset_name <- nm_datasets[[idx]]
-    current_dataset_label <- attr(dataset_list[[idx]], "label") %||% current_dataset_name
 
     res[[idx]] <- vector(mode = "list", length = 4)
     res[[idx]][[FDF$NAME]] <- nm_datasets[[idx]]

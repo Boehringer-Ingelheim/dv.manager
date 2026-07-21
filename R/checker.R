@@ -74,8 +74,6 @@ check_filter_dataset_name <- function(filter_dataset_name, dataset_lists) {
     stop(msg)
   }
 
-  error_messages <- character(0)
-
   for (idx in seq_along(dataset_lists)) {
     dataset_list <- dataset_lists[[idx]]
     dataset_list_name <- names(dataset_lists)[[idx]]
