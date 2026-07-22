@@ -182,7 +182,8 @@ app_server_ <- function(input, output, session, opts) {
             unfiltered_dataset_list = r_unfiltered_dataset_list,
             filter_info = filter_info[["result"]][["filter_info"]],
             get_filtered_dataset = get_filtered_dataset,
-            error_list = filter_info[["error_list"]]
+            error_list = filter_info[["error_list"]],
+            dataset_list_filter = r_dataset_list_filter
           )
         },
         localize = TRUE
@@ -230,6 +231,24 @@ app_server_ <- function(input, output, session, opts) {
     },
     varname = "unfiltered_dataset_list_with_filter_info"
   )
+
+  filter_txt <- sm_mr2(
+    {
+      shiny::req(unfiltered_dataset_list_with_filter_info())
+
+      sm_me({
+        filter_to_txt(
+          ..(unfiltered_dataset_list_with_filter_info())
+        )
+      })
+    },
+    varname = "filter_txt",
+    inline = TRUE
+  )
+
+  shiny::observeEvent(filter_txt(), {
+    log_inform(paste0("\n", filter_txt()))
+  })
 
   filtered_dataset_list <- sm_mr2(
     {

@@ -39,6 +39,7 @@ output:
     number_sections: false
     df_print: kable
     latex_engine: xelatex
+    pandoc_args: ["-V", "monofont:DejaVu Sans Mono"]
     extra_dependencies: ["pdflscape"]
 header-includes:
   - \usepackage{atbegshi}
@@ -587,16 +588,39 @@ body::before {
               sprintf("%s\n\n%s\n\n", section, note)
             })
 
+            log_inform("Creating filter txt section")
+
+            filter_section <- local({
+              section <- "## Filters:"
+
+              if (output_format == EXPORT$OUTPUT_FORMAT$HTML) {
+                verbatim_tags <- c("<pre>", "</pre>")
+              } else if (output_format == EXPORT$OUTPUT_FORMAT$PDF) {
+                verbatim_tags <- c("\\begin{verbatim}", "\\end{verbatim}")
+              }
+
+              section <- sprintf(
+                "%s\n\n%s\n\n```{r filter_state, echo = FALSE, results='asis'}\n\ncat(%s)\n\n```\n\n%s",
+                section,
+                verbatim_tags[[1]],
+                get_code_in_context(filter_txt()),
+                verbatim_tags[[2]]
+              )
+
+              section
+            })
+
             log_inform("Creating rmarkdown")
             rmarkdown <- local({
               rmd <- EXPORT$TEMPLATES$HEADER[[output_format]]
               rmd <- sprintf(
-                "%s\n# Data source\n\n```{r}\n%s\n```\n\n%s\n\n%s\n\n%s\n\n",
+                "%s\n# Data source\n\n```{r}\n%s\n```\n\n%s\n\n%s\n\n%s\n\n%s\n\n",
                 rmd,
                 data_code,
                 date_section,
                 hardcoded_hash_section,
-                dynamic_hash_section
+                dynamic_hash_section,
+                filter_section
               )
 
               for (idx in seq_along(export_elements)) {
