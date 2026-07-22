@@ -658,8 +658,12 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
 
   subject_filter_info <- list(
     subjects = complete_subject_list,
+    dataset_list_lvls = stats::setNames(
+      rep(list(list(lvls = list())), length(dataset_list)),
+      names(dataset_list)
+    ),
     filter_info = stats::setNames(
-      rep(list(list(mask = NA, lvls = list())), length(dataset_list)),
+      rep(list(list(mask = NA)), length(dataset_list)),
       names(dataset_list)
     )
   )
@@ -673,7 +677,10 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
 
   for (current_ds_name in names(dataset_list)) {
     current_mask <- dataset_list[[current_ds_name]][[subj_var]] %in% subject_filter_info[["subjects"]]
+    current_lvls <- subject_filter_info[["dataset_list_lvls"]][[current_ds_name]]
     subject_filter_info[["filter_info"]][[current_ds_name]][["mask"]] <- current_mask
+    subject_filter_info[["filter_info"]][[current_ds_name]][["lvls"]] <- current_lvls
+    subject_filter_info[["dataset_list_lvls"]] <- NULL
   }
 
   return(subject_filter_info)
@@ -718,6 +725,7 @@ combine_filter_info <- function(filter_info) {
     subject_lvls <- subject_filter_info[["filter_info"]][[dataset_name]][["lvls"]]
     dataset_lvls <- dataset_filter_info[["filter_info"]][[dataset_name]][["lvls"]]
     res_lvls <- list()
+
     for (variable in union(names(subject_lvls), names(dataset_lvls))) {
       if (length(names(subject_lvls)) > 0 && variable %in% names(subject_lvls)) {
         var_subject_lvls <- subject_lvls[[variable]]
@@ -731,7 +739,10 @@ combine_filter_info <- function(filter_info) {
         var_dataset_lvls <- subject_lvls[[variable]]
       }
 
-      res_lvls[[variable]] <- intersect(var_subject_lvls, var_dataset_lvls)
+      # Unions as it is the most conservative, in case subject reduces the number and another filter specifically
+      # augments it
+
+      res_lvls[[variable]] <- union(var_subject_lvls, var_dataset_lvls)
     }
     res[["filter_info"]][[dataset_name]][["lvls"]] <- res_lvls
   }

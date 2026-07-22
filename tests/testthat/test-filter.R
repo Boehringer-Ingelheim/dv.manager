@@ -2191,6 +2191,14 @@ local({
               mask = c(TRUE, TRUE),
               lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "b"), var_only_subject = c("a", "b"))
             ),
+            d_both_combine_lvls = list(
+              mask = c(TRUE, TRUE, FALSE),
+              lvls = list(
+                var_combine_lvls = c("a", "b"),
+                var_combine_lvls_rev = c("a", "b", "c"),
+                var_use_subject_lvls = c("sa", "sb")
+              )
+            ),
             d_only_subject = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b")))
           )
         ),
@@ -2203,6 +2211,14 @@ local({
             d_both2 = list(
               mask = c(TRUE, FALSE),
               lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "c"), var_only_dataset = c("a", "b"))
+            ),
+            d_both_combine_lvls = list(
+              mask = c(TRUE, TRUE, TRUE),
+              lvls = list(
+                var_combine_lvls = c("a", "b", "c"),
+                var_combine_lvls_rev = c("a", "b"),
+                var_use_dataset_lvls = c("da", "db")
+              )
             ),
             d_only_dataset = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b")))
           )
@@ -2218,7 +2234,7 @@ local({
             mask = c(TRUE, FALSE),
             lvls = list(
               var_both1 = c("a", "b"),
-              var_both2 = c("a"),
+              var_both2 = c("a", "b", "c"),
               var_only_subject = c("a", "b"),
               var_only_dataset = c("a", "b")
             )
@@ -2227,9 +2243,18 @@ local({
             mask = c(TRUE, FALSE),
             lvls = list(
               var_both1 = c("a", "b"),
-              var_both2 = c("a"),
+              var_both2 = c("a", "b", "c"),
               var_only_subject = c("a", "b"),
               var_only_dataset = c("a", "b")
+            )
+          ),
+          d_both_combine_lvls = list(
+            mask = c(TRUE, TRUE, FALSE),
+            lvls = list(
+              var_combine_lvls = c("a", "b", "c"),
+              var_combine_lvls_rev = c("a", "b", "c"),
+              var_use_subject_lvls = c("sa", "sb"),
+              var_use_dataset_lvls = c("da", "db")
             )
           ),
           d_only_subject = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b"))),
@@ -2245,6 +2270,7 @@ local({
     )
   })
 })
+
 
 local({
   test_that(
