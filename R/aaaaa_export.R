@@ -590,7 +590,7 @@ body::before {
 
             log_inform("Creating filter txt section")
 
-            filter_section <- local({
+            filter_txt_section <- local({
               section <- "## Filters:"
 
               if (output_format == EXPORT$OUTPUT_FORMAT$HTML) {
@@ -599,11 +599,59 @@ body::before {
                 verbatim_tags <- c("\\begin{verbatim}", "\\end{verbatim}")
               }
 
+              cat_mr <- sm_mr(
+                {
+                  cat(..(filter_txt()))
+                },
+                inline = TRUE,
+                varname = "cat_filter_txt"
+              )
+
+              note <- "An explicit call to the filter and parameters used can be found in the code that accompanies this export."
               section <- sprintf(
-                "%s\n\n%s\n\n```{r filter_state, echo = FALSE, results='asis'}\n\ncat(%s)\n\n```\n\n%s",
+                "%s\n\n%s\n\n```{r filter_export_txt, echo = FALSE, results='asis'}\n\n%s\n\n```\n\n%s\n\n%s",
                 section,
                 verbatim_tags[[1]],
-                get_code_in_context(filter_txt()),
+                get_code_in_context(cat_mr()),
+                verbatim_tags[[2]],
+                note
+              )
+
+              section
+            })
+
+            filter_reference_list_txt_section <- local({
+              section <- "# Filter references:"
+
+              if (output_format == EXPORT$OUTPUT_FORMAT$HTML) {
+                verbatim_tags <- c("<pre>", "</pre>")
+              } else if (output_format == EXPORT$OUTPUT_FORMAT$PDF) {
+                verbatim_tags <- c("\\begin{verbatim}", "\\end{verbatim}")
+              }
+
+              if (nchar(filter_reference_list_txt()) > 0) {
+                cat_mr <- sm_mr(
+                  {
+                    cat(..(filter_reference_list_txt()))
+                  },
+                  inline = TRUE,
+                  varname = "cat_filter_reference_list_txt"
+                )
+              } else {
+                cat_mr <- sm_mr(
+                  {
+                    cat("No references found")
+                  },
+                  inline = TRUE,
+                  varname = "cat_filter_reference_list_txt"
+                )
+              }
+
+              section <- sprintf(
+                "%s\n\n%s\n\n```{r filter_export_reference_list, echo = FALSE, results='asis'}\n\n%s\n\n```\n\n%s",
+                section,
+                verbatim_tags[[1]],
+                get_code_in_context(cat_mr()),
                 verbatim_tags[[2]]
               )
 
@@ -620,7 +668,7 @@ body::before {
                 date_section,
                 hardcoded_hash_section,
                 dynamic_hash_section,
-                filter_section
+                filter_txt_section
               )
 
               for (idx in seq_along(export_elements)) {
@@ -707,6 +755,7 @@ body::before {
                   element_formatters[[output_format]][[curr_el[["kind"]]]](curr_el)
                 )
               }
+              rmd <- sprintf("%s\n%s", rmd, filter_reference_list_txt_section)
 
               rmd <- sprintf("%s\n%s", rmd, EXPORT$TEMPLATES$SESSION_INFO[[output_format]])
 

@@ -232,18 +232,31 @@ app_server_ <- function(input, output, session, opts) {
     varname = "unfiltered_dataset_list_with_filter_info"
   )
 
-  filter_txt <- sm_mr2(
+  filter_export <- sm_mr2(
     {
       shiny::req(unfiltered_dataset_list_with_filter_info())
 
       sm_me({
-        filter_to_txt(
+        filter_to_export(
           ..(unfiltered_dataset_list_with_filter_info())
         )
       })
     },
-    varname = "filter_txt",
-    inline = TRUE
+    varname = "filter_export"
+  )
+
+  filter_txt <- sm_mr(
+    {
+      ..(filter_export())[["txt"]]
+    },
+    varname = "filter_txt"
+  )
+
+  filter_reference_list_txt <- sm_mr(
+    {
+      ..(filter_export())[["reference_txt"]]
+    },
+    varname = "filter_reference_list_txt"
   )
 
   shiny::observeEvent(filter_txt(), {
