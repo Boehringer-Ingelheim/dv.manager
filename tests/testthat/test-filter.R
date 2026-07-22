@@ -1903,6 +1903,14 @@ local({
     expect_identical(res, "label")
   })
 
+  test_that("apply_lvls_info_to_ds levels are properly dropped", {
+    unfiltered <- data.frame(x = factor(c("a", "b", "c")))
+    filtered <- unfiltered[1:2, , drop = FALSE]
+    ds_lvl <- list(x = c("a", "b"))
+    res <- apply_lvls_info_to_ds(unfiltered, filtered, ds_lvl)
+    expect_equal(levels(res$x), c("a", "b"))
+  })
+
   test_that("apply_lvls_info_to_ds dropped factor levels are restored when prescribed by ds_lvl", {
     unfiltered <- data.frame(x = factor(c("a", "b", "c")))
     filtered <- unfiltered[1:2, , drop = FALSE] # "c" absent
@@ -1926,7 +1934,7 @@ local({
     expect_equal(res$n, 1:2)
   })
 
-  test_that("apply_lvls_info_to_dsempty ds_lvl returns filtered dataset unchanged", {
+  test_that("apply_lvls_info_to_ds empty ds_lvl returns filtered dataset unchanged", {
     unfiltered <- data.frame(x = factor(c("a", "b")))
     filtered <- unfiltered[1, , drop = FALSE]
     res <- apply_lvls_info_to_ds(unfiltered, filtered, ds_lvl = list())

@@ -1407,6 +1407,7 @@ get_filtered_dataset_ <- function(
   # Even when the mask is all TRUE, levels may change e.g.: dropping a level that is not present in any rows
   # As modifying the level may imply label lost, label copy is also required
   # Both functions below do only create copies when, levels or labels change.
+
   fd <- apply_lvls_info_to_ds(ufd, fd, ds_lvl)
   fd <- copy_labels_from_dataset(ufd, fd)
 
@@ -1457,7 +1458,8 @@ apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) 
     # Therefore we force all levels present in the variable to not be dropped
     new_lvls <- union(present_lvls, ds_lvl[[var_name]])
 
-    if (!identical(present_lvls, new_lvls)) {
+    # If new levels are equal to unfiltered levels, we do not create a new factor
+    if (!identical(all_possible_lvls, new_lvls)) {
       new_lvls <- match_set_order(all_possible_lvls, new_lvls)
       filtered_dataset[[var_name]] <- factor(filtered_dataset[[var_name]], new_lvls)
     }
