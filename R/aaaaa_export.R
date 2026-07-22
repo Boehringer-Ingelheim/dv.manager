@@ -623,12 +623,6 @@ body::before {
             filter_reference_list_txt_section <- local({
               section <- "# Filter references:"
 
-              if (output_format == EXPORT$OUTPUT_FORMAT$HTML) {
-                verbatim_tags <- c("<pre>", "</pre>")
-              } else if (output_format == EXPORT$OUTPUT_FORMAT$PDF) {
-                verbatim_tags <- c("\\begin{verbatim}", "\\end{verbatim}")
-              }
-
               if (nchar(filter_reference_list_txt()) > 0) {
                 cat_mr <- sm_mr(
                   {
@@ -648,11 +642,9 @@ body::before {
               }
 
               section <- sprintf(
-                "%s\n\n%s\n\n```{r filter_export_reference_list, echo = FALSE, results='asis'}\n\n%s\n\n```\n\n%s",
+                "%s\n\n```{r filter_export_reference_list, echo = FALSE, results='asis'}\n\n%s\n\n```",
                 section,
-                verbatim_tags[[1]],
-                get_code_in_context(cat_mr()),
-                verbatim_tags[[2]]
+                get_code_in_context(cat_mr())
               )
 
               section
