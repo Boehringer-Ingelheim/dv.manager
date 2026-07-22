@@ -1,3 +1,7 @@
+# dv.manager 3.1.0-9000
+
+- Fix lvl dropping when filtering, that was broken in 3.1.0
+
 # dv.manager 3.1.0
 
  - Performance: 
