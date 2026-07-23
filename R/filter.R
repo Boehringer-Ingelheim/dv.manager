@@ -677,11 +677,11 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
 
   for (current_ds_name in names(dataset_list)) {
     current_mask <- dataset_list[[current_ds_name]][[subj_var]] %in% subject_filter_info[["subjects"]]
-    current_lvls <- subject_filter_info[["dataset_list_lvls"]][[current_ds_name]]
+    current_lvls <- subject_filter_info[["dataset_list_lvls"]][[current_ds_name]][["lvls"]]
     subject_filter_info[["filter_info"]][[current_ds_name]][["mask"]] <- current_mask
     subject_filter_info[["filter_info"]][[current_ds_name]][["lvls"]] <- current_lvls
-    subject_filter_info[["dataset_list_lvls"]] <- NULL
   }
+  subject_filter_info[["dataset_list_lvls"]] <- NULL
 
   return(subject_filter_info)
 }
