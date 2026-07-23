@@ -61,41 +61,23 @@ check_data <- function(data) {
   data
 }
 
-check_filter_dataset_name <- function(filter_dataset_name, dataset_lists) {
+check_filter_dataset_name <- function(filter_dataset_name, dataset_list_name, dataset_list) {
   # TODO it is possible to improve the feedback from this function. It stops in the first error found. We could check
   # all of them at once. This way the app creator can correct all the errors in one go.
-
-  if (length(dataset_lists) == 0) {
-    return(filter_dataset_name)
-  }
 
   if (is.null(filter_dataset_name)) {
     msg <- "No filter_dataset_name specified!"
     stop(msg)
   }
 
-  for (idx in seq_along(dataset_lists)) {
-    dataset_list <- dataset_lists[[idx]]
-    dataset_list_name <- names(dataset_lists)[[idx]]
-    if (is.function(dataset_list)) {
-      dataset_list <- dataset_list()
-    } else {
-      dataset_list <- dataset_list
-    }
-
-    if (!filter_dataset_name %in% names(dataset_list)) {
-      stop(sprintf("%s has no `%s` table", dataset_list_name, filter_dataset_name))
-    }
+  if (!filter_dataset_name %in% names(dataset_list)) {
+    stop(sprintf("%s has no `%s` table", dataset_list_name, filter_dataset_name))
   }
 
   filter_dataset_name
 }
 
-check_filter_key <- function(filter_key, dataset_lists) {
-  if (length(dataset_lists) == 0) {
-    return(filter_key)
-  }
-
+check_filter_key <- function(filter_key, dataset_list) {
   if (is.null(filter_key)) {
     msg <- "filter_key is not specified"
     stop(msg)
@@ -103,19 +85,10 @@ check_filter_key <- function(filter_key, dataset_lists) {
 
   filter_key_present <- TRUE
 
-  for (idx in seq_along(dataset_lists)) {
-    dataset_list <- dataset_lists[[idx]]
-    if (is.function(dataset_list)) {
-      dataset_list <- dataset_list()
-    } else {
-      dataset_list <- dataset_list
-    }
-
-    for (jdx in seq_along(dataset_list)) {
-      if (!filter_key %in% names(dataset_list[[jdx]])) {
-        filter_key_present <- FALSE
-        break
-      }
+  for (idx in seq_along(dataset_list)) {
+    if (!filter_key %in% names(dataset_list[[idx]])) {
+      filter_key_present <- FALSE
+      break
     }
   }
 
@@ -129,38 +102,28 @@ check_filter_key <- function(filter_key, dataset_lists) {
   filter_key
 }
 
-check_meta_mtime_attribute <- function(datasets) {
-  check_warning <- purrr::imap(
-    datasets,
-    function(x, y) {
-      log_inform(sprintf("Checking date for dataset %s", y))
-      if (is.function(x)) {
-        d <- x()
-      } else {
-        d <- x
-      }
-      purrr::quietly(get_date_range)(
-        purrr::map(d, ~ attr(.x, "meta")[["mtime"]])
-      )
+check_meta_mtime_attribute <- function(dataset_list, dataset_list_name) {
+  log_inform(sprintf("Checking date for dataset_list %s", dataset_list_name))
+
+  captured_warnings <- character()
+  withCallingHandlers(
+    get_date_range(
+      lapply(dataset_list, function(el) attr(el, "meta")[["mtime"]])
+    ),
+    warning = function(w) {
+      captured_warnings <<- c(captured_warnings, w$message)
+      invokeRestart("muffleWarning")
     }
   )
 
-  warned_dataset <- purrr::keep(check_warning, ~ length(.x[["warnings"]]) != 0)
-
-  check_passed <- length(warned_dataset) == 0
-
+  check_passed <- length(captured_warnings) == 0
   if (check_passed) {
     log_inform("Check date: Passed")
   } else {
     log_warn("Check date: Not passed. One or more datasets are not dated.")
-    purrr::iwalk(
-      warned_dataset,
-      ~ {
-        purrr::walk(.x[["warnings"]], function(wm) {
-          log_warn(sprintf("%s -> %s", .y, wm))
-        })
-      }
-    )
+    for (wm in captured_warnings) {
+      log_warn(sprintf("%s -> %s", dataset_list_name, wm))
+    }
   }
 
   check_passed

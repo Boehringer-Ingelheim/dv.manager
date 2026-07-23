@@ -113,14 +113,23 @@ run_app <- function(
   if (!isTRUE(.bypass_checks)) {
     log_inform("Running EEF checkers")
     config[["module_info"]] <- check_EEF(config[["module_info"]], config[["afmm_static"]])
-    config[["filter_dataset_name"]] <- check_filter_dataset_name(filter_dataset_name, dataset_lists)
-    config[["filter_key"]] <- check_filter_key(filter_key, dataset_lists)
-    check_meta_mtime_attribute(dataset_lists)
+
+    for (idx in seq_along(dataset_lists)) {
+      dataset_list <- dataset_lists[[idx]]
+      dataset_list_name <- names(dataset_lists)[[idx]]
+      if (is.function(dataset_list)) {
+        dataset_list <- dataset_list()
+      }
+
+      check_filter_dataset_name(filter_dataset_name, dataset_list_name, dataset_list) # TODO: Fold? Only two checks, one of them dataset_list-independent
+      check_filter_key(filter_key, dataset_list)
+      check_meta_mtime_attribute(dataset_list, dataset_list_name)
+    }
   } else {
-    config[["filter_dataset_name"]] <- filter_dataset_name
-    config[["filter_key"]] <- filter_key
     log_inform("EEF checkers disabled!")
   }
+  config[["filter_dataset_name"]] <- filter_dataset_name
+  config[["filter_key"]] <- filter_key
 
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
