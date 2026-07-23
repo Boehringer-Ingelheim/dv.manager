@@ -1048,7 +1048,7 @@ new_filter_server <- function(
     shiny::observeEvent(after_filter_info(), {
       shiny::req(!is.null(after_filter_info()))
 
-      r_after_filter_info <- after_filter_info()[["filter_info"]][["result"]][["filter_info"]]
+      r_after_filter_info <- after_filter_info()[["filter_info"]]
       r_after_filter_info_names <- names(r_after_filter_info)
 
       row_count <- vector("list", length = length(r_after_filter_info))
