@@ -1783,6 +1783,19 @@ local({
         create_subject_filter_info(dataset_list = dataset_list, e, "sbj")[["subjects"]],
         "SBJ1"
       )
+      expect_identical(
+        create_subject_filter_info(dataset_list = dataset_list, e, "sbj")[["filter_info"]],
+        list(
+          d1 = list(
+            mask = c(FALSE, TRUE),
+            lvls = list(var1 = "a")
+          ),
+          d2 = list(
+            mask = c(FALSE),
+            lvls = list()
+          )
+        )
+      )
     }
   )
 
@@ -1805,6 +1818,19 @@ local({
       expect_identical(
         create_subject_filter_info(dataset_list = dataset_list, e, "sbj")[["subjects"]],
         c("SBJ1", "SBJ2", "SBJ3")
+      )
+      expect_identical(
+        create_subject_filter_info(dataset_list = dataset_list, e, "sbj")[["filter_info"]],
+        list(
+          d1 = list(
+            mask = c(TRUE, TRUE),
+            lvls = list()
+          ),
+          d2 = list(
+            mask = c(TRUE),
+            lvls = list()
+          )
+        )
       )
     }
   )
@@ -2637,7 +2663,12 @@ local({
       ds1 = data.frame(
         row.names = 1:6,
         range_var = c(1.0:5.0, NA),
-        sbj_var = paste0("SBJ-", 1:6)
+        sbj_var = factor(paste0("SBJ-", 1:6)),
+        subset_var = factor(letters[1:6])
+      ),
+      ds2 = data.frame(
+        sbj_var = factor(paste0("SBJ-", 1:6)),
+        subset_var = factor(letters[1:6])
       )
     )
   )
