@@ -1990,6 +1990,7 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
     simple_root_el[SC.PROPERTY.STATE_OVERRIDE] = filter_state;
     simple_filter_state.state = {};
 
+    simple_root_el.querySelectorAll(SC.TAG.INCOMPATIBLE_WARNING_ELEMENT).forEach(el => el.remove());
     let warning_element = document.createElement(SC.TAG.INCOMPATIBLE_WARNING_ELEMENT);
     warning_element.innerHTML = "&#9888; Filter state cannot be represented";
     warning_element.classList = "alert alert-warning mb-3 border-1 rounded";
