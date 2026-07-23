@@ -1787,7 +1787,7 @@ local({
         create_subject_filter_info(dataset_list = dataset_list, e, "sbj")[["filter_info"]],
         list(
           d1 = list(
-            mask = c(FALSE, TRUE),
+            mask = c(TRUE, FALSE),
             lvls = list(var1 = "a")
           ),
           d2 = list(
