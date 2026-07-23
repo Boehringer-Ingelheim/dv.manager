@@ -2914,4 +2914,116 @@ local({
       expect_identical(labels_before, labels_after)
     }
   )
+
+  # Lvl dropping related
+  test_that(
+    "lvls of filtered values are dropped and also reintroduced when another variable filter reintroduces a row" |>
+      vdoc[["add_spec"]](c(
+        specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+        specs$FILTERING$FILTER_LEVEL_DROP
+      )),
+    {
+      app <- start_app_driver(rlang::quo({
+        dv.manager:::run_app(
+          data = !!dataset_lists,
+          module_list = list(
+            AFMM = dv.manager:::mod_afmm_export("afmm")
+          ),
+          filter_dataset_name = "ds1",
+          filter_key = "sbj_var",
+          enableBookmarking = "url",
+          filter_default_state = '
+{
+    "filters": {
+        "datasets_filter": {
+            "children": [
+                {
+                    "kind": "dataset",
+                    "name": "ds2",
+                    "children": [
+                        {
+                            "kind": "row_operation",
+                            "operation": "and",
+                            "children": [
+                                {
+                                    "kind": "filter",
+                                    "dataset": "ds2",
+                                    "operation": "select_subset",
+                                    "variable": "subset_var",
+                                    "values": [
+                                        "d"
+                                    ],
+                                    "include_NA": true
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "subject_filter": {
+            "children": [
+                {
+                    "kind": "row_operation",
+                    "operation": "or",
+                    "children": [
+                        {
+                            "kind": "filter",
+                            "dataset": "ds1",
+                            "operation": "select_subset",
+                            "variable": "sbj_var",
+                            "values": [
+                                "SBJ-1"
+                            ],
+                            "include_NA": true
+                        },
+                        {
+                            "kind": "filter",
+                            "dataset": "ds1",
+                            "operation": "select_subset",
+                            "variable": "sbj_var",
+                            "values": [
+                                "SBJ-2"
+                            ],
+                            "include_NA": true
+                        },
+                        {
+                            "kind": "filter",
+                            "dataset": "ds1",
+                            "operation": "select_subset",
+                            "variable": "subset_var",
+                            "values": [
+                                "c"
+                            ],
+                            "include_NA": true
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "dataset_list_name": "dl1"
+}
+'
+        )
+      }))
+
+      app$wait_for_idle()
+
+      export <- shiny::isolate(app$get_values(export = TRUE)[["export"]][["afmm-afmm"]][["filtered_dataset_list"]]())
+
+      expect_identical(
+        levels(export[["ds1"]][["sbj_var"]]),
+        c("SBJ-1", "SBJ-2", "SBJ-3")
+      )
+      expect_identical(
+        levels(export[["ds1"]][["subset_var"]]),
+        c("a", "b", "c")
+      )
+      expect_identical(
+        levels(export[["ds2"]][["sbj_var"]]),
+        c("SBJ-1", "SBJ-2", "SBJ-3", "SBJ-4", "SBJ-5", "SBJ-6")
+      )
+    }
+  )
 })
