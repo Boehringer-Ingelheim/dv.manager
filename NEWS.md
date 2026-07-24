@@ -1,6 +1,8 @@
 # dv.manager 3.1.0-9000
 
 - Fix lvl dropping when filtering, that was broken in 3.1.0
+- Fix superfluous incompatible state messages in filter
+- Fix row counting that was not present in latest release
 
 # dv.manager 3.1.0
 
