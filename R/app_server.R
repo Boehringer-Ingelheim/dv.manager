@@ -224,6 +224,7 @@ app_server_ <- function(input, output, session, opts) {
         {
           shinymeta::..(unfiltered_dataset_list_with_filter_info_())
         }
+      )
 
       ..t$add_event("received unfiltered_dataset_list_with_filter_info")
 
