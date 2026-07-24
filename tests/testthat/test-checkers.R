@@ -215,7 +215,7 @@ test_that(
       D3 = list(a = 1, b = 2)
     )
 
-    check_filter_dataset_name("a", "D1", data[["D1"]]) |>
+    check_filter_dataset_name("a", data[["D1"]], "D1") |>
       expect_error(regexp = NA) |>
       expect_equal("a")
   }
@@ -232,7 +232,7 @@ test_that(
       D2 = list(a = 1, b = 2),
       D3 = list(c = 1, b = 2)
     )
-    check_filter_dataset_name("a", "D3", data[["D3"]]) |>
+    check_filter_dataset_name("a", data[["D3"]], "D3") |>
       expect_error(regexp = "D3 has no `a` table", fixed = TRUE)
   }
 )
@@ -248,7 +248,7 @@ test_that(
       D2 = list(a = 1, b = 2),
       D3 = list(c = 1, b = 2)
     )
-    check_filter_dataset_name(NULL, "D1", data[["D1"]]) |>
+    check_filter_dataset_name(NULL, data[["D1"]], "D1") |>
       expect_error(regexp = "No filter_dataset_name specified!")
   }
 )

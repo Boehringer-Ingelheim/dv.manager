@@ -112,7 +112,16 @@ run_app <- function(
 
   if (!isTRUE(.bypass_checks)) {
     log_inform("Running EEF checkers")
-    config[["module_info"]] <- check_EEF(config[["module_info"]], config[["afmm_static"]])
+
+     # allocate for [[mod_id]][[dataset_list]]
+    eef_errors_by_mod_and_dl <- local({
+      eef_errors_by_dl <- vector(mode = "list", length = length(dataset_lists))
+      names(eef_errors_by_dl) <- names(dataset_lists)
+      mod_ids <- names(config[["afmm_static"]][["module_names"]])
+      res <- rep(list(eef_errors_by_dl), length(mod_ids))
+      names(res) <- mod_ids
+      res
+    })
 
     for (idx in seq_along(dataset_lists)) {
       dataset_list <- dataset_lists[[idx]]
@@ -121,10 +130,14 @@ run_app <- function(
         dataset_list <- dataset_list()
       }
 
-      check_filter_dataset_name(filter_dataset_name, dataset_list_name, dataset_list) # TODO: Fold? Only two checks, one of them dataset_list-independent
+      eef_errors_by_mod_and_dl <- EEF_collect(eef_errors_by_mod_and_dl, config[["module_info"]], config[["afmm_static"]],
+                                              dataset_list, dataset_list_name)
+      check_filter_dataset_name(filter_dataset_name, dataset_list, dataset_list_name) # TODO: Fold? Only two checks, one of them dataset_list-independent
       check_filter_key(filter_key, dataset_list)
       check_meta_mtime_attribute(dataset_list, dataset_list_name)
     }
+
+    config[["module_info"]] <- EEF_report(config[["module_info"]], eef_errors_by_mod_and_dl)
   } else {
     log_inform("EEF checkers disabled!")
   }

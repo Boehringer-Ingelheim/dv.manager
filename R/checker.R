@@ -61,7 +61,7 @@ check_data <- function(data) {
   data
 }
 
-check_filter_dataset_name <- function(filter_dataset_name, dataset_list_name, dataset_list) {
+check_filter_dataset_name <- function(filter_dataset_name, dataset_list, dataset_list_name) {
   # TODO it is possible to improve the feedback from this function. It stops in the first error found. We could check
   # all of them at once. This way the app creator can correct all the errors in one go.
 
