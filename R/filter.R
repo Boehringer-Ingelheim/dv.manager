@@ -658,8 +658,12 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
 
   subject_filter_info <- list(
     subjects = complete_subject_list,
+    dataset_list_lvls = stats::setNames(
+      rep(list(list(lvls = list())), length(dataset_list)),
+      names(dataset_list)
+    ),
     filter_info = stats::setNames(
-      rep(list(list(mask = NA, lvls = list())), length(dataset_list)),
+      rep(list(list(mask = NA)), length(dataset_list)),
       names(dataset_list)
     )
   )
@@ -673,8 +677,11 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
 
   for (current_ds_name in names(dataset_list)) {
     current_mask <- dataset_list[[current_ds_name]][[subj_var]] %in% subject_filter_info[["subjects"]]
+    current_lvls <- subject_filter_info[["dataset_list_lvls"]][[current_ds_name]][["lvls"]]
     subject_filter_info[["filter_info"]][[current_ds_name]][["mask"]] <- current_mask
+    subject_filter_info[["filter_info"]][[current_ds_name]][["lvls"]] <- current_lvls
   }
+  subject_filter_info[["dataset_list_lvls"]] <- NULL
 
   return(subject_filter_info)
 }
@@ -718,6 +725,7 @@ combine_filter_info <- function(filter_info) {
     subject_lvls <- subject_filter_info[["filter_info"]][[dataset_name]][["lvls"]]
     dataset_lvls <- dataset_filter_info[["filter_info"]][[dataset_name]][["lvls"]]
     res_lvls <- list()
+
     for (variable in union(names(subject_lvls), names(dataset_lvls))) {
       if (length(names(subject_lvls)) > 0 && variable %in% names(subject_lvls)) {
         var_subject_lvls <- subject_lvls[[variable]]
@@ -731,7 +739,10 @@ combine_filter_info <- function(filter_info) {
         var_dataset_lvls <- subject_lvls[[variable]]
       }
 
-      res_lvls[[variable]] <- intersect(var_subject_lvls, var_dataset_lvls)
+      # Unions as it is the most conservative, in case subject reduces the number and another filter specifically
+      # augments it
+
+      res_lvls[[variable]] <- union(var_subject_lvls, var_dataset_lvls)
     }
     res[["filter_info"]][[dataset_name]][["lvls"]] <- res_lvls
   }
@@ -1037,7 +1048,7 @@ new_filter_server <- function(
     shiny::observeEvent(after_filter_info(), {
       shiny::req(!is.null(after_filter_info()))
 
-      r_after_filter_info <- after_filter_info()[["filter_info"]][["result"]][["filter_info"]]
+      r_after_filter_info <- after_filter_info()[["filter_info"]]
       r_after_filter_info_names <- names(r_after_filter_info)
 
       row_count <- vector("list", length = length(r_after_filter_info))
@@ -1407,6 +1418,7 @@ get_filtered_dataset_ <- function(
   # Even when the mask is all TRUE, levels may change e.g.: dropping a level that is not present in any rows
   # As modifying the level may imply label lost, label copy is also required
   # Both functions below do only create copies when, levels or labels change.
+
   fd <- apply_lvls_info_to_ds(ufd, fd, ds_lvl)
   fd <- copy_labels_from_dataset(ufd, fd)
 
@@ -1457,7 +1469,8 @@ apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) 
     # Therefore we force all levels present in the variable to not be dropped
     new_lvls <- union(present_lvls, ds_lvl[[var_name]])
 
-    if (!identical(present_lvls, new_lvls)) {
+    # If new levels are equal to unfiltered levels, we do not create a new factor
+    if (!identical(all_possible_lvls, new_lvls)) {
       new_lvls <- match_set_order(all_possible_lvls, new_lvls)
       filtered_dataset[[var_name]] <- factor(filtered_dataset[[var_name]], new_lvls)
     }
