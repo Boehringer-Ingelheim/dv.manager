@@ -146,6 +146,17 @@ app_server_ <- function(input, output, session, opts) {
           FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class
         )
     )
+
+    if (filter_info[["error_list"]]$any()) {
+      msg <- shiny::div(
+        shiny::p(paste(filter_info[["error_list"]]$get_messages(), collapse = "; ")),
+        shiny::p("Filter will be reset")
+      )
+      session$sendCustomMessage("request_dataset_filter_state", list(id = ID$FILTER, state = "null"))
+      shiny::showNotification(msg, type = "error", duration = NULL)
+      shiny::req(FALSE)
+    }
+
     res <- list(
       unfiltered_dataset_list = r_unfiltered_dataset_list,
       filter_info = filter_info[["result"]][["filter_info"]],
