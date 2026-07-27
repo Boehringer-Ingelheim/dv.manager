@@ -652,16 +652,7 @@ body::before {
 
             log_inform("Creating rmarkdown")
             rmarkdown <- local({
-              rmd <- EXPORT$TEMPLATES$HEADER[[output_format]]
-              rmd <- sprintf(
-                "%s\n# Data source\n\n```{r}\n%s\n```\n\n%s\n\n%s\n\n%s\n\n%s\n\n",
-                rmd,
-                data_code,
-                date_section,
-                hardcoded_hash_section,
-                dynamic_hash_section,
-                filter_txt_section
-              )
+              output_rmd <- ""
 
               for (idx in seq_along(export_elements)) {
                 curr_el <- export_elements[[idx]]
@@ -691,7 +682,7 @@ body::before {
                   }
 
                   res[[EXPORT$OUTPUT_FORMAT$PDF]][[REK$TABLE]] <- function(x) {
-                    fmt <- "\n\\newpage\n\\begin{landscape}\n\nbegingroup\n\n\\fontfamily{lmtt}\\selectfont\n\n%s\n\n\\endgroup\n\n\\end{landscape}\n\\newpage\n\n"
+                    fmt <- "\n\\newpage\n\\begin{landscape}\n\n\\begingroup\n\n\\fontfamily{lmtt}\\selectfont\n\n%s\n\n\\endgroup\n\n\\end{landscape}\n\\newpage\n\n"
                     sprintf(
                       fmt,
                       res[[EXPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]](x)
@@ -741,17 +732,26 @@ body::before {
                   res
                 })
 
-                rmd <- sprintf(
+                output_rmd <- sprintf(
                   "%s\n%s\n",
-                  rmd,
+                  output_rmd,
                   element_formatters[[output_format]][[curr_el[["kind"]]]](curr_el)
                 )
               }
-              rmd <- sprintf("%s\n%s", rmd, filter_reference_list_txt_section)
 
-              rmd <- sprintf("%s\n%s", rmd, EXPORT$TEMPLATES$SESSION_INFO[[output_format]])
-
-              rmd <- sprintf("%s\n%s", rmd, EXPORT$TEMPLATES$FOOTER[[output_format]])
+              rmd <- sprintf(
+                "%s\n\n```{r data_source}\n%s\n```\n\n%s\n\n# Data source\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n",
+                EXPORT$TEMPLATES$HEADER[[output_format]],
+                data_code,
+                output_rmd,
+                date_section,
+                hardcoded_hash_section,
+                dynamic_hash_section,
+                filter_txt_section,
+                filter_reference_list_txt_section,
+                EXPORT$TEMPLATES$SESSION_INFO[[output_format]],
+                EXPORT$TEMPLATES$FOOTER[[output_format]]
+              )
 
               rmd
             })
