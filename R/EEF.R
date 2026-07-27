@@ -1,41 +1,46 @@
-check_EEF <- local({
-  # TODO: Transform afmm in a safe list that is declared fully in run app or in a constructor function, that way all names should be aligned from the beginning and we minimize
-  # possible errors
+# TODO: Transform afmm in a safe list that is declared fully in run app or in a constructor function, that way all names should be aligned from the beginning and we minimize
+# possible errors
 
-  run_check_mod_fn <- function(check_mod_fn, afmm) {
-    dl_count <- length(afmm[["data"]]) # NOTE: `dl_*` stands for dataset_list_*
-
-    errors_by_dl <- vector(mode = "list", length = dl_count)
-    error_count_by_dl <- integer(0)
-    error_count <- 0
-    for (i_dl in seq_len(dl_count)) {
-      dl <- afmm[["data"]][[i_dl]]
-      if (is.function(dl)) {
-        dl <- dl()
-      }
-      # TODO: Unsure of this signature, we break the fact that the check_mod_fn requires afmm
-      # Maybe afmm should not be the proper and element passed and breakin into afmm_static and reactive is not necessary
-      # Maybe just checking agains the config?
-
-      error_messages <- check_mod_fn(afmm, dl)
-      errors_by_dl[[i_dl]] <- error_messages
-      error_count_by_dl[[i_dl]] <- length(error_messages)
-      error_count <- error_count + length(error_messages)
+EEF_collect <- function(eef_errors, module_info, afmm_static, dataset_list, dataset_list_name) {
+  for (nm in names(afmm_static[["module_names"]])) {
+    check_mod_fn <- module_info[["meta"]][[nm]][["check_mod_fn"]]
+    if (!is.null(check_mod_fn)) {
+      log_inform(paste0("------- (S) Running checker for `", nm, "` and dataset list", dataset_list_name, " ---------"))
+      eef_errors[[nm]][[dataset_list_name]] <- check_mod_fn(afmm_static, dataset_list, dataset_list_name)
+      log_inform(paste0("------- (E) Running checker for `", nm, "` and dataset list", dataset_list_name, " ---------"))
+    } else {
+      log_inform(paste0("No checker found for `", nm, "`"))
     }
+  }
+  eef_errors
+}
 
-    names(errors_by_dl) <- names(afmm[["data"]])
-
-    list(
-      error_count = error_count,
-      errors_by_dl = errors_by_dl,
-      error_count_by_dl = error_count_by_dl
-    )
+EEF_report <- local({
+  bold_html <- function(s) {
+    s <- gsub("<b>", "\033[1m", s)
+    s <- gsub("</b>", "\033[22m", s)
+    # strip any remaining tags
+    gsub("<[^>]+>", "", s)
   }
 
-  errors_to_html <- function(errors, module_id) {
-    error_count <- errors[["error_count"]]
-    errors_by_dl <- errors[["errors_by_dl"]]
-    error_count_by_dl <- errors[["error_count_by_dl"]]
+  errors_to_console <- function(errors_by_dl, module_id) {
+    parts <- character(0)
+
+    for (dl in names(errors_by_dl)) {
+      msgs <- errors_by_dl[[dl]]
+      parts <- c(parts, paste0("Dataset: <b>`", dl, "`</b>\n  - ", paste(msgs, collapse = "\n  - ")))
+    }
+    parts <- paste(parts, collapse = "\n\n")
+
+    bold_html(paste0(
+      "EEF errors found for module with id: <b>`",
+      module_id,
+      "`</b>\n",
+      parts
+    ))
+  }
+
+  errors_to_html <- function(errors_by_dl, module_id) {
     dl_count <- length(errors_by_dl)
 
     as_items <- function(x) htmltools::p(htmltools::HTML(paste("\u2022", x)))
@@ -88,7 +93,7 @@ check_EEF <- local({
 
       details_collapse_expand_status <- "open"
       for (i_dl in seq_len(dl_count)) {
-        if (error_count_by_dl[[i_dl]] == 0) {
+        if (length(errors_by_dl[[i_dl]]) == 0) {
           next
         }
 
@@ -118,57 +123,28 @@ check_EEF <- local({
     return(res)
   }
 
-  bold_html <- function(s) {
-    s <- gsub("<b>", "\033[1m", s)
-    s <- gsub("</b>", "\033[22m", s)
-    # strip any remaining tags
-    gsub("<[^>]+>", "", s)
-  }
-
-  errors_to_console <- function(errors, module_id) {
-    parts <- character(0)
-    for (dl in names(errors$errors_by_dl)) {
-      msgs <- errors$errors_by_dl[[dl]]
-      parts <- c(parts, paste0("Dataset: <b>`", dl, "`</b>\n  - ", paste(msgs, collapse = "\n  - ")))
-    }
-    parts <- paste(parts, collapse = "\n\n")
-
-    bold_html(paste0(
-      "EEF errors found for module with id: <b>`",
-      module_id,
-      "`</b>\n",
-      parts
-    ))
-  }
-
-  check_EEF <- function(module_info, afmm_static) {
-    errors <- list()
-    for (nm in names(afmm_static[["module_names"]])) {
-      check_mod_fn <- module_info[["meta"]][[nm]][["check_mod_fn"]]
-      if (!is.null(check_mod_fn)) {
-        log_inform(paste0("Running checker for `", nm, "`"))
-        log_inform(paste0("------- (S) Running checker for `", nm, "` ---------"))
-        errors[[nm]] <- run_check_mod_fn(check_mod_fn = check_mod_fn, afmm = afmm_static)
-        if (errors[[nm]][["error_count"]] > 0) {
-          # Replace uis and servers
-          log_warn(errors_to_console(errors[[nm]], nm))
-          module_info[["ui"]][[nm]] <- local({
-            local_nm <- nm
-            function(...) {
-              errors_to_html(errors[[local_nm]], local_nm)
-            }
-          })
-          module_info[["server"]][[nm]] <- function(...) {}
-        } else {
-          log_inform(paste0("No EEF errors found for `", nm, "`"))
-        }
-        log_inform(paste0("------- (E) Running checker for `", nm, "` ---------"))
+  EEF_report <- function(module_info, eef_errors_by_mod_and_dl) {
+    for (idx in seq_along(eef_errors_by_mod_and_dl)) {
+      mod_id <- names(eef_errors_by_mod_and_dl)[[idx]]
+      dl_errors <- eef_errors_by_mod_and_dl[[idx]]
+      error_count <- sum(unlist(sapply(dl_errors, length)))
+      if (error_count > 0) {
+        # Replace uis and servers
+        log_warn(errors_to_console(dl_errors, mod_id))
+        module_info[["ui"]][[mod_id]] <- local({
+          local_mod_id <- mod_id
+          local_dl_errors <- dl_errors
+          function(...) {
+            errors_to_html(local_dl_errors, local_mod_id)
+          }
+        })
+        module_info[["server"]][[mod_id]] <- function(...) {}
       } else {
-        log_inform(paste0("No checker found for `", nm, "`"))
+        log_inform(paste0("No EEF errors found for `", mod_id, "`"))
       }
     }
-    module_info
+    return(module_info)
   }
 
-  check_EEF
+  EEF_report
 })

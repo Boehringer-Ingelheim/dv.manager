@@ -16,7 +16,7 @@ test_that(
       filter_key = "C",
       .launch = FALSE
     ) |>
-      expect_error(regexp = "D2 has no `DD1` table")
+      expect_error(regexp = "Selected filtering key is not present in all datasets") 
   }
 )
 
@@ -40,6 +40,7 @@ test_that(
       expect_warning(regexp = "Check date: Not passed", fixed = TRUE) |>
       expect_warning(regexp = "D1 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
       expect_warning(regexp = "D1 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
+      expect_warning(regexp = "Check date: Not passed", fixed = TRUE) |>
       expect_warning(regexp = "D2 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
       expect_warning(regexp = "D2 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
       expect_error(regexp = NA)
@@ -105,6 +106,7 @@ test_that(
       expect_warning(regexp = "Check date: Not passed") |>
       expect_warning(regexp = "D1 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
       expect_warning(regexp = "D1 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
+      expect_warning(regexp = "Check date: Not passed") |>
       expect_warning(regexp = "D2 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
       expect_warning(regexp = "D2 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE)
   }
@@ -126,6 +128,7 @@ test_that(
       expect_warning(regexp = "Check date: Not passed") |>
       expect_warning(regexp = "D1 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
       expect_warning(regexp = "D1 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
+      expect_warning(regexp = "Check date: Not passed") |>
       expect_warning(regexp = "D2 -> DD1 has no date. no meta attribute or no mtime entry", fixed = TRUE) |>
       expect_warning(regexp = "D2 -> DD2 has no date. no meta attribute or no mtime entry", fixed = TRUE)
   }

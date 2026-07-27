@@ -15,9 +15,11 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
 
-    check_filter_key("A", data) |>
-      expect_error(regexp = NA) |>
-      expect_equal("A")
+    for (dataset_list in data){
+      check_filter_key("A", dataset_list) |>
+        expect_error(regexp = NA) |>
+        expect_equal("A")
+    }
   }
 )
 
@@ -32,8 +34,10 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, D = 2))
     )
 
-    check_filter_key("C", data) |>
-      expect_error(regexp = "Selected filtering key is not present in all datasets")
+    for (dataset_list in data){
+      check_filter_key("C", dataset_list) |>
+        expect_error(regexp = "Selected filtering key is not present in all datasets")
+    }
   }
 )
 
@@ -47,9 +51,18 @@ test_that(
       "D1" = list(DD1 = tibble::tibble(A = 1, C = 2), DD2 = tibble::tibble(A = 1, B = 2)),
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
-
-    check_filter_key("C", data) |>
-      expect_error(regexp = "Selected filtering key is not present in all datasets")
+   
+    for (dataset_list in data) {
+      if ("C" %in% names(dataset_list)) {
+        check_filter_key("C", dataset_list) |>
+          expect_error(regexp = NA) |>
+          expect_equal("C")
+      } else {
+        check_filter_key("C", dataset_list) |>
+          expect_error(regexp = "Selected filtering key is not present in all datasets")
+      }
+      
+    }
   }
 )
 
@@ -64,21 +77,11 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
 
-    check_filter_key("A", data) |>
-      expect_error(regexp = NA) |>
-      expect_equal("A")
-  }
-)
-
-test_that(
-  vdoc[["add_spec"]](
-    "check_filter_key should pass the check when data is empty. Should return the checked element",
-    c(specs$FILTERING$FILTER_GLOBAL_KEY)
-  ),
-  {
-    check_filter_key("A", list()) |>
-      expect_error(regexp = NA) |>
-      expect_equal("A")
+    for (dataset_list in data) {
+      check_filter_key("A", dataset_list) |>
+        expect_error(regexp = NA) |>
+        expect_equal("A")
+    }
   }
 )
 
@@ -93,8 +96,10 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
 
-    check_filter_key(NULL, data) |>
-      expect_error(regexp = "filter_key is not specified")
+    for (dataset_list in data) {
+      check_filter_key(NULL, dataset_list) |>
+        expect_error(regexp = "filter_key is not specified")
+    }
   }
 )
 
@@ -109,8 +114,10 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
 
-    check_filter_key(1, data) |>
-      expect_error(regexp = "Selected filtering key is not present in all datasets")
+    for (dataset_list in data) {
+      check_filter_key(1, data) |>
+        expect_error(regexp = "Selected filtering key is not present in all datasets")
+    }
   }
 )
 
@@ -148,7 +155,9 @@ test_that(
       DS2 = domain_list
     )
 
-    check_meta_mtime_attribute(data) |>
+    check_meta_mtime_attribute(data[["DS1"]], "DS1") |>
+      expect_true()
+    check_meta_mtime_attribute(data[["DS2"]], "DS2") |>
       expect_true()
   }
 )
@@ -185,7 +194,7 @@ test_that(
 
     attr(data[["DS1"]][["a"]], "meta") <- list()
 
-    check_meta_mtime_attribute(data) |>
+    check_meta_mtime_attribute(data[["DS1"]], "DS1") |>
       expect_false() |>
       expect_warning("Check date: Not passed. One or more datasets are not dated.", fixed = TRUE) |>
       expect_warning("DS1 -> a has no date. no meta attribute or no mtime entry", fixed = TRUE)
@@ -206,21 +215,9 @@ test_that(
       D3 = list(a = 1, b = 2)
     )
 
-    check_filter_dataset_name("a", data) |>
+    check_filter_dataset_name("a", data[["D1"]], "D1") |>
       expect_error(regexp = NA) |>
       expect_equal("a")
-  }
-)
-
-test_that(
-  vdoc[["add_spec"]](
-    "check_filter_dataset_name should pass when data is empty",
-    c(specs$FILTERING$FILTER_GLOBAL_TABLE)
-  ),
-  {
-    check_filter_dataset_name("A", list()) |>
-      expect_error(regexp = NA) |>
-      expect_equal("A")
   }
 )
 
@@ -235,7 +232,7 @@ test_that(
       D2 = list(a = 1, b = 2),
       D3 = list(c = 1, b = 2)
     )
-    check_filter_dataset_name("a", data) |>
+    check_filter_dataset_name("a", data[["D3"]], "D3") |>
       expect_error(regexp = "D3 has no `a` table", fixed = TRUE)
   }
 )
@@ -251,7 +248,7 @@ test_that(
       D2 = list(a = 1, b = 2),
       D3 = list(c = 1, b = 2)
     )
-    check_filter_dataset_name(NULL, data) |>
+    check_filter_dataset_name(NULL, data[["D1"]], "D1") |>
       expect_error(regexp = "No filter_dataset_name specified!")
   }
 )

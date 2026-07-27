@@ -31,7 +31,6 @@ decorate_char_vars_to_factor_vars_dataset_list <- function(f) { # nolintr
 }
 
 char_vars_to_factor_vars_dataset_lists <- function(dataset_lists) { # nolintr
-  dataset_list_names <- names(dataset_lists)
   lapply(dataset_lists, function(d) {
     if (is.function(d)) {
       decorate_char_vars_to_factor_vars_dataset_list(d)
@@ -61,7 +60,6 @@ ungroup2df_datasets_dataset_list <- function(dataset_list) {
 }
 
 ungroup2df_datasets_dataset_lists <- function(dataset_lists) { # nolintr
-  dataset_list_names <- names(dataset_lists)
   lapply(dataset_lists, function(d) {
     if (is.function(d)) {
       decorate_ungroup2df_datasets_dataset_list(d)
