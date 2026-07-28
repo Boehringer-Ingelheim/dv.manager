@@ -192,7 +192,7 @@ app_server_ <- function(input, output, session, opts) {
       res
     },
     inline = TRUE,
-    varname = "unfiltered_dataset_list_with_filter_info_ "
+    varname = "unfiltered_dataset_list_with_filter_info_"
   )
 
   unfiltered_dataset_list_with_filter_info <- sm_mr2(
@@ -222,7 +222,7 @@ app_server_ <- function(input, output, session, opts) {
 
       res <- sm_me(
         {
-          shinymeta::..(unfiltered_dataset_list_with_filter_info_())
+          ..(unfiltered_dataset_list_with_filter_info_())
         }
       )
 
