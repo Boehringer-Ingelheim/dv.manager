@@ -78,9 +78,7 @@ cache_dataset_list_function <- function(dataset_lists) {
   local_dataset_lists <- dataset_lists
 
   dataset_list_single_element_cache <- function(dataset_list_idx) {
-    message(sprintf("called with dataset_list_idx: %d", dataset_list_idx))
     if (dataset_list_idx != last_dataset_list_index_requested) {
-      message(sprintf("last: %d curr: %d", last_dataset_list_index_requested, dataset_list_idx))
       last_dataset_list_returned <<- local_dataset_lists[[dataset_list_idx]]()
     }
     last_dataset_list_index_requested <<- dataset_list_idx
