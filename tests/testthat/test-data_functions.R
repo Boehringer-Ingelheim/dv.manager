@@ -12,7 +12,7 @@ test_that(
     
     mod_simple_prime <- dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")
     mod_simple_prime[["meta"]] <- list(
-      check_mod_fn = function(afmm, dataset_list, dataset_list_name) {
+      check_mod_fn = function(afmm, dataset_list) {
         captured_afmm <<- afmm
         return(character(0))
       }

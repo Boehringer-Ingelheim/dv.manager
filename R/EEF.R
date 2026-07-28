@@ -6,7 +6,7 @@ EEF_collect <- function(eef_errors, module_info, afmm_static, dataset_list, data
     check_mod_fn <- module_info[["meta"]][[nm]][["check_mod_fn"]]
     if (!is.null(check_mod_fn)) {
       log_inform(paste0("------- (S) Running checker for `", nm, "` and dataset list", dataset_list_name, " ---------"))
-      eef_errors[[nm]][[dataset_list_name]] <- check_mod_fn(afmm_static, dataset_list, dataset_list_name)
+      eef_errors[[nm]][[dataset_list_name]] <- check_mod_fn(afmm_static, dataset_list)
       log_inform(paste0("------- (E) Running checker for `", nm, "` and dataset list", dataset_list_name, " ---------"))
     } else {
       log_inform(paste0("No checker found for `", nm, "`"))
