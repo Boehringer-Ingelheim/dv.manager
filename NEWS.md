@@ -1,3 +1,7 @@
+# dv.manager 3.1.0-9003
+
+- Check that dataset list elements produced by functions have the expected structure
+
 # dv.manager 3.1.0-9002
 
 - Reduce reactive-time dataset function evaluation
