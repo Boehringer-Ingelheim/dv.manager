@@ -97,8 +97,10 @@ run_app <- function(
   config <- list()
   config[["module_info"]] <- check_resolved_modules(resolve_module_list(module_list))
   # The automatic mapping will influence reporting when it is implemented in the future
+  check_data(dataset_lists)
+  dataset_lists <- cache_dataset_list_function(dataset_lists)
+
   config[["afmm_static"]] <- local({
-    check_data(dataset_lists)
     d <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
     d <- ungroup2df_datasets_dataset_lists(d)
     if (!.bypass_filter_precomputation) {
@@ -123,7 +125,7 @@ run_app <- function(
       res
     })
 
-    for (idx in seq_along(dataset_lists)) {
+    for (idx in rev(seq_along(dataset_lists))) {
       dataset_list <- dataset_lists[[idx]]
       dataset_list_name <- names(dataset_lists)[[idx]]
       if (is.function(dataset_list)) {

@@ -1,3 +1,7 @@
+# dv.manager 3.1.0-9002
+
+- Reduce reactive-time dataset function evaluation
+
 # dv.manager 3.1.0-9001
 
 - Minimize dataset function evaluation during `run_app` dataset checks

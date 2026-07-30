@@ -70,3 +70,30 @@ ungroup2df_datasets_dataset_lists <- function(dataset_lists) { # nolintr
     }
   })
 }
+
+cache_dataset_list_function <- function(dataset_lists) {
+  last_dataset_list_index_requested <- 0L
+  last_dataset_list_returned <- NULL
+
+  local_dataset_lists <- dataset_lists
+
+  dataset_list_single_element_cache <- function(dataset_list_idx) {
+    if (dataset_list_idx != last_dataset_list_index_requested) {
+      last_dataset_list_returned <<- local_dataset_lists[[dataset_list_idx]]()
+    }
+    last_dataset_list_index_requested <<- dataset_list_idx
+    return(last_dataset_list_returned)
+  }
+
+  for (idx in seq_along(dataset_lists)) {
+    dataset_list <- dataset_lists[[idx]]
+    if (is.function(dataset_list)) {
+      dataset_lists[[idx]] <- local({
+        local_idx <- idx
+        function() dataset_list_single_element_cache(local_idx)
+      })
+    }
+  }
+
+  return(dataset_lists)
+}
