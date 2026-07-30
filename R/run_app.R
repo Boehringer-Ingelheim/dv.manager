@@ -97,7 +97,7 @@ run_app <- function(
   config <- list()
   config[["module_info"]] <- check_resolved_modules(resolve_module_list(module_list))
   # The automatic mapping will influence reporting when it is implemented in the future
-  check_data(dataset_lists)
+  check_data_while_ignoring_dataset_list_fns(dataset_lists)
   dataset_lists <- cache_dataset_list_function(dataset_lists)
 
   config[["afmm_static"]] <- local({
@@ -130,6 +130,7 @@ run_app <- function(
       dataset_list_name <- names(dataset_lists)[[idx]]
       if (is.function(dataset_list)) {
         dataset_list <- dataset_list()
+        check_dataset_list(dataset_list)
       }
 
       eef_errors_by_mod_and_dl <- EEF_collect(eef_errors_by_mod_and_dl, config[["module_info"]], config[["afmm_static"]],
