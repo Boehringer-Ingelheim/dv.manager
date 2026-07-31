@@ -1,0 +1,60 @@
+\newlength{\wpcharwd}
+\newlength{\wptblwd}
+\newlength{\wpmargin}
+\newlength{\wpsaved}
+\newlength{\wpsavedtw}
+\newlength{\wpsavedosm}
+\newlength{\wpsavedesm}
+\newif\ifwpwidened
+
+\ifdefined\pdfpagewidth
+  \let\wppagewidth\pdfpagewidth      % pdfTeX, XeTeX
+\else
+  \let\wppagewidth\pagewidth         % LuaTeX
+\fi
+
+\newcommand{\wptabfont}{\ttfamily\fontsize{7}{8}\selectfont}
+
+\newcommand{\beginwidepage}[2][1in]{%
+  \setlength{\wpmargin}{#1}%
+  \settowidth{\wpcharwd}{{\wptabfont 0}}%
+  \setlength{\wptblwd}{#2\wpcharwd}%
+  \ifdim\wptblwd>\textwidth
+    \global\wpwidenedtrue
+  \else
+    \global\wpwidenedfalse
+  \fi
+  \ifwpwidened
+    \clearpage
+    \global\setlength{\wpsaved}{\wppagewidth}%
+    \global\setlength{\wpsavedtw}{\textwidth}%
+    \global\setlength{\wpsavedosm}{\oddsidemargin}%
+    \global\setlength{\wpsavedesm}{\evensidemargin}%
+    \global\setlength{\wppagewidth}{\dimexpr\wptblwd+2\wpmargin\relax}%
+    \global\setlength{\paperwidth}{\wppagewidth}%
+    \global\setlength{\textwidth}{\wptblwd}%
+    \global\setlength{\hsize}{\wptblwd}%
+    \global\setlength{\linewidth}{\wptblwd}%
+    \global\setlength{\columnwidth}{\wptblwd}%
+    \global\setlength{\oddsidemargin}{\dimexpr(\paperwidth-\wptblwd)/2-1in\relax}%
+    \global\setlength{\evensidemargin}{\oddsidemargin}%
+    \typeout{widepage: paper \the\paperwidth\space text \the\textwidth}%
+  \else
+    \typeout{widepage: table \the\wptblwd\space fits \the\textwidth, no change}%
+  \fi
+}
+
+\newcommand{\stopwidepage}{%
+  \ifwpwidened
+    \clearpage
+    \global\setlength{\wppagewidth}{\wpsaved}%
+    \global\setlength{\paperwidth}{\wpsaved}%
+    \global\setlength{\textwidth}{\wpsavedtw}%
+    \global\setlength{\hsize}{\wpsavedtw}%
+    \global\setlength{\linewidth}{\wpsavedtw}%
+    \global\setlength{\columnwidth}{\wpsavedtw}%
+    \global\setlength{\oddsidemargin}{\wpsavedosm}%
+    \global\setlength{\evensidemargin}{\wpsavedesm}%
+    \global\wpwidenedfalse
+  \fi
+}

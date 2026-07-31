@@ -41,13 +41,15 @@ output:
     latex_engine: xelatex
     pandoc_args: ["-V", "monofont:DejaVu Sans Mono"]
     extra_dependencies: ["pdflscape"]
+    includes:
+      in_header: /home/zsigmas/Boehringer/GH/Repos/dv.manager/header.tex
 header-includes:
   - \usepackage{atbegshi}
   - \usepackage{graphicx}
   - \usepackage{xcolor}
   - \AtBeginShipout{\AtBeginShipoutUpperLeft{\put(25,-420){\rotatebox{90}{\normalfont\color{red}\fontsize{20pt}{24pt}\selectfont UNVALIDATED CONTENT}}\put(570,-420){\rotatebox{90}{\normalfont\color{red}\fontsize{20pt}{24pt}\selectfont UNVALIDATED CONTENT}}}}
   - \newcommand{\alertwarning}[1]{\par\vspace{4pt}\noindent\fcolorbox{yellow!70!black}{yellow!20}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\color{yellow!60!black}\detokenize{#1}}}\par\vspace{4pt}}
-geometry: landscape, margin=2cm
+geometry: margin=2cm
 papersize: a4
 ---
 
@@ -458,6 +460,8 @@ body::before {
                 reactive <- replace_if_htmlwidget(reactive)
               }
 
+              char_width <- NULL
+
               if (inherits(resolved, "try-error")) {
                 code <- local({
                   msg <- attr(resolved, "condition")$message
@@ -493,6 +497,7 @@ body::before {
                     inline = TRUE
                   )
                   code <- get_code_in_context(reactive_())
+                  char_width <- max(nchar(unlist(strsplit(gt::as_latex(reactive()), "\n"))))
                   kind <- REK$TABLE
                 } else {
                   code <- get_code_in_context(reactive())
@@ -503,6 +508,7 @@ body::before {
               el_processed[["reactive"]] <- NULL
               el_processed[["code"]] <- code
               el_processed[["kind"]] <- kind
+              el_processed[["char_width"]] <- char_width
 
               log_inform(paste0("Processed:", el_processed[["id"]]))
 
@@ -683,9 +689,10 @@ body::before {
                   }
 
                   res[[EXPORT$OUTPUT_FORMAT$PDF]][[REK$TABLE]] <- function(x) {
-                    fmt <- "\n\\newpage\n\\begin{landscape}\n\n\\begingroup\n\n\\fontfamily{lmtt}\\selectfont\n\n%s\n\n\\endgroup\n\n\\end{landscape}\n\\newpage\n\n"
+                    fmt <- "\n\n\\beginwidepage{%d}\n\n\\begingroup\n\n\\wptabfont\n\n%s\n\n\\endgroup\n\n\\stopwidepage\n\n"
                     sprintf(
                       fmt,
+                      x[["char_width"]],
                       res[[EXPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]](x)
                     )
                   }
