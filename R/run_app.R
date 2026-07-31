@@ -97,6 +97,12 @@ run_app <- function(
   config <- list()
   config[["module_info"]] <- check_resolved_modules(resolve_module_list(module_list))
   # The automatic mapping will influence reporting when it is implemented in the future
+  # NOTE(miguel): This call checks the overall structure of `dataset_lists` and some basic assumptions about each
+  #               dataset_list that is _not_ provided as a function.
+  #               It would make sense to merge the dataset_list checks with those in #soupie, but we need them here
+  #               to guard against errors in the config[["afmm_static"]] computation immediately below.
+  #               This means that we won't be bypassing some checks for non-functions dataset_list elements, but
+  #               they are inexpensive anyways.
   check_data_while_ignoring_dataset_list_fns(dataset_lists)
   dataset_lists <- cache_dataset_list_function(dataset_lists)
 
@@ -130,7 +136,7 @@ run_app <- function(
       dataset_list_name <- names(dataset_lists)[[idx]]
       if (is.function(dataset_list)) {
         dataset_list <- dataset_list()
-        check_dataset_list(dataset_list)
+        check_dataset_list(dataset_list) # See related comment #soupie
       }
 
       eef_errors_by_mod_and_dl <- EEF_collect(eef_errors_by_mod_and_dl, config[["module_info"]], config[["afmm_static"]],
