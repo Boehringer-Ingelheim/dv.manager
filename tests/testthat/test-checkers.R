@@ -258,7 +258,7 @@ test_that(
 test_that(
   vdoc[["add_spec"]]("check_data should error when the data is NULL", c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)),
   {
-    check_data(NULL) |>
+    check_data_while_ignoring_dataset_list_fns(NULL) |>
       expect_error(
         regexp = "data argument is NULL\\. If you are trying to run an application without data, use an empty list 'dv\\.manager::run_app\\(data = list\\(\\), \\.\\.\\.\\)'" # nolint
       )
@@ -271,7 +271,7 @@ test_that(
     c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)
   ),
   {
-    check_data(list(A = 1)) |> # A list that is not a list of dataframes or a list of functions
+    check_data_while_ignoring_dataset_list_fns(list(A = 1)) |> # A list that is not a list of dataframes or a list of functions
       expect_error("data must be list of lists of dataframes, or a list of functions that returns a list of dataframes")
   }
 )
@@ -282,8 +282,8 @@ test_that(
     c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)
   ),
   {
-    check_data(list(list(data.frame(a = 1)))) |>
-      expect_error("All entries in data must be named")
+    check_data_while_ignoring_dataset_list_fns(list(list(data.frame(a = 1)))) |>
+      expect_error("data argument must be a list an all its entries must be named")
   }
 )
 
@@ -295,7 +295,7 @@ test_that(
   {
     # List of lists of dataframes
     data <- list(a = list(a = data.frame(a = 1)))
-    check_data(data) |>
+    check_data_while_ignoring_dataset_list_fns(data) |>
       expect_error(NA) |>
       expect_equal(data)
 
@@ -303,9 +303,28 @@ test_that(
     data <- list(a = function(x) {
       x
     })
-    check_data(data) |>
+    check_data_while_ignoring_dataset_list_fns(data) |>
       expect_error(NA) |>
       expect_equal(data)
+  }
+)
+
+test_that(
+  vdoc[["add_spec"]](
+    "run_app should throw an error when a dataset_list function returns something other than a valid dataset_list",
+    c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)
+  ),
+  {
+    run_app(
+      data = list(
+        "D1" = function() list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, B = 2)),
+        "D2" = function() NULL
+      ),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
+      filter_key = "C",
+      .launch = FALSE
+    ) |>
+      expect_error(regexp = "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes")
   }
 )
 

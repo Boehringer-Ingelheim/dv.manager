@@ -27,35 +27,40 @@ check_resolved_modules <- function(resolved_module_list) {
   return(resolved_module_list)
 }
 
-check_data <- function(data) {
-  # TODO: This function lets functions pass unchecked. It should be checked if these functions return lists of dataframes
-  # keep in mind that it should be possible to bypass this check.
+check_dataset_list <- function(dataset_list) {
+  ok <- FALSE
+  if (is.list(dataset_list)) {
+    ok <- TRUE
+    for (df in dataset_list) {
+      ok <- ok && is.data.frame(df)
+    }
+  }
+
+  if (!ok) {
+    msg <- "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes"
+    stop(msg)
+  }
+
+  dataset_list
+}
+
+check_data_while_ignoring_dataset_list_fns <- function(data) {
   # NULL data is disallowed
   if (is.null(data)) {
     msg <- "data argument is NULL. If you are trying to run an application without data, use an empty list 'dv.manager::run_app(data = list(), ...)'" # nolint
     stop(msg)
   }
 
-  ok <- TRUE
-  for (idx in seq_along(data)) {
-    dataset_list <- data[[idx]]
-    if (is.list(dataset_list)) {
-      for (jdx in seq_along(dataset_list)) {
-        ok <- ok && is.data.frame(dataset_list[[jdx]])
-      }
-    } else if (!is.function(dataset_list)) {
-      ok <- FALSE
-    }
-    if (!ok) {
-      msg <- "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes"
-      stop(msg)
-    }
-  }
-
   # Check we are passing a named list
   if (!has_all_items_named(data)) {
-    msg <- "All entries in data must be named"
+    msg <- "data argument must be a list an all its entries must be named"
     stop(msg)
+  }
+
+  for (dataset_list in data) {
+    if (!is.function(dataset_list)) {
+      check_dataset_list(dataset_list)
+    }
   }
 
   data
