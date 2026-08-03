@@ -42,13 +42,7 @@ output:
     pandoc_args: ["-V", "monofont:DejaVu Sans Mono"]
     extra_dependencies: ["pdflscape"]
     includes:
-      in_header: /home/zsigmas/Boehringer/GH/Repos/dv.manager/header.tex
-header-includes:
-  - \usepackage{atbegshi}
-  - \usepackage{graphicx}
-  - \usepackage{xcolor}
-  - \AtBeginShipout{\AtBeginShipoutUpperLeft{\put(25,-420){\rotatebox{90}{\normalfont\color{red}\fontsize{20pt}{24pt}\selectfont UNVALIDATED CONTENT}}\put(570,-420){\rotatebox{90}{\normalfont\color{red}\fontsize{20pt}{24pt}\selectfont UNVALIDATED CONTENT}}}}
-  - \newcommand{\alertwarning}[1]{\par\vspace{4pt}\noindent\fcolorbox{yellow!70!black}{yellow!20}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\color{yellow!60!black}\detokenize{#1}}}\par\vspace{4pt}}
+      in_header: /home/zsigmas/Boehringer/GH/Repos/dv.manager/header.tex  
 geometry: margin=2cm
 papersize: a4
 ---
