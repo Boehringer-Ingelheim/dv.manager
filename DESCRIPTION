@@ -44,3 +44,4 @@ Depends: R (>= 4.1.0)
 Remotes: boehringer-ingelheim/dv.loader@main
 VignetteBuilder: knitr
 RoxygenNote: 7.3.3
+SystemRequirements: qpdf

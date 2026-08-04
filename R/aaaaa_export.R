@@ -42,7 +42,7 @@ output:
     pandoc_args: ["-V", "monofont:DejaVu Sans Mono"]
     extra_dependencies: ["pdflscape"]
     includes:
-      in_header: /home/zsigmas/Boehringer/GH/Repos/dv.manager/header.tex  
+      in_header: header.tex
 geometry: margin=2cm
 papersize: a4
 ---
@@ -779,49 +779,54 @@ body::before {
               writeLines(rmarkdown, export_rmd)
 
               zip_filename <- callr::r(
-                function(export_rmd, export_dir, filename) {
+                function(export_rmd, export_dir, header_file, pdf_attach_function, filename) {
                   # All file writing happens in export_dir
                   # Directory is  removed after returning so there is no need of intermediate cleaning
                   setwd(export_dir)
 
                   error_msg <- character(0)
                   output_file <- tryCatch(
-                    rmarkdown::render(input = export_rmd, output_dir = export_dir),
+                    {
+                      file.copy(header_file, ".")
+                      message(list.files())
+                      output_file <- rmarkdown::render(input = export_rmd, output_dir = export_dir)
+                      if (endsWith(output_file, "pdf")) {
+                        session_info_file <- "session_info.txt"
+
+                        writeLines(
+                          capture.output(devtools::session_info()),
+                          session_info_file
+                        )
+
+                        pdf_attach_function(output_file, export_rmd)
+                        pdf_attach_function(output_file, session_info_file)
+                        unlink(session_info_file)
+                        output_file
+                      }
+                    },
                     error = function(e) {
                       error_msg <<- e$message
-                      warning(sprintf("Error rendering export in %s", export_dir))
+                      warning(sprintf("Error rendering export in %s\n%s", export_dir, error_msg))
                       error_file_name <- file.path(export_dir, "error.txt")
-                      writeLines("Error rendering export", error_file_name)
+                      writeLines(c("Error rendering export", error_msg), error_file_name)
                       error_file_name
                     }
                   )
-                  if (endsWith(output_file, "pdf")) {
-                    attach_file <- function(attachment_file, destiny_file) {
-                      preattach_file <- paste0("preattach_", basename(destiny_file))
-                      file.copy(destiny_file, preattach_file)
-                      unlink(destiny_file)
-                      system2("pdfattach", args = c(preattach_file, attachment_file, destiny_file))
-                      unlink(preattach_file)
-                    }
 
-                    session_info_file <- "session_info.txt"
-
-                    writeLines(
-                      capture.output(devtools::session_info()),
-                      session_info_file
-                    )
-
-                    attach_file(export_rmd, output_file)
-                    attach_file(session_info_file, output_file)
-                    unlink(session_info_file)
-                  }
                   zip_filename <- utils::zip(filename, list.files(export_dir))
                   structure(
                     zip_filename,
                     error_msg = error_msg
                   )
                 },
-                args = list(export_rmd = export_rmd, export_dir = export_dir, filename = filename)
+                args = list(
+                  export_rmd = export_rmd,
+                  export_dir = export_dir,
+                  header_file = system.file("export_files/header.tex", package = "dv.manager", mustWork = TRUE),
+                  pdf_attach_function = pdf_attach,
+                  filename = filename
+                ),
+                show = TRUE
               )
               if (length(attr(zip_filename, "error_msg")) > 0) {
                 log_warn(sprintf("Error while rendering export: %s", attr(zip_filename, "error_msg")))
@@ -843,4 +848,94 @@ body::before {
 
   # shinymeta::metaExpr
   sm_me <- shinymeta::metaExpr
+
+  #' Attach a file to a PDF in place
+  #'
+  #' Embeds a file inside an existing PDF using the qpdf command-line tool. The
+  #' PDF is modified in place: qpdf writes to a temporary file in the same
+  #' directory, and the original is only replaced once qpdf exits successfully.
+  #'
+  #' Requires the qpdf command-line program (>= 10.2) on the system PATH. The
+  #' CRAN qpdf package links to the qpdf C++ library but does not expose
+  #' attachment functions, so the CLI is needed here.
+  #'
+  #' Adding dependencies is tricky as it is used in a call to an external proccess that may not have this package,
+  #' or others, installed
+  #'
+  #' @param pdf Path to the PDF to modify. Overwritten on success. Must exist,
+  #'   and its directory must be writable (the temporary file is created there).
+  #' @param attachment Path to the file to embed. Its contents are copied into
+  #'   the PDF; the file itself is left untouched.
+  #' @param key Character, or `NULL`. The name the attachment is filed under in
+  #'   the PDF's embedded-files name tree — the internal identifier, not what a
+  #'   reader displays. Must be unique within the document. Defaults to
+  #'   `basename(attachment)`, which collides if you attach two files with the
+  #'   same basename from different directories.
+  #' @param filename Character, or `NULL`. The name suggested to the user when
+  #'   they save the attachment out of a PDF reader. Most readers show this
+  #'   rather than `key`. Defaults to `basename(attachment)`.
+  #' @param mimetype Character, or `NULL`. MIME type recorded for the embedded
+  #'   file, e.g. `"text/plain"`, `"text/csv"`, `"application/json"`. Passed
+  #'   through to the file stream's `/Subtype` without validation. Some readers
+  #'   use it to pick an icon or an application to open with.
+  #' @param description Character, or `NULL`. Free-text description shown next to
+  #'   the attachment in a reader's attachments pane.
+  #' @param replace Logical. If `TRUE`, overwrite an existing attachment that
+  #'   already uses `key`. If `FALSE` (default), qpdf errors on a key collision
+  #'   rather than silently discarding the earlier attachment.
+  #'
+  #'
+  #' @return The path in `pdf`, invisibly.
+  #'
+  #' @examples
+  #' \dontrun{
+  #' pdf_attach("report.pdf", "data.csv",
+  #'            mimetype = "text/csv",
+  #'            description = "Source data for figures 1-3")
+  #' }
+  #' @export
+  pdf_attach <- function(
+    pdf,
+    attachment,
+    key = NULL,
+    filename = NULL,
+    mimetype = NULL,
+    description = NULL,
+    replace = FALSE
+  ) {
+    stopifnot(file.exists(pdf), file.exists(attachment))
+    if (!nzchar(Sys.which("qpdf"))) {
+      stop("qpdf command-line tool not found on PATH")
+    }
+
+    args <- c(pdf, "--add-attachment", attachment)
+    if (!is.null(key)) {
+      args <- c(args, paste0("--key=", key))
+    }
+    if (!is.null(filename)) {
+      args <- c(args, paste0("--filename=", filename))
+    }
+    if (!is.null(mimetype)) {
+      args <- c(args, paste0("--mimetype=", mimetype))
+    }
+    if (!is.null(description)) {
+      args <- c(args, paste0("--description=", description))
+    }
+    if (replace) {
+      args <- c(args, "--replace")
+    }
+
+    tmp <- tempfile(tmpdir = dirname(pdf), fileext = ".pdf")
+    on.exit(unlink(tmp), add = TRUE)
+
+    status <- system2("qpdf", shQuote(c(args, "--", tmp)))
+    if (status != 0) {
+      stop("qpdf failed with status ", status)
+    }
+    if (!file.rename(tmp, pdf)) {
+      stop("could not overwrite ", pdf)
+    }
+
+    invisible(pdf)
+  }
 }
