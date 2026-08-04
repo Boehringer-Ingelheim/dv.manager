@@ -131,10 +131,17 @@ local({
   attr(d[["fac"]], "label") <- "fac_label"
 
   d1 <- dplyr::group_by(d, .data[["num"]])
+  attr(d1, "label") <- "d1_label"
   d2 <- tibble::as_tibble(d)
+  attr(d2, "label") <- "d2_label"
   d3 <- d
+  attr(d3, "label") <- "d3_label"
   dl <- list(ds1 = d1, ds2 = d2, ds3 = d3)
+
   edl <- list(ds1 = d, ds2 = d, ds3 = d)
+  attr(edl[["ds1"]], "label") <- "d1_label"
+  attr(edl[["ds2"]], "label") <- "d2_label"
+  attr(edl[["ds3"]], "label") <- "d3_label"
 
   dataset_lists <- list(
     dl1 = dl,
