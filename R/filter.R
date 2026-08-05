@@ -1530,7 +1530,7 @@ filter_to_export <- function(filter) {
       var_name <- el[[FC$FE$F$VARIABLE]]
       dataset_name <- el[[FC$FE$F$DATASET]]
       var_label <- get_lbl_robust(udl[[dataset_name]], var_name)
-      dataset_label <- attr(udl[[dataset_name]], "label")
+      dataset_label <- get_lbl_robust(udl, dataset_name)
       values <- el[[FC$FE$F$VALUES]]
       values_length <- length(values)
 
@@ -1580,7 +1580,7 @@ filter_to_export <- function(filter) {
       var_name <- el[[FC$FE$F$VARIABLE]]
       dataset_name <- el[[FC$FE$F$DATASET]]
       var_label <- get_lbl_robust(udl[[dataset_name]], var_name)
-      dataset_label <- attr(udl[[dataset_name]], "label")
+      dataset_label <- get_lbl_robust(udl, dataset_name)
       cuf[[length(cuf) + 1]] <- paste0(" ", "Variable: ", var_label, " [", var_name, "]")
       cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Dataset: ", dataset_label, " [", dataset_name, "]")
       cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Min: ", el[[FC$FE$F$MIN]])
@@ -1627,7 +1627,7 @@ filter_to_export <- function(filter) {
     finfo <- filter$filter_info
     res <- character(0)
     for (nm in names(finfo)) {
-      dataset_label <- attr(udl[[nm]], "label")
+      dataset_label <- dataset_label <- get_lbl_robust(udl, nm)
       dataset_label <- paste0(dataset_label, " [", nm, "]")
       kept_rows <- sum(finfo[[nm]][["mask"]])
       total_rows <- length(finfo[[nm]][["mask"]])
