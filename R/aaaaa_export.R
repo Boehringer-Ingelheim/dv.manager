@@ -8,7 +8,9 @@ if (isTRUE(getOption("dv.export_enabled"))) {
     EXPORT <- poc(
       ID = poc(
         EXPORT_CODE = "export_code",
-        EXPORT_CODE_MENU = "export_code_menu"
+        EXPORT_CODE_MENU = "export_code_menu",
+        EXPORT_MENU_SELECTION = "export_menu_selection",
+        OUTPUT_FORMAT = "output_format"
       ),
       ATTR = "export_element_type",
       ELEMENT_KIND = poc(
@@ -246,6 +248,8 @@ body::before {
       })
 
       export_modal_ui <- function(show_tab = NA) {
+        # It supports either NA -> Show all tabs
+        # Or the id of one tab -> Show only that tab
         log_inform(paste("Showing", show_tab, "tab in menu"))
 
         card_ui <- list(shiny::h3("Export menu"))
@@ -256,7 +260,7 @@ body::before {
         for (idx in seq_along(exportable_elements)) {
           curr_el <- exportable_elements[[idx]]
 
-          if (!is.na(show_tab) && !curr_el[["module_id"]] == show_tab) {
+          if (!is.na(show_tab) && curr_el[["module_id"]] != show_tab) {
             next
           }
 
@@ -282,7 +286,7 @@ body::before {
                   checked = NA,
                   onchange = sprintf(
                     "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
-                    ns("export_menu_input"),
+                    ns(EXPORT$ID$EXPORT_MENU_SELECTION),
                     curr_el[["id"]]
                   )
                 ),
@@ -302,7 +306,7 @@ body::before {
           card_ui[[length(card_ui) + 1]] <- bslib::card(
             bslib::card_header("Output format"),
             shiny::radioButtons(
-              ns("output_format"),
+              ns(EXPORT$ID$OUTPUT_FORMAT),
               label = NULL,
               choices = EXPORT$OUTPUT_FORMAT
             )
@@ -340,8 +344,10 @@ body::before {
 
       selected_tabs_to_export <- NULL
 
-      shiny::observeEvent(input[["export_menu_input"]], {
+      shiny::observeEvent(input[[EXPORT$ID$EXPORT_MENU_SELECTION]], {
         is_output_selected_to_export[[input[[EXPORT$ID$EXPORT_MENU_SELECTION]][["id"]]]] <<- input[[
+          EXPORT$ID$EXPORT_MENU_SELECTION
+        ]][["value"]]
         log_inform(
           paste(
             "Selected outputs to export",
@@ -374,7 +380,7 @@ body::before {
         filename = "export.zip",
         content = function(filename) {
           shiny::withProgress(message = "Rendering export", expr = {
-            output_format <- input[["output_format"]]
+            output_format <- input[[EXPORT$ID$OUTPUT_FORMAT]]
 
             RATTR <- EXPORT$ATTR
             REK <- EXPORT$ELEMENT_KIND
@@ -438,12 +444,16 @@ body::before {
                           latex.use_longtable = TRUE,
                           table.font.size = gt::px(9),
                           latex.header_repeat = TRUE
-                        )
+                        ) |>
+                        gt::as_latex()
                     },
                     inline = TRUE
                   )
 
                   code <- get_code_in_context(reactive_())
+                  # Rough method for estimating an upper limit of table width
+                  # Code should never be narrower than the table, but it can overshoot by large sometimes
+                  char_width <- max(nchar(unlist(strsplit(reactive_(), "\n"))))
                   kind <- REK$TABLE
                 } else if (inherits(reactive(), "gt_tbl")) {
                   reactive_ <- shinymeta::metaReactive(
@@ -453,7 +463,7 @@ body::before {
                     inline = TRUE
                   )
                   code <- get_code_in_context(reactive_())
-                  char_width <- max(nchar(unlist(strsplit(gt::as_latex(reactive()), "\n"))))
+                  char_width <- max(nchar(unlist(strsplit(reactive_(), "\n"))))
                   kind <- REK$TABLE
                 } else {
                   code <- get_code_in_context(reactive())
@@ -466,14 +476,14 @@ body::before {
               el_processed[["kind"]] <- kind
               el_processed[["char_width"]] <- char_width
 
-              log_inform(paste0("Processed:", el_processed[["id"]]))
+              log_inform(paste0("Preprocessed:", el_processed[["id"]]))
 
               return(el_processed)
             }
 
             data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
 
-            log_inform("Processing export elements")
+            log_inform("Preprocessing export elements")
             elements_to_export <- local({
               selected_elements <- names(is_output_selected_to_export)[is_output_selected_to_export]
               selected_exportable_elements <- exportable_elements[selected_elements]
