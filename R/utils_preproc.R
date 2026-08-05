@@ -55,7 +55,6 @@ decorate_ungroup2df_datasets_dataset_list <- function(f) {
 
 ungroup2df_datasets_dataset_list <- function(dataset_list) {
   dataset_names <- names(dataset_list)
-  lbls <- get_lbls(dataset_list)
   for (dataset_name in dataset_names) {
     d <- dataset_list[[dataset_name]]
     attrs <- attributes(d)
@@ -68,7 +67,6 @@ ungroup2df_datasets_dataset_list <- function(dataset_list) {
 
     dataset_list[[dataset_name]] <- d
   }
-  dataset_list <- possibly_set_lbls(dataset_list, lbls)
   dataset_list
 }
 
