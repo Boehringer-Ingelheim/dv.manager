@@ -21,6 +21,14 @@ if (isTRUE(getOption("dv.export_enabled"))) {
       OUTPUT_FORMAT = poc(
         HTML = "html",
         PDF = "pdf"
+      ),
+      MSG = poc(
+        EXPORT_BUTTON = "Export",
+        EXPORT_CUSTOM_BUTTON = "Select Exported Outputs"
+      ),
+      VAL = poc(
+        EXPORT_ALL = "all",
+        EXPORT_CURRENT = "current"
       )
     )
 
@@ -177,12 +185,8 @@ body::before {
         t[["ul"]](
           class = "dropdown-menu",
           t[["li"]](
-            t[["a"]](class = "dropdown-item", href = "#", "Custom current"),
-            onclick = sprintf(onclick_fmt, input_id, "current")
-          ),
-          t[["li"]](
-            t[["a"]](class = "dropdown-item", href = "#", "Custom All"),
-            onclick = sprintf(onclick_fmt, input_id, "all")
+            t[["a"]](class = "dropdown-item", href = "#", EXPORT$MSG$EXPORT_CUSTOM_BUTTON),
+            onclick = sprintf(onclick_fmt, input_id, EXPORT$VAL$EXPORT_ALL)
           ),
         )
       )
@@ -193,8 +197,8 @@ body::before {
         t[["button"]](
           type = "button",
           class = "btn btn-default",
-          "Export",
-          onclick = sprintf(onclick_fmt, input_id, "current")
+          EXPORT$MSG$EXPORT_BUTTON,
+          onclick = sprintf(onclick_fmt, input_id, EXPORT$VAL$EXPORT_CURRENT)
         ),
         dd_div
       )
@@ -359,7 +363,7 @@ body::before {
       shiny::observeEvent(input[[EXPORT$ID$EXPORT_CODE_MENU]], {
         visible_export_tabs <- NA
 
-        if (input[[EXPORT$ID$EXPORT_CODE_MENU]] == "current") {
+        if (input[[EXPORT$ID$EXPORT_CODE_MENU]] == EXPORT$VAL$EXPORT_CURRENT) {
           visible_export_tabs <- input[[ID$NAV_HEADER]]
         }
 
