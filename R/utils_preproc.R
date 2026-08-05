@@ -57,11 +57,15 @@ ungroup2df_datasets_dataset_list <- function(dataset_list) {
   dataset_names <- names(dataset_list)
   lbls <- get_lbls(dataset_list)
   for (dataset_name in dataset_names) {
-    d <- as.data.frame(
-      # Transform to base::data.frame, discards tibble related classes...
-      dplyr::ungroup(dataset_list[[dataset_name]])
-    )
-    d <- possibly_set_lbls(d, lbls)
+    d <- dataset_list[[dataset_name]]
+    attrs <- attributes(d)
+    attrs <- attrs[setdiff(names(attrs), c("names", "row.names", "class", "groups"))]
+
+    d <- dplyr::ungroup(d)
+    d <- as.data.frame(d)
+    attributes(d)[names(attrs)] <- attrs
+    d
+
     dataset_list[[dataset_name]] <- d
   }
   dataset_list <- possibly_set_lbls(dataset_list, lbls)
