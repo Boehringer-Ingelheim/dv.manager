@@ -404,40 +404,7 @@ body::before {
                 paste(collapse = "\n")
             }
 
-            # Replaces reactives that return no htmlwidgets with PDF compatible options
-            replace_if_htmlwidget <- function(x) {
-              if (!inherits(x(), "htmlwidget")) {
-                return(x)
-              }
-
-              supported_htmlwidgets <- list(
-                "datatables" = function(x) {
-                  shinymeta::metaReactive(
-                    {
-                      ..(x())$x$data
-                    },
-                    inline = TRUE
-                  )
-                }
-              )
-
-              supported_type <- inherits(x(), names(supported_htmlwidgets))
-
-              if (!identical(supported_type, 0L)) {
-                replaced_x <- supported_htmlwidgets[[supported_type[[1]]]](x)
-              } else {
-                replaced_x <- shinymeta::metaReactive(
-                  {
-                    stop("Unsupported htmlwidget", paste(class("`", x()), "`", collapse = ", "))
-                  },
-                  inline = TRUE
-                )
-              }
-
-              return(replaced_x)
-            }
-
-            process_export_element <- function(export_element, output_format) {
+            preprocess_export_element <- function(export_element, output_format) {
               el_processed <- export_element
               log_inform(paste0("Processing:", el_processed[["id"]]))
               checkmate::assert_subset(output_format, as.character(unclass(EXPORT$OUTPUT_FORMAT)))
@@ -448,13 +415,8 @@ body::before {
                 reactive <- el_processed[["reactive"]][["pdf"]]
               }
 
-              resolved <- try(reactive(), silent = TRUE)
-
-              if (identical(output_format, EXPORT$OUTPUT_FORMAT$PDF) && !inherits(resolved, "try-error")) {
-                reactive <- replace_if_htmlwidget(reactive)
-              }
-
               char_width <- NULL
+              resolved <- try(reactive(), silent = TRUE)
 
               if (inherits(resolved, "try-error")) {
                 code <- local({
