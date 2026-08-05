@@ -121,10 +121,9 @@ body::before {
       templates
     })
 
-    session_info_section <-
-      EXPORT[["TEMPLATES"]][["SESSION_INFO"]] <- local({
-        templates <- character(0)
-        templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
+    EXPORT[["TEMPLATES"]][["SESSION_INFO"]] <- local({
+      templates <- character(0)
+      templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
 \begin{landscape}
         
 \section{Session Info}
@@ -138,7 +137,7 @@ body::before {
 \end{landscape}
 )--"
 
-        templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(        
+      templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(        
 # Session Info
         
 ```{r session_info}
@@ -147,8 +146,8 @@ body::before {
 
 )--"
 
-        templates
-      })
+      templates
+    })
 
     EXPORT[["TEMPLATES"]][["FOOTER"]] <- local({
       templates <- character(0)
