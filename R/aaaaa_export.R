@@ -338,14 +338,14 @@ body::before {
         res
       }
 
-      selected_tabs_for_export <- NULL
+      selected_tabs_to_export <- NULL
 
       shiny::observeEvent(input[["export_menu_input"]], {
-        selected_tabs_for_export[[input[["export_menu_input"]][["id"]]]] <<- input[["export_menu_input"]][["value"]]
+        is_output_selected_to_export[[input[[EXPORT$ID$EXPORT_MENU_SELECTION]][["id"]]]] <<- input[[
         log_inform(
           paste(
-            "Selected tabs for export",
-            paste(names(selected_tabs_for_export), selected_tabs_for_export, collapse = ", ")
+            "Selected outputs to export",
+            paste(names(is_output_selected_to_export), is_output_selected_to_export, collapse = ", ")
           )
         )
       })
@@ -358,12 +358,12 @@ body::before {
         }
 
         x <- export_modal_ui(visible_export_tabs)
-        selected_tabs_for_export <<- x[["selected"]]
+        is_output_selected_to_export <<- x[["selected"]]
 
         log_inform(
           paste(
-            "Selected tabs for export by default",
-            paste(names(selected_tabs_for_export), selected_tabs_for_export, collapse = ", ")
+            "Selected outputs to export by default",
+            paste(names(is_output_selected_to_export), is_output_selected_to_export, collapse = ", ")
           )
         )
 
@@ -474,20 +474,16 @@ body::before {
             data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
 
             log_inform("Processing export elements")
-            export_elements <- local({
-              selected_exportable_elements <- exportable_elements[names(selected_tabs_for_export)[
-                selected_tabs_for_export
-              ]]
+            elements_to_export <- local({
+              selected_elements <- names(is_output_selected_to_export)[is_output_selected_to_export]
+              selected_exportable_elements <- exportable_elements[selected_elements]
 
               res <- list()
               for (idx in seq_along(selected_exportable_elements)) {
-                log_inform(sprintf("Processing element (%d)", idx))
+                log_inform(sprintf("Preprocessing element (%d)", idx))
                 curr_el <- selected_exportable_elements[[idx]]
-                if (selected_tabs_for_export[[curr_el[["id"]]]]) {
-                  element <- process_export_element(
-                    curr_el,
-                    output_format
-                  )
+                if (is_output_selected_to_export[[curr_el[["id"]]]]) {
+                  element <- preprocess_export_element(curr_el, output_format)
                   res <- c(res, list(element))
                 }
               }
@@ -617,8 +613,8 @@ body::before {
             rmarkdown <- local({
               output_rmd <- ""
 
-              for (idx in seq_along(export_elements)) {
-                curr_el <- export_elements[[idx]]
+              for (idx in seq_along(elements_to_export)) {
+                curr_el <- elements_to_export[[idx]]
                 log_inform(paste0("Processing idx: ", idx))
 
                 element_formatters <- local({
