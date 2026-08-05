@@ -1476,22 +1476,27 @@ apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) 
   filtered_dataset
 }
 
-filter_to_export <- function(filter) {
-  f <- filter[["dataset_list_filter"]][["parsed"]][["filters"]]
-  udl <- filter$unfiltered_dataset_list
+
+# TODO: Add HTML spans with tooltip info
+# TODO: Add the state at each of the levels, it should be possible when we calculate the masks and the levels in the dataset
+
+# Recieves an unfiltered_dataset_list_with_filter_info like
+filter_to_export <- function(unfiltered_dataset_list_with_filter_info) {
+  TC <- c(
+    h = "\u2500", # ─
+    v = "\u2502 ", # │(spc)
+    vr = "\u251C\u2500", # ├─
+    ur = "\u2514\u2500", # └─
+    spc = "  " # double space
+  )
+  MAX_PRINTED_SUBSET_VALUES <- 5
+
+  f <- unfiltered_dataset_list_with_filter_info[["dataset_list_filter"]][["parsed"]][["filters"]]
+  udl <- unfiltered_dataset_list_with_filter_info$unfiltered_dataset_list
 
   unicode_filter <- list()
   unicode_filter[["sbj"]] <- "Subject_filter"
 
-  TC <- c(
-    h = "\u2500", # ─
-    v = "\u2502 ", # │
-    vr = "\u251C\u2500", # ├
-    ur = "\u2514\u2500", # └
-    spc = "  "
-  )
-
-  MAX_PRINTED_SUBSET_VALUES <- 5
   reference_list <- list()
 
   actions <- local({
@@ -1594,8 +1599,7 @@ filter_to_export <- function(filter) {
   })
 
   create_single_unicode_filter <- function(el, root_el) {
-    curr_unicode_filter <- character(0)
-    curr_unicode_filter[[1]] <- root_el
+    curr_unicode_filter <- root_el
     children <- el[[FC$FE$F$CHILDREN]]
     last_child_idx <- length(children)
 
@@ -1614,17 +1618,16 @@ filter_to_export <- function(filter) {
       child_unicode[2:length(child_unicode)] <- paste0(tree_prefix, child_unicode[2:length(child_unicode)])
       curr_unicode_filter <- c(curr_unicode_filter, child_unicode)
     }
+
     curr_unicode_filter
   }
-
-  reference_list <- list()
 
   filter_unicode <- paste0(
     create_single_unicode_filter(f[["subject_filter"]], "Subject filter"),
     collapse = "\n"
   )
   ds_unicode <- local({
-    finfo <- filter$filter_info
+    finfo <- unfiltered_dataset_list_with_filter_info[["filter_info"]]
     res <- character(0)
     for (nm in names(finfo)) {
       dataset_label <- dataset_label <- get_lbl_robust(udl, nm)
