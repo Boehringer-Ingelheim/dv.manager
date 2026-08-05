@@ -360,6 +360,15 @@ body::before {
       })
 
       shiny::observeEvent(input[[EXPORT$ID$EXPORT_CODE_MENU]], {
+        if (is.null(attr(selected_dataset_list(), "load_fn"))) {
+          dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
+          user_msg <- sprintf("Current dataset list `%s` is not configured for exporting.", dataset_list_name)
+          dev_msg <- sprintf("Export not possible for `%s`. No `load_fn` attribute found. ", dataset_list_name)
+          log_warn(dev_msg)
+          shiny::showNotification(user_msg, type = "error")
+          shiny::req(FALSE)
+        }
+
         visible_export_tabs <- NA
 
         if (input[[EXPORT$ID$EXPORT_CODE_MENU]] == EXPORT$VAL$EXPORT_CURRENT) {
