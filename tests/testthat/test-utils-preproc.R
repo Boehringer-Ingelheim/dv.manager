@@ -131,10 +131,23 @@ local({
   attr(d[["fac"]], "label") <- "fac_label"
 
   d1 <- dplyr::group_by(d, .data[["num"]])
+  attr(d1, "label") <- "d1_label"
+  attr(d1, "other_attr") <- "d1_other_attr"
   d2 <- tibble::as_tibble(d)
+  attr(d2, "label") <- "d2_label"
+  attr(d2, "other_attr") <- "d2_other_attr"
   d3 <- d
+  attr(d3, "label") <- "d3_label"
+  attr(d3, "other_attr") <- "d3_other_attr"
   dl <- list(ds1 = d1, ds2 = d2, ds3 = d3)
+
   edl <- list(ds1 = d, ds2 = d, ds3 = d)
+  attr(edl[["ds1"]], "label") <- "d1_label"
+  attr(edl[["ds2"]], "label") <- "d2_label"
+  attr(edl[["ds3"]], "label") <- "d3_label"
+  attr(edl[["ds1"]], "other_attr") <- "d1_other_attr"
+  attr(edl[["ds2"]], "other_attr") <- "d2_other_attr"
+  attr(edl[["ds3"]], "other_attr") <- "d3_other_attr"
 
   dataset_lists <- list(
     dl1 = dl,
@@ -184,9 +197,13 @@ local({
       vdoc[["add_spec"]](c(specs$PREPROCESSING$PREPROCESS_UNGROUP, specs$PREPROCESSING$PREPROCESS_TIBBLE_TO_DF)),
     {
       r <- suppressMessages(
-        suppressWarnings(
-          run_app(dataset_lists, module_list = list(), filter_dataset_name = "ds1", filter_key = "num", .launch = FALSE)
-        )
+        suppressWarnings(run_app(
+          dataset_lists,
+          module_list = list(),
+          filter_dataset_name = "ds1",
+          filter_key = "num",
+          .launch = FALSE
+        ))
       )
 
       expect_identical(

@@ -1,3 +1,7 @@
+# dv.manager 3.1.0-9004
+
+- Originally grouped data.frames keep the relevant attributes after being ungrouped
+
 # dv.manager 3.1.0-9003
 
 - Check that dataset list elements produced by functions have the expected structure
