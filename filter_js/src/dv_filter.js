@@ -1293,7 +1293,7 @@ const SC = {
 
 let get_simple_root_el = function(el){
   __assert(()=>is_html_element(el))
-  return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.SIMPLE}"]`));
+  return (get_root_el(el).querySelector(`${FC.TAG.FILTER}${attr_selector(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.SIMPLE)}`));
 }
 
 // Returns a simplified filter state or null if the filter_state is not compatible with the simple filter
