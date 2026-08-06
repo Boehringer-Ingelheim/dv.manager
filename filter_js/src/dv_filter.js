@@ -167,6 +167,11 @@ let is_numeric_finite = function (value) {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+// bootstrap-select needs a container that actually exists in the current layout
+let get_data_container = function () {
+  return (document.querySelector(".dv_main_panel") ? 'body .dv_main_panel' : 'body');
+}
+
 //#region BLOCKLY FILTER
 
 const BC = {
@@ -1457,13 +1462,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   select.setAttribute('data-width', '100%');
   select.setAttribute('data-style', 'btn');
   select.setAttribute('data-selected-text-format', 'static');
-  let data_container;
-  if(document.querySelector(".dv_main_panel")) {
-    data_container = 'body .dv_main_panel'     
-  } else {
-    data_container = 'body'
-  }
-  select.setAttribute('data-container', data_container);
+  select.setAttribute('data-container', get_data_container());
   select.setAttribute(SC.ATTRIBUTE.VARIABLE_SELECTOR, '');
 
   for(let i = 0; i < dataset.variables.length; ++i) {
