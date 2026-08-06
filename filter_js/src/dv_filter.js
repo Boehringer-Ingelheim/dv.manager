@@ -383,7 +383,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
         state.blocks.blocks.push(subject_filter);
       }
     }
-    
+
     let datasets_filter_state = filter[BC.TYPE.DATASETS_FILTER];
     if (datasets_filter_state && datasets_filter_state.children && datasets_filter_state.children.length > 0) {
       for (let idx = 0; idx < datasets_filter_state.children.length; idx++) {
@@ -533,8 +533,16 @@ const filter_generator_subset = function (block, generator) {
   return ([code, BC.ORDER.ATOMIC]);
 }
 
-const get_blockly_code = function ({ workspace, generator, dataset_name }) {
+const get_blockly_code = function (filter) {
 
+  if (!filter || !filter.workspace || !filter.generator) {
+    throw new Error("Blockly filter has not been initialised");
+  }
+
+  const workspace = filter.workspace;
+  const generator = filter.generator;
+  const dataset_name = filter.dataset_name;
+  
   const start = new Date();
 
   let filters = {
