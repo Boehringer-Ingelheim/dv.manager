@@ -2309,7 +2309,7 @@ let get_root_el_by_id = function(id) {
 }
 
 // Should be called only inside listeners/message handlers to get the current state of the filter
-let get_filter_property = function(el, property, clone) {  
+let get_filter_property = function(el, property, clone = true) {  
   __assert(()=>is_html_element(el));
   __logger("Getting property: " + property);  
   if(clone) {
