@@ -1721,22 +1721,24 @@ let create_variable_filter_controls = function(variable_filter_control_container
       
       if(numeric_finite_max_and_min) {
       const MAGIC_NEGATIVE_MARGIN = -25;  // This is the distance between of the ion.range.slider top and the slider line
-      const histogram_container = document.createElement("div");
-      histogram_container.className = "histogram";
-      histogram_container.style = `display:flex; align-items:flex-end; margin-bottom: ${MAGIC_NEGATIVE_MARGIN}px;`
-      const density = current_variable.density;
-      // Find max density to scale heights
-      const max_density = Math.max(...density);
-      // Draw bars
-      density.forEach(d => {
-        const bar = document.createElement("div");
-        bar.style.flex = "1";               // equal width
-        bar.style.marginRight = "2px";      // spacing between bars        
-        bar.style.height = (d / max_density) * 25 + "px"; // scale height
-        bar.className = "bg-secondary";
-        histogram_container.appendChild(bar);
-      });
-      container.appendChild(histogram_container);      
+      const density = Array.isArray(current_variable.density) ? current_variable.density : [];
+        const max_density = density.length > 0 ? Math.max(...density) : 0;
+        
+        if (max_density > 0) {
+          const histogram_container = document.createElement("div");
+          histogram_container.className = "histogram";
+          histogram_container.style.cssText = `display:flex; align-items:flex-end; margin-bottom: ${MAGIC_NEGATIVE_MARGIN}px;`;
+          // Draw bars
+          density.forEach(d => {
+            const bar = document.createElement("div");
+            bar.style.flex = "1";               // equal width
+            bar.style.marginRight = "2px";      // spacing between bars        
+            bar.style.height = (d / max_density) * 25 + "px"; // scale height
+            bar.className = "bg-secondary";
+            histogram_container.appendChild(bar);
+          });
+          container.appendChild(histogram_container);
+        }     
 
       let numerical_input = document.createElement("input");
       numerical_input.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');      
