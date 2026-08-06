@@ -1238,7 +1238,7 @@ let blockly_static_init = function(blockly_root_el, id) {
 };
 
 let chaff = function () {
-  if (Blockly.getMainWorkspace() !== undefined) {
+  if (Blockly.getMainWorkspace()) {
     Blockly.hideChaff();
   }
 }
