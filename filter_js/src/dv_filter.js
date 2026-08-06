@@ -2057,7 +2057,7 @@ let simple_static_init = function(simple_root_el) {
     let dataset_name = dataset_div.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
     let dataset_list_name = get_filter_property(simple_root_el, FC.PROPERTY.DATASET_LIST_NAME);
 
-    let current_dataset_list = get_filter_property(simple_root_el, FC.PROPERTY.DATA).dataset_lists.find(obj=>obj.name === dataset_list_name);
+    let current_dataset_list = get_filter_property(simple_root_el, FC.PROPERTY.DATA, false).dataset_lists.find(obj=>obj.name === dataset_list_name);
     let dataset = current_dataset_list.dataset_list.find(obj=>obj.name === dataset_name);
 
     let selected_variables = $(event.target).val() ?? [];
