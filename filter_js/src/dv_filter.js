@@ -2189,7 +2189,7 @@ let init_filter_handler = function (root_el, dataset_list_data, dataset_list_nam
 let update_filter_result_handler = function(msg, root_el){
 
   let parsed_msg = JSON.parse(msg.json)
-  console.log(parsed_msg);
+  __logger(parsed_msg);
 
   let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
   let current_dataset_list = get_filter_property(root_el, FC.PROPERTY.DATA, false).dataset_lists.find(obj=>obj.name === dataset_list_name);
