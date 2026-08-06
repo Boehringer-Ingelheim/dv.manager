@@ -1099,7 +1099,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
 
   options.maxInstances = {};
   const idx_singleton_cat = toolbox.contents.findIndex(x => x.name === "Filter Types");
-  toolbox.contents[idx_singleton_cat].contents.map((x) => options.maxInstances[x.type] = 1)
+  toolbox.contents[idx_singleton_cat].contents.forEach((x) => { options.maxInstances[x.type] = 1; });
 
   options.toolbox = toolbox;
 
