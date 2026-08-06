@@ -28,8 +28,8 @@ import { multiPickerField } from './multi_picker.js';
 import { deserialize_b64_filter_data } from './js_deserializer/deserializer.mjs';
 import './toolbox-search/index.js'
 
-const __DEV_MODE = true;
-const __LOGGER = true;
+const __DEV_MODE = false;
+const __LOGGER = false;
 const __TIMER = false;
 
 let __logger = function(x){};
