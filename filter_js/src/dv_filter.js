@@ -1861,7 +1861,7 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
     } else if (kind === SC.VARIABLE.DATE) {
 
       let input = current_variable_el.querySelectorAll(`[${SC.ATTRIBUTE.FILTER_VALUE}] input`);
-      if (!input || input.length !=2) {
+      if (!input || input.length != 2) {
         throw new Error(`No 2 input elements found inside: ${current_variable_el.outerHTML}`);
       }
 
