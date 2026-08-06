@@ -199,7 +199,7 @@ const get_block_filter_type = function (dataset_name, variable_name) {
   return ("d_" + dataset_name + "_v_" + variable_name);
 }
 
-const get_block_dataset_type = function (dataset_name, variable_name) {
+const get_block_dataset_type = function (dataset_name) {
   return ("d_" + dataset_name);
 }
 
