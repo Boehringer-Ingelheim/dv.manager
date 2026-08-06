@@ -1174,7 +1174,7 @@ let blockly_static_init = function(blockly_root_el, id) {
   inner_filter_el.setAttribute(BC.ATTRIBUTE.INNER_FILTER, '');
   
   let button_container = document.createElement("div");
-  button_container.classList= "d-inline-flex justify-content-center"  ;
+  button_container.className = "d-inline-flex justify-content-center";
 
   let gen_code_button = document.createElement("button");
   gen_code_button.type = "button";
