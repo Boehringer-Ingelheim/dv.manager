@@ -108,6 +108,10 @@ if(__DEV_MODE) {
   }  
 }
 
+let escape_quotes = function(str) {
+
+}
+
 let is_html_element = function(obj) {
   return obj instanceof HTMLElement && !!obj.tagName;
 }
@@ -431,15 +435,17 @@ const filter_generator_range = function (block, generator) {
   const max = block.getFieldValue('max');
   const include_NA = block.getFieldValue('include_NA') === "FALSE" ? false : true;
 
-  const code = '{' +
-    '"kind": "' + kind + '"' +
-    ', "dataset": "' + dataset_name + '"' +
-    ', "operation": "' + operation + '"' +
-    ', "variable": "' + variable + '"' +
-    ', "min": ' + min +
-    ', "max": ' + max +
-    ', "include_NA": ' + include_NA +
-    '}';
+  const code_obj = {
+    kind: kind,
+    dataset: dataset_name,
+    operation: operation,
+    variable: variable,
+    min: min,
+    max: max,
+    include_NA: include_NA
+  }
+
+  const code = JSON.stringify(code_obj)
 
   return ([code, null]);
 }
@@ -453,15 +459,17 @@ const filter_generator_date_range = function (block, generator) {
   const max = block.getFieldValue('max');
   const include_NA = block.getFieldValue('include_NA') === "FALSE" ? false : true;
 
-  const code = '{' +
-    '"kind": "' + kind + '"' +
-    ', "dataset": "' + dataset_name + '"' +
-    ', "operation": "' + operation + '"' +
-    ', "variable": "' + variable + '"' +
-    ', "min": "' + min + '"' +
-    ', "max": "' + max + '"' +
-    ', "include_NA": ' + include_NA +
-    '}';
+  const code_obj = {
+    kind: kind,
+    dataset: dataset_name,
+    operation: operation,
+    variable: variable,
+    min: min,
+    max: max,
+    include_NA: include_NA
+  }
+
+  const code = JSON.stringify(code_obj)
 
   return ([code, null]);
 }
@@ -474,14 +482,16 @@ const filter_generator_subset = function (block, generator) {
   const values = block.getFieldValue('value');
   const include_NA = block.getFieldValue('include_NA') === "FALSE" ? false : true;
 
-  const code = '{' +
-    '"kind": "' + kind + '"' +
-    ', "dataset": "' + dataset_name + '"' +
-    ', "operation": "' + operation + '"' +
-    ', "variable": "' + variable + '"' +
-    ', "values":' + values +
-    ', "include_NA": ' + include_NA +
-    '}';
+  const code_obj = {
+    kind: kind,
+    dataset: dataset_name,
+    operation: operation,
+    variable: variable,
+    values: values,    
+    include_NA: include_NA
+  }
+
+  const code = JSON.stringify(code_obj)
 
   return ([code, null]);
 }
