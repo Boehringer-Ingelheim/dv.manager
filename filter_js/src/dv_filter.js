@@ -1468,7 +1468,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   for(let i = 0; i < dataset.variables.length; ++i) {
     let option = document.createElement('option');
     option.value = dataset.variables[i].name;
-    let disabled;
+    
     if (dataset.variables[i].kind === "unknown") {
       option.setAttribute("disabled", "");            
     }
