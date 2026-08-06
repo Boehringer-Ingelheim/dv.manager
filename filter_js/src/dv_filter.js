@@ -1617,10 +1617,6 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
     na_checkbox_addon.appendChild(na_checkbox);
     na_group.appendChild(na_checkbox_addon);
-
-    if(current_variable.NA_count > 0) {
-     
-    }
     
     let close_button = document.createElement("button");
     close_button.type = "button";
