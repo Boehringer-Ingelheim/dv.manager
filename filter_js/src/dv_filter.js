@@ -860,7 +860,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     }
   };
 
-  let color_step = Math.floor((BC.COLOR.DATASET_RANGE_MAX - BC.COLOR.DATASET_RANGE_MIN) / selected_datasets.length);
+  let color_step = selected_datasets.length > 0
+    ? Math.floor((BC.COLOR.DATASET_RANGE_MAX - BC.COLOR.DATASET_RANGE_MIN) / selected_datasets.length)
+    : 0;
   let current_color = (BC.COLOR.DATASET_RANGE_MIN - color_step);
 
   for (let dataset of selected_datasets) {
