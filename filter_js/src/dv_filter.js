@@ -2060,7 +2060,7 @@ let simple_static_init = function(simple_root_el) {
     let current_dataset_list = get_filter_property(simple_root_el, FC.PROPERTY.DATA).dataset_lists.find(obj=>obj.name === dataset_list_name);
     let dataset = current_dataset_list.dataset_list.find(obj=>obj.name === dataset_name);
 
-    let selected_variables = $(event.target).val();
+    let selected_variables = $(event.target).val() ?? [];
 
     let dataset_control_div = dataset_div.querySelector(SC.TAG.VARIABLE_FILTER_CONTAINER);
     let dataset_filter_state = simplify_filter_state(get_filter_state(get_simple_root_el(dataset_div), dataset_list_name), get_filter_property(simple_root_el, FC.PROPERTY.SUBJECT_DATASET_NAME)).state[dataset_name]  ?? []; //FIXME: loiuhb who is reponsible for this is not well defined
