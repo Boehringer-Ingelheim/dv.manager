@@ -999,7 +999,16 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
 
   function onChange(event) {
     if (event.type !== Blockly.Events.BLOCK_MOVE) return;
+    if (!Array.isArray(event.reason)){
+      __logger("No event.reason array found")
+      return;
+    } 
+   
     let current_workspace = Blockly.Workspace.getById(event.workspaceId);
+    if (!current_workspace) {
+      __logger("No workspace found")
+      return;
+    };
     let new_parent_block = current_workspace.getBlockById(event.newParentId);
     let old_parent_block = current_workspace.getBlockById(event.oldParentId);
     let current_block = current_workspace.getBlockById(event.blockId);
@@ -1013,6 +1022,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     // As `Uncaught TypeError TypeError: d.isVisible is not a function` appeared. The origin is unclear
 
     if (event.reason.includes("connect")) {
+
+      // The moved block can already be gone (deleted mid-drag)
+      if (!current_block) return;
 
       // Check the connection is legal
 
