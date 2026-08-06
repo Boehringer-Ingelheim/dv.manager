@@ -1723,7 +1723,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       const MAGIC_NEGATIVE_MARGIN = -25;  // This is the distance between of the ion.range.slider top and the slider line
       const density = Array.isArray(current_variable.density) ? current_variable.density : [];
         const max_density = density.length > 0 ? Math.max(...density) : 0;
-        
+
         if (max_density > 0) {
           const histogram_container = document.createElement("div");
           histogram_container.className = "histogram";
@@ -2710,7 +2710,8 @@ export { init, request_dataset_filter_state }
 
 // A wall will be hit regarding who is responsible of the state managing things are getting complicated, maybe full state
 // should be passed back and forth, otherwise state gets divided.
-
+// TODO: `filter_log_input_id` is accepted by init() but never used. init_blockly already
+// returns the restore log in res.log; it still has to be forwarded to Shiny.
 // TODO: Check requested filter states, they may contain variables that are not present and this brings errors
 // Define behavior:
 // Bookmarked and loaded filters must remain unaltered, so in the future when data matches they will work
