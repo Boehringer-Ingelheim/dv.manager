@@ -483,7 +483,7 @@ app_server_ <- function(input, output, session, opts) {
 
   ### Export
 
-  if (export_enabled) {
+  if (isTRUE(export_enabled)) {
     eval(export_server_quote)
   }
 }
