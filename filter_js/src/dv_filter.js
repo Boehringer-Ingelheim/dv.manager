@@ -641,10 +641,10 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     for (let idx = 0; idx < block_names.length; ++idx) {
       let current_name = block_names[idx];
       if(current_name.startsWith(ns(""))){
-        __logger("Removing: " + block_names[idx]);
-        Blockly.Blocks[block_names[idx]] = null;
+        __logger("Removing: " + current_name);
+        delete Blockly.Blocks[current_name];
       } else {
-        __logger("Keeping: " + block_names[idx]);
+        __logger("Keeping: " + current_name);
       }
     }
 
