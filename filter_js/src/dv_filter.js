@@ -263,7 +263,8 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
 
           if (!applicable) {
             res = null;
-            log = "Preselected/bookmarked filter is not applicable to the current dataset";
+            log.push("Preselected/bookmarked filter is not applicable to the current dataset: " +
+              current_filter.dataset + " - " + current_filter.variable);
             break;
           }
 
