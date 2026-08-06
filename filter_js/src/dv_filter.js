@@ -147,11 +147,20 @@ let max_str_date = function(date1, date2) {
   let num_date1 = new Date(date1).getTime();
   let num_date2 = new Date(date2).getTime();
 
-  let res = date1;
-  if (num_date2>num_date1) {
-    res = date2;  
-  }
-  return(res);
+  if (!Number.isFinite(num_date1)) return (date2);
+  if (!Number.isFinite(num_date2)) return (date1);
+
+  return (num_date2 > num_date1 ? date2 : date1);
+}
+
+let min_str_date = function(date1, date2) {
+  let num_date1 = new Date(date1).getTime();
+  let num_date2 = new Date(date2).getTime();
+
+  if (!Number.isFinite(num_date1)) return (date2);
+  if (!Number.isFinite(num_date2)) return (date1);
+
+  return (num_date2 < num_date1 ? date2 : date1);
 }
 
 let is_numeric_finite = function (value) {
@@ -1606,7 +1615,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
       if(current_state) {
         from = max_str_date(current_state.min, current_variable.min);
-        to = max_str_date(current_state.max, current_variable.max);
+        to = min_str_date(current_state.max, current_variable.max);
       } else {
         from = current_variable.min;
         to = current_variable.max;
