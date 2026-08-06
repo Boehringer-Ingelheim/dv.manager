@@ -1481,7 +1481,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
       </br>
       <small class="text-muted">${dataset.variables[i].label}</small>
     `);
-    option.setAttribute('data-subtext', `Description for`);    
+     
     if(selected_variables.includes(option.value)) {
       option.setAttribute("selected", "");
     }
