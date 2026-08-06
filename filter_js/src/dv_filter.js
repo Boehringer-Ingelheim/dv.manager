@@ -1213,6 +1213,10 @@ let blockly_static_init = function(blockly_root_el, id) {
   
   let send_code = function () {
     const filter = $(inner_filter_el).data('filter');
+    if (!filter) {
+      __logger("Blockly filter is not initialised yet, skipping send");
+      return;
+    }
     const code = get_blockly_code(filter);
     const event = new CustomEvent(FC.EVENT.NEW_FILTER_VALUE, {
       detail: {filter: code, mode: FC.MODE.BLOCKLY},
