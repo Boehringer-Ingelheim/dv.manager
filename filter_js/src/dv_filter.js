@@ -1340,7 +1340,7 @@ let simplify_filter_state = function(state, subject_dataset_name) {
   let compatible = true;
   let states = {};
 
-  if (state !==null) {
+  if (state && state.filters) {
 
     let dataset_filter_dataset_names = state.filters.datasets_filter.children.map((x) => x.name);
 
