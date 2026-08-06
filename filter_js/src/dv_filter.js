@@ -1982,7 +1982,7 @@ let handle_action = function() {
       __assert(()=>is_html_element(el))
       const variable_to_be_removed = el.closest(SC.TAG.VARIABLE_FILTER).getAttribute(SC.ATTRIBUTE.VARIABLE); 
       const select = el.closest(SC.TAG.DATASET_FILTER).querySelector("select");
-      let current_selection = $(select).val();
+      let current_selection = $(select).val() ?? [];
       let new_selection = current_selection.filter(item => item != variable_to_be_removed);
       $(select).selectpicker('val', new_selection);      
     }
