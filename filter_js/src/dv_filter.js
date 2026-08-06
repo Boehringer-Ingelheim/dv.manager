@@ -108,8 +108,24 @@ if(__DEV_MODE) {
   }  
 }
 
-let escape_quotes = function(str) {
+let escape_html = function (value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
+// Escapes a value for use inside a *quoted* CSS attribute selector: [attr="<value>"].
+// Inside a CSS string only the backslash and the quote character need escaping.
+let css_attr_value = function (value) {
+  return String(value ?? "").replace(/["\\]/g, "\\$&");
+}
+
+// Builds a quoted, escaped attribute selector fragment
+let attr_selector = function (attribute, value) {
+  return ('[' + attribute + '="' + css_attr_value(value) + '"]');
 }
 
 let is_html_element = function(obj) {
