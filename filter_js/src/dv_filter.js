@@ -487,7 +487,7 @@ const filter_generator_subset = function (block, generator) {
     dataset: dataset_name,
     operation: operation,
     variable: variable,
-    values: JSON.parse(values),    
+    values: JSON.parse(values), //FIXME: This values is parsed and deparsed because multi picker stringfies it.
     include_NA: include_NA
   }
 
