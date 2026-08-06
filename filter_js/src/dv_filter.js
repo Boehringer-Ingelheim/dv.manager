@@ -1938,8 +1938,8 @@ let get_filter_state = function (simple_root_el, dataset_list_name) {
     return(simple_root_el[SC.PROPERTY.STATE_OVERRIDE]);
   }
 
-  let subject_div = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=true]`);
-  let other_div = simple_root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=false]`);
+  let subject_div = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}${attr_selector(SC.ATTRIBUTE.SUBJECT_FILTER, "true")}`);
+  let other_div = simple_root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}${attr_selector(SC.ATTRIBUTE.SUBJECT_FILTER, "false")}`);
 
   let subject_filter = get_single_dataset_filter_state(subject_div);
   let dataset_filters = [];
