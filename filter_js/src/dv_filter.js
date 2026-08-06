@@ -723,7 +723,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
 
   let selected_datasets;
 
-  for (let dataset of filter_data["dataset_lists"]) {
+  const dataset_lists = (filter_data && filter_data["dataset_lists"]) ? filter_data["dataset_lists"] : [];
+
+  for (let dataset of dataset_lists) {
     let name = dataset["name"];
     if (name === selected_dataset_name) {
       selected_datasets = dataset["dataset_list"];
@@ -731,8 +733,8 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     }
   }
 
-  if (selected_datasets === null) {
-    throw new Error('Selected dataset not found');
+  if (!selected_datasets) {
+    throw new Error('Selected dataset not found: ' + selected_dataset_name);
   }
 
   let populate_inputs = function (block, input_names) {
