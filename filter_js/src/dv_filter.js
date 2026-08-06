@@ -1648,13 +1648,13 @@ let create_variable_filter_controls = function(variable_filter_control_container
       __assert(() => count.every((v, idx, arr) => idx === 0 || arr[idx - 1] >= v)) // Check counts are sorted descending
       __assert(() => value.length === count.length) // Check values and counts are aligned
 
-      for(let i = 0; i < value.length; ++i) {
+      for(let j = 0; j < value.length; ++j) {
         let option = document.createElement('option');
-        option.value = value[i];
-        option.textContent = value[i];
-        option.setAttribute("data-subtext", `${count[i]} / ${dataset.nrow}`);
+        option.value = value[j];
+        option.textContent = value[j];
+        option.setAttribute("data-subtext", `${count[j]} / ${dataset.nrow}`);
         if(current_state) {
-          if(current_state.values.includes(option.value)) {
+          if (Array.isArray(current_state.values) && current_state.values.includes(option.value)) {
             option.setAttribute("selected", '');         
           }
         } else {
