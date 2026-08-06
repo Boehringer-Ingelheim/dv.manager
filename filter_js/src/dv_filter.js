@@ -1348,17 +1348,20 @@ let simplify_filter_state = function(state, subject_dataset_name) {
 
   if (state && state.filters) {
 
-    let dataset_filter_dataset_names = state.filters.datasets_filter.children.map((x) => x.name);
+    let datasets_filter_children = state.filters.datasets_filter?.children ?? [];
+    let subject_filter_children = state.filters.subject_filter?.children ?? [];
+
+    let dataset_filter_dataset_names = datasets_filter_children.map((x) => x.name);
 
     if (dataset_filter_dataset_names.includes(subject_dataset_name)) {
       // Cannot be at the same time dataset and subject filter in simple
       compatible = false;
     } else {
-      let dataset_filters_to_be_checked = structuredClone(state.filters.datasets_filter.children);
+      let dataset_filters_to_be_checked = structuredClone(datasets_filter_children);
 
       let sbj_filter = {
         name: subject_dataset_name,
-        children: structuredClone(state.filters.subject_filter.children)
+        children: structuredClone(subject_filter_children)
       };
 
       dataset_filters_to_be_checked.push(sbj_filter);
