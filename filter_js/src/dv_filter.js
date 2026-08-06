@@ -737,20 +737,19 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     throw new Error('Selected dataset not found: ' + selected_dataset_name);
   }
 
-  let populate_inputs = function (block, input_names) {
-    // Secondary effects on block
+  let append_value_input_row_comb = function (block, input_name) {
+    block.appendValueInput(input_name ?? get_random_input_id()).setCheck(["filter", "row"]);
+  }
+
+  let append_value_input_set_comb = function (block, input_name) {
+    block.appendValueInput(input_name ?? get_random_input_id()).setCheck(["set", "filter", "row"]);
+  }
+
+  let populate_inputs = function (block, input_names, append_input) {
     for (let idx = 0; idx < input_names.length; idx++) {
-      block.appendValueInput(input_names[idx])
+      append_input(block, input_names[idx]);
     }
   };
-
-  let append_value_input_row_comb = function (block) {
-    block.appendValueInput(get_random_input_id()).setCheck(["filter", "row"]);
-  }
-
-  let append_value_input_set_comb = function (block) {
-    block.appendValueInput(get_random_input_id()).setCheck(["set", "filter", "row"]);
-  }
 
   let remove_value_inputs = function (block, input_names_for_removal) {
     // Secondary effects on block      
@@ -758,7 +757,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
       if (block.inputList.map(x => x.name).includes(element)) {
         block.removeInput(element)
       } else {
-        __logger("Skipping removal of " + element + "not found");
+        __logger("Skipping removal of " + element + " not found");
       }
     });
   }
@@ -789,7 +788,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     loadExtraState: function (state) {
       if (state && state.data !== undefined && state.data.length > 0) {
         __logger("Loading with state")
-        populate_inputs(this, state.data);
+        populate_inputs(this, state.data, append_value_input_row_comb);
         __logger(this.inputList.map(x => x.name));
       } else {
         __logger("Loading with no state");
@@ -829,7 +828,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     loadExtraState: function (state) {
       if (state && state.data !== undefined && state.data.length > 0) {
         __logger("Loading with state")
-        populate_inputs(this, state.data);
+        populate_inputs(this, state.data, append_value_input_set_comb);
         __logger(this.inputList.map(x => x.name));
       } else {
         __logger("Loading with no state");
