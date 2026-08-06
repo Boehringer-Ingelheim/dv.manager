@@ -1466,20 +1466,26 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   select.setAttribute(SC.ATTRIBUTE.VARIABLE_SELECTOR, '');
 
   for(let i = 0; i < dataset.variables.length; ++i) {
+    const current_variable = dataset.variables[i];
     let option = document.createElement('option');
-    option.value = dataset.variables[i].name;
+    option.value = current_variable.name;
     
-    if (dataset.variables[i].kind === "unknown") {
+    if (current_variable.kind === "unknown") {
       option.setAttribute("disabled", "");            
     }
 
+    const icon_class = SC.CLASS_ICON[current_variable.class] ?? SC.CLASS_ICON.unknown;
+    const na_html = current_variable.NA_count > 0
+      ? `<small style="color:darkred;">(${escape_html(current_variable.NA_count)} missing)</small>`
+      : "";
+
     option.setAttribute('data-content', `
-      <span class="glyphicon glyphicon-${SC.CLASS_ICON[dataset.variables[i].class]}"></span>
-      ${dataset.variables[i].name}
-      <code style="color:darkblue;">${dataset.variables[i].class}</code>
-      ${dataset.variables[i].NA_count>0?`<small style="color:darkred;">(${dataset.variables[i].NA_count} missing)</small>` : ""}      
-      </br>
-      <small class="text-muted">${dataset.variables[i].label}</small>
+      <span class="glyphicon glyphicon-${escape_html(icon_class)}"></span>
+      ${escape_html(current_variable.name)}
+      <code style="color:darkblue;">${escape_html(current_variable.class)}</code>
+      ${na_html}
+      <br>
+      <small class="text-muted">${escape_html(current_variable.label)}</small>
     `);
      
     if(selected_variables.includes(option.value)) {
