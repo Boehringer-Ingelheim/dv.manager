@@ -1124,6 +1124,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
       Blockly.serialization.workspaces.load(filter_state, ws);
       ws.cleanUp(); // If overlap reorganize
     } catch (error) {
+      console.error("Error restoring preset/bookmarked state", error);
       alert("Error restoring preset/bookmarked state");
     }
 
