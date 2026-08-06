@@ -249,12 +249,13 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
           */
 
           let applicable = true;
-          let dataset_names = dataset_list.map((x) => x.name);
-          if (dataset_names.includes(current_filter.dataset)) {
-            let dataset_idx = dataset_list.map((x) => x.name).indexOf(current_filter.dataset);
-            let variable_names = dataset_list[dataset_idx].variables.map((x) => x.name);
-            if (!variable_names.includes(current_filter.variable)) {
-              applicable = false
+          let dataset_idx = dataset_list.findIndex((x) => x.name === current_filter.dataset);
+          let variable_idx = -1;
+
+          if (dataset_idx >= 0) {
+            variable_idx = dataset_list[dataset_idx].variables.findIndex((x) => x.name === current_filter.variable);
+            if (variable_idx < 0) {
+              applicable = false;
             }
           } else {
             applicable = false;
@@ -269,12 +270,10 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
           if (current_filter.operation === "select_subset") {
             __logger("as subset");
             __logger(current_filter);
-            let dataset_idx = dataset_list.map((x) => x.name).indexOf(current_filter.dataset);
-            let variable_names = dataset_list[dataset_idx].variables.map((x) => x.name);
-            let variable_idx = variable_names.indexOf(current_filter.variable);
-            let variable_values = dataset_list[dataset_idx].variables[variable_idx].value;
-            let found = current_filter.values.filter((x) => variable_values.includes(x));
-            let removed = current_filter.values.filter((x) => !variable_values.includes(x));
+            let variable_values = dataset_list[dataset_idx].variables[variable_idx].value ?? [];
+            let requested_values = Array.isArray(current_filter.values) ? current_filter.values : [];
+            let found = requested_values.filter((x) => variable_values.includes(x));
+            let removed = requested_values.filter((x) => !variable_values.includes(x));
 
             if (removed.length > 0) {
               log.push("Removed values: " + removed.join() + " from " + current_filter.dataset + " - " + current_filter.variable)
