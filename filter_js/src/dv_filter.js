@@ -22,10 +22,10 @@
 */
 
 import * as Blockly from 'blockly';
-import { rangeSliderField } from './range_slider.js'; ``
+import { rangeSliderField } from './range_slider.js';
 import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
-import {deserialize_b64_filter_data} from './js_deserializer/deserializer.mjs';
+import { deserialize_b64_filter_data } from './js_deserializer/deserializer.mjs';
 import './toolbox-search/index.js'
 
 const __DEV_MODE = false;
@@ -487,7 +487,7 @@ const filter_generator_subset = function (block, generator) {
     dataset: dataset_name,
     operation: operation,
     variable: variable,
-    values: values,    
+    values: JSON.parse(values),    
     include_NA: include_NA
   }
 
