@@ -919,7 +919,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
           dd_options.push([values[i], values[i]])
         }
 
-        if (dd_options.length == 0) dd_options = [['_EMPTY_VEC_', '_EMPTY_VEC_']]
+        if (dd_options.length == 0) dd_options = [[BC.EMPTY_VEC_SENTINEL, BC.EMPTY_VEC_SENTINEL]]
 
         Blockly.Blocks[nsed_variable_type] = {
           init: function () {
