@@ -28,8 +28,8 @@ import { multiPickerField } from './multi_picker.js';
 import { deserialize_b64_filter_data } from './js_deserializer/deserializer.mjs';
 import './toolbox-search/index.js'
 
-const __DEV_MODE = false;
-const __LOGGER = false;
+const __DEV_MODE = true;
+const __LOGGER = true;
 const __TIMER = false;
 
 let __logger = function(x){};
@@ -163,7 +163,11 @@ const BC = {
   ATTRIBUTE: {
     INNER_FILTER: "data-inner-filter",
     MODAL: "data-blockly-modal"
-  }
+  },  
+  ORDER: {
+    ATOMIC: 0
+  },  
+  EMPTY_VEC_SENTINEL: '_EMPTY_VEC_'
 }
 
 const get_block_filter_type = function (dataset_name, variable_name) {
@@ -374,126 +378,131 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
 
   return ([state, log]);
 }
+const parse_child_code = function (code) {
+  try {
+    return (JSON.parse(code));
+  } catch (error) {
+    console.error("Generated child block is not valid JSON", code, error);
+    throw new Error("A filter block produced invalid output. Please check the blocks for incomplete entries.");
+  }
+}
+
+const finite_or_null = function (value) {
+  const num = typeof value === "number" ? value : Number(value);
+  return (Number.isFinite(num) ? num : null);
+}
+
+const read_include_NA = function (block) {
+  const value = block.getFieldValue('include_NA');
+  return (value === true || value === "TRUE");
+}
+
+const read_picker_values = function (block) {
+  const raw = block.getFieldValue('value');
+  let values;
+
+  if (Array.isArray(raw)) {
+    values = raw;
+  } else {
+    try {
+      values = JSON.parse(raw);
+    } catch (error) {
+      __logger("Could not parse picker value, defaulting to an empty selection: " + raw);
+      values = [];
+    }
+  }
+
+  if (!Array.isArray(values)) values = [];
+
+  return (values.filter((x) => x !== BC.EMPTY_VEC_SENTINEL));
+}
 
 const dataset_filter_generator = function (block, generator) {
-  const children_code = generator.valueToCode(block, "children", 0);
-  const code = '{"name" : "' + block.dataset_name + '", "kind": "dataset", "children": [' + children_code + ']}';
+  const children_code = generator.valueToCode(block, "children", BC.ORDER.ATOMIC);
+  const code = JSON.stringify({
+    name: block.dataset_name,
+    kind: "dataset",
+    children: children_code === '' ? [] : [parse_child_code(children_code)]
+  });
   return (code);
 }
 
 const subject_filter_generator = function (block, generator) {
-  const code = generator.valueToCode(block, "content", 0);
-  return ('{"subject_filter": {"children": [' + code + '] }}');
-}
-
-const set_operation_generator = function (block, generator) {
-  let children_code = "";
-  let current_inputs = block.inputList.map(x => x.name);
-  for (let input of current_inputs) {
-    const code = generator.valueToCode(block, input, 0);
-    if (code !== '') {
-      children_code = children_code + code + ", ";
+  const children_code = generator.valueToCode(block, "content", BC.ORDER.ATOMIC);
+  const code = JSON.stringify({
+    subject_filter: {
+      children: children_code === '' ? [] : [parse_child_code(children_code)]
     }
-  }
-  children_code = children_code.slice(0, -2);
-
-  const kind = 'set_operation';
-  const operation = block.getFieldValue('operation');
-  const code = '{' +
-    '"kind": "' + kind + '"' +
-    ', "operation": "' + operation + '"' +
-    ', "children": [' + children_code + ']}';
-  return ([code, null])
+  });
+  return (code);
 }
 
-const row_operation_generator = function (block, generator) {
-  let children_code = "";
-  let current_inputs = block.inputList.map(x => x.name);
-  for (let input of current_inputs) {
-    const code = generator.valueToCode(block, input, 0);
-    if (code !== '') {
-      children_code = children_code + code + ", ";
+// Row and set combination generators differ only in the `kind` they emit
+const make_combination_generator = function (kind) {
+  return (function (block, generator) {
+    const children = [];
+
+    for (const input of block.inputList) {
+      // Dummy / end-row inputs carry no connection and can never hold a value
+      if (!input.connection) continue;
+      const child_code = generator.valueToCode(block, input.name, BC.ORDER.ATOMIC);
+      if (child_code !== '') {
+        children.push(parse_child_code(child_code));
+      }
     }
-  }
-  children_code = children_code.slice(0, -2);
 
-  const kind = 'row_operation';
-  const operation = block.getFieldValue('operation');
-  const code = '{' +
-    '"kind": "' + kind + '"' +
-    ', "operation": "' + operation + '"' +
-    ', "children": [' + children_code + ']}';
-  return ([code, null])
+    const code = JSON.stringify({
+      kind: kind,
+      operation: block.getFieldValue('operation'),
+      children: children
+    });
+
+    return ([code, BC.ORDER.ATOMIC]);
+  });
 }
+
+const set_operation_generator = make_combination_generator('set_operation');
+const row_operation_generator = make_combination_generator('row_operation');
 
 const filter_generator_range = function (block, generator) {
-  const dataset_name = block.dataset_name;
-  const variable = block.variable_name;
-  const kind = 'filter';
-  const operation = 'select_range';
-  const min = block.getFieldValue('min');
-  const max = block.getFieldValue('max');
-  const include_NA = block.getFieldValue('include_NA') === "FALSE" ? false : true;
+  const code = JSON.stringify({
+    kind: 'filter',
+    dataset: block.dataset_name,
+    operation: 'select_range',
+    variable: block.variable_name,
+    min: finite_or_null(block.getFieldValue('min')),
+    max: finite_or_null(block.getFieldValue('max')),
+    include_NA: read_include_NA(block)
+  });
 
-  const code_obj = {
-    kind: kind,
-    dataset: dataset_name,
-    operation: operation,
-    variable: variable,
-    min: min,
-    max: max,
-    include_NA: include_NA
-  }
-
-  const code = JSON.stringify(code_obj)
-
-  return ([code, null]);
+  return ([code, BC.ORDER.ATOMIC]);
 }
 
 const filter_generator_date_range = function (block, generator) {
-  const dataset_name = block.dataset_name;
-  const variable = block.variable_name;
-  const kind = 'filter';
-  const operation = 'select_date';
-  const min = block.getFieldValue('min');
-  const max = block.getFieldValue('max');
-  const include_NA = block.getFieldValue('include_NA') === "FALSE" ? false : true;
+  const code = JSON.stringify({
+    kind: 'filter',
+    dataset: block.dataset_name,
+    operation: 'select_date',
+    variable: block.variable_name,
+    min: block.getFieldValue('min'),
+    max: block.getFieldValue('max'),
+    include_NA: read_include_NA(block)
+  });
 
-  const code_obj = {
-    kind: kind,
-    dataset: dataset_name,
-    operation: operation,
-    variable: variable,
-    min: min,
-    max: max,
-    include_NA: include_NA
-  }
-
-  const code = JSON.stringify(code_obj)
-
-  return ([code, null]);
+  return ([code, BC.ORDER.ATOMIC]);
 }
 
 const filter_generator_subset = function (block, generator) {
-  const dataset_name = block.dataset_name;
-  const variable = block.variable_name;
-  const kind = 'filter';
-  const operation = 'select_subset';
-  const values = block.getFieldValue('value');
-  const include_NA = block.getFieldValue('include_NA') === "FALSE" ? false : true;
+  const code = JSON.stringify({
+    kind: 'filter',
+    dataset: block.dataset_name,
+    operation: 'select_subset',
+    variable: block.variable_name,
+    values: read_picker_values(block),
+    include_NA: read_include_NA(block)
+  });
 
-  const code_obj = {
-    kind: kind,
-    dataset: dataset_name,
-    operation: operation,
-    variable: variable,
-    values: JSON.parse(values), //FIXME: This values is parsed and deparsed because multi picker stringfies it.
-    include_NA: include_NA
-  }
-
-  const code = JSON.stringify(code_obj)
-
-  return ([code, null]);
+  return ([code, BC.ORDER.ATOMIC]);
 }
 
 const get_blockly_code = function ({ workspace, generator, dataset_name }) {
