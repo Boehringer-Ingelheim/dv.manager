@@ -2274,16 +2274,17 @@ let FC = {
     STATIC_RET: "static_ret",
     FILTER_MODE: "filter_mode",
     SKIP_DATASET_FILTERS: "skip_dataset_filters"
-  },
-  VAL: {
-    EMPTY_FILTER: {
-        filters: {
-          datasets_filter: {children : [] },
-          subject_filter: {children : [] },
-          dataset_list_name: ""
-        }
-      }
   }
+}
+
+let make_empty_filter = function (dataset_list_name) {
+  return ({
+    filters: {
+      datasets_filter: { children: [] },
+      subject_filter: { children: [] }
+    },
+    dataset_list_name: dataset_list_name ?? ""
+  });
 }
 
 let get_root_el = function(el) {
@@ -2510,7 +2511,8 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
   });
 
   clear_all_button.addEventListener("click", function(){
-    set_filter_property(root_el, FC.PROPERTY.STATE, FC.VAL.EMPTY_FILTER);
+    let current_dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
+    set_filter_property(root_el, FC.PROPERTY.STATE, make_empty_filter(current_dataset_list_name));
     root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true })); // Trigger filter redraw after cleaning filters
   });
 
