@@ -368,24 +368,27 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
       }
       return (res);
     }
-
-    if (filter[BC.TYPE.SUBJECT_FILTER] && filter[BC.TYPE.SUBJECT_FILTER].children.length > 0) {
-      let processed_filter = process_filter(filter[BC.TYPE.SUBJECT_FILTER].children[0]);
+    
+    let subject_filter_state = filter[BC.TYPE.SUBJECT_FILTER];
+    if (subject_filter_state && subject_filter_state.children && subject_filter_state.children.length > 0) {
+      let processed_filter = process_filter(subject_filter_state.children[0]);
       if (processed_filter !== null) {
         let subject_filter = {
           type: ns(BC.TYPE.SUBJECT_FILTER),
           id: Blockly.utils.idGenerator.genUid(),
           x: 0,
           y: 0,
-          inputs: { content: { block: process_filter(filter[BC.TYPE.SUBJECT_FILTER].children[0]) } }
+          inputs: { content: { block: processed_filter } }
         };
         state.blocks.blocks.push(subject_filter);
       }
     }
-
-    if (filter.datasets_filter && filter.datasets_filter.children.length > 0) {
-      for (let idx = 0; idx < filter.datasets_filter.children.length; idx++) {
-        let curr_dataset_filter = filter.datasets_filter.children[idx];
+    
+    let datasets_filter_state = filter[BC.TYPE.DATASETS_FILTER];
+    if (datasets_filter_state && datasets_filter_state.children && datasets_filter_state.children.length > 0) {
+      for (let idx = 0; idx < datasets_filter_state.children.length; idx++) {
+        let curr_dataset_filter = datasets_filter_state.children[idx];
+        if (!curr_dataset_filter.children || curr_dataset_filter.children.length === 0) continue;
         let processed_filter = process_filter(curr_dataset_filter.children[0]);
         if (processed_filter !== null) {
           let dataset_filter = {
@@ -393,7 +396,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
             id: Blockly.utils.idGenerator.genUid(),
             x: 0,
             y: 0,
-            inputs: { children: { block: process_filter(curr_dataset_filter.children[0]) } }
+            inputs: { children: { block: processed_filter } }
           };
           state.blocks.blocks.push(dataset_filter);
         }
