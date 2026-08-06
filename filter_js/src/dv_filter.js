@@ -2470,7 +2470,7 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
   }
 
   root_el.addEventListener(FC.EVENT.REQUESTED_REDRAW, function(){    
-    let dataset_list_data = get_filter_property(root_el, FC.PROPERTY.DATA);    
+    let dataset_list_data = get_filter_property(root_el, FC.PROPERTY.DATA, false);     
     let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
     let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME);
     let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
