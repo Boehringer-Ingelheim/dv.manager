@@ -1847,7 +1847,7 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
         throw new Error(`No select element found inside: ${current_variable_el.outerHTML}`);
       }
 
-      let values = $(select).val();
+      let values = $(select).val() ?? [];
 
       curr_filter = {
         kind: "filter",
