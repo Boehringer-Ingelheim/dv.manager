@@ -2620,9 +2620,8 @@ let baked_update_filter_result_handler = function (msg) {
     console.error("Root el: " + msg.id + " not found");
     return;
   }
-  update_filter_result_handler(msg, root_el);  
+  update_filter_result_handler(msg, root_el);
 };
-Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
 
 let update_data = function (msg) {
   let root_el = get_root_el_by_id(msg.id);
@@ -2634,7 +2633,6 @@ let update_data = function (msg) {
   root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));
   //FIXME: select reference and event cannot happen here
 };
-Shiny.addCustomMessageHandler("update_data", update_data);
 
 let request_dataset_filter_state = function(msg) {
   let root_el = get_root_el_by_id(msg.id);
@@ -2645,7 +2643,6 @@ let request_dataset_filter_state = function(msg) {
   set_filter_property(root_el, FC.PROPERTY.STATE, JSON.parse(msg.state));
   root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));  
 };
-Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
 
 let baked_show_hide_dataset_filters_handlers = function (msg) {
   let root_el = get_root_el_by_id(msg.id);
@@ -2655,7 +2652,6 @@ let baked_show_hide_dataset_filters_handlers = function (msg) {
   }
   show_hide_dataset_filters_handler(msg, root_el);
 };
-Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
 
 let baked_init_filter_handler = function(msg) {            
   let root_el = get_root_el_by_id(msg.id);
@@ -2687,7 +2683,24 @@ let baked_init_filter_handler = function(msg) {
       skip_dataset_filters  
     );
 };
-Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
+let shiny_handlers_registered = false;
+
+let register_shiny_handlers = function () {
+  if (shiny_handlers_registered) return;
+  if (typeof Shiny === "undefined" || !Shiny.addCustomMessageHandler) {
+    console.error("Shiny is not available: filter message handlers were not registered");
+    return;
+  }
+  shiny_handlers_registered = true;
+
+  Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
+  Shiny.addCustomMessageHandler("update_data", update_data);
+  Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
+  Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
+  Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
+};
+
+register_shiny_handlers();
 
 //#endregion
 
