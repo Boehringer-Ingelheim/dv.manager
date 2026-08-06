@@ -1639,7 +1639,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
       categorical_select.setAttribute('multiple', '');        
       categorical_select.setAttribute('data-live-search', 'true');
       categorical_select.setAttribute('data-actions-box', 'true');
-      categorical_select.setAttribute('data-container', 'body .dv_main_panel');
+      categorical_select.setAttribute('data-container', get_data_container());
       categorical_select.setAttribute('data-width', '100%');
       categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
