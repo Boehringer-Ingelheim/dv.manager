@@ -1974,7 +1974,7 @@ let get_filter_state = function (simple_root_el, dataset_list_name) {
   return (state);
 };
 
-// Handles actions buttons. For not it is only one, maybe it is an unrequired generalization
+// Handles actions buttons. For now it is only one, maybe it is an unrequired generalization
 let handle_action = function() {
     
   let handlers = {
