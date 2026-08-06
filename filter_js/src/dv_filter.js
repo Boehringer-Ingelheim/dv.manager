@@ -1291,6 +1291,12 @@ const SC = {
   }
 }
 
+// Selector fragment for a dataset filter card, safe for names containing dots,
+// spaces or quotes
+let dataset_filter_selector = function (dataset_name) {
+  return (SC.TAG.DATASET_FILTER + attr_selector(SC.ATTRIBUTE.DATASET_NAME, dataset_name));
+}
+
 let get_simple_root_el = function(el){
   __assert(()=>is_html_element(el))
   return (get_root_el(el).querySelector(`${FC.TAG.FILTER}${attr_selector(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.SIMPLE)}`));
@@ -1371,9 +1377,9 @@ let simplify_filter_state = function(state, subject_dataset_name) {
 
 let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
   __time_function_start() 
-  __assert(()=>is_html_element(simple_root_el));
+  __assert(() =>is_html_element(simple_root_el));
   __assert(() => Array.isArray(dataset_filter_state));
-  __assert(()=> !simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`));
+  __assert(() => !simple_root_el.querySelector(dataset_filter_selector(dataset.name)));
   
   let selected_variables = [];  
   for(let i = 0; i < dataset_filter_state.length; ++i) {
@@ -1404,7 +1410,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   card_collapse_link.textContent = dataset.label;
   card_collapse_link.className = "dv-dataset-filter-collapse-link h6";
   card_collapse_link.setAttribute("data-bs-toggle", "collapse");  
-  card_collapse_link.setAttribute("data-bs-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .card-body`);
+  card_collapse_link.setAttribute("data-bs-target", `${dataset_filter_selector(dataset.name)} .card-body`);
   card_collapse_link.href = "#"; // Recommended to make it keyboard-accessible
 
   let filter_count_tag = document.createElement(SC.TAG.FILTER_COUNT_TAG);
@@ -1796,7 +1802,7 @@ let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   __assert(()=>is_html_element(simple_root_el))
   __assert(() => Array.isArray(dataset_filter_state));
 
-  let prev_dataset_filter_el = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`);
+  let prev_dataset_filter_el = simple_root_el.querySelector(dataset_filter_selector(dataset.name));
 
   if(prev_dataset_filter_el) {
     destroy_dataset_filter(prev_dataset_filter_el);    
