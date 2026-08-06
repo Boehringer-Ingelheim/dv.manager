@@ -542,7 +542,7 @@ const get_blockly_code = function (filter) {
   const workspace = filter.workspace;
   const generator = filter.generator;
   const dataset_name = filter.dataset_name;
-  
+
   const start = new Date();
 
   let filters = {
@@ -560,20 +560,31 @@ const get_blockly_code = function (filter) {
 
     let hl = new Blockly.Workspace();
 
-    for (let i = 0; i < topBlocks.length; i++) {
-      let current_block = topBlocks[i];
-      blockly_state["blocks"]["blocks"].push(current_block);
-      Blockly.serialization.workspaces.load(blockly_state, hl);
-      const current_filter = JSON.parse(generator.workspaceToCode(hl));
-      if (current_filter.kind === "dataset") {
-        filters.datasets_filter.children.push(current_filter);
-      } else {
-        filters.subject_filter = (current_filter.subject_filter);
-      }
-      blockly_state["blocks"]["blocks"].length = 0;
-    }
+    try {
+      for (let i = 0; i < topBlocks.length; i++) {
+        let current_block = topBlocks[i];
+        blockly_state["blocks"]["blocks"].push(current_block);
+        Blockly.serialization.workspaces.load(blockly_state, hl);
 
-    blockly_state["blocks"]["blocks"] = topBlocks; // Restore blocks for saving
+        let current_filter;
+        try {
+          current_filter = JSON.parse(generator.workspaceToCode(hl));
+        } catch (error) {
+          console.error("Could not generate filter code for block", current_block, error);
+          throw new Error("The filter could not be generated. Please check the blocks for incomplete entries.");
+        }
+
+        if (current_filter.kind === "dataset") {
+          filters.datasets_filter.children.push(current_filter);
+        } else {
+          filters.subject_filter = (current_filter.subject_filter);
+        }
+        blockly_state["blocks"]["blocks"].length = 0;
+      }
+    } finally {      
+      hl.dispose();
+      blockly_state["blocks"]["blocks"] = topBlocks; // Restore blocks for saving
+    }
 
   }
 
