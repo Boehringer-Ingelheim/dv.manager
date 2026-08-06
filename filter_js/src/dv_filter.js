@@ -2145,7 +2145,7 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
 
 let get_blockly_root_el = function(el){  
   __assert(()=>is_html_element(el))
-  return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
+  return (get_root_el(el).querySelector(`${FC.TAG.FILTER}${attr_selector(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.BLOCKLY)}`));
 }
 
 let init_filter_handler = function (root_el, dataset_list_data, dataset_list_name, subject_filter_dataset_name, filter_state, static_init_ret, selected_mode, skip_dataset_filters) {
