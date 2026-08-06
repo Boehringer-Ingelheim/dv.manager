@@ -1625,10 +1625,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
     close_button.innerHTML = "&times;";
     
     // Assemble header
-    header.appendChild(name_label);
-    header.appendChild(na_group);
-    header.appendChild(close_button);
-
+    
     header.appendChild(name_label);
     header.appendChild(na_group);
     header.appendChild(close_button);
