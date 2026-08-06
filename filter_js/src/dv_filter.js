@@ -2473,9 +2473,9 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
     let dataset_list_data = get_filter_property(root_el, FC.PROPERTY.DATA, false);     
     let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
     let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME);
-    let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
+    let current_filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
     let static_init_ret = get_filter_property(root_el, FC.PROPERTY.STATIC_RET, false);
-    let filter_mode = get_filter_property(root_el, FC.PROPERTY.FILTER_MODE);
+    let current_filter_mode = get_filter_property(root_el, FC.PROPERTY.FILTER_MODE);
     let skip_dataset_filters = get_filter_property(root_el, FC.PROPERTY.SKIP_DATASET_FILTERS);
 
     if (!dataset_list_data) {
@@ -2488,9 +2488,9 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
       dataset_list_data,
       dataset_list_name,
       subject_filter_dataset_name,
-      filter_state,
+      current_filter_state,
       static_init_ret,
-      filter_mode,
+      current_filter_mode,
       skip_dataset_filters      
     );
   })
