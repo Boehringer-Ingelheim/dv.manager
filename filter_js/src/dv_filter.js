@@ -385,7 +385,7 @@ const subject_filter_generator = function (block, generator) {
 const set_operation_generator = function (block, generator) {
   let children_code = "";
   let current_inputs = block.inputList.map(x => x.name);
-  for (input of current_inputs) {
+  for (let input of current_inputs) {
     const code = generator.valueToCode(block, input, 0);
     if (code !== '') {
       children_code = children_code + code + ", ";
@@ -405,7 +405,7 @@ const set_operation_generator = function (block, generator) {
 const row_operation_generator = function (block, generator) {
   let children_code = "";
   let current_inputs = block.inputList.map(x => x.name);
-  for (input of current_inputs) {
+  for (let input of current_inputs) {
     const code = generator.valueToCode(block, input, 0);
     if (code !== '') {
       children_code = children_code + code + ", ";
@@ -2072,7 +2072,7 @@ let update_filter_result_handler = function(msg, root_el){
   console.log(parsed_msg);
 
   let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
-  let current_dataset_list = get_filter_property(root_el, FC.PROPERTY.DATA, clone = false).dataset_lists.find(obj=>obj.name === dataset_list_name);
+  let current_dataset_list = get_filter_property(root_el, FC.PROPERTY.DATA, false).dataset_lists.find(obj=>obj.name === dataset_list_name);
 
   
   let row_count = parsed_msg.row_count; 
@@ -2179,7 +2179,7 @@ let get_root_el_by_id = function(id) {
 }
 
 // Should be called only inside listeners/message handlers to get the current state of the filter
-let get_filter_property = function(el, property, clone = true) {  
+let get_filter_property = function(el, property, clone) {  
   __assert(()=>is_html_element(el));
   __logger("Getting property: " + property);  
   if(clone) {
@@ -2289,7 +2289,7 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
   bottom_container.className = "mb-3 p-1";
 
   
-  static_ret = {};
+  let static_ret = {};
 
   // Simple
   let simple_option = document.createElement('option');
