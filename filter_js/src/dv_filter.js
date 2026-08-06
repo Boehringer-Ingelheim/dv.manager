@@ -2228,17 +2228,14 @@ let show_hide_dataset_filters_handler =  function(msg, root_el){
   }
 }
 
-let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters) {
-  __assert(()=>is_html_element(blockly_root_el))
+  let blockly_dynamic_init = function (blockly_root_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters) {
+    __assert(() => is_html_element(blockly_root_el))
+    __assert(() => !filter)
 
-  let inner_filter_el = blockly_root_el.querySelector(`[${BC.ATTRIBUTE.INNER_FILTER}]`);
-  const filter = $(inner_filter_el).data("filter");
-  if (filter) {
-    filter.workspace.dispose();
+    let inner_filter_el = blockly_root_el.querySelector(`[${BC.ATTRIBUTE.INNER_FILTER}]`);    
     $(inner_filter_el).data("filter", undefined);
+    $(inner_filter_el).data('filter', init_blockly(inner_filter_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters));
   }
-  $(inner_filter_el).data('filter', init_blockly(inner_filter_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters));
-}
 
 let FC = {
   TAG:{
