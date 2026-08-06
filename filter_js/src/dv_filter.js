@@ -1987,7 +1987,14 @@ let handle_action = function() {
       $(select).selectpicker('val', new_selection);      
     }
   };
-  handlers[this.getAttribute('data-action')](this);
+
+  const action = this.getAttribute('data-action');
+  const handler = handlers[action];
+  if (!handler) {
+    console.error("Unknown filter action: " + action);
+    return;
+  }
+  handler(this);
 };
 
 let dispatch_simple_filter_changed = function(event) {  
@@ -2089,6 +2096,10 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
   let subject_dataset = filter_data.dataset_list.find(obj=>obj.name === subject_dataset_name);
   let other_datasets = filter_data.dataset_list.filter(obj=>obj.name !== subject_dataset_name);  
 
+  if (!subject_dataset) {
+    throw new Error("Subject dataset not found: " + subject_dataset_name);
+  }
+
   if(!simple_filter_state.compatible) {
     __logger("State not compatible");
     simple_root_el.classList.add("dv-disabled-controls");
@@ -2144,6 +2155,10 @@ let init_filter_handler = function (root_el, dataset_list_data, dataset_list_nam
   __assert(()=>is_html_element(root_el));
 
   let dataset_list = dataset_list_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
+
+  if (!dataset_list) {
+    throw new Error("Dataset list not found: " + dataset_list_name);
+  }
   
   if(selected_mode === FC.MODE.SIMPLE) {
     get_simple_root_el(root_el).style.display = 'block';
@@ -2179,14 +2194,24 @@ let update_filter_result_handler = function(msg, root_el){
   let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
   let current_dataset_list = get_filter_property(root_el, FC.PROPERTY.DATA, false).dataset_lists.find(obj=>obj.name === dataset_list_name);
 
+  if (!current_dataset_list) {
+    console.error("Dataset list not found: " + dataset_list_name);
+    return;
+  }
   
   let row_count = parsed_msg.row_count; 
-  for(let idx = 0; idx < row_count.length; ++idx) {
+  for (let idx = 0; idx < row_count.length; ++idx) {
     let name = row_count[idx].name;
     let current_nrow = row_count[idx].count;
-    let total_nrow = current_dataset_list.dataset_list.find(obj=>obj.name === name).nrow;
+    let dataset = current_dataset_list.dataset_list.find(obj => obj.name === name);
+    let count_el = root_el.querySelector(`${dataset_filter_selector(name)} ${SC.TAG.ROW_COUNT_TAG}`);
 
-    root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${name}] ${SC.TAG.ROW_COUNT_TAG}`).textContent = `${current_nrow} / ${total_nrow}`;
+    if (!dataset || !count_el) {
+      __logger("Skipping row count for missing dataset filter: " + name);
+      continue;
+    }
+
+    count_el.textContent = `${current_nrow} / ${dataset.nrow}`;
   }
 }
 
@@ -2273,8 +2298,10 @@ let get_root_el = function(el) {
     root_el = el.closest(FC.TAG.ROOT)    
   }
   
-  if(!root_el) {
-    throw new Error("no root found from" + el);
+  if (!root_el) {
+    throw new Error("No filter root <" + FC.TAG.ROOT + "> found from element: " +
+      (el && el.tagName ? el.tagName.toLowerCase() : String(el)) +
+      (el && el.id ? "#" + el.id : ""));
   }
   return(root_el);
 }
@@ -2321,6 +2348,11 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
   let root_el = document.getElementById(root_id);
   __logger("root el for " + root_id);
   __logger(root_el);
+
+  if (!root_el) {
+    throw new Error("Filter root element not found: " + root_id);
+  }
+
   init_filter_property_field(root_el);
   set_filter_property(root_el, FC.PROPERTY.STATE, filter_state);
   set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, !saved_filter_states ? [] : saved_filter_states);
@@ -2424,6 +2456,11 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
 
   static_ret[FC.MODE.BLOCKLY] = blockly_static_init(blockly_div, root_id);
   set_filter_property(root_el, FC.PROPERTY.STATIC_RET, static_ret);
+ 
+  if (filter_mode !== FC.MODE.SIMPLE && filter_mode !== FC.MODE.BLOCKLY) {
+    console.warn("Unknown filter mode '" + filter_mode + "', falling back to " + FC.MODE.SIMPLE);
+    filter_mode = FC.MODE.SIMPLE;
+  }
   
   select.value = filter_mode;
   set_filter_property(root_el, FC.PROPERTY.FILTER_MODE, select.value);
@@ -2442,6 +2479,11 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
     let static_init_ret = get_filter_property(root_el, FC.PROPERTY.STATIC_RET, false);
     let filter_mode = get_filter_property(root_el, FC.PROPERTY.FILTER_MODE);
     let skip_dataset_filters = get_filter_property(root_el, FC.PROPERTY.SKIP_DATASET_FILTERS);
+
+    if (!dataset_list_data) {
+      __logger("Redraw requested before any data was received, skipping");
+      return;
+    }
     
     init_filter_handler( 
       root_el,      
@@ -2573,16 +2615,22 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
   
 };
 
-let baked_update_filter_result_handler= function(msg) {
-  let root_el = get_root_el_by_id(msg.id)
-  if(!root_el) console.error("Root el: " + msg.id + "not found");  
+let baked_update_filter_result_handler = function (msg) {
+  let root_el = get_root_el_by_id(msg.id);
+  if (!root_el) {
+    console.error("Root el: " + msg.id + " not found");
+    return;
+  }
   update_filter_result_handler(msg, root_el);  
 };
 Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
 
-let update_data = function(msg) {
-  let root_el = get_root_el_by_id(msg.id)
-  if(!root_el) console.error("Root el: " + msg.id + "not found");  
+let update_data = function (msg) {
+  let root_el = get_root_el_by_id(msg.id);
+  if (!root_el) {
+    console.error("Root el: " + msg.id + " not found");
+    return;
+  }
   set_filter_property(root_el, FC.PROPERTY.DATA, JSON.parse(msg.data));
   root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));
   //FIXME: select reference and event cannot happen here
@@ -2590,23 +2638,32 @@ let update_data = function(msg) {
 Shiny.addCustomMessageHandler("update_data", update_data);
 
 let request_dataset_filter_state = function(msg) {
-  let root_el = get_root_el_by_id(msg.id)
-  if(!root_el) console.error("Root el: " + msg.id + "not found");
+  let root_el = get_root_el_by_id(msg.id);
+  if(!root_el) {
+    console.error("Root el: " + msg.id + " not found");
+    return;
+  }
   set_filter_property(root_el, FC.PROPERTY.STATE, JSON.parse(msg.state));
   root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));  
 };
 Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
 
-let baked_show_hide_dataset_filters_handlers = function(msg) {
-  let root_el = get_root_el_by_id(msg.id)
-  if(!root_el) console.error("Root el: " + msg.id + "not found");  
+let baked_show_hide_dataset_filters_handlers = function (msg) {
+  let root_el = get_root_el_by_id(msg.id);
+  if (!root_el) {
+    console.error("Root el: " + msg.id + " not found");
+    return;
+  }
   show_hide_dataset_filters_handler(msg, root_el);
 };
 Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
 
 let baked_init_filter_handler = function(msg) {            
-    let root_el = get_root_el_by_id(msg.id)
-    if(!root_el) console.error("Root el: " + msg.id + "not found");
+  let root_el = get_root_el_by_id(msg.id);
+  if (!root_el) {
+    console.error("Root el: " + msg.id + " not found");
+    return;
+  }  
     let dataset_lists_filter_data = deserialize_b64_filter_data(msg.dataset_lists_filter_data);
     set_filter_property(root_el, FC.PROPERTY.DATA, dataset_lists_filter_data);
     set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, msg.dataset_list_name);
