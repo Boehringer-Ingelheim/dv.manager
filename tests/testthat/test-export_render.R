@@ -1,7 +1,6 @@
 local({
-  write_export_rmd <- function(export_dir, chunk_body, output = "html_document") {
-    export_rmd <- file.path(export_dir, "export.Rmd")
-    writeLines(
+  make_export_rmd <- function(chunk_body, output = "html_document") {
+    paste(
       c(
         "---",
         "title: \"export\"",
@@ -12,10 +11,11 @@ local({
         chunk_body,
         "```"
       ),
-      export_rmd
+      collapse = "\n"
     )
-    export_rmd
   }
+
+  dummy_header <- "% dummy header"
 
   spy_pdf_attach <- function() {
     calls <- new.env()
@@ -27,19 +27,9 @@ local({
   }
 
   test_that("render_export_document renders HTML, zips it, and never calls pdf_attach_function", {
-    export_dir <- tempfile("export_test_")
-    dir.create(export_dir)
-    header_file <- tempfile(fileext = ".tex")
-    writeLines("% dummy header", header_file)
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
       {
-        if (dir.exists(export_dir)) {
-          unlink(export_dir, recursive = TRUE)
-        }
-        if (file.exists(header_file)) {
-          unlink(header_file)
-        }
         if (file.exists(zip_path)) {
           unlink(zip_path)
         }
@@ -47,10 +37,9 @@ local({
       add = TRUE
     )
 
-    export_rmd <- write_export_rmd(export_dir, "1 + 1", output = "html_document")
     spy <- spy_pdf_attach()
 
-    result <- render_export_document(export_rmd, export_dir, header_file, spy$fn, zip_path)
+    result <- render_export_document(make_export_rmd("1 + 1"), dummy_header, spy$fn, zip_path)
 
     expect_true(file.exists(zip_path))
     contents <- utils::unzip(zip_path, list = TRUE)[["Name"]]
@@ -64,19 +53,9 @@ local({
     skip_if_not(rmarkdown::pandoc_available(), "pandoc not available")
     skip_if_not(nzchar(Sys.which("pdflatex")), "pdflatex not available")
 
-    export_dir <- tempfile("export_test_")
-    dir.create(export_dir)
-    header_file <- tempfile(fileext = ".tex")
-    writeLines("% dummy header", header_file)
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
       {
-        if (dir.exists(export_dir)) {
-          unlink(export_dir, recursive = TRUE)
-        }
-        if (file.exists(header_file)) {
-          unlink(header_file)
-        }
         if (file.exists(zip_path)) {
           unlink(zip_path)
         }
@@ -84,10 +63,9 @@ local({
       add = TRUE
     )
 
-    export_rmd <- write_export_rmd(export_dir, "1 + 1", output = "pdf_document")
     spy <- spy_pdf_attach()
 
-    result <- render_export_document(export_rmd, export_dir, header_file, spy$fn, zip_path)
+    result <- render_export_document(make_export_rmd("1 + 1", output = "pdf_document"), dummy_header, spy$fn, zip_path)
 
     expect_true(file.exists(zip_path))
     contents <- utils::unzip(zip_path, list = TRUE)[["Name"]]
@@ -98,23 +76,13 @@ local({
     expect_length(spy$calls$log, 2)
     expect_true(all(endsWith(vapply(spy$calls$log, `[[`, character(1), "pdf"), ".pdf")))
     attachments <- vapply(spy$calls$log, function(x) basename(x[["attachment"]]), character(1))
-    expect_setequal(attachments, c(basename(export_rmd), "session_info.txt"))
+    expect_setequal(attachments, c("export.Rmd", "session_info.txt"))
   })
 
   test_that("render_export_document captures render errors in error.txt without calling pdf_attach_function", {
-    export_dir <- tempfile("export_test_")
-    dir.create(export_dir)
-    header_file <- tempfile(fileext = ".tex")
-    writeLines("% dummy header", header_file)
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
       {
-        if (dir.exists(export_dir)) {
-          unlink(export_dir, recursive = TRUE)
-        }
-        if (file.exists(header_file)) {
-          unlink(header_file)
-        }
         if (file.exists(zip_path)) {
           unlink(zip_path)
         }
@@ -122,12 +90,11 @@ local({
       add = TRUE
     )
 
-    export_rmd <- write_export_rmd(export_dir, 'stop("boom")', output = "html_document")
     spy <- spy_pdf_attach()
 
     result <- NULL
     expect_warning(
-      result <- render_export_document(export_rmd, export_dir, header_file, spy$fn, zip_path),
+      result <- render_export_document(make_export_rmd('stop("boom")'), dummy_header, spy$fn, zip_path),
       regexp = "Error rendering export"
     )
 
@@ -138,19 +105,9 @@ local({
   })
 
   test_that("render_export_document works when run inside a callr subprocess", {
-    export_dir <- tempfile("export_test_")
-    dir.create(export_dir)
-    header_file <- tempfile(fileext = ".tex")
-    writeLines("% dummy header", header_file)
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
       {
-        if (dir.exists(export_dir)) {
-          unlink(export_dir, recursive = TRUE)
-        }
-        if (file.exists(header_file)) {
-          unlink(header_file)
-        }
         if (file.exists(zip_path)) {
           unlink(zip_path)
         }
@@ -158,14 +115,11 @@ local({
       add = TRUE
     )
 
-    export_rmd <- write_export_rmd(export_dir, "1 + 1", output = "html_document")
-
     result <- callr::r(
       render_export_document,
       args = list(
-        export_rmd = export_rmd,
-        export_dir = export_dir,
-        header_file = header_file,
+        rmarkdown = make_export_rmd("1 + 1"),
+        header = dummy_header,
         pdf_attach_function = function(pdf, attachment) invisible(NULL),
         filename = zip_path
       )

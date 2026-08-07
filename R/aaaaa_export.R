@@ -6,11 +6,8 @@
 #' tests) — everything needed must arrive as an argument, nothing carries over
 #' from the caller's session.
 #'
-#' @param export_rmd Path to the .Rmd file to render.
-#' @param export_dir Directory containing `export_rmd`; becomes the working
-#'   directory, and everything left in it ends up in the zip.
-#' @param header_file Path to a file (e.g. `header.tex`) copied into
-#'   `export_dir` before rendering.
+#' @param rmarkdown The full .Rmd document content, as a single string.
+#' @param header The `header.tex` content, as a single string.
 #' @param pdf_attach_function `function(pdf, attachment)` used to attach files
 #'   to a rendered PDF. Injected so it can be tested independently.
 #' @param filename Path the resulting zip file is written to.
@@ -18,20 +15,39 @@
 #' @return `filename`, with an `error_msg` attribute (character(0) on success,
 #'   the error message on failure).
 #' @keywords internal
-render_export_document <- function(export_rmd, export_dir, header_file, pdf_attach_function, filename, quiet = TRUE) {
+render_export_document <- function(rmarkdown, header, pdf_attach_function, filename, quiet = TRUE) {
+  export_dir <- tempfile(pattern = "export")
+  if (!quiet) {
+    message(sprintf("Creating export in %s", export_dir))
+  }
+  dir.create(export_dir)
+
   old_wd <- getwd()
-  on.exit(setwd(old_wd), add = TRUE)
+  on.exit(
+    {
+      if (dir.exists(export_dir)) {
+        unlink(export_dir, recursive = TRUE)
+        if (!quiet) {
+          message(sprintf("Removing dir %s", export_dir))
+        }
+      }
+      setwd(old_wd)
+    },
+    add = TRUE
+  )
   setwd(export_dir)
+
+  writeLines(rmarkdown, "export.Rmd")
+  writeLines(header, "header.tex")
 
   error_msg <- character(0)
   tryCatch(
     {
-      file.copy(header_file, ".")
-      output_file <- rmarkdown::render(input = export_rmd, output_dir = export_dir, quiet = quiet)
+      output_file <- rmarkdown::render(input = "export.Rmd", output_dir = export_dir, quiet = quiet)
       if (endsWith(output_file, "pdf")) {
         session_info_file <- "session_info.txt"
         writeLines(capture.output(devtools::session_info()), session_info_file)
-        pdf_attach_function(output_file, export_rmd)
+        pdf_attach_function(output_file, "export.Rmd")
         pdf_attach_function(output_file, session_info_file)
         unlink(session_info_file)
       }
@@ -39,7 +55,7 @@ render_export_document <- function(export_rmd, export_dir, header_file, pdf_atta
     error = function(e) {
       error_msg <<- e$message
       warning(sprintf("Error rendering export in %s\n%s", export_dir, error_msg))
-      writeLines(c("Error rendering export", error_msg), file.path(export_dir, "error.txt"))
+      writeLines(c("Error rendering export", error_msg), "error.txt")
     }
   )
 
@@ -814,43 +830,25 @@ body::before {
             })
 
             log_inform("Rendering rmarkdown")
-            rendered_filename <- local({
-              export_dir <- tempfile(pattern = "export")
-              log_inform(sprintf("Creating export in %s", export_dir))
-              dir.create(export_dir)
-              curr_dir <- getwd()
-              on.exit(
-                {
-                  if (dir.exists(export_dir)) {
-                    unlink(export_dir, recursive = TRUE)
-                    log_inform(sprintf("Removing dir %s", export_dir))
-                  }
-                  setwd(curr_dir)
-                },
-                add = TRUE
-              )
-
-              export_rmd <- file.path(export_dir, "export.Rmd")
-              writeLines(rmarkdown, export_rmd)
-
-              zip_filename <- callr::r(
-                render_export_document,
-                args = list(
-                  export_rmd = export_rmd,
-                  export_dir = export_dir,
-                  header_file = system.file("export_files/header.tex", package = "dv.manager", mustWork = TRUE),
-                  pdf_attach_function = pdf_attach,
-                  filename = filename,
-                  quiet = FALSE # We ant to access it in the app log
-                ),
-                show = TRUE
-              )
-              if (length(attr(zip_filename, "error_msg")) > 0) {
-                log_warn(sprintf("Error while rendering export: %s", attr(zip_filename, "error_msg")))
-              }
-              attr(zip_filename, "error_msg") <- NULL
-              zip_filename
-            })
+            header <- paste(
+              readLines(system.file("export_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
+              collapse = "\n"
+            )
+            rendered_filename <- callr::r(
+              render_export_document,
+              args = list(
+                rmarkdown = rmarkdown,
+                header = header,
+                pdf_attach_function = pdf_attach,
+                filename = filename,
+                quiet = FALSE # We want to access it in the app log
+              ),
+              show = TRUE
+            )
+            if (length(attr(rendered_filename, "error_msg")) > 0) {
+              log_warn(sprintf("Error while rendering export: %s", attr(rendered_filename, "error_msg")))
+            }
+            attr(rendered_filename, "error_msg") <- NULL
           })
         }
       )
