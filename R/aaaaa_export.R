@@ -89,43 +89,39 @@ pdf_attach <- function(pdf, attachment) {
   invisible(pdf)
 }
 
-if (isTRUE(getOption("dv.export_enabled"))) {
-  warning("Export has been enabled. This is an experimental feature.")
-  # Code for exporting versions
-
-  EXPORT <- local({
-    EXPORT <- poc(
-      ID = poc(
-        EXPORT_CODE = "export_code",
-        EXPORT_CODE_MENU = "export_code_menu",
-        EXPORT_MENU_SELECTION = "export_menu_selection",
-        OUTPUT_FORMAT = "output_format"
-      ),
-      ATTR = "export_element_type",
-      ELEMENT_KIND = poc(
-        ERROR = "error",
-        TABLE = "table",
-        DEFAULT = "default"
-      ),
-      OUTPUT_FORMAT = poc(
-        HTML = "html",
-        PDF = "pdf"
-      ),
-      MSG = poc(
-        EXPORT_BUTTON = "Export",
-        EXPORT_CUSTOM_BUTTON = "Select Exported Outputs"
-      ),
-      VAL = poc(
-        EXPORT_ALL = "all",
-        EXPORT_CURRENT = "current"
-      )
+EXPORT <- local({
+  EXPORT <- poc(
+    ID = poc(
+      EXPORT_CODE = "export_code",
+      EXPORT_CODE_MENU = "export_code_menu",
+      EXPORT_MENU_SELECTION = "export_menu_selection",
+      OUTPUT_FORMAT = "output_format"
+    ),
+    ATTR = "export_element_type",
+    ELEMENT_KIND = poc(
+      ERROR = "error",
+      TABLE = "table",
+      DEFAULT = "default"
+    ),
+    OUTPUT_FORMAT = poc(
+      HTML = "html",
+      PDF = "pdf"
+    ),
+    MSG = poc(
+      EXPORT_BUTTON = "Export",
+      EXPORT_CUSTOM_BUTTON = "Select Exported Outputs"
+    ),
+    VAL = poc(
+      EXPORT_ALL = "all",
+      EXPORT_CURRENT = "current"
     )
+  )
 
-    EXPORT[["TEMPLATES"]] <- list()
+  EXPORT[["TEMPLATES"]] <- list()
 
-    EXPORT[["TEMPLATES"]][["HEADER"]] <- local({
-      templates <- character(0)
-      templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
+  EXPORT[["TEMPLATES"]][["HEADER"]] <- local({
+    templates <- character(0)
+    templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
 ---
 title: "A export"
 author: "A user"
@@ -160,7 +156,7 @@ knitr::opts_chunk$set(
 
 )--"
 
-      templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(
+    templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(
 ---
 title: "A export"
 author: "A user"
@@ -173,17 +169,17 @@ output:
     toc_float: true
     toc_depth: 3
     number_sections: false
-    df_print: paged    
+    df_print: paged
     self_contained: true
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  out.width = "100%", 
+  out.width = "100%",
   tidy = TRUE
 )
 ```
-        
+
 ```{css, echo=FALSE}
 body::before {
   content: "UNVALIDATED CONTENT";
@@ -199,7 +195,7 @@ body::before {
   z-index: 9999;
   user-select: none;
 }
-        
+
 @media print {
   body::before { position: fixed; }  /* most browsers repeat fixed bg per page */
 }
@@ -207,56 +203,156 @@ body::before {
 
 )--"
 
-      templates
-    })
+    templates
+  })
 
-    EXPORT[["TEMPLATES"]][["SESSION_INFO"]] <- local({
-      templates <- character(0)
-      templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
+  EXPORT[["TEMPLATES"]][["SESSION_INFO"]] <- local({
+    templates <- character(0)
+    templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
 \begin{landscape}
-        
+
 \section{Session Info}
-        
+
 \begin{verbatim}
-        
+
 ```{r session_info, results = 'asis'}
   devtools::session_info()
 ```
-\end{verbatim}        
+\end{verbatim}
 \end{landscape}
 )--"
 
-      templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(        
+    templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(
 # Session Info
-        
+
 ```{r session_info}
   devtools::session_info()
 ```
 
 )--"
 
-      templates
-    })
-
-    EXPORT[["TEMPLATES"]][["FOOTER"]] <- local({
-      templates <- character(0)
-      templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- ""
-
-      # Currently code is attached to the PDF file
-      #   r"--(
-      # # Annex: Code
-
-      # ```{r show-code, ref.label = setdiff(knitr::all_labels(), c("setup", "show-code")), echo=TRUE, eval=FALSE}
-      # ```
-      # )--"
-
-      templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- ""
-
-      templates
-    })
-
-    EXPORT
+    templates
   })
+
+  EXPORT[["TEMPLATES"]][["FOOTER"]] <- local({
+    templates <- character(0)
+    templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- ""
+
+    # Currently code is attached to the PDF file
+    #   r"--(
+    # # Annex: Code
+
+    # ```{r show-code, ref.label = setdiff(knitr::all_labels(), c("setup", "show-code")), echo=TRUE, eval=FALSE}
+    # ```
+    # )--"
+
+    templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- ""
+
+    templates
+  })
+
+  EXPORT
+})
+
+#' Formatters mapping (output format, element kind) to a chunk of Rmd markup
+#'
+#' @return A nested list: `formatters[[output_format]][[kind]]` is a
+#'   `function(x)` taking a processed export element and returning markup.
+#' @keywords internal
+export_element_formatters <- function() {
+  res <- list()
+  res[[EXPORT$OUTPUT_FORMAT$PDF]] <- list()
+  res[[EXPORT$OUTPUT_FORMAT$PDF]][["header"]] <- function(x) {
+    if (x[["is_first_module_element"]]) {
+      sprintf(
+        "\\section{%s}\n\n\\subsection{%s}\n\n",
+        escape_latex(x[["module_name"]]),
+        escape_latex(x[["label"]])
+      )
+    } else {
+      sprintf("\\subsection{%s}\n\n", escape_latex(x[["label"]]))
+    }
+  }
+  res[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$ERROR]] <- function(x) {
+    fmt <- "\n%s\n\n\\alertwarning{%s}\n\n"
+    sprintf(fmt, res[[EXPORT$OUTPUT_FORMAT$PDF]][["header"]](x), x[["code"]])
+  }
+  res[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$TABLE]] <- function(x) {
+    fmt <- "\n\n\\beginwidepage{%d}\n\n\\begingroup\n\n\\wptabfont\n\n%s\n\n\\endgroup\n\n\\stopwidepage\n\n"
+    sprintf(fmt, x[["char_width"]], res[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$DEFAULT]](x))
+  }
+  res[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$DEFAULT]] <- function(x) {
+    fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
+    sprintf(fmt, res[[EXPORT$OUTPUT_FORMAT$PDF]][["header"]](x), x[["id"]], x[["code"]])
+  }
+
+  res[[EXPORT$OUTPUT_FORMAT$HTML]] <- list()
+  res[[EXPORT$OUTPUT_FORMAT$HTML]][["header"]] <- function(x) {
+    if (x[["is_first_module_element"]]) {
+      sprintf("# %s\n\n## %s\n\n", x[["module_name"]], x[["label"]])
+    } else {
+      sprintf("## %s\n\n", x[["label"]])
+    }
+  }
+  res[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$ERROR]] <- function(x) {
+    fmt <- "\n%s\n\n<div class = \"alert alert-warning\" role = \"alert\">%s</div>\n\n"
+    sprintf(fmt, res[[EXPORT$OUTPUT_FORMAT$HTML]][["header"]](x), x[["code"]])
+  }
+  res[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$TABLE]] <- function(x) {
+    res[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$DEFAULT]](x)
+  }
+  res[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$DEFAULT]] <- function(x) {
+    fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
+    sprintf(fmt, res[[EXPORT$OUTPUT_FORMAT$HTML]][["header"]](x), x[["id"]], x[["code"]])
+  }
+  res
+}
+
+#' Assemble the final export .Rmd from preprocessed elements and precomputed sections
+#'
+#' @param elements_to_export List of preprocessed export elements (each with
+#'   `kind`, `id`, `code`, `label`, `module_name`, `is_first_module_element`,
+#'   `char_width`), in the order they should appear.
+#' @param output_format One of `EXPORT$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
+#' @param data_code Rmd code chunk describing how the source data was loaded.
+#' @param sections Named list with `date`, `hardcoded_hash`, `dynamic_hash`,
+#'   `filter_txt`, `filter_reference` markdown sections.
+#' @param templates Named list with `header`, `session_info`, `footer`
+#'   templates, already resolved for `output_format`.
+#' @return The full .Rmd document, as a single string.
+#' @keywords internal
+build_export_rmd <- function(elements_to_export, output_format, data_code, sections, templates) {
+  element_formatters <- export_element_formatters()
+
+  output_rmd <- ""
+  for (idx in seq_along(elements_to_export)) {
+    curr_el <- elements_to_export[[idx]]
+    log_inform(paste0("Processing idx: ", idx))
+    output_rmd <- sprintf(
+      "%s\n%s\n",
+      output_rmd,
+      element_formatters[[output_format]][[curr_el[["kind"]]]](curr_el)
+    )
+  }
+
+  sprintf(
+    "%s\n\n```{r data_source}\n%s\n```\n\n%s\n\n# Data source\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n",
+    templates[["header"]],
+    data_code,
+    output_rmd,
+    sections[["date"]],
+    sections[["hardcoded_hash"]],
+    sections[["dynamic_hash"]],
+    sections[["filter_txt"]],
+    sections[["filter_reference"]],
+    templates[["session_info"]],
+    templates[["footer"]]
+  )
+}
+
+if (isTRUE(getOption("dv.export_enabled"))) {
+  warning("Export has been enabled. This is an experimental feature.")
+  # Code for exporting versions
 
   append_export_button <- function(x, ns) {
     log_inform("Attaching export button")
@@ -723,111 +819,23 @@ body::before {
             })
 
             log_inform("Creating rmarkdown")
-            rmarkdown <- local({
-              output_rmd <- ""
-
-              for (idx in seq_along(elements_to_export)) {
-                curr_el <- elements_to_export[[idx]]
-                log_inform(paste0("Processing idx: ", idx))
-
-                element_formatters <- local({
-                  res <- list()
-                  res[[EXPORT$OUTPUT_FORMAT$PDF]] <- list()
-                  res[[EXPORT$OUTPUT_FORMAT$PDF]][["header"]] <- function(x) {
-                    if (x[["is_first_module_element"]]) {
-                      sprintf(
-                        "\\section{%s}\n\n\\subsection{%s}\n\n",
-                        escape_latex(x[["module_name"]]),
-                        escape_latex(x[["label"]])
-                      )
-                    } else {
-                      sprintf("\\subsection{%s}\n\n", escape_latex(x[["label"]]))
-                    }
-                  }
-                  res[[EXPORT$OUTPUT_FORMAT$PDF]][[REK$ERROR]] <- function(x) {
-                    fmt <- "\n%s\n\n\\alertwarning{%s}\n\n"
-                    sprintf(
-                      fmt,
-                      res[[EXPORT$OUTPUT_FORMAT$PDF]][["header"]](x),
-                      x[["code"]]
-                    )
-                  }
-
-                  res[[EXPORT$OUTPUT_FORMAT$PDF]][[REK$TABLE]] <- function(x) {
-                    fmt <- "\n\n\\beginwidepage{%d}\n\n\\begingroup\n\n\\wptabfont\n\n%s\n\n\\endgroup\n\n\\stopwidepage\n\n"
-                    sprintf(
-                      fmt,
-                      x[["char_width"]],
-                      res[[EXPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]](x)
-                    )
-                  }
-
-                  res[[EXPORT$OUTPUT_FORMAT$PDF]][[REK$DEFAULT]] <- function(x) {
-                    fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
-                    sprintf(
-                      fmt,
-                      res[[EXPORT$OUTPUT_FORMAT$PDF]][["header"]](x),
-                      x[["id"]],
-                      x[["code"]]
-                    )
-                  }
-
-                  res[[EXPORT$OUTPUT_FORMAT$HTML]] <- list()
-                  res[[EXPORT$OUTPUT_FORMAT$HTML]][["header"]] <- function(x) {
-                    if (x[["is_first_module_element"]]) {
-                      sprintf("# %s\n\n## %s\n\n", x[["module_name"]], x[["label"]])
-                    } else {
-                      sprintf("## %s\n\n", x[["label"]])
-                    }
-                  }
-                  res[[EXPORT$OUTPUT_FORMAT$HTML]][[REK$ERROR]] <- function(x) {
-                    fmt <- "\n%s\n\n<div class = \"alert alert-warning\" role = \"alert\">%s</div>\n\n"
-
-                    sprintf(
-                      fmt,
-                      res[[EXPORT$OUTPUT_FORMAT$HTML]][["header"]](x),
-                      x[["code"]]
-                    )
-                  }
-
-                  res[[EXPORT$OUTPUT_FORMAT$HTML]][[REK$TABLE]] <- function(x) {
-                    res[[EXPORT$OUTPUT_FORMAT$HTML]][[REK$DEFAULT]](x)
-                  }
-                  res[[EXPORT$OUTPUT_FORMAT$HTML]][[REK$DEFAULT]] <- function(x) {
-                    fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
-                    sprintf(
-                      fmt,
-                      res[[EXPORT$OUTPUT_FORMAT$HTML]][["header"]](x),
-                      x[["id"]],
-                      x[["code"]]
-                    )
-                  }
-                  res
-                })
-
-                output_rmd <- sprintf(
-                  "%s\n%s\n",
-                  output_rmd,
-                  element_formatters[[output_format]][[curr_el[["kind"]]]](curr_el)
-                )
-              }
-
-              rmd <- sprintf(
-                "%s\n\n```{r data_source}\n%s\n```\n\n%s\n\n# Data source\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n",
-                EXPORT$TEMPLATES$HEADER[[output_format]],
-                data_code,
-                output_rmd,
-                date_section,
-                hardcoded_hash_section,
-                dynamic_hash_section,
-                filter_txt_section,
-                filter_reference_list_txt_section,
-                EXPORT$TEMPLATES$SESSION_INFO[[output_format]],
-                EXPORT$TEMPLATES$FOOTER[[output_format]]
+            rmarkdown <- build_export_rmd(
+              elements_to_export = elements_to_export,
+              output_format = output_format,
+              data_code = data_code,
+              sections = list(
+                date = date_section,
+                hardcoded_hash = hardcoded_hash_section,
+                dynamic_hash = dynamic_hash_section,
+                filter_txt = filter_txt_section,
+                filter_reference = filter_reference_list_txt_section
+              ),
+              templates = list(
+                header = EXPORT$TEMPLATES$HEADER[[output_format]],
+                session_info = EXPORT$TEMPLATES$SESSION_INFO[[output_format]],
+                footer = EXPORT$TEMPLATES$FOOTER[[output_format]]
               )
-
-              rmd
-            })
+            )
 
             log_inform("Rendering rmarkdown")
             header <- paste(
