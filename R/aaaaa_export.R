@@ -435,7 +435,10 @@ body::before {
               char_width <- NULL
               resolved <- try(reactive(), silent = TRUE)
 
-              if (inherits(resolved, "try-error")) {
+              if (is.null(reactive)) {
+                code <- paste("Error creating", el_processed[["id"]], "Not avaliable in", output_format, "format")
+                kind <- REK$ERROR
+              } else if (inherits(resolved, "try-error")) {
                 code <- local({
                   msg <- attr(resolved, "condition")$message
                   paste("Error creating", el_processed[["id"]], msg)
