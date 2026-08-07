@@ -14,10 +14,11 @@
 #' @param pdf_attach_function `function(pdf, attachment)` used to attach files
 #'   to a rendered PDF. Injected so it can be tested independently.
 #' @param filename Path the resulting zip file is written to.
+#' @param quiet Silences both `rmarkdown::render()` and the zip step's output.
 #' @return `filename`, with an `error_msg` attribute (character(0) on success,
 #'   the error message on failure).
 #' @keywords internal
-render_export_document <- function(export_rmd, export_dir, header_file, pdf_attach_function, filename) {
+render_export_document <- function(export_rmd, export_dir, header_file, pdf_attach_function, filename, quiet = TRUE) {
   old_wd <- getwd()
   on.exit(setwd(old_wd), add = TRUE)
   setwd(export_dir)
@@ -26,7 +27,7 @@ render_export_document <- function(export_rmd, export_dir, header_file, pdf_atta
   tryCatch(
     {
       file.copy(header_file, ".")
-      output_file <- rmarkdown::render(input = export_rmd, output_dir = export_dir)
+      output_file <- rmarkdown::render(input = export_rmd, output_dir = export_dir, quiet = quiet)
       if (endsWith(output_file, "pdf")) {
         session_info_file <- "session_info.txt"
         writeLines(capture.output(devtools::session_info()), session_info_file)
@@ -42,7 +43,7 @@ render_export_document <- function(export_rmd, export_dir, header_file, pdf_atta
     }
   )
 
-  zip_filename <- utils::zip(filename, list.files(export_dir))
+  zip_filename <- utils::zip(filename, list.files(export_dir), flags = if (quiet) "-r9Xq" else "-r9X")
   structure(zip_filename, error_msg = error_msg)
 }
 
@@ -839,7 +840,8 @@ body::before {
                   export_dir = export_dir,
                   header_file = system.file("export_files/header.tex", package = "dv.manager", mustWork = TRUE),
                   pdf_attach_function = pdf_attach,
-                  filename = filename
+                  filename = filename,
+                  quiet = FALSE # We ant to access it in the app log
                 ),
                 show = TRUE
               )
