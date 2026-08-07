@@ -1,7 +1,80 @@
 # This file contains all export related code. Remove it if required.
 
+#' Render an export Rmd to a zip file
+#'
+#' Runs inside a fresh `callr::r()` subprocess (or can be called directly, e.g.
+#' in tests): nothing from the caller's session is available here besides
+#' what's passed in as an argument.
+#'
+#' @param export_rmd Path to the .Rmd file to render.
+#' @param export_dir Directory containing `export_rmd`. Becomes the working
+#'   directory for rendering, and everything left in it ends up in the zip.
+#' @param header_file Path to a file (e.g. `header.tex`) copied into
+#'   `export_dir` before rendering, for the Rmd to `\input{}`/include.
+#' @param pdf_attach_function Function used to attach files to a rendered PDF,
+#'   with the signature `function(pdf, attachment)`. Injected so tests can
+#'   substitute a stub instead of the real qpdf-backed `pdf_attach`.
+#' @param filename Path the resulting zip file is written to.
+#'
+#' @return The path in `filename`, with an `error_msg` attribute (character(0)
+#'   on success, the error message on failure).
+render_export_document <- function(export_rmd, export_dir, header_file, pdf_attach_function, filename) {
+  old_wd <- getwd()
+  on.exit(setwd(old_wd), add = TRUE)
+  setwd(export_dir)
+
+  error_msg <- character(0)
+  tryCatch(
+    {
+      file.copy(header_file, ".")
+      output_file <- rmarkdown::render(input = export_rmd, output_dir = export_dir)
+      if (endsWith(output_file, "pdf")) {
+        session_info_file <- "session_info.txt"
+        writeLines(capture.output(devtools::session_info()), session_info_file)
+        pdf_attach_function(output_file, export_rmd)
+        pdf_attach_function(output_file, session_info_file)
+        unlink(session_info_file)
+      }
+    },
+    error = function(e) {
+      error_msg <<- e$message
+      warning(sprintf("Error rendering export in %s\n%s", export_dir, error_msg))
+      writeLines(c("Error rendering export", error_msg), file.path(export_dir, "error.txt"))
+    }
+  )
+
+  zip_filename <- utils::zip(filename, list.files(export_dir))
+  structure(zip_filename, error_msg = error_msg)
+}
+
+#' Attach a file to a PDF in place
+#'
+#' @param pdf Path to an existing PDF, overwritten in place. Requires qpdf on PATH.
+#' @param attachment Path to the file to embed, keyed by its basename.
+#' @return `pdf`, invisibly.
+#' @keywords internal
+pdf_attach <- function(pdf, attachment) {
+  stopifnot(file.exists(pdf), file.exists(attachment))
+  if (!nzchar(Sys.which("qpdf"))) {
+    stop("qpdf command-line tool not found on PATH")
+  }
+
+  tmp <- tempfile(tmpdir = dirname(pdf), fileext = ".pdf")
+  on.exit(unlink(tmp), add = TRUE)
+
+  status <- system2("qpdf", shQuote(c(pdf, "--add-attachment", attachment, "--", tmp)))
+  if (status != 0) {
+    stop("qpdf failed with status ", status)
+  }
+  if (!file.rename(tmp, pdf)) {
+    stop("could not overwrite ", pdf)
+  }
+
+  invisible(pdf)
+}
+
 if (isTRUE(getOption("dv.export_enabled"))) {
-  log_warn("Export has been enabled. This is an experimental feature.")
+  warning("Export has been enabled. This is an experimental feature.")
   # Code for exporting versions
 
   EXPORT <- local({
@@ -761,46 +834,7 @@ body::before {
               writeLines(rmarkdown, export_rmd)
 
               zip_filename <- callr::r(
-                function(export_rmd, export_dir, header_file, pdf_attach_function, filename) {
-                  # All file writing happens in export_dir
-                  # Directory is  removed after returning so there is no need of intermediate cleaning
-                  setwd(export_dir)
-
-                  error_msg <- character(0)
-                  output_file <- tryCatch(
-                    {
-                      file.copy(header_file, ".")
-                      message(list.files())
-                      output_file <- rmarkdown::render(input = export_rmd, output_dir = export_dir)
-                      if (endsWith(output_file, "pdf")) {
-                        session_info_file <- "session_info.txt"
-
-                        writeLines(
-                          capture.output(devtools::session_info()),
-                          session_info_file
-                        )
-
-                        pdf_attach_function(output_file, export_rmd)
-                        pdf_attach_function(output_file, session_info_file)
-                        unlink(session_info_file)
-                        output_file
-                      }
-                    },
-                    error = function(e) {
-                      error_msg <<- e$message
-                      warning(sprintf("Error rendering export in %s\n%s", export_dir, error_msg))
-                      error_file_name <- file.path(export_dir, "error.txt")
-                      writeLines(c("Error rendering export", error_msg), error_file_name)
-                      error_file_name
-                    }
-                  )
-
-                  zip_filename <- utils::zip(filename, list.files(export_dir))
-                  structure(
-                    zip_filename,
-                    error_msg = error_msg
-                  )
-                },
+                render_export_document,
                 args = list(
                   export_rmd = export_rmd,
                   export_dir = export_dir,
@@ -830,94 +864,4 @@ body::before {
 
   # shinymeta::metaExpr
   sm_me <- shinymeta::metaExpr
-
-  #' Attach a file to a PDF in place
-  #'
-  #' Embeds a file inside an existing PDF using the qpdf command-line tool. The
-  #' PDF is modified in place: qpdf writes to a temporary file in the same
-  #' directory, and the original is only replaced once qpdf exits successfully.
-  #'
-  #' Requires the qpdf command-line program (>= 10.2) on the system PATH. The
-  #' CRAN qpdf package links to the qpdf C++ library but does not expose
-  #' attachment functions, so the CLI is needed here.
-  #'
-  #' Adding dependencies is tricky as it is used in a call to an external proccess that may not have this package,
-  #' or others, installed
-  #'
-  #' @param pdf Path to the PDF to modify. Overwritten on success. Must exist,
-  #'   and its directory must be writable (the temporary file is created there).
-  #' @param attachment Path to the file to embed. Its contents are copied into
-  #'   the PDF; the file itself is left untouched.
-  #' @param key Character, or `NULL`. The name the attachment is filed under in
-  #'   the PDF's embedded-files name tree — the internal identifier, not what a
-  #'   reader displays. Must be unique within the document. Defaults to
-  #'   `basename(attachment)`, which collides if you attach two files with the
-  #'   same basename from different directories.
-  #' @param filename Character, or `NULL`. The name suggested to the user when
-  #'   they save the attachment out of a PDF reader. Most readers show this
-  #'   rather than `key`. Defaults to `basename(attachment)`.
-  #' @param mimetype Character, or `NULL`. MIME type recorded for the embedded
-  #'   file, e.g. `"text/plain"`, `"text/csv"`, `"application/json"`. Passed
-  #'   through to the file stream's `/Subtype` without validation. Some readers
-  #'   use it to pick an icon or an application to open with.
-  #' @param description Character, or `NULL`. Free-text description shown next to
-  #'   the attachment in a reader's attachments pane.
-  #' @param replace Logical. If `TRUE`, overwrite an existing attachment that
-  #'   already uses `key`. If `FALSE` (default), qpdf errors on a key collision
-  #'   rather than silently discarding the earlier attachment.
-  #'
-  #'
-  #' @return The path in `pdf`, invisibly.
-  #'
-  #' @examples
-  #' \dontrun{
-  #' pdf_attach("report.pdf", "data.csv",
-  #'            mimetype = "text/csv",
-  #'            description = "Source data for figures 1-3")
-  #' }
-  #' @export
-  pdf_attach <- function(
-    pdf,
-    attachment,
-    key = NULL,
-    filename = NULL,
-    mimetype = NULL,
-    description = NULL,
-    replace = FALSE
-  ) {
-    stopifnot(file.exists(pdf), file.exists(attachment))
-    if (!nzchar(Sys.which("qpdf"))) {
-      stop("qpdf command-line tool not found on PATH")
-    }
-
-    args <- c(pdf, "--add-attachment", attachment)
-    if (!is.null(key)) {
-      args <- c(args, paste0("--key=", key))
-    }
-    if (!is.null(filename)) {
-      args <- c(args, paste0("--filename=", filename))
-    }
-    if (!is.null(mimetype)) {
-      args <- c(args, paste0("--mimetype=", mimetype))
-    }
-    if (!is.null(description)) {
-      args <- c(args, paste0("--description=", description))
-    }
-    if (replace) {
-      args <- c(args, "--replace")
-    }
-
-    tmp <- tempfile(tmpdir = dirname(pdf), fileext = ".pdf")
-    on.exit(unlink(tmp), add = TRUE)
-
-    status <- system2("qpdf", shQuote(c(args, "--", tmp)))
-    if (status != 0) {
-      stop("qpdf failed with status ", status)
-    }
-    if (!file.rename(tmp, pdf)) {
-      stop("could not overwrite ", pdf)
-    }
-
-    invisible(pdf)
-  }
 }
