@@ -2,22 +2,21 @@
 
 #' Render an export Rmd to a zip file
 #'
-#' Runs inside a fresh `callr::r()` subprocess (or can be called directly, e.g.
-#' in tests): nothing from the caller's session is available here besides
-#' what's passed in as an argument.
+#' Runs in a fresh `callr::r()` subprocess (or can be called directly, e.g. in
+#' tests) — everything needed must arrive as an argument, nothing carries over
+#' from the caller's session.
 #'
 #' @param export_rmd Path to the .Rmd file to render.
-#' @param export_dir Directory containing `export_rmd`. Becomes the working
-#'   directory for rendering, and everything left in it ends up in the zip.
+#' @param export_dir Directory containing `export_rmd`; becomes the working
+#'   directory, and everything left in it ends up in the zip.
 #' @param header_file Path to a file (e.g. `header.tex`) copied into
-#'   `export_dir` before rendering, for the Rmd to `\input{}`/include.
-#' @param pdf_attach_function Function used to attach files to a rendered PDF,
-#'   with the signature `function(pdf, attachment)`. Injected so tests can
-#'   substitute a stub instead of the real qpdf-backed `pdf_attach`.
+#'   `export_dir` before rendering.
+#' @param pdf_attach_function `function(pdf, attachment)` used to attach files
+#'   to a rendered PDF. Injected so it can be tested independently.
 #' @param filename Path the resulting zip file is written to.
-#'
-#' @return The path in `filename`, with an `error_msg` attribute (character(0)
-#'   on success, the error message on failure).
+#' @return `filename`, with an `error_msg` attribute (character(0) on success,
+#'   the error message on failure).
+#' @keywords internal
 render_export_document <- function(export_rmd, export_dir, header_file, pdf_attach_function, filename) {
   old_wd <- getwd()
   on.exit(setwd(old_wd), add = TRUE)
