@@ -345,8 +345,6 @@ body::before {
         res
       }
 
-      selected_tabs_to_export <- NULL
-
       shiny::observeEvent(input[[EXPORT$ID$EXPORT_MENU_SELECTION]], {
         is_output_selected_to_export[[input[[EXPORT$ID$EXPORT_MENU_SELECTION]][["id"]]]] <<- input[[
           EXPORT$ID$EXPORT_MENU_SELECTION
