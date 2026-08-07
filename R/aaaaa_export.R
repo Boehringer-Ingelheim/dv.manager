@@ -357,6 +357,7 @@ body::before {
         )
       })
 
+      is_output_selected_to_export <- NULL # TODO replace by reactiveValue so it can be used in the testServer?
       shiny::observeEvent(input[[EXPORT$ID$EXPORT_CODE_MENU]], {
         if (is.null(attr(selected_dataset_list(), "load_fn"))) {
           dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
