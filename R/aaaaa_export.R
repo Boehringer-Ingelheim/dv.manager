@@ -426,9 +426,9 @@ body::before {
               checkmate::assert_subset(output_format, as.character(unclass(EXPORT$OUTPUT_FORMAT)))
 
               if (identical(output_format, EXPORT$OUTPUT_FORMAT$HTML)) {
-                reactive <- el_processed[["reactive"]][["html"]]
+                reactive <- el_processed[["metareactive"]][["html"]]
               } else if (identical(output_format, EXPORT$OUTPUT_FORMAT$PDF)) {
-                reactive <- el_processed[["reactive"]][["pdf"]]
+                reactive <- el_processed[["metareactive"]][["pdf"]]
               }
 
               char_width <- NULL
@@ -481,7 +481,7 @@ body::before {
                 }
               }
 
-              el_processed[["reactive"]] <- NULL
+              el_processed[["metareactive"]] <- NULL
               el_processed[["code"]] <- code
               el_processed[["kind"]] <- kind
               el_processed[["char_width"]] <- char_width
