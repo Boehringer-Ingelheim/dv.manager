@@ -196,6 +196,14 @@ validate_subgroup_name <- function(subgroup_name, subject_dataset, subject_filte
   return(errors)
 }
 
+#' Apply configured subgroups to the subject-level dataset
+#'
+#' @param dataset_list Named list of data.frames, keyed by dataset name.
+#' @param subject_filter_dataset_name Name of the subject-level dataset in `dataset_list` subgroups are added to.
+#' @param filter_key_var Column identifying subjects, used to build each subgroup's membership mask.
+#' @param subgroups Named list of subgroup definitions (`label`, `cat_labels`, `cat_filters`).
+#' @return `list(result = safe_list(dataset_list, correct_subgroups, incorrect_subgroups), error_list)`.
+#' @export
 apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_key_var, subgroups) {
   subject_dataset <- dataset_list[[subject_filter_dataset_name]]
   error_list <- new_error_list()

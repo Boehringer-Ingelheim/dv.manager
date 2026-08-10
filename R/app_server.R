@@ -96,7 +96,7 @@ app_server_ <- function(input, output, session, opts) {
         d <- dataset_lists[[dataset_list_name]]
       }
 
-      df <- add_date_range(d)
+      df <- dv.manager::add_date_range(d)
       attr(df, "dataset_list_name") <- dataset_list_name
       df
     },
@@ -124,7 +124,7 @@ app_server_ <- function(input, output, session, opts) {
 
       res_apply_subgroups <- sm_me(
         {
-          apply_subgroups(
+          dv.manager::apply_subgroups(
             ..(selected_dataset_list()),
             ..(subject_filter_dataset_name),
             ..(filter_key_var),
@@ -172,7 +172,7 @@ app_server_ <- function(input, output, session, opts) {
           r_unfiltered_dataset_list <- ..(shiny::isolate(unfiltered_dataset_list()))
           r_dataset_list_filter <- ..(dataset_list_filter()) # List that describes the filter no need of solving it in shinymeta
           filter_key_var <- ..(filter_key_var)
-          filter_info <- combine_filter_info(get_filter_info(
+          filter_info <- dv.manager::combine_filter_info(dv.manager::get_filter_info(
             r_unfiltered_dataset_list,
             r_dataset_list_filter,
             filter_key_var

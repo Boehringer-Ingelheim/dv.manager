@@ -684,7 +684,13 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
   return(subject_filter_info)
 }
 
-# Can be expanded to combine arbitrary filters not necessarily
+#' Combine subject- and dataset-level filter results into one filter_info
+#'
+#' Can be expanded to combine arbitrary filters, not necessarily just these two.
+#'
+#' @param filter_info `list(result = list(subject =, dataset =), error_list =)`, as returned by [get_filter_info()].
+#' @return `list(result = list(subjects =, filter_info =), error_list =)`.
+#' @export
 combine_filter_info <- function(filter_info) {
   if (filter_info[["error_list"]]$any()) {
     return(
@@ -830,6 +836,13 @@ apply_filter_info_to_dataset_list <- (function(
 }) |>
   shiny::maskReactiveContext()
 
+#' Resolve subject- and dataset-level filter results for a dataset list
+#'
+#' @param unfiltered_dataset_list Named list of data.frames, carrying a `dataset_list_name` attribute.
+#' @param dataset_list_filter Parsed filter state (`parsed`, `raw`), as produced by the filter UI.
+#' @param filter_key_var Column identifying subjects.
+#' @return `list(result = list(subject =, dataset =) or NULL, error_list =)`.
+#' @export
 get_filter_info <- (function(unfiltered_dataset_list, dataset_list_filter, filter_key_var) {
   error_list <- new_error_list()
   fi <- NULL

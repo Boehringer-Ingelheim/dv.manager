@@ -15,6 +15,7 @@
 #' @return `filename`, with an `error_msg` attribute (character(0) on success,
 #'   the error message on failure).
 #' @keywords internal
+#' @noRd
 render_export_document <- function(rmarkdown, header, pdf_attach_function, filename, quiet = TRUE) {
   export_dir <- tempfile(pattern = "export")
   if (!quiet) {
@@ -69,6 +70,7 @@ render_export_document <- function(rmarkdown, header, pdf_attach_function, filen
 #' @param attachment Path to the file to embed, keyed by its basename.
 #' @return `pdf`, invisibly.
 #' @keywords internal
+#' @noRd
 pdf_attach <- function(pdf, attachment) {
   stopifnot(file.exists(pdf), file.exists(attachment))
   if (!nzchar(Sys.which("qpdf"))) {
@@ -262,6 +264,7 @@ body::before {
 #' not named constants — but the same fail-loudly-on-a-typo motivation applies
 #' to `[[output_format]][[kind]]` lookups.
 #' @keywords internal
+#' @noRd
 EXPORT_ELEMENT_FORMATTERS <- local({
   res <- safe_list()
   res[[EXPORT$OUTPUT_FORMAT$PDF]] <- safe_list()
@@ -324,6 +327,7 @@ EXPORT_ELEMENT_FORMATTERS <- local({
 #'   templates, already resolved for `output_format`.
 #' @return The full .Rmd document, as a single string.
 #' @keywords internal
+#' @noRd
 build_export_rmd <- function(elements_to_export, output_format, data_code, sections, templates) {
   output_rmd <- ""
   for (idx in seq_along(elements_to_export)) {
@@ -356,6 +360,7 @@ build_export_rmd <- function(elements_to_export, output_format, data_code, secti
 #' @param dataset_list Named list of data.frames (the resolved dataset list).
 #' @return The markdown section, as a single string.
 #' @keywords internal
+#' @noRd
 build_hardcoded_hash_section <- function(dataset_list) {
   dataset_list_hash <- vector(mode = "list", length = length(dataset_list))
   for (idx in seq_along(dataset_list)) {
@@ -390,6 +395,7 @@ build_hardcoded_hash_section <- function(dataset_list) {
 #'   R code reproducing it. Injected so it can be tested independently.
 #' @return The markdown section, as a single string.
 #' @keywords internal
+#' @noRd
 build_dynamic_hash_section <- function(selected_dataset_list_mr, get_code_in_context) {
   loop <- shinymeta::metaReactive(
     {
@@ -418,7 +424,7 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, get_code_in_con
 #' `meta$mtime`, and a bare `NULL` would collapse the whole `sprintf()` to
 #' `character(0)`, dropping that dataset's line entirely.
 #'
-#' Shares [build_dynamic_hash_section()]'s ordering requirement: call it after
+#' Shares `build_dynamic_hash_section()`'s ordering requirement: call it after
 #' the data code has been generated with the same expansion context.
 #'
 #' @param selected_dataset_list_mr Metareactive resolving to the dataset list.
@@ -427,6 +433,7 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, get_code_in_con
 #'   R code reproducing it. Injected so it can be tested independently.
 #' @return The markdown section, as a single string.
 #' @keywords internal
+#' @noRd
 build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code_in_context) {
   loop <- shinymeta::metaReactive(
     {
@@ -460,6 +467,7 @@ build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code
 #'   description at render time.
 #' @return The markdown section, as a single string.
 #' @keywords internal
+#' @noRd
 build_filter_txt_section <- function(output_format, filter_txt_code) {
   checkmate::assert_subset(output_format, as.character(unclass(EXPORT$OUTPUT_FORMAT)))
   section <- "## Filters:"
@@ -487,6 +495,7 @@ build_filter_txt_section <- function(output_format, filter_txt_code) {
 #'   reference list at render time (or a "No references found" fallback).
 #' @return The markdown section, as a single string.
 #' @keywords internal
+#' @noRd
 build_filter_reference_section <- function(filter_reference_code) {
   sprintf(
     "%s\n\n```{r filter_export_reference_list, echo = FALSE, results='asis'}\n\n%s\n\n```",
@@ -510,6 +519,7 @@ build_filter_reference_section <- function(filter_reference_code) {
 #' @return Unnamed list of preprocessed elements: each with `metareactive`
 #'   dropped and `code`, `kind` (one of `EXPORT$ELEMENT_KIND`) and `char_width` added.
 #' @keywords internal
+#' @noRd
 preprocess_export_elements <- function(exportable_elements, is_selected, output_format, get_code_in_context) {
   checkmate::assert_subset(output_format, as.character(unclass(EXPORT$OUTPUT_FORMAT)))
   selected <- exportable_elements[names(is_selected)[is_selected]]
@@ -594,6 +604,7 @@ preprocess_export_elements <- function(exportable_elements, is_selected, output_
 #'   logical vector (keyed by element id) of which elements are selected by
 #'   default — `TRUE` for every element actually shown in the modal.
 #' @keywords internal
+#' @noRd
 build_export_modal_ui <- function(exportable_elements, ns, show_tab = NA) {
   log_inform(paste("Showing", show_tab, "tab in menu"))
 
