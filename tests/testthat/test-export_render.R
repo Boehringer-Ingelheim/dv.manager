@@ -1,4 +1,6 @@
 local({
+  skip_if_no_export_code()
+
   make_export_rmd <- function(chunk_body, output = "html_document") {
     paste(
       c(

@@ -1,4 +1,6 @@
 local({
+  skip_if_no_export_code()
+
   make_element <- function(
     id = "mod1-el1",
     kind = "default",
@@ -20,44 +22,54 @@ local({
   }
 
   test_that("export_element_formatters formats PDF default elements, with a section header only for the first element", {
-    formatters <- export_element_formatters()
+    formatters <- EXPORT_ELEMENT_FORMATTERS
 
-    first <- formatters[["pdf"]][["default"]](make_element(is_first_module_element = TRUE))
-    later <- formatters[["pdf"]][["default"]](make_element(is_first_module_element = FALSE))
+    first <- formatters[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$DEFAULT]](
+      make_element(is_first_module_element = TRUE)
+    )
+    later <- formatters[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$DEFAULT]](
+      make_element(is_first_module_element = FALSE)
+    )
 
     expect_snapshot(cat(first))
     expect_snapshot(cat(later))
   })
 
   test_that("export_element_formatters wraps PDF tables in a wide page sized to char_width", {
-    formatters <- export_element_formatters()
+    formatters <- EXPORT_ELEMENT_FORMATTERS
 
-    out <- formatters[["pdf"]][["table"]](make_element(kind = "table", char_width = 42))
+    out <- formatters[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$TABLE]](
+      make_element(kind = EXPORT$ELEMENT_KIND$TABLE, char_width = 42)
+    )
     expect_snapshot(cat(out))
   })
 
   test_that("export_element_formatters flags PDF errors with alertwarning", {
-    formatters <- export_element_formatters()
+    formatters <- EXPORT_ELEMENT_FORMATTERS
 
-    out <- formatters[["pdf"]][["error"]](make_element(kind = "error", code = "boom"))
+    out <- formatters[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$ERROR]](
+      make_element(kind = EXPORT$ELEMENT_KIND$ERROR, code = "boom")
+    )
     expect_snapshot(cat(out))
   })
 
   test_that("export_element_formatters formats HTML elements, and table delegates to default", {
-    formatters <- export_element_formatters()
+    formatters <- EXPORT_ELEMENT_FORMATTERS
     el <- make_element()
 
-    default_out <- formatters[["html"]][["default"]](el)
-    table_out <- formatters[["html"]][["table"]](el)
+    default_out <- formatters[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$DEFAULT]](el)
+    table_out <- formatters[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$TABLE]](el)
 
     expect_snapshot(cat(default_out))
     expect_snapshot(cat(table_out))
   })
 
   test_that("export_element_formatters flags HTML errors with an alert div", {
-    formatters <- export_element_formatters()
+    formatters <- EXPORT_ELEMENT_FORMATTERS
 
-    out <- formatters[["html"]][["error"]](make_element(kind = "error", code = "boom"))
+    out <- formatters[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$ERROR]](
+      make_element(kind = EXPORT$ELEMENT_KIND$ERROR, code = "boom")
+    )
     expect_snapshot(cat(out))
   })
 
@@ -77,10 +89,15 @@ local({
 
   test_that("build_export_rmd assembles an HTML document from all pieces, in order", {
     elements <- list(
-      make_element(id = "mod1-el1", kind = "default", label = "Element 1", is_first_module_element = TRUE),
+      make_element(
+        id = "mod1-el1",
+        kind = EXPORT$ELEMENT_KIND$DEFAULT,
+        label = "Element 1",
+        is_first_module_element = TRUE
+      ),
       make_element(
         id = "mod1-el2",
-        kind = "error",
+        kind = EXPORT$ELEMENT_KIND$ERROR,
         label = "Element 2",
         is_first_module_element = FALSE,
         code = "boom"
@@ -89,7 +106,7 @@ local({
 
     rmd <- build_export_rmd(
       elements_to_export = elements,
-      output_format = "html",
+      output_format = EXPORT$OUTPUT_FORMAT$HTML,
       data_code = "df <- load_data()",
       sections = fixture_sections,
       templates = fixture_templates
@@ -100,12 +117,18 @@ local({
 
   test_that("build_export_rmd wraps a PDF table element in a wide page", {
     elements <- list(
-      make_element(id = "mod1-el1", kind = "table", label = "Table 1", is_first_module_element = TRUE, char_width = 10)
+      make_element(
+        id = "mod1-el1",
+        kind = EXPORT$ELEMENT_KIND$TABLE,
+        label = "Table 1",
+        is_first_module_element = TRUE,
+        char_width = 10
+      )
     )
 
     rmd <- build_export_rmd(
       elements_to_export = elements,
-      output_format = "pdf",
+      output_format = EXPORT$OUTPUT_FORMAT$PDF,
       data_code = "df <- load_data()",
       sections = fixture_sections,
       templates = fixture_templates
