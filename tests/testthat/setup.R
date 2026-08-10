@@ -26,9 +26,18 @@ run_shiny_tests <- !isTRUE(as.logical(Sys.getenv("SKIP_SHINY_TESTS")))
 
 skip_if_not_running_shiny_tests <- function() testthat::skip_if_not(run_shiny_tests, message = "Skip tests") # nolint
 
+# R/aaaaa_export.R can be removed entirely to produce an export-free build of the package; tests that
+# exercise it must skip rather than error when it's absent.
+skip_if_no_export_code <- function() {
+  aaaaa_export_path <- if (testthat::is_testing()) "../../R/aaaaa_export.R" else "R/aaaaa_export.R"
+  testthat::skip_if_not(file.exists(aaaaa_export_path), "R/aaaaa_export.R not present in this build")
+}
+
 # `expr` must be a quosure or a regular call, in both cases they must be self-contained as they will be deparsed
 # and run in another process
-start_app_driver <- function(expr, defer = TRUE) {
+# `options` is merged into the R options() set in the app subprocess *before* app.R (and therefore the package)
+# loads - needed for anything gated at package-load time, e.g. `getOption("dv.export_enabled")`.
+start_app_driver <- function(expr, defer = TRUE, options = list()) {
   root_app <- if (run_shiny_tests) {
     app_dir <- if (testthat::is_testing()) {
       "app/app.R"
@@ -47,9 +56,12 @@ start_app_driver <- function(expr, defer = TRUE) {
         app <- shinytest2::AppDriver$new(
           app_dir = app_dir,
           seed = 1,
-          options = list(
-            "__quo_file" = temp,
-            "__use_load_all" = isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
+          options = utils::modifyList(
+            list(
+              "__quo_file" = temp,
+              "__use_load_all" = isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
+            ),
+            options
           )
         )
         app$wait_for_idle()
