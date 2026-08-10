@@ -826,9 +826,11 @@ if (isTRUE(getOption("dv.export_enabled"))) {
               fn <- body(attr(selected_dataset_list(), "load_fn"))
               dln <- attr(selected_dataset_list(), "dataset_list_name")
               .ec$substituteMetaReactive(selected_dataset_list, function() {
-                shinymeta::metaExpr({
+                # This metaExpression contains part of the logic of selected dataset list, add date_range and attribute
+                # It is not ideal as they may get desynchronized in the future
+                sm_me({
                   df <- ..(fn)
-                  df <- add_date_range(df)
+                  df <- dv.manager::add_date_range(df)
                   attr(df, "dataset_list_name") <- ..(dln)
                   df
                 })
