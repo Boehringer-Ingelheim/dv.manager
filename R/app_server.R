@@ -82,7 +82,7 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  selected_dataset_list <- sm_mr2(
+  selected_dataset_list <- sm_mr(
     {
       dataset_list_name <- input[["selector"]]
       shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
@@ -172,7 +172,7 @@ app_server_ <- function(input, output, session, opts) {
           r_unfiltered_dataset_list <- ..(shiny::isolate(unfiltered_dataset_list()))
           r_dataset_list_filter <- ..(dataset_list_filter()) # List that describes the filter no need of solving it in shinymeta
           filter_key_var <- ..(filter_key_var)
-          filter_info <- dv.manager::combine_filter_info(dv.manager::get_filter_info(
+          filter_info <- dv.manager::combine_filter_info(get_filter_info(
             r_unfiltered_dataset_list,
             r_dataset_list_filter,
             filter_key_var
