@@ -256,12 +256,15 @@ body::before {
 
 #' Formatters mapping (output format, element kind) to a chunk of Rmd markup
 #'
-#' @return A nested list: `formatters[[output_format]][[kind]]` is a
-#'   `function(x)` taking a processed export element and returning markup.
+#' `EXPORT_ELEMENT_FORMATTERS[[output_format]][[kind]]` is a `function(x)`
+#' taking a processed export element and returning markup. A `safe_list`
+#' rather than a `poc()` since its entries are behavior (formatter functions),
+#' not named constants — but the same fail-loudly-on-a-typo motivation applies
+#' to `[[output_format]][[kind]]` lookups.
 #' @keywords internal
-export_element_formatters <- function() {
-  res <- list()
-  res[[EXPORT$OUTPUT_FORMAT$PDF]] <- list()
+EXPORT_ELEMENT_FORMATTERS <- local({
+  res <- safe_list()
+  res[[EXPORT$OUTPUT_FORMAT$PDF]] <- safe_list()
   res[[EXPORT$OUTPUT_FORMAT$PDF]][["header"]] <- function(x) {
     if (x[["is_first_module_element"]]) {
       sprintf(
@@ -286,7 +289,7 @@ export_element_formatters <- function() {
     sprintf(fmt, res[[EXPORT$OUTPUT_FORMAT$PDF]][["header"]](x), x[["id"]], x[["code"]])
   }
 
-  res[[EXPORT$OUTPUT_FORMAT$HTML]] <- list()
+  res[[EXPORT$OUTPUT_FORMAT$HTML]] <- safe_list()
   res[[EXPORT$OUTPUT_FORMAT$HTML]][["header"]] <- function(x) {
     if (x[["is_first_module_element"]]) {
       sprintf("# %s\n\n## %s\n\n", x[["module_name"]], x[["label"]])
@@ -306,7 +309,7 @@ export_element_formatters <- function() {
     sprintf(fmt, res[[EXPORT$OUTPUT_FORMAT$HTML]][["header"]](x), x[["id"]], x[["code"]])
   }
   res
-}
+})
 
 #' Assemble the final export .Rmd from preprocessed elements and precomputed sections
 #'
@@ -322,8 +325,6 @@ export_element_formatters <- function() {
 #' @return The full .Rmd document, as a single string.
 #' @keywords internal
 build_export_rmd <- function(elements_to_export, output_format, data_code, sections, templates) {
-  element_formatters <- export_element_formatters()
-
   output_rmd <- ""
   for (idx in seq_along(elements_to_export)) {
     curr_el <- elements_to_export[[idx]]
@@ -331,7 +332,7 @@ build_export_rmd <- function(elements_to_export, output_format, data_code, secti
     output_rmd <- sprintf(
       "%s\n%s\n",
       output_rmd,
-      element_formatters[[output_format]][[curr_el[["kind"]]]](curr_el)
+      EXPORT_ELEMENT_FORMATTERS[[output_format]][[curr_el[["kind"]]]](curr_el)
     )
   }
 
@@ -347,6 +348,332 @@ build_export_rmd <- function(elements_to_export, output_format, data_code, secti
     sections[["filter_reference"]],
     templates[["session_info"]],
     templates[["footer"]]
+  )
+}
+
+#' Markdown section listing a content hash per dataset, computed now
+#'
+#' @param dataset_list Named list of data.frames (the resolved dataset list).
+#' @return The markdown section, as a single string.
+#' @keywords internal
+build_hardcoded_hash_section <- function(dataset_list) {
+  dataset_list_hash <- vector(mode = "list", length = length(dataset_list))
+  for (idx in seq_along(dataset_list)) {
+    dataset_list_hash[[idx]] <- digest::digest(dataset_list[[idx]])
+  }
+  names(dataset_list_hash) <- names(dataset_list)
+
+  section <- "## Hardcoded Data hash:"
+  for (idx in seq_along(dataset_list_hash)) {
+    section <- sprintf(
+      "%s\n\n **name**: `%s` **hash**: %s",
+      section,
+      names(dataset_list_hash)[[idx]],
+      dataset_list_hash[[idx]]
+    )
+  }
+  note <- "These hashes are calculated in-app, they correspond to the data loaded in the app that created the export."
+  sprintf("%s\n\n%s\n\n", section, note)
+}
+
+#' Markdown section recomputing each dataset's hash at render time
+#'
+#' Emits one `asis` chunk looping over the dataset list, so the section adapts to
+#' whatever it holds at render time and never names it or its length itself: the
+#' reference comes from `get_code_in_context()`. It collapses to a bare reference
+#' (no re-emitted assignment) only because the shared expansion context has
+#' already emitted that assignment into the data-source chunk, so this must be
+#' called after the data code is generated.
+#'
+#' @param selected_dataset_list_mr Metareactive resolving to the dataset list.
+#' @param get_code_in_context `function(x)` turning a metareactive call into the
+#'   R code reproducing it. Injected so it can be tested independently.
+#' @return The markdown section, as a single string.
+#' @keywords internal
+build_dynamic_hash_section <- function(selected_dataset_list_mr, get_code_in_context) {
+  loop <- shinymeta::metaReactive(
+    {
+      for (idx in seq_along(..(selected_dataset_list_mr()))) {
+        cat(sprintf(
+          "\n\n **name**: `%s` **hash**: %s",
+          names(..(selected_dataset_list_mr()))[[idx]],
+          digest::digest(..(selected_dataset_list_mr())[[idx]])
+        ))
+      }
+    },
+    inline = TRUE
+  )
+
+  note <- "These hashes are calculated during export rendering, and should match those in the **Hardcoded Data hash** section."
+  sprintf(
+    "## Dynamic Data hash:\n\n```{r dynamic_data_hash, echo = FALSE, results='asis'}\n%s\n```\n\n%s\n\n",
+    get_code_in_context(loop()),
+    note
+  )
+}
+
+#' Markdown section with the date range and per-dataset modification times
+#'
+#' `format()` guards the modification time because a dataset may carry no
+#' `meta$mtime`, and a bare `NULL` would collapse the whole `sprintf()` to
+#' `character(0)`, dropping that dataset's line entirely.
+#'
+#' Shares [build_dynamic_hash_section()]'s ordering requirement: call it after
+#' the data code has been generated with the same expansion context.
+#'
+#' @param selected_dataset_list_mr Metareactive resolving to the dataset list.
+#' @param date_range_mr Metareactive resolving to the dataset list date range.
+#' @param get_code_in_context `function(x)` turning a metareactive call into the
+#'   R code reproducing it. Injected so it can be tested independently.
+#' @return The markdown section, as a single string.
+#' @keywords internal
+build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code_in_context) {
+  loop <- shinymeta::metaReactive(
+    {
+      for (idx in seq_along(..(selected_dataset_list_mr()))) {
+        cat(sprintf(
+          "\n\n **name**: `%s` **modification time**: %s",
+          names(..(selected_dataset_list_mr()))[[idx]],
+          format(attr(..(selected_dataset_list_mr())[[idx]], "meta")[["mtime"]])
+        ))
+      }
+    },
+    inline = TRUE
+  )
+
+  note <- "These dates are calculated during export rendering."
+  sprintf(
+    paste0(
+      "## Data Modification Dates:\n\n **Date range**:\n\n`r %s`\n\n",
+      "```{r data_modification_dates, echo = FALSE, results='asis'}\n%s\n```\n\n%s\n\n"
+    ),
+    get_code_in_context(date_range_mr()),
+    get_code_in_context(loop()),
+    note
+  )
+}
+
+#' Markdown section wrapping the filter description in a verbatim block
+#'
+#' @param output_format One of `EXPORT$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
+#' @param filter_txt_code R code, as a string, that prints the filter
+#'   description at render time.
+#' @return The markdown section, as a single string.
+#' @keywords internal
+build_filter_txt_section <- function(output_format, filter_txt_code) {
+  checkmate::assert_subset(output_format, as.character(unclass(EXPORT$OUTPUT_FORMAT)))
+  section <- "## Filters:"
+
+  if (output_format == EXPORT$OUTPUT_FORMAT$HTML) {
+    verbatim_tags <- c("<pre>", "</pre>")
+  } else if (output_format == EXPORT$OUTPUT_FORMAT$PDF) {
+    verbatim_tags <- c("\\begin{verbatim}", "\\end{verbatim}")
+  }
+
+  note <- "An explicit call to the filter and parameters used can be found in the code that accompanies this export."
+  sprintf(
+    "%s\n\n%s\n\n```{r filter_export_txt, echo = FALSE, results='asis'}\n\n%s\n\n```\n\n%s\n\n%s",
+    section,
+    verbatim_tags[[1]],
+    filter_txt_code,
+    verbatim_tags[[2]],
+    note
+  )
+}
+
+#' Markdown section wrapping the filter reference list
+#'
+#' @param filter_reference_code R code, as a string, that prints the filter
+#'   reference list at render time (or a "No references found" fallback).
+#' @return The markdown section, as a single string.
+#' @keywords internal
+build_filter_reference_section <- function(filter_reference_code) {
+  sprintf(
+    "%s\n\n```{r filter_export_reference_list, echo = FALSE, results='asis'}\n\n%s\n\n```",
+    "# Filter references:",
+    filter_reference_code
+  )
+}
+
+#' Preprocess every selected exportable element, in declaration order
+#'
+#' `get_code_in_context()` must receive the *call* to a metareactive, not its
+#' value: `shinymeta::expandChain()` forces that argument in meta mode to get
+#' code out of it. Resolved values (`resolved`, and the second `latex()` call
+#' below) are therefore only ever used for inspection, never handed to it.
+#'
+#' @param exportable_elements Named list of all flattened exportable elements, keyed by id.
+#' @param is_selected Named logical vector, keyed by element id.
+#' @param output_format One of `EXPORT$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
+#' @param get_code_in_context `function(x)` turning a metareactive call into the
+#'   R code reproducing it. Injected so it can be tested independently.
+#' @return Unnamed list of preprocessed elements: each with `metareactive`
+#'   dropped and `code`, `kind` (one of `EXPORT$ELEMENT_KIND`) and `char_width` added.
+#' @keywords internal
+preprocess_export_elements <- function(exportable_elements, is_selected, output_format, get_code_in_context) {
+  checkmate::assert_subset(output_format, as.character(unclass(EXPORT$OUTPUT_FORMAT)))
+  selected <- exportable_elements[names(is_selected)[is_selected]]
+
+  res <- vector(mode = "list", length = length(selected))
+  for (idx in seq_along(selected)) {
+    log_inform(sprintf("Preprocessing element (%d)", idx))
+    export_element <- selected[[idx]]
+    log_inform(paste0("Processing:", export_element[["id"]]))
+
+    # Entries are keyed by the output format values themselves; missing -> NULL
+    metareactive <- export_element[["metareactive"]][[output_format]]
+    char_width <- NULL
+
+    if (is.null(metareactive)) {
+      code <- paste("Error creating", export_element[["id"]], "Not avaliable in", output_format, "format")
+      kind <- EXPORT$ELEMENT_KIND$ERROR
+    } else {
+      resolved <- try(metareactive(), silent = TRUE)
+      is_table <- identical(output_format, EXPORT$OUTPUT_FORMAT$PDF) &&
+        (is.data.frame(resolved) || inherits(resolved, "gt_tbl"))
+
+      if (inherits(resolved, "try-error")) {
+        code <- paste("Error creating", export_element[["id"]], attr(resolved, "condition")[["message"]])
+        kind <- EXPORT$ELEMENT_KIND$ERROR
+      } else if (is_table) {
+        # TODO: This could be moved to the formatter section
+        latex <- if (is.data.frame(resolved)) {
+          shinymeta::metaReactive(
+            {
+              ..(metareactive()) |>
+                gt::gt() |>
+                gt::tab_options(
+                  latex.use_longtable = TRUE,
+                  table.font.size = gt::px(9),
+                  latex.header_repeat = TRUE
+                ) |>
+                gt::as_latex()
+            },
+            inline = TRUE
+          )
+        } else {
+          shinymeta::metaReactive(
+            {
+              ..(metareactive()) |> gt::as_latex()
+            },
+            inline = TRUE
+          )
+        }
+
+        code <- get_code_in_context(latex())
+        # Rough method for estimating an upper limit of table width
+        # Code should never be narrower than the table, but it can overshoot by large sometimes
+        char_width <- max(nchar(unlist(strsplit(latex(), "\n"))))
+        kind <- EXPORT$ELEMENT_KIND$TABLE
+      } else {
+        code <- get_code_in_context(metareactive())
+        kind <- EXPORT$ELEMENT_KIND$DEFAULT
+      }
+    }
+
+    export_element[["metareactive"]] <- NULL
+    export_element[["code"]] <- code
+    export_element[["kind"]] <- kind
+    export_element[["char_width"]] <- char_width
+
+    log_inform(paste0("Preprocessed:", export_element[["id"]]))
+    res[[idx]] <- export_element
+  }
+  res
+}
+
+#' Build the export selection modal
+#'
+#' @param exportable_elements Named list of all flattened exportable elements
+#'   (keyed by id), each with `module_id`, `module_name`, `label`, `info`,
+#'   `is_first_module_element`.
+#' @param ns Namespacing function for input/output ids.
+#' @param show_tab Module id to show only that module's elements, or `NA`
+#'   (default) to show all.
+#' @return `list(modal_dialog =, selected =)`: the modal UI, and a named
+#'   logical vector (keyed by element id) of which elements are selected by
+#'   default — `TRUE` for every element actually shown in the modal.
+#' @keywords internal
+build_export_modal_ui <- function(exportable_elements, ns, show_tab = NA) {
+  log_inform(paste("Showing", show_tab, "tab in menu"))
+
+  card_ui <- list(shiny::h3("Export menu"))
+  card_items <- NULL
+  selected <- logical(length(exportable_elements))
+  names(selected) <- names(exportable_elements)
+
+  flush_card <- function() {
+    if (!is.null(card_items)) {
+      card_ui[[length(card_ui) + 1]] <<- do.call(bslib::card, card_items)
+    }
+  }
+
+  for (curr_el in exportable_elements) {
+    if (!is.na(show_tab) && curr_el[["module_id"]] != show_tab) {
+      next
+    }
+
+    if (curr_el[["is_first_module_element"]]) {
+      flush_card()
+      card_items <- list(bslib::card_header(curr_el[["module_name"]]))
+    }
+
+    card_items[[length(card_items) + 1]] <- shiny::div(
+      class = "form-check form-switch",
+      shiny::tags[["label"]](
+        class = "form-check-label",
+        title = curr_el[["info"]],
+        shiny::tags[["input"]](
+          class = "form-check-input",
+          type = "checkbox",
+          role = "switch",
+          checked = NA,
+          onchange = sprintf(
+            "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
+            ns(EXPORT$ID$EXPORT_MENU_SELECTION),
+            curr_el[["id"]]
+          )
+        ),
+        curr_el[["label"]]
+      )
+    )
+
+    selected[[curr_el[["id"]]]] <- TRUE
+  }
+  flush_card() # the last module's card is never flushed inside the loop
+
+  if (any(selected)) {
+    card_ui[[length(card_ui) + 1]] <- bslib::card(
+      bslib::card_header("Output format"),
+      shiny::radioButtons(
+        ns(EXPORT$ID$OUTPUT_FORMAT),
+        label = NULL,
+        choices = EXPORT$OUTPUT_FORMAT
+      )
+    )
+    download_button <- shiny::downloadButton(ns(EXPORT$ID$EXPORT_CODE), "Export")
+  } else {
+    card_ui[[length(card_ui) + 1]] <- bslib::card(
+      bslib::card_header("No elements available for export")
+    )
+    download_button <- NULL
+  }
+
+  list(
+    modal_dialog = shiny::modalDialog(
+      shiny::div(
+        class = "d-flex flex-column vh-25",
+        style = "max-height: 90vh",
+        shiny::div(
+          class = "overflow-auto flex-grow-1 p-3 min-h-0",
+          list(card_ui)
+        ),
+        download_button
+      ),
+      easyClose = TRUE,
+      footer = NULL
+    ),
+    selected = selected
   )
 }
 
@@ -435,101 +762,6 @@ if (isTRUE(getOption("dv.export_enabled"))) {
         res
       })
 
-      export_modal_ui <- function(show_tab = NA) {
-        # It supports either NA -> Show all tabs
-        # Or the id of one tab -> Show only that tab
-        log_inform(paste("Showing", show_tab, "tab in menu"))
-
-        card_ui <- list(shiny::h3("Export menu"))
-        card_items <- NULL
-        selected <- rep(FALSE, length(exportable_elements))
-        names(selected) <- names(exportable_elements)
-
-        for (idx in seq_along(exportable_elements)) {
-          curr_el <- exportable_elements[[idx]]
-
-          if (!is.na(show_tab) && curr_el[["module_id"]] != show_tab) {
-            next
-          }
-
-          if (curr_el[["is_first_module_element"]]) {
-            if (!is.null(card_items)) {
-              card_ui[[length(card_ui) + 1]] <- do.call(bslib::card, card_items)
-            }
-          }
-
-          if (curr_el[["is_first_module_element"]]) {
-            card_items <- list(bslib::card_header(curr_el[["module_name"]]))
-          }
-          card_items[[length(card_items) + 1]] <-
-            shiny::div(
-              class = "form-check form-switch",
-              shiny::tags[["label"]](
-                class = "form-check-label",
-                title = curr_el[["info"]],
-                shiny::tags[["input"]](
-                  class = "form-check-input",
-                  type = "checkbox",
-                  role = "switch",
-                  checked = NA,
-                  onchange = sprintf(
-                    "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
-                    ns(EXPORT$ID$EXPORT_MENU_SELECTION),
-                    curr_el[["id"]]
-                  )
-                ),
-                curr_el[["label"]]
-              )
-            )
-
-          selected[[curr_el[["id"]]]] <- TRUE
-        }
-
-        # Last card is done post loop
-        if (!is.null(card_items)) {
-          card_ui[[length(card_ui) + 1]] <- do.call(bslib::card, card_items)
-        }
-
-        if (length(card_ui) > 0) {
-          card_ui[[length(card_ui) + 1]] <- bslib::card(
-            bslib::card_header("Output format"),
-            shiny::radioButtons(
-              ns(EXPORT$ID$OUTPUT_FORMAT),
-              label = NULL,
-              choices = EXPORT$OUTPUT_FORMAT
-            )
-          )
-
-          download_button <- shiny::downloadButton(ns(EXPORT$ID$EXPORT_CODE), "Export")
-        } else {
-          card_ui[[length(card_ui) + 1]] <- bslib::card(
-            bslib::card_header("No elements available for export")
-          )
-
-          download_button <- NULL
-        }
-
-        res <- list(
-          modal_dialog = shiny::modalDialog(
-            shiny::div(
-              class = "d-flex flex-column vh-25",
-              style = "max-height: 90vh",
-              shiny::div(
-                class = "overflow-auto flex-grow-1 p-3 min-h-0",
-                list(
-                  card_ui
-                )
-              ),
-              download_button
-            ),
-            easyClose = TRUE,
-            footer = NULL
-          ),
-          selected = selected
-        )
-        res
-      }
-
       shiny::observeEvent(input[[EXPORT$ID$EXPORT_MENU_SELECTION]], {
         is_output_selected_to_export[[input[[EXPORT$ID$EXPORT_MENU_SELECTION]][["id"]]]] <<- input[[
           EXPORT$ID$EXPORT_MENU_SELECTION
@@ -559,7 +791,7 @@ if (isTRUE(getOption("dv.export_enabled"))) {
           visible_export_tabs <- input[[ID$NAV_HEADER]]
         }
 
-        x <- export_modal_ui(visible_export_tabs)
+        x <- build_export_modal_ui(exportable_elements, ns, visible_export_tabs)
         is_output_selected_to_export <<- x[["selected"]]
 
         log_inform(
@@ -577,9 +809,6 @@ if (isTRUE(getOption("dv.export_enabled"))) {
         content = function(filename) {
           shiny::withProgress(message = "Rendering export", expr = {
             output_format <- input[[EXPORT$ID$OUTPUT_FORMAT]]
-
-            RATTR <- EXPORT$ATTR
-            REK <- EXPORT$ELEMENT_KIND
 
             ec <- shiny::isolate({
               .ec <- shinymeta::newExpansionContext()
@@ -606,167 +835,22 @@ if (isTRUE(getOption("dv.export_enabled"))) {
                 paste(collapse = "\n")
             }
 
-            preprocess_export_element <- function(export_element, output_format) {
-              el_processed <- export_element
-              log_inform(paste0("Processing:", el_processed[["id"]]))
-              checkmate::assert_subset(output_format, as.character(unclass(EXPORT$OUTPUT_FORMAT)))
-
-              if (identical(output_format, EXPORT$OUTPUT_FORMAT$HTML)) {
-                reactive <- el_processed[["metareactive"]][["html"]]
-              } else if (identical(output_format, EXPORT$OUTPUT_FORMAT$PDF)) {
-                reactive <- el_processed[["metareactive"]][["pdf"]]
-              }
-
-              char_width <- NULL
-              resolved <- try(reactive(), silent = TRUE)
-
-              if (is.null(reactive)) {
-                code <- paste("Error creating", el_processed[["id"]], "Not avaliable in", output_format, "format")
-                kind <- REK$ERROR
-              } else if (inherits(resolved, "try-error")) {
-                code <- local({
-                  msg <- attr(resolved, "condition")$message
-                  paste("Error creating", el_processed[["id"]], msg)
-                })
-                kind <- REK$ERROR
-              } else if (identical(output_format, EXPORT$OUTPUT_FORMAT$HTML)) {
-                code <- get_code_in_context(reactive())
-                kind <- REK$DEFAULT
-              } else if (identical(output_format, EXPORT$OUTPUT_FORMAT$PDF)) {
-                # TODO: This could be moved to the formatter section
-                if (is.data.frame(reactive())) {
-                  reactive_ <- shinymeta::metaReactive(
-                    {
-                      ..(reactive()) |>
-                        gt::gt() |>
-                        gt::tab_options(
-                          latex.use_longtable = TRUE,
-                          table.font.size = gt::px(9),
-                          latex.header_repeat = TRUE
-                        ) |>
-                        gt::as_latex()
-                    },
-                    inline = TRUE
-                  )
-
-                  code <- get_code_in_context(reactive_())
-                  # Rough method for estimating an upper limit of table width
-                  # Code should never be narrower than the table, but it can overshoot by large sometimes
-                  char_width <- max(nchar(unlist(strsplit(reactive_(), "\n"))))
-                  kind <- REK$TABLE
-                } else if (inherits(reactive(), "gt_tbl")) {
-                  reactive_ <- shinymeta::metaReactive(
-                    {
-                      ..(reactive()) |> gt::as_latex()
-                    },
-                    inline = TRUE
-                  )
-                  code <- get_code_in_context(reactive_())
-                  char_width <- max(nchar(unlist(strsplit(reactive_(), "\n"))))
-                  kind <- REK$TABLE
-                } else {
-                  code <- get_code_in_context(reactive())
-                  kind <- REK$DEFAULT
-                }
-              }
-
-              el_processed[["metareactive"]] <- NULL
-              el_processed[["code"]] <- code
-              el_processed[["kind"]] <- kind
-              el_processed[["char_width"]] <- char_width
-
-              log_inform(paste0("Preprocessed:", el_processed[["id"]]))
-
-              return(el_processed)
-            }
+            # Order of calls to get_code_in_context is relevant, once an element has been expanded in a given
+            # expansion context, any additional attempt to expand it will return an empty string
+            # Therefore we need to make sure that all relevant elements are included in the report and also
+            # in the correct order. It is better to resolve those outside of the call as the internal order of resolving
+            # due to promises may not be the same.
+            #> x <- function() message("x")
+            #> y <- function() message("y")
+            #> z <- function(a,b){b;a}
+            #> z(x(), y())
 
             data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
-
-            log_inform("Preprocessing export elements")
-            elements_to_export <- local({
-              selected_elements <- names(is_output_selected_to_export)[is_output_selected_to_export]
-              selected_exportable_elements <- exportable_elements[selected_elements]
-
-              res <- list()
-              for (idx in seq_along(selected_exportable_elements)) {
-                log_inform(sprintf("Preprocessing element (%d)", idx))
-                curr_el <- selected_exportable_elements[[idx]]
-                if (is_output_selected_to_export[[curr_el[["id"]]]]) {
-                  element <- preprocess_export_element(curr_el, output_format)
-                  res <- c(res, list(element))
-                }
-              }
-              res
-            })
-
-            log_inform("Creating hardcoded dataset hash section")
-            hardcoded_hash_section <- local({
-              dataset_list_hash <- vector(mode = "list", length = length(selected_dataset_list()))
-              for (idx in seq_along(selected_dataset_list())) {
-                dataset_list_hash[[idx]] <- digest::digest(selected_dataset_list()[[idx]])
-              }
-              names(dataset_list_hash) <- names(selected_dataset_list())
-
-              section <- "## Hardcoded Data hash:"
-              for (idx in seq_along(dataset_list_hash)) {
-                section <- sprintf(
-                  "%s\n\n **name**: `%s` **hash**: %s",
-                  section,
-                  names(dataset_list_hash)[[idx]],
-                  dataset_list_hash[[idx]]
-                )
-              }
-              note <- "These hashes are calculated in-app, they correspond to the data loaded in the app that created the export."
-              sprintf("%s\n\n%s\n\n", section, note)
-            })
-
-            log_inform("Creating dynamic dataset hash section")
-            dynamic_hash_section <- local({
-              section <- "## Dynamic Data hash:"
-              for (idx in seq_along(selected_dataset_list())) {
-                section <- sprintf(
-                  "%s\n\n **name**: ``r names(selected_dataset_list)[[%d]]`` **hash**: `r digest::digest(selected_dataset_list[[%d]])`",
-                  section,
-                  idx,
-                  idx
-                )
-              }
-              note <- "These hashes are calculated during export rendering, and should match those in the **Hardcoded Data hash** section."
-              sprintf("%s\n\n%s\n\n", section, note)
-            })
-
-            log_inform("Creating date section")
-            date_section <- local({
-              section <- "## Data Modification Dates:"
-              section <- sprintf(
-                "%s\n\n **Date range**:\n\n`r %s`",
-                section,
-                get_code_in_context(date_range())
-              )
-
-              for (idx in seq_along(selected_dataset_list())) {
-                section <- sprintf(
-                  "%s\n\n **name**: ``r names(selected_dataset_list)[[%d]]`` **modification time**: `r attr(selected_dataset_list[[%d]], \"meta\")[[\"mtime\"]]`",
-                  section,
-                  idx,
-                  idx
-                )
-              }
-              note <- "These dates are calculated during export rendering."
-              sprintf("%s\n\n%s\n\n", section, note)
-            })
-
-            log_inform("Creating filter txt section")
+            date <- build_date_section(selected_dataset_list, date_range, get_code_in_context)
+            hardcoded_hash_section <- build_hardcoded_hash_section(selected_dataset_list())
+            dynamic_hash_section <- build_dynamic_hash_section(selected_dataset_list, get_code_in_context)
 
             filter_txt_section <- local({
-              section <- "## Filters:"
-
-              if (output_format == EXPORT$OUTPUT_FORMAT$HTML) {
-                verbatim_tags <- c("<pre>", "</pre>")
-              } else if (output_format == EXPORT$OUTPUT_FORMAT$PDF) {
-                verbatim_tags <- c("\\begin{verbatim}", "\\end{verbatim}")
-              }
-
               cat_mr <- sm_mr(
                 {
                   cat(..(filter_txt()))
@@ -775,22 +859,10 @@ if (isTRUE(getOption("dv.export_enabled"))) {
                 varname = "cat_filter_txt"
               )
 
-              note <- "An explicit call to the filter and parameters used can be found in the code that accompanies this export."
-              section <- sprintf(
-                "%s\n\n%s\n\n```{r filter_export_txt, echo = FALSE, results='asis'}\n\n%s\n\n```\n\n%s\n\n%s",
-                section,
-                verbatim_tags[[1]],
-                get_code_in_context(cat_mr()),
-                verbatim_tags[[2]],
-                note
-              )
-
-              section
+              build_filter_txt_section(output_format, get_code_in_context(cat_mr()))
             })
 
             filter_reference_list_txt_section <- local({
-              section <- "# Filter references:"
-
               if (nchar(filter_reference_list_txt()) > 0) {
                 cat_mr <- sm_mr(
                   {
@@ -809,14 +881,16 @@ if (isTRUE(getOption("dv.export_enabled"))) {
                 )
               }
 
-              section <- sprintf(
-                "%s\n\n```{r filter_export_reference_list, echo = FALSE, results='asis'}\n\n%s\n\n```",
-                section,
-                get_code_in_context(cat_mr())
-              )
-
-              section
+              build_filter_reference_section(get_code_in_context(cat_mr()))
             })
+
+            log_inform("Preprocessing export elements")
+            elements_to_export <- preprocess_export_elements(
+              exportable_elements,
+              is_output_selected_to_export,
+              output_format,
+              get_code_in_context
+            )
 
             log_inform("Creating rmarkdown")
             rmarkdown <- build_export_rmd(
@@ -824,7 +898,7 @@ if (isTRUE(getOption("dv.export_enabled"))) {
               output_format = output_format,
               data_code = data_code,
               sections = list(
-                date = date_section,
+                date = date,
                 hardcoded_hash = hardcoded_hash_section,
                 dynamic_hash = dynamic_hash_section,
                 filter_txt = filter_txt_section,
