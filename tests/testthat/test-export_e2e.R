@@ -41,6 +41,12 @@ local({
   test_that("a module's exported value is downloaded end to end as a rendered export.zip", {
     app <- start_app_driver(
       rlang::quo({
+        dv.manager:::..activate_export()
+        on.exit(
+          dv.manager:::..deactivate_export(),
+          add = TRUE
+        )
+
         dv.manager:::run_app(
           data = !!data,
           module_list = list(

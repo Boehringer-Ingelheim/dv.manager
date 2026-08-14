@@ -235,7 +235,7 @@ app_server_ <- function(input, output, session, opts) {
       shiny::req(unfiltered_dataset_list_with_filter_info())
 
       AEE[["A"]][["sm_me"]]({
-        filter_to_export(
+        dv.manager::filter_to_export(
           ..(unfiltered_dataset_list_with_filter_info())
         )
       })

@@ -1441,9 +1441,6 @@ get_filtered_dataset_ <- function(
 
 #' Apply the resolved filter info to a single dataset
 #'
-#' Exported so the code emitted by the export feature can call it as
-#' `dv.manager::get_filtered_dataset()`, not for direct use by module developers.
-#'
 #' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =, ...)`,
 #'   as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
 #' @param name Name of the dataset to filter.
@@ -1465,9 +1462,6 @@ get_filtered_dataset <- function(unfiltered_dataset_list_with_filter_info, name,
 
 
 #' Apply the resolved filter info to every dataset in the list
-#'
-#' Exported so the code emitted by the export feature can call it as
-#' `dv.manager::get_filtered_dataset_list()`, not for direct use by module developers.
 #'
 #' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =, ...)`,
 #'   as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
@@ -1519,7 +1513,15 @@ apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) 
 # TODO: Add HTML spans with tooltip info
 # TODO: Add the state at each of the levels, it should be possible when we calculate the masks and the levels in the dataset
 
-# Recieves an unfiltered_dataset_list_with_filter_info like
+#' Describe the active filter as a plain-text tree for the export document
+#'
+#' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =,
+#'   dataset_list_filter =, ...)`, as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
+#' @return `list(txt =, reference_txt =)`, both single strings: the filter tree, and the values of subsets too
+#'   long to print inline (`""` when none), keyed by the `See filter reference (n)` markers left in `txt`.
+#' @keywords internal
+#' @export
+#' @noRd
 filter_to_export <- function(unfiltered_dataset_list_with_filter_info) {
   TC <- c(
     h = "\u2500", # ─
