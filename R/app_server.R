@@ -169,7 +169,7 @@ app_server_ <- function(input, output, session, opts) {
           r_unfiltered_dataset_list <- ..(shiny::isolate(unfiltered_dataset_list()))
           r_dataset_list_filter <- ..(dataset_list_filter()) # List that describes the filter no need of solving it in shinymeta
           filter_key_var <- ..(filter_key_var)
-          filter_info <- dv.manager::combine_filter_info(get_filter_info(
+          filter_info <- dv.manager::combine_filter_info(dv.manager::get_filter_info(
             r_unfiltered_dataset_list,
             r_dataset_list_filter,
             filter_key_var
@@ -178,7 +178,7 @@ app_server_ <- function(input, output, session, opts) {
           list(
             unfiltered_dataset_list = r_unfiltered_dataset_list,
             filter_info = filter_info[["result"]][["filter_info"]],
-            get_filtered_dataset = get_filtered_dataset,
+            get_filtered_dataset = dv.manager::get_filtered_dataset,
             error_list = filter_info[["error_list"]],
             dataset_list_filter = r_dataset_list_filter
           )
@@ -268,7 +268,7 @@ app_server_ <- function(input, output, session, opts) {
       fd <- AEE[["A"]][["sm_me"]]({
         r_unfiltered_dataset_list_with_filter_info <- ..(unfiltered_dataset_list_with_filter_info())
 
-        get_filtered_dataset_list(r_unfiltered_dataset_list_with_filter_info)
+        dv.manager::get_filtered_dataset_list(r_unfiltered_dataset_list_with_filter_info)
       })
       ..t$add_event("received filtered_dataset_list")
       fd

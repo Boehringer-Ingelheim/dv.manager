@@ -1439,6 +1439,20 @@ get_filtered_dataset_ <- function(
   fd
 }
 
+#' Apply the resolved filter info to a single dataset
+#'
+#' Exported so the code emitted by the export feature can call it as
+#' `dv.manager::get_filtered_dataset()`, not for direct use by module developers.
+#'
+#' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =, ...)`,
+#'   as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
+#' @param name Name of the dataset to filter.
+#' @param vars Columns to keep. Omit (do not pass `NULL`) to keep all of them.
+#' @param mask Logical vector ANDed with the filter mask. Omit (do not pass `NULL`) to apply the filter mask alone.
+#' @return The filtered data.frame, with levels and labels carried over from the unfiltered dataset.
+#' @keywords internal
+#' @export
+#' @noRd
 get_filtered_dataset <- function(unfiltered_dataset_list_with_filter_info, name, vars, mask) {
   get_filtered_dataset_(
     as_safe_list(unfiltered_dataset_list_with_filter_info[["unfiltered_dataset_list"]]),
@@ -1449,6 +1463,18 @@ get_filtered_dataset <- function(unfiltered_dataset_list_with_filter_info, name,
   )
 }
 
+
+#' Apply the resolved filter info to every dataset in the list
+#'
+#' Exported so the code emitted by the export feature can call it as
+#' `dv.manager::get_filtered_dataset_list()`, not for direct use by module developers.
+#'
+#' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =, ...)`,
+#'   as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
+#' @return Named list of filtered data.frames, one per entry of `unfiltered_dataset_list`.
+#' @keywords internal
+#' @export
+#' @noRd
 get_filtered_dataset_list <- function(unfiltered_dataset_list_with_filter_info) {
   ufd <- unfiltered_dataset_list_with_filter_info[["unfiltered_dataset_list"]]
   res <- vector(mode = "list", length = length(ufd))
