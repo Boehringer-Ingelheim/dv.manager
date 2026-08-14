@@ -1,6 +1,10 @@
-local({
-  skip_if_no_export_code()
+dv.manager:::..activate_export()
+on.exit(
+  dv.manager:::..deactivate_export(),
+  add = TRUE
+)
 
+local({
   test_that("build_hardcoded_hash_section lists a content hash per dataset", {
     dataset_list <- list(a = data.frame(x = 1:2), b = data.frame(y = "z"))
     expect_snapshot(cat(build_hardcoded_hash_section(dataset_list)))

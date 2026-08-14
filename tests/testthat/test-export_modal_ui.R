@@ -1,6 +1,10 @@
-local({
-  skip_if_no_export_code()
+dv.manager:::..activate_export()
+on.exit(
+  dv.manager:::..deactivate_export(),
+  add = TRUE
+)
 
+local({
   test_ns <- function(x) paste0("test-", x)
 
   make_element <- function(id, module_id, module_name, is_first) {

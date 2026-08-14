@@ -1,5 +1,10 @@
 skip_if_not_running_shiny_tests()
-skip_if_no_export_code()
+
+dv.manager:::..activate_export()
+on.exit(
+  dv.manager:::..deactivate_export(),
+  add = TRUE
+)
 
 # Only test export is produced the rest is tested in the rest of test functions
 # `dv.export_enabled` gates code defined at *package load time* (see R/aaaaa_export.R), so it has to
@@ -45,8 +50,7 @@ local({
           filter_key = "USUBJID",
           filter_default_state = !!filter_default_state
         )
-      }),
-      options = list("dv.export_enabled" = TRUE)
+      })
     )
 
     app$run_js(sprintf(

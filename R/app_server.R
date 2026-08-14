@@ -7,8 +7,7 @@ app_server <- function(input = NULL, output = NULL, session = NULL) {
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
     "filter_info" = get_config("filter_info"),
-    "enable_subgroup" = get_config("subgroup")[["enable"]],
-    "export_enabled" = get_config("export_enabled")
+    "enable_subgroup" = get_config("subgroup")[["enable"]]
   )
 
   app_server_(input, output, session, opts)
@@ -23,8 +22,7 @@ app_server_module <- function(id) {
     "startup_msg" = get_config("startup_msg"),
     "reload_period" = get_config("reload_period"),
     "filter_info" = get_config("filter_info"),
-    "enable_subgroup" = get_config("subgroup")[["enable"]],
-    "export_enabled" = get_config("export_enabled")
+    "enable_subgroup" = get_config("subgroup")[["enable"]]
   )
   shiny::moduleServer(id = id, module = function(input, output, session) app_server_(input, output, session, opts))
 }
@@ -60,7 +58,6 @@ app_server_ <- function(input, output, session, opts) {
   reload_period <- opts[["reload_period"]]
   filter_info <- opts[["filter_info"]]
   enable_subgroup <- opts[["enable_subgroup"]]
-  export_enabled <- opts[["export_enabled"]]
 
   ######################################
 
@@ -82,7 +79,7 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  selected_dataset_list <- sm_mr(
+  selected_dataset_list <- AEE[["A"]][["sm_mr"]](
     {
       dataset_list_name <- input[["selector"]]
       shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
@@ -117,12 +114,12 @@ app_server_ <- function(input, output, session, opts) {
     )
   }
 
-  unfiltered_dataset_list_ <- sm_mr2(
+  unfiltered_dataset_list_ <- AEE[["A"]][["sm_mr2"]](
     {
       ..t$add_period("unfiltered_dataset_list_", TRUE)
       on.exit(..t$add_period("unfiltered_dataset_list_", FALSE))
 
-      res_apply_subgroups <- sm_me(
+      res_apply_subgroups <- AEE[["A"]][["sm_me"]](
         {
           dv.manager::apply_subgroups(
             ..(selected_dataset_list()),
@@ -140,7 +137,7 @@ app_server_ <- function(input, output, session, opts) {
     varname = "unfiltered_dataset_list_"
   )
 
-  unfiltered_dataset_list <- sm_mr2(
+  unfiltered_dataset_list <- AEE[["A"]][["sm_mr2"]](
     {
       ..t$add_period("unfiltered_dataset_list", TRUE)
       on.exit(..t$add_period("unfiltered_dataset_list", FALSE))
@@ -150,7 +147,7 @@ app_server_ <- function(input, output, session, opts) {
       }
       subgroups[["set_incorrect_subgroups"]](unfiltered_dataset_list_()[["result"]][["incorrect_subgroups"]])
 
-      sm_me(
+      AEE[["A"]][["sm_me"]](
         {
           ..(unfiltered_dataset_list_())[["result"]][["dataset_list"]]
         },
@@ -160,14 +157,14 @@ app_server_ <- function(input, output, session, opts) {
     varname = "unfiltered_dataset_list"
   )
 
-  unfiltered_dataset_list_with_filter_info_ <- sm_mr2(
+  unfiltered_dataset_list_with_filter_info_ <- AEE[["A"]][["sm_mr2"]](
     {
       ..t$add_period("unfiltered_dataset_list_with_filter_info_", TRUE)
       on.exit(..t$add_period("unfiltered_dataset_list_with_filter_info_", FALSE))
       # Place reqs here so all elements are synchronized before going forward
       # Consider generation counters (Check current approach)
 
-      res <- sm_me(
+      res <- AEE[["A"]][["sm_me"]](
         {
           r_unfiltered_dataset_list <- ..(shiny::isolate(unfiltered_dataset_list()))
           r_dataset_list_filter <- ..(dataset_list_filter()) # List that describes the filter no need of solving it in shinymeta
@@ -195,7 +192,7 @@ app_server_ <- function(input, output, session, opts) {
     varname = "unfiltered_dataset_list_with_filter_info_"
   )
 
-  unfiltered_dataset_list_with_filter_info <- sm_mr2(
+  unfiltered_dataset_list_with_filter_info <- AEE[["A"]][["sm_mr2"]](
     {
       ..t$add_period("unfiltered_dataset_list_with_filter_info", TRUE)
       on.exit(..t$add_period("unfiltered_dataset_list_with_filter_info", FALSE))
@@ -220,7 +217,7 @@ app_server_ <- function(input, output, session, opts) {
     }
 
 
-      res <- sm_me(
+      res <- AEE[["A"]][["sm_me"]](
         {
           ..(unfiltered_dataset_list_with_filter_info_())
         }
@@ -233,11 +230,11 @@ app_server_ <- function(input, output, session, opts) {
     varname = "unfiltered_dataset_list_with_filter_info"
   )
 
-  filter_export <- sm_mr2(
+  filter_export <- AEE[["A"]][["sm_mr2"]](
     {
       shiny::req(unfiltered_dataset_list_with_filter_info())
 
-      sm_me({
+      AEE[["A"]][["sm_me"]]({
         filter_to_export(
           ..(unfiltered_dataset_list_with_filter_info())
         )
@@ -246,14 +243,14 @@ app_server_ <- function(input, output, session, opts) {
     varname = "filter_export"
   )
 
-  filter_txt <- sm_mr(
+  filter_txt <- AEE[["A"]][["sm_mr"]](
     {
       ..(filter_export())[["txt"]]
     },
     varname = "filter_txt"
   )
 
-  filter_reference_list_txt <- sm_mr(
+  filter_reference_list_txt <- AEE[["A"]][["sm_mr"]](
     {
       ..(filter_export())[["reference_txt"]]
     },
@@ -264,11 +261,11 @@ app_server_ <- function(input, output, session, opts) {
     log_inform(paste0("\n", filter_txt()))
   })
 
-  filtered_dataset_list <- sm_mr2(
+  filtered_dataset_list <- AEE[["A"]][["sm_mr2"]](
     {
       ..t$add_period("filtered_dataset_list", TRUE)
       on.exit(..t$add_period("filtered_dataset_list", FALSE))
-      fd <- sm_me({
+      fd <- AEE[["A"]][["sm_me"]]({
         r_unfiltered_dataset_list_with_filter_info <- ..(unfiltered_dataset_list_with_filter_info())
 
         get_filtered_dataset_list(r_unfiltered_dataset_list_with_filter_info)
@@ -452,7 +449,7 @@ app_server_ <- function(input, output, session, opts) {
     paste0("Dataset name: ", input$selector)
   })
 
-  date_range <- sm_mr(
+  date_range <- AEE[["A"]][["sm_mr"]](
     {
       date_range <- attr(..(unfiltered_dataset_list()), "date_range")
 
@@ -483,9 +480,7 @@ app_server_ <- function(input, output, session, opts) {
 
   ### Export
 
-  if (isTRUE(export_enabled)) {
-    eval(export_server_quote)
-  }
+  eval(AEE[["A"]][["export_server_quote"]])
 }
 
 # Convoluted way of having a testable server function

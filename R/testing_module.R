@@ -2791,13 +2791,13 @@ export_dataset_name_server <- function(id, afmm) {
           dataset_name = list(
             label = "Dataset name",
             metareactive = list(
-              html = sm_mr(
+              html = AEE[["A"]][["sm_mr"]](
                 {
                   attr(..(afmm[["unfiltered_dataset_list"]]()), "dataset_list_name")
                 },
                 varname = "dataset_name"
               ),
-              pdf = sm_mr(
+              pdf = AEE[["A"]][["sm_mr"]](
                 {
                   attr(..(afmm[["unfiltered_dataset_list"]]()), "dataset_list_name")
                 },

@@ -1,6 +1,10 @@
-local({
-  skip_if_no_export_code()
+dv.manager:::..activate_export()
+on.exit(
+  dv.manager:::..deactivate_export(),
+  add = TRUE
+)
 
+local({
   make_export_rmd <- function(chunk_body, output = "html_document") {
     paste(
       c(

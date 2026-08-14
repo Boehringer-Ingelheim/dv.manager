@@ -36,8 +36,7 @@ Suggests:
     dv.loader (>= 1.0.0),
     fontawesome (>= 0.2.1),
     pharmaverseadam,
-    shinytest2,
-    shinymeta
+    shinytest2
 Config/testthat/edition: 3
 Config/testthat/parallel: false
 Depends: R (>= 4.1.0)

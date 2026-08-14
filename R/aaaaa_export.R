@@ -688,274 +688,290 @@ build_export_modal_ui <- function(exportable_elements, ns, show_tab = NA) {
   )
 }
 
-if (isTRUE(getOption("dv.export_enabled"))) {
-  warning("Export has been enabled. This is an experimental feature.")
-  # Code for exporting versions
+EA <- list()
 
-  append_export_button <- function(x, ns) {
-    log_inform("Attaching export button")
+EA[["append_export_button"]] <- function(x, ns) {
+  log_inform("Attaching export button")
 
-    input_id <- ns(EXPORT$ID$EXPORT_CODE_MENU)
-    onclick_fmt <- "Shiny.setInputValue('%s', '%s', {priority: 'event'})"
+  input_id <- ns(EXPORT$ID$EXPORT_CODE_MENU)
+  onclick_fmt <- "Shiny.setInputValue('%s', '%s', {priority: 'event'})"
 
-    export_button <- local({
-      t <- shiny::tags
-      dd_div <- shiny::div(
-        class = "btn-group",
-        role = "group",
-        t[["button"]](type = "button", class = "btn btn-default dropdown-toggle btn-sm", "data-bs-toggle" = "dropdown"),
-        t[["ul"]](
-          class = "dropdown-menu",
-          t[["li"]](
-            t[["a"]](class = "dropdown-item", href = "#", EXPORT$MSG$EXPORT_CUSTOM_BUTTON),
-            onclick = sprintf(onclick_fmt, input_id, EXPORT$VAL$EXPORT_ALL)
-          ),
-        )
-      )
-
-      bg_d <- shiny::div(
-        class = "btn-group",
-        role = "group",
-        t[["button"]](
-          type = "button",
-          class = "btn btn-default",
-          EXPORT$MSG$EXPORT_BUTTON,
-          onclick = sprintf(onclick_fmt, input_id, EXPORT$VAL$EXPORT_CURRENT)
+  export_button <- local({
+    t <- shiny::tags
+    dd_div <- shiny::div(
+      class = "btn-group",
+      role = "group",
+      t[["button"]](type = "button", class = "btn btn-default dropdown-toggle btn-sm", "data-bs-toggle" = "dropdown"),
+      t[["ul"]](
+        class = "dropdown-menu",
+        t[["li"]](
+          t[["a"]](class = "dropdown-item", href = "#", EXPORT$MSG$EXPORT_CUSTOM_BUTTON),
+          onclick = sprintf(onclick_fmt, input_id, EXPORT$VAL$EXPORT_ALL)
         ),
-        dd_div
       )
-
-      bg_d
-    })
-
-    top_buttons <- c(
-      x,
-      list(export_button)
     )
 
-    top_buttons
-  }
+    bg_d <- shiny::div(
+      class = "btn-group",
+      role = "group",
+      t[["button"]](
+        type = "button",
+        class = "btn btn-default",
+        EXPORT$MSG$EXPORT_BUTTON,
+        onclick = sprintf(onclick_fmt, input_id, EXPORT$VAL$EXPORT_CURRENT)
+      ),
+      dd_div
+    )
 
-  export_server_quote <- quote({
-    local({
-      log_inform("Running export server")
-      # Flatten exportable elements and set defaults for missing entries
-      exportable_elements <- local({
-        res <- list()
-        for (idx in seq_along(module_output)) {
-          mo <- module_output[[idx]]
-
-          if ("to_export" %in% names(mo)) {
-            to_export_elements <- mo[["to_export"]]
-            module_id <- names(module_output)[[idx]]
-            module_name <- module_names[[module_id]]
-
-            for (jdx in seq_along(to_export_elements)) {
-              if (!checkmate::test_named(to_export_elements[[jdx]], type = "unique")) {
-                stop(sprintf("Exported elements for module %s are not named or names are not unique", module_id))
-              }
-
-              current_element_list_nm <- names(to_export_elements)[[jdx]]
-              current_element <- to_export_elements[[jdx]]
-
-              first_module_element <- jdx == 1
-              current_element[["label"]] <- current_element[["label"]] %||% current_element_list_nm
-              current_element[["info"]] <- current_element[["info"]] %||% current_element[["label"]]
-              current_element[["id"]] <- paste0(module_id, "-", current_element_list_nm)
-              current_element[["is_first_module_element"]] <- first_module_element
-              current_element[["module_name"]] <- module_name
-              current_element[["module_id"]] <- module_id
-              res[[current_element[["id"]]]] <- current_element
-            }
-          }
-        }
-
-        res
-      })
-
-      shiny::observeEvent(input[[EXPORT$ID$EXPORT_MENU_SELECTION]], {
-        is_output_selected_to_export[[input[[EXPORT$ID$EXPORT_MENU_SELECTION]][["id"]]]] <<- input[[
-          EXPORT$ID$EXPORT_MENU_SELECTION
-        ]][["value"]]
-        log_inform(
-          paste(
-            "Selected outputs to export",
-            paste(names(is_output_selected_to_export), is_output_selected_to_export, collapse = ", ")
-          )
-        )
-      })
-
-      is_output_selected_to_export <- NULL # TODO replace by reactiveValue so it can be used in the testServer?
-      shiny::observeEvent(input[[EXPORT$ID$EXPORT_CODE_MENU]], {
-        if (is.null(attr(selected_dataset_list(), "load_fn"))) {
-          dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
-          user_msg <- sprintf("Current dataset list `%s` is not configured for exporting.", dataset_list_name)
-          dev_msg <- sprintf("Export not possible for `%s`. No `load_fn` attribute found. ", dataset_list_name)
-          log_warn(dev_msg)
-          shiny::showNotification(user_msg, type = "error")
-          shiny::req(FALSE)
-        }
-
-        visible_export_tabs <- NA
-
-        if (input[[EXPORT$ID$EXPORT_CODE_MENU]] == EXPORT$VAL$EXPORT_CURRENT) {
-          visible_export_tabs <- input[[ID$NAV_HEADER]]
-        }
-
-        x <- build_export_modal_ui(exportable_elements, ns, visible_export_tabs)
-        is_output_selected_to_export <<- x[["selected"]]
-
-        log_inform(
-          paste(
-            "Selected outputs to export by default",
-            paste(names(is_output_selected_to_export), is_output_selected_to_export, collapse = ", ")
-          )
-        )
-
-        shiny::showModal(x[["modal_dialog"]])
-      })
-
-      output[[EXPORT$ID$EXPORT_CODE]] <- shiny::downloadHandler(
-        filename = "export.zip",
-        content = function(filename) {
-          shiny::withProgress(message = "Rendering export", expr = {
-            output_format <- input[[EXPORT$ID$OUTPUT_FORMAT]]
-
-            ec <- shiny::isolate({
-              .ec <- shinymeta::newExpansionContext()
-              fn <- body(attr(selected_dataset_list(), "load_fn"))
-              dln <- attr(selected_dataset_list(), "dataset_list_name")
-              .ec$substituteMetaReactive(selected_dataset_list, function() {
-                # This metaExpression contains part of the logic of selected dataset list, add date_range and attribute
-                # It is not ideal as they may get desynchronized in the future
-                sm_me({
-                  df <- ..(fn)
-                  df <- dv.manager::add_date_range(df)
-                  attr(df, "dataset_list_name") <- ..(dln)
-                  df
-                })
-              })
-              .ec
-            })
-
-            get_code_in_context <- function(x) {
-              shinymeta::expandChain(
-                x,
-                .expansionContext = ec
-              ) |>
-                shinymeta::formatCode(formatter = format_with_air, width = 400L) |>
-                as.character() |>
-                paste(collapse = "\n")
-            }
-
-            # Order of calls to get_code_in_context is relevant, once an element has been expanded in a given
-            # expansion context, any additional attempt to expand it will return an empty string
-            # Therefore we need to make sure that all relevant elements are included in the report and also
-            # in the correct order. It is better to resolve those outside of the call as the internal order of resolving
-            # due to promises may not be the same.
-            #> x <- function() message("x")
-            #> y <- function() message("y")
-            #> z <- function(a,b){b;a}
-            #> z(x(), y())
-
-            data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
-            date <- build_date_section(selected_dataset_list, date_range, get_code_in_context)
-            hardcoded_hash_section <- build_hardcoded_hash_section(selected_dataset_list())
-            dynamic_hash_section <- build_dynamic_hash_section(selected_dataset_list, get_code_in_context)
-
-            filter_txt_section <- local({
-              cat_mr <- sm_mr(
-                {
-                  cat(..(filter_txt()))
-                },
-                inline = TRUE,
-                varname = "cat_filter_txt"
-              )
-
-              build_filter_txt_section(output_format, get_code_in_context(cat_mr()))
-            })
-
-            filter_reference_list_txt_section <- local({
-              if (nchar(filter_reference_list_txt()) > 0) {
-                cat_mr <- sm_mr(
-                  {
-                    cat(..(filter_reference_list_txt()))
-                  },
-                  inline = TRUE,
-                  varname = "cat_filter_reference_list_txt"
-                )
-              } else {
-                cat_mr <- sm_mr(
-                  {
-                    cat("No references found")
-                  },
-                  inline = TRUE,
-                  varname = "cat_filter_reference_list_txt"
-                )
-              }
-
-              build_filter_reference_section(get_code_in_context(cat_mr()))
-            })
-
-            log_inform("Preprocessing export elements")
-            elements_to_export <- preprocess_export_elements(
-              exportable_elements,
-              is_output_selected_to_export,
-              output_format,
-              get_code_in_context
-            )
-
-            log_inform("Creating rmarkdown")
-            rmarkdown <- build_export_rmd(
-              elements_to_export = elements_to_export,
-              output_format = output_format,
-              data_code = data_code,
-              sections = list(
-                date = date,
-                hardcoded_hash = hardcoded_hash_section,
-                dynamic_hash = dynamic_hash_section,
-                filter_txt = filter_txt_section,
-                filter_reference = filter_reference_list_txt_section
-              ),
-              templates = list(
-                header = EXPORT$TEMPLATES$HEADER[[output_format]],
-                session_info = EXPORT$TEMPLATES$SESSION_INFO[[output_format]],
-                footer = EXPORT$TEMPLATES$FOOTER[[output_format]]
-              )
-            )
-
-            log_inform("Rendering rmarkdown")
-            header <- paste(
-              readLines(system.file("export_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
-              collapse = "\n"
-            )
-            rendered_filename <- callr::r(
-              render_export_document,
-              args = list(
-                rmarkdown = rmarkdown,
-                header = header,
-                pdf_attach_function = pdf_attach,
-                filename = filename,
-                quiet = FALSE # We want to access it in the app log
-              ),
-              show = TRUE
-            )
-            if (length(attr(rendered_filename, "error_msg")) > 0) {
-              log_warn(sprintf("Error while rendering export: %s", attr(rendered_filename, "error_msg")))
-            }
-            attr(rendered_filename, "error_msg") <- NULL
-          })
-        }
-      )
-    })
+    bg_d
   })
 
-  # shinymeta::metaReactive2
-  sm_mr2 <- shinymeta::metaReactive2
+  top_buttons <- c(
+    x,
+    list(export_button)
+  )
 
-  # shinymeta::metaReactive
-  sm_mr <- shinymeta::metaReactive
+  top_buttons
+}
 
-  # shinymeta::metaExpr
-  sm_me <- shinymeta::metaExpr
+EA[["export_server_quote"]] <- quote({
+  local({
+    log_inform("Running export server")
+    # Flatten exportable elements and set defaults for missing entries
+    exportable_elements <- local({
+      res <- list()
+      for (idx in seq_along(module_output)) {
+        mo <- module_output[[idx]]
+
+        if ("to_export" %in% names(mo)) {
+          to_export_elements <- mo[["to_export"]]
+          module_id <- names(module_output)[[idx]]
+          module_name <- module_names[[module_id]]
+
+          for (jdx in seq_along(to_export_elements)) {
+            if (!checkmate::test_named(to_export_elements[[jdx]], type = "unique")) {
+              stop(sprintf("Exported elements for module %s are not named or names are not unique", module_id))
+            }
+
+            current_element_list_nm <- names(to_export_elements)[[jdx]]
+            current_element <- to_export_elements[[jdx]]
+
+            first_module_element <- jdx == 1
+            current_element[["label"]] <- current_element[["label"]] %||% current_element_list_nm
+            current_element[["info"]] <- current_element[["info"]] %||% current_element[["label"]]
+            current_element[["id"]] <- paste0(module_id, "-", current_element_list_nm)
+            current_element[["is_first_module_element"]] <- first_module_element
+            current_element[["module_name"]] <- module_name
+            current_element[["module_id"]] <- module_id
+            res[[current_element[["id"]]]] <- current_element
+          }
+        }
+      }
+
+      res
+    })
+
+    shiny::observeEvent(input[[EXPORT$ID$EXPORT_MENU_SELECTION]], {
+      is_output_selected_to_export[[input[[EXPORT$ID$EXPORT_MENU_SELECTION]][["id"]]]] <<- input[[
+        EXPORT$ID$EXPORT_MENU_SELECTION
+      ]][["value"]]
+      log_inform(
+        paste(
+          "Selected outputs to export",
+          paste(names(is_output_selected_to_export), is_output_selected_to_export, collapse = ", ")
+        )
+      )
+    })
+
+    is_output_selected_to_export <- NULL # TODO replace by reactiveValue so it can be used in the testServer?
+    shiny::observeEvent(input[[EXPORT$ID$EXPORT_CODE_MENU]], {
+      if (is.null(attr(selected_dataset_list(), "load_fn"))) {
+        dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
+        user_msg <- sprintf("Current dataset list `%s` is not configured for exporting.", dataset_list_name)
+        dev_msg <- sprintf("Export not possible for `%s`. No `load_fn` attribute found. ", dataset_list_name)
+        log_warn(dev_msg)
+        shiny::showNotification(user_msg, type = "error")
+        shiny::req(FALSE)
+      }
+
+      visible_export_tabs <- NA
+
+      if (input[[EXPORT$ID$EXPORT_CODE_MENU]] == EXPORT$VAL$EXPORT_CURRENT) {
+        visible_export_tabs <- input[[ID$NAV_HEADER]]
+      }
+
+      x <- build_export_modal_ui(exportable_elements, ns, visible_export_tabs)
+      is_output_selected_to_export <<- x[["selected"]]
+
+      log_inform(
+        paste(
+          "Selected outputs to export by default",
+          paste(names(is_output_selected_to_export), is_output_selected_to_export, collapse = ", ")
+        )
+      )
+
+      shiny::showModal(x[["modal_dialog"]])
+    })
+
+    output[[EXPORT$ID$EXPORT_CODE]] <- shiny::downloadHandler(
+      filename = "export.zip",
+      content = function(filename) {
+        shiny::withProgress(message = "Rendering export", expr = {
+          output_format <- input[[EXPORT$ID$OUTPUT_FORMAT]]
+
+          ec <- shiny::isolate({
+            .ec <- shinymeta::newExpansionContext()
+            fn <- body(attr(selected_dataset_list(), "load_fn"))
+            dln <- attr(selected_dataset_list(), "dataset_list_name")
+            .ec$substituteMetaReactive(selected_dataset_list, function() {
+              # This metaExpression contains part of the logic of selected dataset list, add date_range and attribute
+              # It is not ideal as they may get desynchronized in the future
+              AEE[["A"]][["sm_me"]]({
+                df <- ..(fn)
+                df <- dv.manager::add_date_range(df)
+                attr(df, "dataset_list_name") <- ..(dln)
+                df
+              })
+            })
+            .ec
+          })
+
+          get_code_in_context <- function(x) {
+            shinymeta::expandChain(
+              x,
+              .expansionContext = ec
+            ) |>
+              shinymeta::formatCode(formatter = format_with_air, width = 400L) |>
+              as.character() |>
+              paste(collapse = "\n")
+          }
+
+          # Order of calls to get_code_in_context is relevant, once an element has been expanded in a given
+          # expansion context, any additional attempt to expand it will return an empty string
+          # Therefore we need to make sure that all relevant elements are included in the report and also
+          # in the correct order. It is better to resolve those outside of the call as the internal order of resolving
+          # due to promises may not be the same.
+          #> x <- function() message("x")
+          #> y <- function() message("y")
+          #> z <- function(a,b){b;a}
+          #> z(x(), y())
+
+          data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
+          date <- build_date_section(selected_dataset_list, date_range, get_code_in_context)
+          hardcoded_hash_section <- build_hardcoded_hash_section(selected_dataset_list())
+          dynamic_hash_section <- build_dynamic_hash_section(selected_dataset_list, get_code_in_context)
+
+          filter_txt_section <- local({
+            cat_mr <- sm_mr(
+              {
+                cat(..(filter_txt()))
+              },
+              inline = TRUE,
+              varname = "cat_filter_txt"
+            )
+
+            build_filter_txt_section(output_format, get_code_in_context(cat_mr()))
+          })
+
+          filter_reference_list_txt_section <- local({
+            if (nchar(filter_reference_list_txt()) > 0) {
+              cat_mr <- sm_mr(
+                {
+                  cat(..(filter_reference_list_txt()))
+                },
+                inline = TRUE,
+                varname = "cat_filter_reference_list_txt"
+              )
+            } else {
+              cat_mr <- sm_mr(
+                {
+                  cat("No references found")
+                },
+                inline = TRUE,
+                varname = "cat_filter_reference_list_txt"
+              )
+            }
+
+            build_filter_reference_section(get_code_in_context(cat_mr()))
+          })
+
+          log_inform("Preprocessing export elements")
+          elements_to_export <- preprocess_export_elements(
+            exportable_elements,
+            is_output_selected_to_export,
+            output_format,
+            get_code_in_context
+          )
+
+          log_inform("Creating rmarkdown")
+          rmarkdown <- build_export_rmd(
+            elements_to_export = elements_to_export,
+            output_format = output_format,
+            data_code = data_code,
+            sections = list(
+              date = date,
+              hardcoded_hash = hardcoded_hash_section,
+              dynamic_hash = dynamic_hash_section,
+              filter_txt = filter_txt_section,
+              filter_reference = filter_reference_list_txt_section
+            ),
+            templates = list(
+              header = EXPORT$TEMPLATES$HEADER[[output_format]],
+              session_info = EXPORT$TEMPLATES$SESSION_INFO[[output_format]],
+              footer = EXPORT$TEMPLATES$FOOTER[[output_format]]
+            )
+          )
+
+          log_inform("Rendering rmarkdown")
+          header <- paste(
+            readLines(system.file("export_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
+            collapse = "\n"
+          )
+          rendered_filename <- callr::r(
+            render_export_document,
+            args = list(
+              rmarkdown = rmarkdown,
+              header = header,
+              pdf_attach_function = pdf_attach,
+              filename = filename,
+              quiet = FALSE # We want to access it in the app log
+            ),
+            show = TRUE
+          )
+          if (length(attr(rendered_filename, "error_msg")) > 0) {
+            log_warn(sprintf("Error while rendering export: %s", attr(rendered_filename, "error_msg")))
+          }
+          attr(rendered_filename, "error_msg") <- NULL
+        })
+      }
+    )
+  })
+})
+
+..activate_export <- function() {
+  if (requireNamespace("shinymeta")) {
+    log_warn("Export functionality is under development")
+
+    # These set of functions is declared inside to avoid calling shinymeta out of a function.
+    # Doing that would require some extra if statements that would worsen code readability.
+
+    # shinymeta::metaReactive2
+    EA[["sm_mr2"]] <- shinymeta::metaReactive2
+
+    # shinymeta::metaReactive
+    EA[["sm_mr"]] <- shinymeta::metaReactive
+
+    # shinymeta::metaExpr
+    EA[["sm_me"]] <- shinymeta::metaExpr
+
+    AEE[["A"]] <- EA
+  } else {
+    log_warn("`shinymeta` package is required to activate export functionality")
+    AEE[["A"]] <- NEA
+  }
+  invisible(NULL)
+}
+
+..deactivate_export <- function() {
+  AEE[["A"]] <- NEA
 }

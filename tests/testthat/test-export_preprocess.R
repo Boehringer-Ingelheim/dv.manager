@@ -1,6 +1,10 @@
-local({
-  skip_if_no_export_code()
+dv.manager:::..activate_export()
+on.exit(
+  dv.manager:::..deactivate_export(),
+  add = TRUE
+)
 
+local({
   # get_code_in_context() is injected. The real one hands its argument to
   # shinymeta::expandChain(), which forces that promise in meta mode; this stub
   # deliberately never forces it, so tests stay independent of code generation.
