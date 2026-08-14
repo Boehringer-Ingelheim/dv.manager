@@ -644,8 +644,8 @@ local({
           app$wait_for_idle()
           app$run_js(gjsc(dataset_name, vn, fv))
           app$wait_for_idle()
-          expect_identical(gmdfv(dataset_name, fv, TRUE), get_filter_state(app))
-          expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 3L)
+          expect_identical(gmdfv(dataset_name, fv, FALSE), get_filter_state(app))
+          expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 2L)
         }
       )
 
