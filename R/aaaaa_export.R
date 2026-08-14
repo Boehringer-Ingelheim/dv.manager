@@ -862,7 +862,7 @@ EA[["export_server_quote"]] <- quote({
           dynamic_hash_section <- build_dynamic_hash_section(selected_dataset_list, get_code_in_context)
 
           filter_txt_section <- local({
-            cat_mr <- sm_mr(
+            cat_mr <- AEE[["A"]][["sm_mr"]](
               {
                 cat(..(filter_txt()))
               },
@@ -875,7 +875,7 @@ EA[["export_server_quote"]] <- quote({
 
           filter_reference_list_txt_section <- local({
             if (nchar(filter_reference_list_txt()) > 0) {
-              cat_mr <- sm_mr(
+              cat_mr <- AEE[["A"]][["sm_mr"]](
                 {
                   cat(..(filter_reference_list_txt()))
                 },
@@ -883,7 +883,7 @@ EA[["export_server_quote"]] <- quote({
                 varname = "cat_filter_reference_list_txt"
               )
             } else {
-              cat_mr <- sm_mr(
+              cat_mr <- AEE[["A"]][["sm_mr"]](
                 {
                   cat("No references found")
                 },
