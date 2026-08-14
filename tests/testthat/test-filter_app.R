@@ -650,7 +650,7 @@ local({
       )
 
       test_that(
-        sprintf("a `%s` NAs can be removed", vn) |>
+        sprintf("a `%s` NAs can be included", vn) |>
           vdoc[["add_spec"]](c(
             specs$FILTERING$FILTER_ADD_REMOVE,
             specs$FILTERING$FILTER_INCLUDE_EXCLUDE_NA,
@@ -659,10 +659,10 @@ local({
             specs$FILTERING$FILTER_MENU_SIDEBAR
           )),
         {
-          app$run_js(set_NA_include_js_code(dataset_name, vn, FALSE))
+          app$run_js(set_NA_include_js_code(dataset_name, vn, TRUE))
           app$wait_for_idle()
-          expect_identical(gmdfv(dataset_name, fv, FALSE), get_filter_state(app))
-          expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 2L)
+          expect_identical(gmdfv(dataset_name, fv, TRUE), get_filter_state(app))
+          expect_identical(nrow(get_filtered_dataset_list(app)[["dataset_1"]]), 3L)
         }
       )
 
