@@ -1612,7 +1612,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
     if (current_state) {
       na_checkbox.checked = current_state.include_NA;
     } else {
-      na_checkbox.checked = true;
+      na_checkbox.checked = false;
     }
 
     na_checkbox_addon.appendChild(na_checkbox);
