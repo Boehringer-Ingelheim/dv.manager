@@ -2,11 +2,8 @@
 % Please edit documentation in R/utils_importFrom.R
 \name{.data}
 \alias{.data}
-\alias{..}
 \title{.data from dplyr}
 \description{
 .data from dplyr
-
-.. from shinymeta
 }
 \keyword{internal}
