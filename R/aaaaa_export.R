@@ -136,7 +136,7 @@ output:
     number_sections: false
     df_print: kable
     latex_engine: xelatex
-    pandoc_args: ["-V", "monofont:DejaVu Sans Mono"]
+    pandoc_args: ["-V", "monofont:Latin Modern Mono"]
     extra_dependencies: ["pdflscape"]
     includes:
       in_header: header.tex
