@@ -1,3 +1,7 @@
+# dv.manager 3.1.0-9006
+
+- Includes POC for exporting, under activation flag
+
 # dv.manager 3.1.0-9005
 
 - filter clean up
