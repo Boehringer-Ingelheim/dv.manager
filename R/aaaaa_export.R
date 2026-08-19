@@ -537,6 +537,14 @@ preprocess_export_elements <- function(exportable_elements, is_selected, output_
     if (is.null(metareactive)) {
       code <- paste("Error creating", export_element[["id"]], "Not avaliable in", output_format, "format")
       kind <- EXPORT$ELEMENT_KIND$ERROR
+    } else if (!inherits(metareactive, "shinymeta_reactive")) {
+      code <- paste(
+        "Error creating",
+        export_element[["id"]],
+        "`metareactive` field is not a metareactive.",
+        "Module is not prepared or not activated for exporting."
+      )
+      kind <- EXPORT$ELEMENT_KIND$ERROR
     } else {
       resolved <- try(metareactive(), silent = TRUE)
       is_table <- identical(output_format, EXPORT$OUTPUT_FORMAT$PDF) &&
