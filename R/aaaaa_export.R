@@ -591,15 +591,15 @@ preprocess_export_elements <- function(exportable_elements, is_selected, output_
             },
             inline = TRUE
           )
-        } else {
+        } else if (inherits(resolved, "gt_tbl")) {
           shinymeta::metaReactive(
             {
-              # %%
-
               ..(metareactive()) |> gt::as_latex()
             },
             inline = TRUE
           )
+        } else {
+          stop("Unknown table type")
         }
 
         code <- get_code_in_context(latex())
