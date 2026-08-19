@@ -18,7 +18,6 @@
 #' @noRd
 render_export_document <- function(rmarkdown, header, pdf_attach_function, filename, quiet = TRUE) {
   export_dir <- tempfile(pattern = "export")
-  message(paste("Zip filename(render process):", filename))
   if (!quiet) {
     message(sprintf("Creating export in %s", export_dir))
   }
@@ -61,7 +60,28 @@ render_export_document <- function(rmarkdown, header, pdf_attach_function, filen
     }
   )
 
-  zip_filename <- utils::zip(filename, list.files(export_dir), flags = if (quiet) "-r9Xq" else "-r9X")
+  zip_command_path <- local({
+    default_zip <- Sys.getenv("R_ZIPCMD")
+    if (is.null(default_zip) || !is.character(default_zip) || nchar(default_zip) == 0) {
+      warning("`R_ZIPCMD` environment variable is not set\nAttempting to locate zip command it automatically")
+      zip_path_via_which <- system2("which", "zip", stdout = TRUE)
+      if (length(zip_path_via_which) == 1 && file.exists(zip_path_via_which)) {
+        message(sprintf("Found zip command in %s", zip_path_via_which))
+        zip_path <- zip_path_via_which
+      } else {
+        stop(sprintf("Failed to locate zip command automatically"))
+      }
+    } else {
+      zip_path <- default_zip
+    }
+    zip_path
+  })
+  zip_filename <- utils::zip(
+    filename,
+    list.files(export_dir),
+    flags = if (quiet) "-r9Xq" else "-r9X",
+    zip = zip_command_path
+  )
   structure(zip_filename, error_msg = error_msg)
 }
 
@@ -939,7 +959,6 @@ EA[["export_server_quote"]] <- quote({
             readLines(system.file("export_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
             collapse = "\n"
           )
-          log_inform(paste("Zip filename(app process):", filename))
           rendered_filename <- callr::r(
             render_export_document,
             args = list(
