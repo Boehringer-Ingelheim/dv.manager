@@ -18,7 +18,7 @@
 #' @noRd
 render_export_document <- function(rmarkdown, header, pdf_attach_function, filename, quiet = TRUE) {
   export_dir <- tempfile(pattern = "export")
-  log_inform(paste("Zip filename(render process):", filename))
+  message(paste("Zip filename(render process):", filename))
   if (!quiet) {
     message(sprintf("Creating export in %s", export_dir))
   }
