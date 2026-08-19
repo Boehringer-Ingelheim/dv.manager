@@ -957,7 +957,7 @@ EA[["export_server_quote"]] <- quote({
 })
 
 ..activate_export <- function() {
-  if (requireNamespace("shinymeta")) {
+  if (requireNamespace("shinymeta", quietly = TRUE)) {
     log_warn("Export functionality is under development")
 
     # These set of functions is declared inside to avoid calling shinymeta out of a function.

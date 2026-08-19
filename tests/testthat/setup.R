@@ -14,7 +14,7 @@ specs <- vdoc[["specs"]]
 #  validation (F)
 
 ## Temporarily install shinymeta for testing until validated
-if (!requireNamespace("shinymeta")) {
+if (!requireNamespace("shinymeta", quietly = TRUE)) {
   stop("`shinymeta` required for testing")
 }
 # -----
