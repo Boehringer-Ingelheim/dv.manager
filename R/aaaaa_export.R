@@ -584,10 +584,11 @@ preprocess_export_elements <- function(exportable_elements, is_selected, output_
                 gt::gt() |>
                 gt::tab_options(
                   latex.use_longtable = TRUE,
-                  table.font.size = gt::px(9),
-                  latex.header_repeat = TRUE
+                  table.font.size = gt::px(9)
+                  #, latex.header_repeat = TRUE # Replaced by function below
                 ) |>
-                gt::as_latex()
+                gt::as_latex() |>
+                latex_header_repeat()
             },
             inline = TRUE
           )
@@ -979,6 +980,22 @@ EA[["export_server_quote"]] <- quote({
     )
   })
 })
+
+
+# Workaround for gt versions predating the latex.header_repeat tab_options()
+# Usage: gt(tbl) |> tab_options(latex.use_longtable = TRUE) |> as_latex() |>
+# latex.header_repeat()
+# In specific environments we won't have access to gt (>=1.3.0)
+# To be removed when the access if granted
+latex_header_repeat <- function(x) {
+  x <- as.character(x)
+  if (!grepl("\\\\endhead", x)) {
+    x <- sub("(\\\\midrule\\n)", "\\1\\\\endhead\n", x)
+  }
+  class(x) <- "knit_asis"
+  x
+}
+
 
 ..activate_export <- function() {
   if (requireNamespace("shinymeta", quietly = TRUE)) {
