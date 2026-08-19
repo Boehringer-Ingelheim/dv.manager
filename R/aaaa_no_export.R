@@ -13,7 +13,7 @@ NEA[["sm_mr"]] <- function(expr, ...) {
 NEA[["sm_mr2"]] <- NEA[["sm_mr"]]
 
 # shinymeta::metaExpr
-NEA[["sm_me"]] <- sm_me <- function(expr, ...) {
+NEA[["sm_me"]] <- function(expr, ...) {
   eval(substitute(expr), envir = parent.frame())
 }
 
