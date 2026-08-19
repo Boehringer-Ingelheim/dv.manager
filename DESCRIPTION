@@ -16,7 +16,8 @@ Imports:
     purrr (>= 0.3.4),
     dplyr (>= 1.0.3),
     lubridate (>= 1.7.9.2),    
-    checkmate (>= 2.1.0),    
+    checkmate (>= 2.1.0),
+    gt(>=1.3.0),
     jsonlite,
     jsonvalidate,
     shinyWidgets
