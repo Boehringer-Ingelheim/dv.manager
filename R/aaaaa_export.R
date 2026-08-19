@@ -137,7 +137,7 @@ output:
     df_print: kable
     latex_engine: xelatex
     pandoc_args: ["-V", "monofont:Latin Modern Mono"]
-    extra_dependencies: ["pdflscape"]
+    extra_dependencies: ["lscape"]
     includes:
       in_header: header.tex
 geometry: margin=2cm
@@ -211,17 +211,18 @@ body::before {
   EXPORT[["TEMPLATES"]][["SESSION_INFO"]] <- local({
     templates <- character(0)
     templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
-\begin{landscape}
-
-\section{Session Info}
-
-\begin{verbatim}
 
 ```{r session_info, results = 'asis'}
-  devtools::session_info()
+  session_lines <- capture.output(devtools::session_info())   
+  max_char_width <- max(nchar(session_lines))
+  
+  session_lines <- paste0(session_lines, collapse = "\n")
+    
+  fmt <- "\n\n\\newpage\n\n\\beginwidepage{%d}\n\n\\begingroup\n\n\\wptabfont\n\n\\section{Session Info}\n\n\\begin{verbatim}\n\n%s\n\n\\end{verbatim}\n\n\\endgroup\n\n\\stopwidepage\n\n"
+  cat(sprintf(fmt, max_char_width, session_lines))
+    
 ```
-\end{verbatim}
-\end{landscape}
+
 )--"
 
     templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(
@@ -572,6 +573,8 @@ preprocess_export_elements <- function(exportable_elements, is_selected, output_
         } else {
           shinymeta::metaReactive(
             {
+              # %%
+
               ..(metareactive()) |> gt::as_latex()
             },
             inline = TRUE
