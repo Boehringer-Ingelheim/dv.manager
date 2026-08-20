@@ -24,24 +24,26 @@ local({
     "m2-a" = make_element("m2-a", "m2", "Module 2", TRUE)
   )
 
-  test_that("build_export_modal_ui shows every element and selects all of them by default", {
+  test_that("build_export_modal_ui shows one switch per module and selects all of them by default", {
     res <- build_export_modal_ui(fixture_elements, test_ns)
 
     expect_identical(res[["selected"]], c("m1-a" = TRUE, "m1-b" = TRUE, "m2-a" = TRUE))
-    expect_snapshot(cat(as.character(res[["modal_dialog"]])))
+    html <- as.character(res[["modal_dialog"]])
+    expect_length(gregexpr("form-check form-switch", html, fixed = TRUE)[[1]], 2)
+    expect_false(grepl("Label m1-a", html, fixed = TRUE)) # per-output entries are not listed
+    expect_snapshot(cat(html))
   })
 
-  test_that("build_export_modal_ui shows every module but preselects only the elements of selected_tab", {
+  test_that("build_export_modal_ui shows every module but preselects only the outputs of selected_tab", {
     res <- build_export_modal_ui(fixture_elements, test_ns, selected_tab = "m1")
 
     expect_identical(res[["selected"]], c("m1-a" = TRUE, "m1-b" = TRUE, "m2-a" = FALSE))
     html <- as.character(res[["modal_dialog"]])
     expect_true(grepl("Module 1", html, fixed = TRUE))
     expect_true(grepl("Module 2", html, fixed = TRUE))
-    is_switch_checked <- function(id) grepl(paste0("checked onchange=[^>]*", id), html)
-    expect_true(is_switch_checked("m1-a"))
-    expect_true(is_switch_checked("m1-b"))
-    expect_false(is_switch_checked("m2-a"))
+    is_switch_checked <- function(module_id) grepl(paste0("checked onchange=[^>]*", module_id), html)
+    expect_true(is_switch_checked("m1"))
+    expect_false(is_switch_checked("m2"))
   })
 
   test_that("build_export_modal_ui shows a fallback message and no download button when nothing is exportable", {
@@ -49,7 +51,7 @@ local({
 
     expect_identical(res[["selected"]], logical(0))
     html <- as.character(res[["modal_dialog"]])
-    expect_true(grepl("No elements available for export", html, fixed = TRUE))
+    expect_true(grepl("No outputs available for export", html, fixed = TRUE))
     expect_false(grepl("output_format", html, fixed = TRUE))
     expect_false(grepl("shiny-download-link", html, fixed = TRUE))
   })

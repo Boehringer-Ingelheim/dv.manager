@@ -131,7 +131,10 @@ EXPORT <- local({
       PDF = "pdf"
     ),
     MSG = poc(
-      EXPORT_BUTTON = "Generate Output Documentation"
+      EXPORT_BUTTON = "Generate Output Documentation",
+      OUTPUTS_CARD = "Outputs",
+      FORMAT_CARD = "Format",
+      NOTHING_TO_EXPORT = "No outputs available for export"
     ),
     VAL = poc(
       EXPORT_ALL = "all"
@@ -586,14 +589,16 @@ preprocess_export_elements <- function(exportable_elements, is_selected, output_
                   #, latex.header_repeat = TRUE # Replaced by function below
                 ) |>
                 gt::as_latex() |>
-                latex_header_repeat()
+                dv.manager:::latex_header_repeat()
             },
             inline = TRUE
           )
         } else if (inherits(resolved, "gt_tbl")) {
           shinymeta::metaReactive(
             {
-              ..(metareactive()) |> gt::as_latex()
+              ..(metareactive()) |>
+                gt::as_latex() |>
+                dv.manager:::latex_header_repeat()
             },
             inline = TRUE
           )
@@ -629,40 +634,33 @@ preprocess_export_elements <- function(exportable_elements, is_selected, output_
 #'   (keyed by id), each with `module_id`, `module_name`, `label`, `info`,
 #'   `is_first_module_element`.
 #' @param ns Namespacing function for input/output ids.
-#' @param selected_tab Module id whose elements are checked by default, or `NA`
-#'   (default) to check all of them. Every element is listed either way.
+#' @param selected_tab Module id whose outputs are checked by default, or `NA`
+#'   (default) to check all of them. Every module is listed either way.
 #' @return `list(modal_dialog =, selected =)`: the modal UI, and a named
 #'   logical vector (keyed by element id) of which elements are checked by
-#'   default.
+#'   default. The modal shows one switch per module, keyed by module id, so a
+#'   switch event covers every element of that module.
 #' @keywords internal
 #' @noRd
 build_export_modal_ui <- function(exportable_elements, ns, selected_tab = NA) {
   log_inform(paste("Preselecting", selected_tab, "tab elements in menu"))
 
-  card_ui <- list(shiny::h3("Export menu"))
-  card_items <- NULL
+  switches <- list()
   selected <- logical(length(exportable_elements))
   names(selected) <- names(exportable_elements)
 
-  flush_card <- function() {
-    if (!is.null(card_items)) {
-      card_ui[[length(card_ui) + 1]] <<- do.call(bslib::card, card_items)
-    }
-  }
-
   for (curr_el in exportable_elements) {
     is_selected <- is.na(selected_tab) || curr_el[["module_id"]] == selected_tab
+    selected[[curr_el[["id"]]]] <- is_selected
 
-    if (curr_el[["is_first_module_element"]]) {
-      flush_card()
-      card_items <- list(bslib::card_header(curr_el[["module_name"]]))
-    }
+    if (!curr_el[["is_first_module_element"]]) {
+      next
+    } # a single switch toggles all the outputs of a module
 
-    card_items[[length(card_items) + 1]] <- shiny::div(
+    switches[[length(switches) + 1]] <- shiny::div(
       class = "form-check form-switch",
       shiny::tags[["label"]](
         class = "form-check-label",
-        title = curr_el[["info"]],
         shiny::tags[["input"]](
           class = "form-check-input",
           type = "checkbox",
@@ -671,31 +669,30 @@ build_export_modal_ui <- function(exportable_elements, ns, selected_tab = NA) {
           onchange = sprintf(
             "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
             ns(EXPORT$ID$EXPORT_MENU_SELECTION),
-            curr_el[["id"]]
+            curr_el[["module_id"]]
           )
         ),
-        curr_el[["label"]]
+        curr_el[["module_name"]]
       )
     )
-
-    selected[[curr_el[["id"]]]] <- is_selected
   }
-  flush_card() # the last module's card is never flushed inside the loop
 
-  if (length(exportable_elements) > 0) {
-    card_ui[[length(card_ui) + 1]] <- bslib::card(
-      bslib::card_header("Output format"),
-      shiny::radioButtons(
-        ns(EXPORT$ID$OUTPUT_FORMAT),
-        label = NULL,
-        choices = EXPORT$OUTPUT_FORMAT
+  if (length(switches) > 0) {
+    body_ui <- list(
+      do.call(bslib::card, c(list(bslib::card_header(EXPORT$MSG$OUTPUTS_CARD)), switches)),
+      bslib::card(
+        bslib::card_header(EXPORT$MSG$FORMAT_CARD),
+        shiny::radioButtons(
+          ns(EXPORT$ID$OUTPUT_FORMAT),
+          label = NULL,
+          # HTML output is hidden for now, the rest of the pipeline still supports it
+          choices = list(PDF = EXPORT$OUTPUT_FORMAT$PDF)
+        )
       )
     )
-    download_button <- shiny::downloadButton(ns(EXPORT$ID$EXPORT_CODE), "Export")
+    download_button <- shiny::downloadButton(ns(EXPORT$ID$EXPORT_CODE), EXPORT$MSG$EXPORT_BUTTON)
   } else {
-    card_ui[[length(card_ui) + 1]] <- bslib::card(
-      bslib::card_header("No elements available for export")
-    )
+    body_ui <- list(bslib::card(bslib::card_header(EXPORT$MSG$NOTHING_TO_EXPORT)))
     download_button <- NULL
   }
 
@@ -706,7 +703,7 @@ build_export_modal_ui <- function(exportable_elements, ns, selected_tab = NA) {
         style = "max-height: 90vh",
         shiny::div(
           class = "overflow-auto flex-grow-1 p-3 min-h-0",
-          list(card_ui)
+          body_ui
         ),
         download_button
       ),
@@ -780,9 +777,12 @@ EA[["export_server_quote"]] <- quote({
     })
 
     shiny::observeEvent(input[[EXPORT$ID$EXPORT_MENU_SELECTION]], {
-      is_output_selected_to_export[[input[[EXPORT$ID$EXPORT_MENU_SELECTION]][["id"]]]] <<- input[[
-        EXPORT$ID$EXPORT_MENU_SELECTION
-      ]][["value"]]
+      # switches are per module, so one event toggles every output of that module
+      selection <- input[[EXPORT$ID$EXPORT_MENU_SELECTION]]
+      module_element_ids <- names(exportable_elements)[
+        vapply(exportable_elements, function(el) el[["module_id"]] == selection[["id"]], logical(1))
+      ]
+      is_output_selected_to_export[module_element_ids] <<- selection[["value"]]
       log_inform(
         paste(
           "Selected outputs to export",
