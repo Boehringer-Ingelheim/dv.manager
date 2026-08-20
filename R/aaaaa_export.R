@@ -131,12 +131,10 @@ EXPORT <- local({
       PDF = "pdf"
     ),
     MSG = poc(
-      EXPORT_BUTTON = "Export",
-      EXPORT_CUSTOM_BUTTON = "Select Exported Outputs"
+      EXPORT_BUTTON = "Generate Output Documentation"
     ),
     VAL = poc(
-      EXPORT_ALL = "all",
-      EXPORT_CURRENT = "current"
+      EXPORT_ALL = "all"
     )
   )
 
@@ -631,15 +629,15 @@ preprocess_export_elements <- function(exportable_elements, is_selected, output_
 #'   (keyed by id), each with `module_id`, `module_name`, `label`, `info`,
 #'   `is_first_module_element`.
 #' @param ns Namespacing function for input/output ids.
-#' @param show_tab Module id to show only that module's elements, or `NA`
-#'   (default) to show all.
+#' @param selected_tab Module id whose elements are checked by default, or `NA`
+#'   (default) to check all of them. Every element is listed either way.
 #' @return `list(modal_dialog =, selected =)`: the modal UI, and a named
-#'   logical vector (keyed by element id) of which elements are selected by
-#'   default — `TRUE` for every element actually shown in the modal.
+#'   logical vector (keyed by element id) of which elements are checked by
+#'   default.
 #' @keywords internal
 #' @noRd
-build_export_modal_ui <- function(exportable_elements, ns, show_tab = NA) {
-  log_inform(paste("Showing", show_tab, "tab in menu"))
+build_export_modal_ui <- function(exportable_elements, ns, selected_tab = NA) {
+  log_inform(paste("Preselecting", selected_tab, "tab elements in menu"))
 
   card_ui <- list(shiny::h3("Export menu"))
   card_items <- NULL
@@ -653,9 +651,7 @@ build_export_modal_ui <- function(exportable_elements, ns, show_tab = NA) {
   }
 
   for (curr_el in exportable_elements) {
-    if (!is.na(show_tab) && curr_el[["module_id"]] != show_tab) {
-      next
-    }
+    is_selected <- is.na(selected_tab) || curr_el[["module_id"]] == selected_tab
 
     if (curr_el[["is_first_module_element"]]) {
       flush_card()
@@ -671,7 +667,7 @@ build_export_modal_ui <- function(exportable_elements, ns, show_tab = NA) {
           class = "form-check-input",
           type = "checkbox",
           role = "switch",
-          checked = NA,
+          checked = if (is_selected) NA else NULL,
           onchange = sprintf(
             "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
             ns(EXPORT$ID$EXPORT_MENU_SELECTION),
@@ -682,11 +678,11 @@ build_export_modal_ui <- function(exportable_elements, ns, show_tab = NA) {
       )
     )
 
-    selected[[curr_el[["id"]]]] <- TRUE
+    selected[[curr_el[["id"]]]] <- is_selected
   }
   flush_card() # the last module's card is never flushed inside the loop
 
-  if (any(selected)) {
+  if (length(exportable_elements) > 0) {
     card_ui[[length(card_ui) + 1]] <- bslib::card(
       bslib::card_header("Output format"),
       shiny::radioButtons(
@@ -726,38 +722,17 @@ EA <- list()
 EA[["append_export_button"]] <- function(x, ns) {
   log_inform("Attaching export button")
 
-  input_id <- ns(EXPORT$ID$EXPORT_CODE_MENU)
-  onclick_fmt <- "Shiny.setInputValue('%s', '%s', {priority: 'event'})"
-
-  export_button <- local({
-    t <- shiny::tags
-    dd_div <- shiny::div(
-      class = "btn-group",
-      role = "group",
-      t[["button"]](type = "button", class = "btn btn-default dropdown-toggle btn-sm", "data-bs-toggle" = "dropdown"),
-      t[["ul"]](
-        class = "dropdown-menu",
-        t[["li"]](
-          t[["a"]](class = "dropdown-item", href = "#", EXPORT$MSG$EXPORT_CUSTOM_BUTTON),
-          onclick = sprintf(onclick_fmt, input_id, EXPORT$VAL$EXPORT_ALL)
-        ),
-      )
+  export_button <- shiny::tags[["button"]](
+    type = "button",
+    class = "btn btn-default",
+    title = EXPORT$MSG$EXPORT_BUTTON,
+    shiny::icon("file-lines", class = "fa-lg"),
+    onclick = sprintf(
+      "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
+      ns(EXPORT$ID$EXPORT_CODE_MENU),
+      EXPORT$VAL$EXPORT_ALL
     )
-
-    bg_d <- shiny::div(
-      class = "btn-group",
-      role = "group",
-      t[["button"]](
-        type = "button",
-        class = "btn btn-default",
-        EXPORT$MSG$EXPORT_BUTTON,
-        onclick = sprintf(onclick_fmt, input_id, EXPORT$VAL$EXPORT_CURRENT)
-      ),
-      dd_div
-    )
-
-    bg_d
-  })
+  )
 
   top_buttons <- c(
     x,
@@ -827,13 +802,8 @@ EA[["export_server_quote"]] <- quote({
         shiny::req(FALSE)
       }
 
-      visible_export_tabs <- NA
-
-      if (input[[EXPORT$ID$EXPORT_CODE_MENU]] == EXPORT$VAL$EXPORT_CURRENT) {
-        visible_export_tabs <- input[[ID$NAV_HEADER]]
-      }
-
-      x <- build_export_modal_ui(exportable_elements, ns, visible_export_tabs)
+      # every exportable output is listed, but only those in the tab in view start out selected
+      x <- build_export_modal_ui(exportable_elements, ns, selected_tab = input[[ID$NAV_HEADER]])
       is_output_selected_to_export <<- x[["selected"]]
 
       log_inform(

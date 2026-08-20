@@ -31,16 +31,20 @@ local({
     expect_snapshot(cat(as.character(res[["modal_dialog"]])))
   })
 
-  test_that("build_export_modal_ui filters to a single module when show_tab is set", {
-    res <- build_export_modal_ui(fixture_elements, test_ns, show_tab = "m1")
+  test_that("build_export_modal_ui shows every module but preselects only the elements of selected_tab", {
+    res <- build_export_modal_ui(fixture_elements, test_ns, selected_tab = "m1")
 
     expect_identical(res[["selected"]], c("m1-a" = TRUE, "m1-b" = TRUE, "m2-a" = FALSE))
     html <- as.character(res[["modal_dialog"]])
     expect_true(grepl("Module 1", html, fixed = TRUE))
-    expect_false(grepl("Module 2", html, fixed = TRUE))
+    expect_true(grepl("Module 2", html, fixed = TRUE))
+    is_switch_checked <- function(id) grepl(paste0("checked onchange=[^>]*", id), html)
+    expect_true(is_switch_checked("m1-a"))
+    expect_true(is_switch_checked("m1-b"))
+    expect_false(is_switch_checked("m2-a"))
   })
 
-  test_that("build_export_modal_ui shows a fallback message and no download button when nothing is selected", {
+  test_that("build_export_modal_ui shows a fallback message and no download button when nothing is exportable", {
     res <- build_export_modal_ui(list(), test_ns)
 
     expect_identical(res[["selected"]], logical(0))
@@ -50,12 +54,13 @@ local({
     expect_false(grepl("shiny-download-link", html, fixed = TRUE))
   })
 
-  test_that("build_export_modal_ui falls back to the same message when show_tab matches nothing", {
-    res <- build_export_modal_ui(fixture_elements, test_ns, show_tab = "does-not-exist")
+  test_that("build_export_modal_ui preselects nothing when selected_tab matches no module", {
+    res <- build_export_modal_ui(fixture_elements, test_ns, selected_tab = "does-not-exist")
 
     expect_identical(res[["selected"]], c("m1-a" = FALSE, "m1-b" = FALSE, "m2-a" = FALSE))
     html <- as.character(res[["modal_dialog"]])
-    expect_true(grepl("No elements available for export", html, fixed = TRUE))
-    expect_false(grepl("output_format", html, fixed = TRUE))
+    expect_true(grepl("Module 1", html, fixed = TRUE))
+    expect_true(grepl("Module 2", html, fixed = TRUE))
+    expect_true(grepl("output_format", html, fixed = TRUE))
   })
 })

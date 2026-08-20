@@ -62,7 +62,7 @@ local({
     app$run_js(sprintf(
       "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
       EXPORT$ID$EXPORT_CODE_MENU,
-      EXPORT$VAL$EXPORT_CURRENT
+      EXPORT$VAL$EXPORT_ALL
     ))
     app$wait_for_idle()
 
