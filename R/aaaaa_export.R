@@ -959,8 +959,10 @@ EA[["export_server_quote"]] <- quote({
 # To be removed when the access if granted
 latex_header_repeat <- function(x) {
   x <- as.character(x)
+  stopifnot(length(x) == 1) # only latex output, gt objects turn into longer vectors
   if (!grepl("\\\\endhead", x)) {
-    x <- sub("(\\\\midrule\\n)", "\\1\\\\endhead\n", x)
+    # the midrule line carries trailing spacing directives in some gt versions
+    x <- sub("(\\\\midrule[^\n]*\n)", "\\1\\\\endhead\n", x)
   }
   class(x) <- "knit_asis"
   x
