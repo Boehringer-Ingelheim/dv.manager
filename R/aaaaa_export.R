@@ -134,7 +134,7 @@ EXPORT <- local({
       EXPORT_BUTTON = "Generate Output Documentation",
       OUTPUTS_CARD = "Outputs",
       FORMAT_CARD = "Format",
-      NOTHING_TO_EXPORT = "No outputs available for export"
+      NOTHING_TO_EXPORT = "No outputs available"
     ),
     VAL = poc(
       EXPORT_ALL = "all"
