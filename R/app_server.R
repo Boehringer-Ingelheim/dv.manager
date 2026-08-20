@@ -150,13 +150,11 @@ app_server_ <- function(input, output, session, opts) {
     if (filter_info[["error_list"]]$any()) {
       msg <- shiny::div(
         shiny::p(paste(filter_info[["error_list"]]$get_messages(), collapse = "; ")),
-        shiny::p("Filter will be reset")
+        shiny::p("Please select a valid filter or clear current filter to continue")
       )
-      session$sendCustomMessage("request_dataset_filter_state", list(id = ID$FILTER, state = "null"))
       shiny::showNotification(msg, type = "error", duration = NULL)
       shiny::req(FALSE)
     }
-
     res <- list(
       unfiltered_dataset_list = r_unfiltered_dataset_list,
       filter_info = filter_info[["result"]][["filter_info"]],

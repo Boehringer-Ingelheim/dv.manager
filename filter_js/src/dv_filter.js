@@ -22,10 +22,10 @@
 */
 
 import * as Blockly from 'blockly';
-import { rangeSliderField } from './range_slider.js'; ``
+import { rangeSliderField } from './range_slider.js';
 import { datePickerField } from './date_picker.js';
 import { multiPickerField } from './multi_picker.js';
-import {deserialize_b64_filter_data} from './js_deserializer/deserializer.mjs';
+import { deserialize_b64_filter_data } from './js_deserializer/deserializer.mjs';
 import './toolbox-search/index.js'
 
 const __DEV_MODE = false;
@@ -108,6 +108,26 @@ if(__DEV_MODE) {
   }  
 }
 
+let escape_html = function (value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Escapes a value for use inside a *quoted* CSS attribute selector: [attr="<value>"].
+// Inside a CSS string only the backslash and the quote character need escaping.
+let css_attr_value = function (value) {
+  return String(value ?? "").replace(/["\\]/g, "\\$&");
+}
+
+// Builds a quoted, escaped attribute selector fragment
+let attr_selector = function (attribute, value) {
+  return ('[' + attribute + '="' + css_attr_value(value) + '"]');
+}
+
 let is_html_element = function(obj) {
   return obj instanceof HTMLElement && !!obj.tagName;
 }
@@ -127,15 +147,29 @@ let max_str_date = function(date1, date2) {
   let num_date1 = new Date(date1).getTime();
   let num_date2 = new Date(date2).getTime();
 
-  let res = date1;
-  if (num_date2>num_date1) {
-    res = date2;  
-  }
-  return(res);
+  if (!Number.isFinite(num_date1)) return (date2);
+  if (!Number.isFinite(num_date2)) return (date1);
+
+  return (num_date2 > num_date1 ? date2 : date1);
+}
+
+let min_str_date = function(date1, date2) {
+  let num_date1 = new Date(date1).getTime();
+  let num_date2 = new Date(date2).getTime();
+
+  if (!Number.isFinite(num_date1)) return (date2);
+  if (!Number.isFinite(num_date2)) return (date1);
+
+  return (num_date2 < num_date1 ? date2 : date1);
 }
 
 let is_numeric_finite = function (value) {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+// bootstrap-select needs a container that actually exists in the current layout
+let get_data_container = function () {
+  return (document.querySelector(".dv_main_panel") ? 'body .dv_main_panel' : 'body');
 }
 
 //#region BLOCKLY FILTER
@@ -159,14 +193,18 @@ const BC = {
   ATTRIBUTE: {
     INNER_FILTER: "data-inner-filter",
     MODAL: "data-blockly-modal"
-  }
+  },  
+  ORDER: {
+    ATOMIC: 0
+  },  
+  EMPTY_VEC_SENTINEL: '_EMPTY_VEC_'
 }
 
 const get_block_filter_type = function (dataset_name, variable_name) {
   return ("d_" + dataset_name + "_v_" + variable_name);
 }
 
-const get_block_dataset_type = function (dataset_name, variable_name) {
+const get_block_dataset_type = function (dataset_name) {
   return ("d_" + dataset_name);
 }
 
@@ -216,12 +254,13 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
           */
 
           let applicable = true;
-          let dataset_names = dataset_list.map((x) => x.name);
-          if (dataset_names.includes(current_filter.dataset)) {
-            let dataset_idx = dataset_list.map((x) => x.name).indexOf(current_filter.dataset);
-            let variable_names = dataset_list[dataset_idx].variables.map((x) => x.name);
-            if (!variable_names.includes(current_filter.variable)) {
-              applicable = false
+          let dataset_idx = dataset_list.findIndex((x) => x.name === current_filter.dataset);
+          let variable_idx = -1;
+
+          if (dataset_idx >= 0) {
+            variable_idx = dataset_list[dataset_idx].variables.findIndex((x) => x.name === current_filter.variable);
+            if (variable_idx < 0) {
+              applicable = false;
             }
           } else {
             applicable = false;
@@ -229,19 +268,18 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
 
           if (!applicable) {
             res = null;
-            log = "Preselected/bookmarked filter is not applicable to the current dataset";
+            log.push("Preselected/bookmarked filter is not applicable to the current dataset: " +
+              current_filter.dataset + " - " + current_filter.variable);
             break;
           }
 
           if (current_filter.operation === "select_subset") {
             __logger("as subset");
             __logger(current_filter);
-            let dataset_idx = dataset_list.map((x) => x.name).indexOf(current_filter.dataset);
-            let variable_names = dataset_list[dataset_idx].variables.map((x) => x.name);
-            let variable_idx = variable_names.indexOf(current_filter.variable);
-            let variable_values = dataset_list[dataset_idx].variables[variable_idx].value;
-            let found = current_filter.values.filter((x) => variable_values.includes(x));
-            let removed = current_filter.values.filter((x) => !variable_values.includes(x));
+            let variable_values = dataset_list[dataset_idx].variables[variable_idx].value ?? [];
+            let requested_values = Array.isArray(current_filter.values) ? current_filter.values : [];
+            let found = requested_values.filter((x) => variable_values.includes(x));
+            let removed = requested_values.filter((x) => !variable_values.includes(x));
 
             if (removed.length > 0) {
               log.push("Removed values: " + removed.join() + " from " + current_filter.dataset + " - " + current_filter.variable)
@@ -335,24 +373,27 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
       }
       return (res);
     }
-
-    if (filter[BC.TYPE.SUBJECT_FILTER] && filter[BC.TYPE.SUBJECT_FILTER].children.length > 0) {
-      let processed_filter = process_filter(filter[BC.TYPE.SUBJECT_FILTER].children[0]);
+    
+    let subject_filter_state = filter[BC.TYPE.SUBJECT_FILTER];
+    if (subject_filter_state && subject_filter_state.children && subject_filter_state.children.length > 0) {
+      let processed_filter = process_filter(subject_filter_state.children[0]);
       if (processed_filter !== null) {
         let subject_filter = {
           type: ns(BC.TYPE.SUBJECT_FILTER),
           id: Blockly.utils.idGenerator.genUid(),
           x: 0,
           y: 0,
-          inputs: { content: { block: process_filter(filter[BC.TYPE.SUBJECT_FILTER].children[0]) } }
+          inputs: { content: { block: processed_filter } }
         };
         state.blocks.blocks.push(subject_filter);
       }
     }
 
-    if (filter.datasets_filter && filter.datasets_filter.children.length > 0) {
-      for (let idx = 0; idx < filter.datasets_filter.children.length; idx++) {
-        let curr_dataset_filter = filter.datasets_filter.children[idx];
+    let datasets_filter_state = filter[BC.TYPE.DATASETS_FILTER];
+    if (datasets_filter_state && datasets_filter_state.children && datasets_filter_state.children.length > 0) {
+      for (let idx = 0; idx < datasets_filter_state.children.length; idx++) {
+        let curr_dataset_filter = datasets_filter_state.children[idx];
+        if (!curr_dataset_filter.children || curr_dataset_filter.children.length === 0) continue;
         let processed_filter = process_filter(curr_dataset_filter.children[0]);
         if (processed_filter !== null) {
           let dataset_filter = {
@@ -360,7 +401,7 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
             id: Blockly.utils.idGenerator.genUid(),
             x: 0,
             y: 0,
-            inputs: { children: { block: process_filter(curr_dataset_filter.children[0]) } }
+            inputs: { children: { block: processed_filter } }
           };
           state.blocks.blocks.push(dataset_filter);
         }
@@ -370,123 +411,142 @@ const filter_state_to_blockly_state = function (previous_filter, dataset_list, n
 
   return ([state, log]);
 }
+const parse_child_code = function (code) {
+  try {
+    return (JSON.parse(code));
+  } catch (error) {
+    console.error("Generated child block is not valid JSON", code, error);
+    throw new Error("A filter block produced invalid output. Please check the blocks for incomplete entries.");
+  }
+}
+
+const finite_or_null = function (value) {
+  const num = typeof value === "number" ? value : Number(value);
+  return (Number.isFinite(num) ? num : null);
+}
+
+const read_include_NA = function (block) {
+  const value = block.getFieldValue('include_NA');
+  return (value === true || value === "TRUE");
+}
+
+const read_picker_values = function (block) {
+  const raw = block.getFieldValue('value');
+  let values;
+
+  if (Array.isArray(raw)) {
+    values = raw;
+  } else {
+    try {
+      values = JSON.parse(raw);
+    } catch (error) {
+      __logger("Could not parse picker value, defaulting to an empty selection: " + raw);
+      values = [];
+    }
+  }
+
+  if (!Array.isArray(values)) values = [];
+
+  return (values.filter((x) => x !== BC.EMPTY_VEC_SENTINEL));
+}
 
 const dataset_filter_generator = function (block, generator) {
-  const children_code = generator.valueToCode(block, "children", 0);
-  const code = '{"name" : "' + block.dataset_name + '", "kind": "dataset", "children": [' + children_code + ']}';
+  const children_code = generator.valueToCode(block, "children", BC.ORDER.ATOMIC);
+  const code = JSON.stringify({
+    name: block.dataset_name,
+    kind: "dataset",
+    children: children_code === '' ? [] : [parse_child_code(children_code)]
+  });
   return (code);
 }
 
 const subject_filter_generator = function (block, generator) {
-  const code = generator.valueToCode(block, "content", 0);
-  return ('{"subject_filter": {"children": [' + code + '] }}');
-}
-
-const set_operation_generator = function (block, generator) {
-  let children_code = "";
-  let current_inputs = block.inputList.map(x => x.name);
-  for (input of current_inputs) {
-    const code = generator.valueToCode(block, input, 0);
-    if (code !== '') {
-      children_code = children_code + code + ", ";
+  const children_code = generator.valueToCode(block, "content", BC.ORDER.ATOMIC);
+  const code = JSON.stringify({
+    subject_filter: {
+      children: children_code === '' ? [] : [parse_child_code(children_code)]
     }
-  }
-  children_code = children_code.slice(0, -2);
-
-  const kind = 'set_operation';
-  const operation = block.getFieldValue('operation');
-  const code = '{' +
-    '"kind": "' + kind + '"' +
-    ', "operation": "' + operation + '"' +
-    ', "children": [' + children_code + ']}';
-  return ([code, null])
+  });
+  return (code);
 }
 
-const row_operation_generator = function (block, generator) {
-  let children_code = "";
-  let current_inputs = block.inputList.map(x => x.name);
-  for (input of current_inputs) {
-    const code = generator.valueToCode(block, input, 0);
-    if (code !== '') {
-      children_code = children_code + code + ", ";
+// Row and set combination generators differ only in the `kind` they emit
+const make_combination_generator = function (kind) {
+  return (function (block, generator) {
+    const children = [];
+
+    for (const input of block.inputList) {
+      // Dummy / end-row inputs carry no connection and can never hold a value
+      if (!input.connection) continue;
+      const child_code = generator.valueToCode(block, input.name, BC.ORDER.ATOMIC);
+      if (child_code !== '') {
+        children.push(parse_child_code(child_code));
+      }
     }
-  }
-  children_code = children_code.slice(0, -2);
 
-  const kind = 'row_operation';
-  const operation = block.getFieldValue('operation');
-  const code = '{' +
-    '"kind": "' + kind + '"' +
-    ', "operation": "' + operation + '"' +
-    ', "children": [' + children_code + ']}';
-  return ([code, null])
+    const code = JSON.stringify({
+      kind: kind,
+      operation: block.getFieldValue('operation'),
+      children: children
+    });
+
+    return ([code, BC.ORDER.ATOMIC]);
+  });
 }
+
+const set_operation_generator = make_combination_generator('set_operation');
+const row_operation_generator = make_combination_generator('row_operation');
 
 const filter_generator_range = function (block, generator) {
-  const dataset_name = block.dataset_name;
-  const variable = block.variable_name;
-  const kind = 'filter';
-  const operation = 'select_range';
-  const min = block.getFieldValue('min');
-  const max = block.getFieldValue('max');
-  const include_NA = block.getFieldValue('include_NA') === "FALSE" ? false : true;
+  const code = JSON.stringify({
+    kind: 'filter',
+    dataset: block.dataset_name,
+    operation: 'select_range',
+    variable: block.variable_name,
+    min: finite_or_null(block.getFieldValue('min')),
+    max: finite_or_null(block.getFieldValue('max')),
+    include_NA: read_include_NA(block)
+  });
 
-  const code = '{' +
-    '"kind": "' + kind + '"' +
-    ', "dataset": "' + dataset_name + '"' +
-    ', "operation": "' + operation + '"' +
-    ', "variable": "' + variable + '"' +
-    ', "min": ' + min +
-    ', "max": ' + max +
-    ', "include_NA": ' + include_NA +
-    '}';
-
-  return ([code, null]);
+  return ([code, BC.ORDER.ATOMIC]);
 }
 
 const filter_generator_date_range = function (block, generator) {
-  const dataset_name = block.dataset_name;
-  const variable = block.variable_name;
-  const kind = 'filter';
-  const operation = 'select_date';
-  const min = block.getFieldValue('min');
-  const max = block.getFieldValue('max');
-  const include_NA = block.getFieldValue('include_NA') === "FALSE" ? false : true;
+  const code = JSON.stringify({
+    kind: 'filter',
+    dataset: block.dataset_name,
+    operation: 'select_date',
+    variable: block.variable_name,
+    min: block.getFieldValue('min'),
+    max: block.getFieldValue('max'),
+    include_NA: read_include_NA(block)
+  });
 
-  const code = '{' +
-    '"kind": "' + kind + '"' +
-    ', "dataset": "' + dataset_name + '"' +
-    ', "operation": "' + operation + '"' +
-    ', "variable": "' + variable + '"' +
-    ', "min": "' + min + '"' +
-    ', "max": "' + max + '"' +
-    ', "include_NA": ' + include_NA +
-    '}';
-
-  return ([code, null]);
+  return ([code, BC.ORDER.ATOMIC]);
 }
 
 const filter_generator_subset = function (block, generator) {
-  const dataset_name = block.dataset_name;
-  const variable = block.variable_name;
-  const kind = 'filter';
-  const operation = 'select_subset';
-  const values = block.getFieldValue('value');
-  const include_NA = block.getFieldValue('include_NA') === "FALSE" ? false : true;
+  const code = JSON.stringify({
+    kind: 'filter',
+    dataset: block.dataset_name,
+    operation: 'select_subset',
+    variable: block.variable_name,
+    values: read_picker_values(block),
+    include_NA: read_include_NA(block)
+  });
 
-  const code = '{' +
-    '"kind": "' + kind + '"' +
-    ', "dataset": "' + dataset_name + '"' +
-    ', "operation": "' + operation + '"' +
-    ', "variable": "' + variable + '"' +
-    ', "values":' + values +
-    ', "include_NA": ' + include_NA +
-    '}';
-
-  return ([code, null]);
+  return ([code, BC.ORDER.ATOMIC]);
 }
 
-const get_blockly_code = function ({ workspace, generator, dataset_name }) {
+const get_blockly_code = function (filter) {
+
+  if (!filter || !filter.workspace || !filter.generator) {
+    throw new Error("Blockly filter has not been initialised");
+  }
+
+  const workspace = filter.workspace;
+  const generator = filter.generator;
+  const dataset_name = filter.dataset_name;
 
   const start = new Date();
 
@@ -505,20 +565,31 @@ const get_blockly_code = function ({ workspace, generator, dataset_name }) {
 
     let hl = new Blockly.Workspace();
 
-    for (let i = 0; i < topBlocks.length; i++) {
-      let current_block = topBlocks[i];
-      blockly_state["blocks"]["blocks"].push(current_block);
-      Blockly.serialization.workspaces.load(blockly_state, hl);
-      const current_filter = JSON.parse(generator.workspaceToCode(hl));
-      if (current_filter.kind === "dataset") {
-        filters.datasets_filter.children.push(current_filter);
-      } else {
-        filters.subject_filter = (current_filter.subject_filter);
-      }
-      blockly_state["blocks"]["blocks"].length = 0;
-    }
+    try {
+      for (let i = 0; i < topBlocks.length; i++) {
+        let current_block = topBlocks[i];
+        blockly_state["blocks"]["blocks"].push(current_block);
+        Blockly.serialization.workspaces.load(blockly_state, hl);
 
-    blockly_state["blocks"]["blocks"] = topBlocks; // Restore blocks for saving
+        let current_filter;
+        try {
+          current_filter = JSON.parse(generator.workspaceToCode(hl));
+        } catch (error) {
+          console.error("Could not generate filter code for block", current_block, error);
+          throw new Error("The filter could not be generated. Please check the blocks for incomplete entries.");
+        }
+
+        if (current_filter.kind === "dataset") {
+          filters.datasets_filter.children.push(current_filter);
+        } else {
+          filters.subject_filter = (current_filter.subject_filter);
+        }
+        blockly_state["blocks"]["blocks"].length = 0;
+      }
+    } finally {      
+      hl.dispose();
+      blockly_state["blocks"]["blocks"] = topBlocks; // Restore blocks for saving
+    }
 
   }
 
@@ -532,6 +603,20 @@ const get_blockly_code = function ({ workspace, generator, dataset_name }) {
 
   return (res_state)
 }
+
+// FIXME: This is a very ugly way of disposing the workspace but less resistance route currently
+let global_blockly_disposal = {};
+
+let dispose_blockly_workspace = function (id) {
+  const disposer = global_blockly_disposal[id];
+  if (!disposer) return;
+  global_blockly_disposal[id] = undefined;
+  try {
+    disposer();
+  } catch (error) {
+    console.error("Error disposing the previous Blockly workspace", error);
+  }
+};
 
 const init_blockly = function (el, dataset_name, filter_data, init_state, skip_dataset_filters) {
   let id = get_root_el(el).id;
@@ -561,10 +646,10 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     for (let idx = 0; idx < block_names.length; ++idx) {
       let current_name = block_names[idx];
       if(current_name.startsWith(ns(""))){
-        __logger("Removing: " + block_names[idx]);
-        Blockly.Blocks[block_names[idx]] = null;
+        __logger("Removing: " + current_name);
+        delete Blockly.Blocks[current_name];
       } else {
-        __logger("Keeping: " + block_names[idx]);
+        __logger("Keeping: " + current_name);
       }
     }
 
@@ -643,7 +728,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
 
   let selected_datasets;
 
-  for (let dataset of filter_data["dataset_lists"]) {
+  const dataset_lists = (filter_data && filter_data["dataset_lists"]) ? filter_data["dataset_lists"] : [];
+
+  for (let dataset of dataset_lists) {
     let name = dataset["name"];
     if (name === selected_dataset_name) {
       selected_datasets = dataset["dataset_list"];
@@ -651,24 +738,23 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     }
   }
 
-  if (selected_datasets === null) {
-    throw new Error('Selected dataset not found');
+  if (!selected_datasets) {
+    throw new Error('Selected dataset not found: ' + selected_dataset_name);
   }
 
-  let populate_inputs = function (block, input_names) {
-    // Secondary effects on block
+  let append_value_input_row_comb = function (block, input_name) {
+    block.appendValueInput(input_name ?? get_random_input_id()).setCheck(["filter", "row"]);
+  }
+
+  let append_value_input_set_comb = function (block, input_name) {
+    block.appendValueInput(input_name ?? get_random_input_id()).setCheck(["set", "filter", "row"]);
+  }
+
+  let populate_inputs = function (block, input_names, append_input) {
     for (let idx = 0; idx < input_names.length; idx++) {
-      block.appendValueInput(input_names[idx])
+      append_input(block, input_names[idx]);
     }
   };
-
-  let append_value_input_row_comb = function (block) {
-    block.appendValueInput(get_random_input_id()).setCheck(["filter", "row"]);
-  }
-
-  let append_value_input_set_comb = function (block) {
-    block.appendValueInput(get_random_input_id()).setCheck(["set", "filter", "row"]);
-  }
 
   let remove_value_inputs = function (block, input_names_for_removal) {
     // Secondary effects on block      
@@ -676,7 +762,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
       if (block.inputList.map(x => x.name).includes(element)) {
         block.removeInput(element)
       } else {
-        __logger("Skipping removal of " + element + "not found");
+        __logger("Skipping removal of " + element + " not found");
       }
     });
   }
@@ -707,7 +793,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     loadExtraState: function (state) {
       if (state && state.data !== undefined && state.data.length > 0) {
         __logger("Loading with state")
-        populate_inputs(this, state.data);
+        populate_inputs(this, state.data, append_value_input_row_comb);
         __logger(this.inputList.map(x => x.name));
       } else {
         __logger("Loading with no state");
@@ -747,7 +833,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     loadExtraState: function (state) {
       if (state && state.data !== undefined && state.data.length > 0) {
         __logger("Loading with state")
-        populate_inputs(this, state.data);
+        populate_inputs(this, state.data, append_value_input_set_comb);
         __logger(this.inputList.map(x => x.name));
       } else {
         __logger("Loading with no state");
@@ -779,7 +865,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     }
   };
 
-  let color_step = Math.floor((BC.COLOR.DATASET_RANGE_MAX - BC.COLOR.DATASET_RANGE_MIN) / selected_datasets.length);
+  let color_step = selected_datasets.length > 0
+    ? Math.floor((BC.COLOR.DATASET_RANGE_MAX - BC.COLOR.DATASET_RANGE_MIN) / selected_datasets.length)
+    : 0;
   let current_color = (BC.COLOR.DATASET_RANGE_MIN - color_step);
 
   for (let dataset of selected_datasets) {
@@ -836,7 +924,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
           dd_options.push([values[i], values[i]])
         }
 
-        if (dd_options.length == 0) dd_options = [['_EMPTY_VEC_', '_EMPTY_VEC_']]
+        if (dd_options.length == 0) dd_options = [[BC.EMPTY_VEC_SENTINEL, BC.EMPTY_VEC_SENTINEL]]
 
         Blockly.Blocks[nsed_variable_type] = {
           init: function () {
@@ -916,7 +1004,16 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
 
   function onChange(event) {
     if (event.type !== Blockly.Events.BLOCK_MOVE) return;
+    if (!Array.isArray(event.reason)){
+      __logger("No event.reason array found")
+      return;
+    } 
+   
     let current_workspace = Blockly.Workspace.getById(event.workspaceId);
+    if (!current_workspace) {
+      __logger("No workspace found")
+      return;
+    };
     let new_parent_block = current_workspace.getBlockById(event.newParentId);
     let old_parent_block = current_workspace.getBlockById(event.oldParentId);
     let current_block = current_workspace.getBlockById(event.blockId);
@@ -930,6 +1027,9 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
     // As `Uncaught TypeError TypeError: d.isVisible is not a function` appeared. The origin is unclear
 
     if (event.reason.includes("connect")) {
+
+      // The moved block can already be gone (deleted mid-drag)
+      if (!current_block) return;
 
       // Check the connection is legal
 
@@ -1004,16 +1104,14 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
 
   options.maxInstances = {};
   const idx_singleton_cat = toolbox.contents.findIndex(x => x.name === "Filter Types");
-  toolbox.contents[idx_singleton_cat].contents.map((x) => options.maxInstances[x.type] = 1)
+  toolbox.contents[idx_singleton_cat].contents.forEach((x) => { options.maxInstances[x.type] = 1; });
 
   options.toolbox = toolbox;
 
-  if(global_blockly_disposal[id]){
-    global_blockly_disposal[id];
-    global_blockly_disposal[id] = undefined;
-  }  
-  let ws = Blockly.inject(container_div, options);
-  global_blockly_disposal[id] = function(){ws.disposal();}
+  dispose_blockly_workspace(id);
+ 
+   let ws = Blockly.inject(container_div, options);
+   global_blockly_disposal[id] = function () { ws.dispose(); };
 
   ws.MAX_UNDO = 0; //Disconnect undo because of listeners
   // When removing elements using JS the undo is messed up
@@ -1031,6 +1129,7 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
       Blockly.serialization.workspaces.load(filter_state, ws);
       ws.cleanUp(); // If overlap reorganize
     } catch (error) {
+      console.error("Error restoring preset/bookmarked state", error);
       alert("Error restoring preset/bookmarked state");
     }
 
@@ -1044,8 +1143,6 @@ const init_blockly = function (el, dataset_name, filter_data, init_state, skip_d
   }
   return (res) 
 } 
-
-let global_blockly_disposal = {}; // FIXME: This is a very ugly way of disposing the workspace but less resistance route currently
 
 let blockly_static_init = function(blockly_root_el, id) {
 
@@ -1082,7 +1179,7 @@ let blockly_static_init = function(blockly_root_el, id) {
   inner_filter_el.setAttribute(BC.ATTRIBUTE.INNER_FILTER, '');
   
   let button_container = document.createElement("div");
-  button_container.classList= "d-inline-flex justify-content-center"  ;
+  button_container.className = "d-inline-flex justify-content-center";
 
   let gen_code_button = document.createElement("button");
   gen_code_button.type = "button";
@@ -1122,6 +1219,10 @@ let blockly_static_init = function(blockly_root_el, id) {
   
   let send_code = function () {
     const filter = $(inner_filter_el).data('filter');
+    if (!filter) {
+      __logger("Blockly filter is not initialised yet, skipping send");
+      return;
+    }
     const code = get_blockly_code(filter);
     const event = new CustomEvent(FC.EVENT.NEW_FILTER_VALUE, {
       detail: {filter: code, mode: FC.MODE.BLOCKLY},
@@ -1142,7 +1243,7 @@ let blockly_static_init = function(blockly_root_el, id) {
 };
 
 let chaff = function () {
-  if (Blockly.getMainWorkspace() !== undefined) {
+  if (Blockly.getMainWorkspace()) {
     Blockly.hideChaff();
   }
 }
@@ -1195,9 +1296,15 @@ const SC = {
   }
 }
 
+// Selector fragment for a dataset filter card, safe for names containing dots,
+// spaces or quotes
+let dataset_filter_selector = function (dataset_name) {
+  return (SC.TAG.DATASET_FILTER + attr_selector(SC.ATTRIBUTE.DATASET_NAME, dataset_name));
+}
+
 let get_simple_root_el = function(el){
   __assert(()=>is_html_element(el))
-  return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.SIMPLE}"]`));
+  return (get_root_el(el).querySelector(`${FC.TAG.FILTER}${attr_selector(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.SIMPLE)}`));
 }
 
 // Returns a simplified filter state or null if the filter_state is not compatible with the simple filter
@@ -1244,19 +1351,22 @@ let simplify_filter_state = function(state, subject_dataset_name) {
   let compatible = true;
   let states = {};
 
-  if (state !==null) {
+  if (state && state.filters) {
 
-    let dataset_filter_dataset_names = state.filters.datasets_filter.children.map((x) => x.name);
+    let datasets_filter_children = state.filters.datasets_filter?.children ?? [];
+    let subject_filter_children = state.filters.subject_filter?.children ?? [];
+
+    let dataset_filter_dataset_names = datasets_filter_children.map((x) => x.name);
 
     if (dataset_filter_dataset_names.includes(subject_dataset_name)) {
       // Cannot be at the same time dataset and subject filter in simple
       compatible = false;
     } else {
-      let dataset_filters_to_be_checked = structuredClone(state.filters.datasets_filter.children);
+      let dataset_filters_to_be_checked = structuredClone(datasets_filter_children);
 
       let sbj_filter = {
         name: subject_dataset_name,
-        children: structuredClone(state.filters.subject_filter.children)
+        children: structuredClone(subject_filter_children)
       };
 
       dataset_filters_to_be_checked.push(sbj_filter);
@@ -1275,9 +1385,9 @@ let simplify_filter_state = function(state, subject_dataset_name) {
 
 let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_state, is_subject_filter) {
   __time_function_start() 
-  __assert(()=>is_html_element(simple_root_el));
+  __assert(() =>is_html_element(simple_root_el));
   __assert(() => Array.isArray(dataset_filter_state));
-  __assert(()=> !simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`));
+  __assert(() => !simple_root_el.querySelector(dataset_filter_selector(dataset.name)));
   
   let selected_variables = [];  
   for(let i = 0; i < dataset_filter_state.length; ++i) {
@@ -1308,7 +1418,7 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   card_collapse_link.textContent = dataset.label;
   card_collapse_link.className = "dv-dataset-filter-collapse-link h6";
   card_collapse_link.setAttribute("data-bs-toggle", "collapse");  
-  card_collapse_link.setAttribute("data-bs-target", `${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${dataset.name}] .card-body`);
+  card_collapse_link.setAttribute("data-bs-target", `${dataset_filter_selector(dataset.name)} .card-body`);
   card_collapse_link.href = "#"; // Recommended to make it keyboard-accessible
 
   let filter_count_tag = document.createElement(SC.TAG.FILTER_COUNT_TAG);
@@ -1352,32 +1462,32 @@ let create_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   select.setAttribute('data-width', '100%');
   select.setAttribute('data-style', 'btn');
   select.setAttribute('data-selected-text-format', 'static');
-  let data_container;
-  if(document.querySelector(".dv_main_panel")) {
-    data_container = 'body .dv_main_panel'     
-  } else {
-    data_container = 'body'
-  }
-  select.setAttribute('data-container', data_container);
+  select.setAttribute('data-container', get_data_container());
   select.setAttribute(SC.ATTRIBUTE.VARIABLE_SELECTOR, '');
 
   for(let i = 0; i < dataset.variables.length; ++i) {
+    const current_variable = dataset.variables[i];
     let option = document.createElement('option');
-    option.value = dataset.variables[i].name;
-    let disabled;
-    if (dataset.variables[i].kind === "unknown") {
+    option.value = current_variable.name;
+    
+    if (current_variable.kind === "unknown") {
       option.setAttribute("disabled", "");            
     }
 
+    const icon_class = SC.CLASS_ICON[current_variable.class] ?? SC.CLASS_ICON.unknown;
+    const na_html = current_variable.NA_count > 0
+      ? `<small style="color:darkred;">(${escape_html(current_variable.NA_count)} missing)</small>`
+      : "";
+
     option.setAttribute('data-content', `
-      <span class="glyphicon glyphicon-${SC.CLASS_ICON[dataset.variables[i].class]}"></span>
-      ${dataset.variables[i].name}
-      <code style="color:darkblue;">${dataset.variables[i].class}</code>
-      ${dataset.variables[i].NA_count>0?`<small style="color:darkred;">(${dataset.variables[i].NA_count} missing)</small>` : ""}      
-      </br>
-      <small class="text-muted">${dataset.variables[i].label}</small>
+      <span class="glyphicon glyphicon-${escape_html(icon_class)}"></span>
+      ${escape_html(current_variable.name)}
+      <code style="color:darkblue;">${escape_html(current_variable.class)}</code>
+      ${na_html}
+      <br>
+      <small class="text-muted">${escape_html(current_variable.label)}</small>
     `);
-    option.setAttribute('data-subtext', `Description for`);    
+     
     if(selected_variables.includes(option.value)) {
       option.setAttribute("selected", "");
     }
@@ -1502,15 +1612,11 @@ let create_variable_filter_controls = function(variable_filter_control_container
     if (current_state) {
       na_checkbox.checked = current_state.include_NA;
     } else {
-      na_checkbox.checked = true;
+      na_checkbox.checked = false;
     }
 
     na_checkbox_addon.appendChild(na_checkbox);
     na_group.appendChild(na_checkbox_addon);
-
-    if(current_variable.NA_count > 0) {
-     
-    }
     
     let close_button = document.createElement("button");
     close_button.type = "button";
@@ -1519,10 +1625,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
     close_button.innerHTML = "&times;";
     
     // Assemble header
-    header.appendChild(name_label);
-    header.appendChild(na_group);
-    header.appendChild(close_button);
-
+    
     header.appendChild(name_label);
     header.appendChild(na_group);
     header.appendChild(close_button);
@@ -1536,22 +1639,22 @@ let create_variable_filter_controls = function(variable_filter_control_container
       categorical_select.setAttribute('multiple', '');        
       categorical_select.setAttribute('data-live-search', 'true');
       categorical_select.setAttribute('data-actions-box', 'true');
-      categorical_select.setAttribute('data-container', 'body .dv_main_panel');
+      categorical_select.setAttribute('data-container', get_data_container());
       categorical_select.setAttribute('data-width', '100%');
       categorical_select.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');
 
-      let value = current_variable.value;
-      let count = current_variable.count;
-      __assert(()=>count.every((v, i, a) => i === 0 || a[i-1] >= v)) // Check is sorted
-      __assert(()=>value.length === count.length) // Check is sorted
+      let value = current_variable.value ?? [];
+      let count = current_variable.count ?? [];
+      __assert(() => count.every((v, idx, arr) => idx === 0 || arr[idx - 1] >= v)) // Check counts are sorted descending
+      __assert(() => value.length === count.length) // Check values and counts are aligned
 
-      for(let i = 0; i < value.length; ++i) {
+      for(let j = 0; j < value.length; ++j) {
         let option = document.createElement('option');
-        option.value = value[i];
-        option.textContent = value[i];
-        option.setAttribute("data-subtext", `${count[i]} / ${dataset.nrow}`);
+        option.value = value[j];
+        option.textContent = value[j];
+        option.setAttribute("data-subtext", `${count[j]} / ${dataset.nrow}`);
         if(current_state) {
-          if(current_state.values.includes(option.value)) {
+          if (Array.isArray(current_state.values) && current_state.values.includes(option.value)) {
             option.setAttribute("selected", '');         
           }
         } else {
@@ -1571,7 +1674,7 @@ let create_variable_filter_controls = function(variable_filter_control_container
 
       if(current_state) {
         from = max_str_date(current_state.min, current_variable.min);
-        to = max_str_date(current_state.max, current_variable.max);
+        to = min_str_date(current_state.max, current_variable.max);
       } else {
         from = current_variable.min;
         to = current_variable.max;
@@ -1618,22 +1721,24 @@ let create_variable_filter_controls = function(variable_filter_control_container
       
       if(numeric_finite_max_and_min) {
       const MAGIC_NEGATIVE_MARGIN = -25;  // This is the distance between of the ion.range.slider top and the slider line
-      const histogram_container = document.createElement("div");
-      histogram_container.className = "histogram";
-      histogram_container.style = `display:flex; align-items:flex-end; margin-bottom: ${MAGIC_NEGATIVE_MARGIN}px;`
-      const density = current_variable.density;
-      // Find max density to scale heights
-      const max_density = Math.max(...density);
-      // Draw bars
-      density.forEach(d => {
-        const bar = document.createElement("div");
-        bar.style.flex = "1";               // equal width
-        bar.style.marginRight = "2px";      // spacing between bars        
-        bar.style.height = (d / max_density) * 25 + "px"; // scale height
-        bar.className = "bg-secondary";
-        histogram_container.appendChild(bar);
-      });
-      container.appendChild(histogram_container);      
+      const density = Array.isArray(current_variable.density) ? current_variable.density : [];
+        const max_density = density.length > 0 ? Math.max(...density) : 0;
+
+        if (max_density > 0) {
+          const histogram_container = document.createElement("div");
+          histogram_container.className = "histogram";
+          histogram_container.style.cssText = `display:flex; align-items:flex-end; margin-bottom: ${MAGIC_NEGATIVE_MARGIN}px;`;
+          // Draw bars
+          density.forEach(d => {
+            const bar = document.createElement("div");
+            bar.style.flex = "1";               // equal width
+            bar.style.marginRight = "2px";      // spacing between bars        
+            bar.style.height = (d / max_density) * 25 + "px"; // scale height
+            bar.className = "bg-secondary";
+            histogram_container.appendChild(bar);
+          });
+          container.appendChild(histogram_container);
+        }     
 
       let numerical_input = document.createElement("input");
       numerical_input.setAttribute(SC.ATTRIBUTE.FILTER_VALUE, '');      
@@ -1700,7 +1805,7 @@ let update_dataset_filter = function(simple_root_el, dataset, dataset_filter_sta
   __assert(()=>is_html_element(simple_root_el))
   __assert(() => Array.isArray(dataset_filter_state));
 
-  let prev_dataset_filter_el = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME} = '${dataset.name}']`);
+  let prev_dataset_filter_el = simple_root_el.querySelector(dataset_filter_selector(dataset.name));
 
   if(prev_dataset_filter_el) {
     destroy_dataset_filter(prev_dataset_filter_el);    
@@ -1742,7 +1847,7 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
         throw new Error(`No select element found inside: ${current_variable_el.outerHTML}`);
       }
 
-      let values = $(select).val();
+      let values = $(select).val() ?? [];
 
       curr_filter = {
         kind: "filter",
@@ -1756,7 +1861,7 @@ let get_single_dataset_filter_state = function (dataset_container_el) {
     } else if (kind === SC.VARIABLE.DATE) {
 
       let input = current_variable_el.querySelectorAll(`[${SC.ATTRIBUTE.FILTER_VALUE}] input`);
-      if (!input || input.length !=2) {
+      if (!input || input.length != 2) {
         throw new Error(`No 2 input elements found inside: ${current_variable_el.outerHTML}`);
       }
 
@@ -1833,8 +1938,8 @@ let get_filter_state = function (simple_root_el, dataset_list_name) {
     return(simple_root_el[SC.PROPERTY.STATE_OVERRIDE]);
   }
 
-  let subject_div = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=true]`);
-  let other_div = simple_root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.SUBJECT_FILTER}=false]`);
+  let subject_div = simple_root_el.querySelector(`${SC.TAG.DATASET_FILTER}${attr_selector(SC.ATTRIBUTE.SUBJECT_FILTER, "true")}`);
+  let other_div = simple_root_el.querySelectorAll(`${SC.TAG.DATASET_FILTER}${attr_selector(SC.ATTRIBUTE.SUBJECT_FILTER, "false")}`);
 
   let subject_filter = get_single_dataset_filter_state(subject_div);
   let dataset_filters = [];
@@ -1869,7 +1974,7 @@ let get_filter_state = function (simple_root_el, dataset_list_name) {
   return (state);
 };
 
-// Handles actions buttons. For not it is only one, maybe it is an unrequired generalization
+// Handles actions buttons. For now it is only one, maybe it is an unrequired generalization
 let handle_action = function() {
     
   let handlers = {
@@ -1877,12 +1982,19 @@ let handle_action = function() {
       __assert(()=>is_html_element(el))
       const variable_to_be_removed = el.closest(SC.TAG.VARIABLE_FILTER).getAttribute(SC.ATTRIBUTE.VARIABLE); 
       const select = el.closest(SC.TAG.DATASET_FILTER).querySelector("select");
-      let current_selection = $(select).val();
+      let current_selection = $(select).val() ?? [];
       let new_selection = current_selection.filter(item => item != variable_to_be_removed);
       $(select).selectpicker('val', new_selection);      
     }
   };
-  handlers[this.getAttribute('data-action')](this);
+
+  const action = this.getAttribute('data-action');
+  const handler = handlers[action];
+  if (!handler) {
+    console.error("Unknown filter action: " + action);
+    return;
+  }
+  handler(this);
 };
 
 let dispatch_simple_filter_changed = function(event) {  
@@ -1945,10 +2057,10 @@ let simple_static_init = function(simple_root_el) {
     let dataset_name = dataset_div.getAttribute(SC.ATTRIBUTE.DATASET_NAME);
     let dataset_list_name = get_filter_property(simple_root_el, FC.PROPERTY.DATASET_LIST_NAME);
 
-    let current_dataset_list = get_filter_property(simple_root_el, FC.PROPERTY.DATA).dataset_lists.find(obj=>obj.name === dataset_list_name);
+    let current_dataset_list = get_filter_property(simple_root_el, FC.PROPERTY.DATA, false).dataset_lists.find(obj=>obj.name === dataset_list_name);
     let dataset = current_dataset_list.dataset_list.find(obj=>obj.name === dataset_name);
 
-    let selected_variables = $(event.target).val();
+    let selected_variables = $(event.target).val() ?? [];
 
     let dataset_control_div = dataset_div.querySelector(SC.TAG.VARIABLE_FILTER_CONTAINER);
     let dataset_filter_state = simplify_filter_state(get_filter_state(get_simple_root_el(dataset_div), dataset_list_name), get_filter_property(simple_root_el, FC.PROPERTY.SUBJECT_DATASET_NAME)).state[dataset_name]  ?? []; //FIXME: loiuhb who is reponsible for this is not well defined
@@ -1984,6 +2096,10 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
   let subject_dataset = filter_data.dataset_list.find(obj=>obj.name === subject_dataset_name);
   let other_datasets = filter_data.dataset_list.filter(obj=>obj.name !== subject_dataset_name);  
 
+  if (!subject_dataset) {
+    throw new Error("Subject dataset not found: " + subject_dataset_name);
+  }
+
   if(!simple_filter_state.compatible) {
     __logger("State not compatible");
     simple_root_el.classList.add("dv-disabled-controls");
@@ -1993,7 +2109,7 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
     simple_root_el.querySelectorAll(SC.TAG.INCOMPATIBLE_WARNING_ELEMENT).forEach(el => el.remove());
     let warning_element = document.createElement(SC.TAG.INCOMPATIBLE_WARNING_ELEMENT);
     warning_element.innerHTML = "&#9888; Filter state cannot be represented";
-    warning_element.classList = "alert alert-warning mb-3 border-1 rounded";
+    warning_element.className = "alert alert-warning mb-3 border-1 rounded";
     simple_root_el.prepend(warning_element);
   } else {
     __logger("State compatible");    
@@ -2029,7 +2145,7 @@ let simple_dynamic_init = function(simple_root_el, filter_data, subject_dataset_
 
 let get_blockly_root_el = function(el){  
   __assert(()=>is_html_element(el))
-  return(get_root_el(el).querySelector(`${FC.TAG.FILTER}[${FC.ATTRIBUTE.FILTER_MODE}="${FC.MODE.BLOCKLY}"]`));
+  return (get_root_el(el).querySelector(`${FC.TAG.FILTER}${attr_selector(FC.ATTRIBUTE.FILTER_MODE, FC.MODE.BLOCKLY)}`));
 }
 
 let init_filter_handler = function (root_el, dataset_list_data, dataset_list_name, subject_filter_dataset_name, filter_state, static_init_ret, selected_mode, skip_dataset_filters) {
@@ -2039,6 +2155,10 @@ let init_filter_handler = function (root_el, dataset_list_data, dataset_list_nam
   __assert(()=>is_html_element(root_el));
 
   let dataset_list = dataset_list_data.dataset_lists.find(obj=>obj.name === dataset_list_name);
+
+  if (!dataset_list) {
+    throw new Error("Dataset list not found: " + dataset_list_name);
+  }
   
   if(selected_mode === FC.MODE.SIMPLE) {
     get_simple_root_el(root_el).style.display = 'block';
@@ -2069,19 +2189,29 @@ let init_filter_handler = function (root_el, dataset_list_data, dataset_list_nam
 let update_filter_result_handler = function(msg, root_el){
 
   let parsed_msg = JSON.parse(msg.json)
-  console.log(parsed_msg);
+  __logger(parsed_msg);
 
   let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
-  let current_dataset_list = get_filter_property(root_el, FC.PROPERTY.DATA, clone = false).dataset_lists.find(obj=>obj.name === dataset_list_name);
+  let current_dataset_list = get_filter_property(root_el, FC.PROPERTY.DATA, false).dataset_lists.find(obj=>obj.name === dataset_list_name);
 
+  if (!current_dataset_list) {
+    console.error("Dataset list not found: " + dataset_list_name);
+    return;
+  }
   
   let row_count = parsed_msg.row_count; 
-  for(let idx = 0; idx < row_count.length; ++idx) {
+  for (let idx = 0; idx < row_count.length; ++idx) {
     let name = row_count[idx].name;
     let current_nrow = row_count[idx].count;
-    let total_nrow = current_dataset_list.dataset_list.find(obj=>obj.name === name).nrow;
+    let dataset = current_dataset_list.dataset_list.find(obj => obj.name === name);
+    let count_el = root_el.querySelector(`${dataset_filter_selector(name)} ${SC.TAG.ROW_COUNT_TAG}`);
 
-    root_el.querySelector(`${SC.TAG.DATASET_FILTER}[${SC.ATTRIBUTE.DATASET_NAME}=${name}] ${SC.TAG.ROW_COUNT_TAG}`).textContent = `${current_nrow} / ${total_nrow}`;
+    if (!dataset || !count_el) {
+      __logger("Skipping row count for missing dataset filter: " + name);
+      continue;
+    }
+
+    count_el.textContent = `${current_nrow} / ${dataset.nrow}`;
   }
 }
 
@@ -2098,17 +2228,14 @@ let show_hide_dataset_filters_handler =  function(msg, root_el){
   }
 }
 
-let blockly_dynamic_init = function(blockly_root_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters) {
-  __assert(()=>is_html_element(blockly_root_el))
+  let blockly_dynamic_init = function (blockly_root_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters) {
+    __assert(() => is_html_element(blockly_root_el))
+    __assert(() => !filter)
 
-  let inner_filter_el = blockly_root_el.querySelector(`[${BC.ATTRIBUTE.INNER_FILTER}]`);
-  const filter = $(inner_filter_el).data("filter");
-  if (filter) {
-    filter.workspace.dispose();
+    let inner_filter_el = blockly_root_el.querySelector(`[${BC.ATTRIBUTE.INNER_FILTER}]`);    
     $(inner_filter_el).data("filter", undefined);
+    $(inner_filter_el).data('filter', init_blockly(inner_filter_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters));
   }
-  $(inner_filter_el).data('filter', init_blockly(inner_filter_el, dataset_list_name, filter_data, filter_state, skip_dataset_filters));
-}
 
 let FC = {
   TAG:{
@@ -2147,16 +2274,17 @@ let FC = {
     STATIC_RET: "static_ret",
     FILTER_MODE: "filter_mode",
     SKIP_DATASET_FILTERS: "skip_dataset_filters"
-  },
-  VAL: {
-    EMPTY_FILTER: {
-        filters: {
-          datasets_filter: {children : [] },
-          subject_filter: {children : [] },
-          dataset_list_name: ""
-        }
-      }
   }
+}
+
+let make_empty_filter = function (dataset_list_name) {
+  return ({
+    filters: {
+      datasets_filter: { children: [] },
+      subject_filter: { children: [] }
+    },
+    dataset_list_name: dataset_list_name ?? ""
+  });
 }
 
 let get_root_el = function(el) {
@@ -2168,8 +2296,10 @@ let get_root_el = function(el) {
     root_el = el.closest(FC.TAG.ROOT)    
   }
   
-  if(!root_el) {
-    throw new Error("no root found from" + el);
+  if (!root_el) {
+    throw new Error("No filter root <" + FC.TAG.ROOT + "> found from element: " +
+      (el && el.tagName ? el.tagName.toLowerCase() : String(el)) +
+      (el && el.id ? "#" + el.id : ""));
   }
   return(root_el);
 }
@@ -2216,6 +2346,11 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
   let root_el = document.getElementById(root_id);
   __logger("root el for " + root_id);
   __logger(root_el);
+
+  if (!root_el) {
+    throw new Error("Filter root element not found: " + root_id);
+  }
+
   init_filter_property_field(root_el);
   set_filter_property(root_el, FC.PROPERTY.STATE, filter_state);
   set_filter_property(root_el, FC.PROPERTY.SAVED_STATES, !saved_filter_states ? [] : saved_filter_states);
@@ -2289,7 +2424,7 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
   bottom_container.className = "mb-3 p-1";
 
   
-  static_ret = {};
+  let static_ret = {};
 
   // Simple
   let simple_option = document.createElement('option');
@@ -2319,6 +2454,11 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
 
   static_ret[FC.MODE.BLOCKLY] = blockly_static_init(blockly_div, root_id);
   set_filter_property(root_el, FC.PROPERTY.STATIC_RET, static_ret);
+ 
+  if (filter_mode !== FC.MODE.SIMPLE && filter_mode !== FC.MODE.BLOCKLY) {
+    console.warn("Unknown filter mode '" + filter_mode + "', falling back to " + FC.MODE.SIMPLE);
+    filter_mode = FC.MODE.SIMPLE;
+  }
   
   select.value = filter_mode;
   set_filter_property(root_el, FC.PROPERTY.FILTER_MODE, select.value);
@@ -2330,22 +2470,27 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
   }
 
   root_el.addEventListener(FC.EVENT.REQUESTED_REDRAW, function(){    
-    let dataset_list_data = get_filter_property(root_el, FC.PROPERTY.DATA);    
+    let dataset_list_data = get_filter_property(root_el, FC.PROPERTY.DATA, false);    
     let dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
     let subject_filter_dataset_name = get_filter_property(root_el, FC.PROPERTY.SUBJECT_DATASET_NAME);
-    let filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
+    let current_filter_state = get_filter_property(root_el, FC.PROPERTY.STATE);
     let static_init_ret = get_filter_property(root_el, FC.PROPERTY.STATIC_RET, false);
-    let filter_mode = get_filter_property(root_el, FC.PROPERTY.FILTER_MODE);
+    let current_filter_mode = get_filter_property(root_el, FC.PROPERTY.FILTER_MODE);
     let skip_dataset_filters = get_filter_property(root_el, FC.PROPERTY.SKIP_DATASET_FILTERS);
+
+    if (!dataset_list_data) {
+      __logger("Redraw requested before any data was received, skipping");
+      return;
+    }
     
     init_filter_handler( 
       root_el,      
       dataset_list_data,
       dataset_list_name,
       subject_filter_dataset_name,
-      filter_state,
+      current_filter_state,
       static_init_ret,
-      filter_mode,
+      current_filter_mode,
       skip_dataset_filters      
     );
   })
@@ -2366,7 +2511,8 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
   });
 
   clear_all_button.addEventListener("click", function(){
-    set_filter_property(root_el, FC.PROPERTY.STATE, FC.VAL.EMPTY_FILTER);
+    let current_dataset_list_name = get_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME);
+    set_filter_property(root_el, FC.PROPERTY.STATE, make_empty_filter(current_dataset_list_name));
     root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true })); // Trigger filter redraw after cleaning filters
   });
 
@@ -2468,40 +2614,51 @@ const init = function (root_id, filter_state_json, saved_filter_states_json, sub
   
 };
 
-let baked_update_filter_result_handler= function(msg) {
-  let root_el = get_root_el_by_id(msg.id)
-  if(!root_el) console.error("Root el: " + msg.id + "not found");  
-  update_filter_result_handler(msg, root_el);  
+let baked_update_filter_result_handler = function (msg) {
+  let root_el = get_root_el_by_id(msg.id);
+  if (!root_el) {
+    console.error("Root el: " + msg.id + " not found");
+    return;
+  }
+  update_filter_result_handler(msg, root_el);
 };
-Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
 
-let update_data = function(msg) {
-  let root_el = get_root_el_by_id(msg.id)
-  if(!root_el) console.error("Root el: " + msg.id + "not found");  
+let update_data = function (msg) {
+  let root_el = get_root_el_by_id(msg.id);
+  if (!root_el) {
+    console.error("Root el: " + msg.id + " not found");
+    return;
+  }
   set_filter_property(root_el, FC.PROPERTY.DATA, JSON.parse(msg.data));
   root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));
   //FIXME: select reference and event cannot happen here
 };
-Shiny.addCustomMessageHandler("update_data", update_data);
 
 let request_dataset_filter_state = function(msg) {
-  let root_el = get_root_el_by_id(msg.id)
-  if(!root_el) console.error("Root el: " + msg.id + "not found");
+  let root_el = get_root_el_by_id(msg.id);
+  if(!root_el) {
+    console.error("Root el: " + msg.id + " not found");
+    return;
+  }
   set_filter_property(root_el, FC.PROPERTY.STATE, JSON.parse(msg.state));
   root_el.dispatchEvent(new Event(FC.EVENT.REQUESTED_REDRAW, { bubbles: true }));  
 };
-Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
 
-let baked_show_hide_dataset_filters_handlers = function(msg) {
-  let root_el = get_root_el_by_id(msg.id)
-  if(!root_el) console.error("Root el: " + msg.id + "not found");  
+let baked_show_hide_dataset_filters_handlers = function (msg) {
+  let root_el = get_root_el_by_id(msg.id);
+  if (!root_el) {
+    console.error("Root el: " + msg.id + " not found");
+    return;
+  }
   show_hide_dataset_filters_handler(msg, root_el);
 };
-Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
 
 let baked_init_filter_handler = function(msg) {            
-    let root_el = get_root_el_by_id(msg.id)
-    if(!root_el) console.error("Root el: " + msg.id + "not found");
+  let root_el = get_root_el_by_id(msg.id);
+  if (!root_el) {
+    console.error("Root el: " + msg.id + " not found");
+    return;
+  }  
     let dataset_lists_filter_data = deserialize_b64_filter_data(msg.dataset_lists_filter_data);
     set_filter_property(root_el, FC.PROPERTY.DATA, dataset_lists_filter_data);
     set_filter_property(root_el, FC.PROPERTY.DATASET_LIST_NAME, msg.dataset_list_name);
@@ -2526,7 +2683,24 @@ let baked_init_filter_handler = function(msg) {
       skip_dataset_filters  
     );
 };
-Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
+let shiny_handlers_registered = false;
+
+let register_shiny_handlers = function () {
+  if (shiny_handlers_registered) return;
+  if (typeof Shiny === "undefined" || !Shiny.addCustomMessageHandler) {
+    console.error("Shiny is not available: filter message handlers were not registered");
+    return;
+  }
+  shiny_handlers_registered = true;
+
+  Shiny.addCustomMessageHandler("update_filter_result", baked_update_filter_result_handler);
+  Shiny.addCustomMessageHandler("update_data", update_data);
+  Shiny.addCustomMessageHandler("request_dataset_filter_state", request_dataset_filter_state);
+  Shiny.addCustomMessageHandler("show_hide_dataset_filters", baked_show_hide_dataset_filters_handlers);
+  Shiny.addCustomMessageHandler("init_filter", baked_init_filter_handler);
+};
+
+register_shiny_handlers();
 
 //#endregion
 
@@ -2536,7 +2710,8 @@ export { init, request_dataset_filter_state }
 
 // A wall will be hit regarding who is responsible of the state managing things are getting complicated, maybe full state
 // should be passed back and forth, otherwise state gets divided.
-
+// TODO: `filter_log_input_id` is accepted by init() but never used. init_blockly already
+// returns the restore log in res.log; it still has to be forwarded to Shiny.
 // TODO: Check requested filter states, they may contain variables that are not present and this brings errors
 // Define behavior:
 // Bookmarked and loaded filters must remain unaltered, so in the future when data matches they will work

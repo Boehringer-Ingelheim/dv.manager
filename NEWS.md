@@ -1,3 +1,9 @@
+# dv.manager 3.1.0-9005
+
+- filter clean up
+- add support for special characters in filter selectors
+- change default behavior of filters to NOT include NA values
+
 # dv.manager 3.1.0-9004
 
 - Originally grouped data.frames keep the relevant attributes after being ungrouped
