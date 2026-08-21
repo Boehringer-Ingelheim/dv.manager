@@ -1003,26 +1003,22 @@ latex_header_repeat <- function(x) {
     ODGA[["sm_mr2"]] <- shinymeta::metaReactive2
 
     # shinymeta::metaReactive
-    ODGA[["sm_mr"]] <- shinymeta::metaReactive
+    ODGA[["sm_mr"]] <- local({
+      f <- shinymeta::metaReactive
+      fargs <- formals(f)
+      fargs$localize <- TRUE
+      formals(f) <- fargs
+      f
+    })
 
     # shinymeta::metaExpr
-    ODGA[["sm_me"]] <- function(...) {
-      e <- parent.frame()
-      l <- list(...)
-      l[["localize"]] <- TRUE
-      if (is.null(l[["env"]])) {
-        l[["env"]] <- e
-      }
-
-      if (is.null(l[["localize"]])) {
-        l[["localize"]] <- TRUE
-      }
-
-      do.call(
-        shinymeta::metaExpr,
-        l
-      )
-    }
+    ODGA[["sm_me"]] <- local({
+      f <- shinymeta::metaExpr
+      fargs <- formals(f)
+      fargs$localize <- TRUE
+      formals(f) <- fargs
+      f
+    })
 
     ODGE[["A"]] <- ODGA
   } else {
