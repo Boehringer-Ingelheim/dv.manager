@@ -450,21 +450,22 @@ app_server_ <- function(input, output, session, opts) {
 
   date_range <- ODGE[["A"]][["sm_mr"]](
     {
-      date_range <- attr(..(unfiltered_dataset_list()), "date_range")
+      dr <- attr(..(unfiltered_dataset_list()), "date_range")
 
-      if (!any(is.na(date_range))) {
-        date_range <- format(date_range, "%Y-%b-%d (%Z)")
-        if (date_range[1] != date_range[2]) {
-          date_string <- sprintf("%s - %s", date_range[1], date_range[2])
+      if (!any(is.na(dr))) {
+        dr <- format(dr, "%Y-%b-%d (%Z)")
+        if (dr[1] != dr[2]) {
+          date_string <- sprintf("%s - %s", dr[1], dr[2])
         } else {
-          date_string <- date_range[1]
+          date_string <- dr[1]
         }
       } else {
         date_string <- "Date unavailable"
       }
       date_string
     },
-    varname = "date_range"
+    varname = "date_range",
+    localize = TRUE
   )
 
   output[["dataset_date"]] <- shiny::renderText({
