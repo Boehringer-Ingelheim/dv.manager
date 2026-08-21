@@ -209,7 +209,7 @@ app_server_ <- function(input, output, session, opts) {
 
       if (unfiltered_dataset_list_with_filter_info_()[["error_list"]]$any()) {
         msg <- shiny::div(
-          shiny::p(paste(filter_info[["error_list"]]$get_messages(), collapse = "; ")),
+          shiny::p(paste(unfiltered_dataset_list_with_filter_info_()[["error_list"]]$get_messages(), collapse = "; ")),
           shiny::p("Please select a valid filter or clear current filter to continue")
         )
         shiny::showNotification(msg, type = "error", duration = NULL)
