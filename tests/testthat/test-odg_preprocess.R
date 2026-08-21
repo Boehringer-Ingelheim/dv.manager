@@ -10,6 +10,10 @@ local({
   # deliberately never forces it, so tests stay independent of code generation.
   fake_get_code_in_context <- function(x) "FIXTURE_CODE"
 
+  # preprocess_odg_elements() rejects anything that is not a metareactive, so the
+  # stubs below carry the class shinymeta::metaReactive() would have given them.
+  fake_metareactive <- function(f) structure(f, class = c("shinymeta_reactive", "reactive", "function"))
+
   make_element <- function(metareactive) {
     list(
       id = "mod1-el1",
@@ -32,7 +36,7 @@ local({
   }
 
   test_that("preprocess_odg_elements reports an error for a format the element does not provide", {
-    el <- make_element(list(html = function() "only html"))
+    el <- make_element(list(html = fake_metareactive(function() "only html")))
 
     res <- preprocess_one(el, ODG$OUTPUT_FORMAT$PDF, fake_get_code_in_context)
 
@@ -40,8 +44,18 @@ local({
     expect_match(res[["code"]], "Not avaliable in pdf format")
   })
 
+  test_that("preprocess_odg_elements reports an error when the field is not a metareactive", {
+    # a module that was never prepared for ODG hands over a plain reactive/function
+    el <- make_element(list(html = function() "a plot"))
+
+    res <- preprocess_one(el, ODG$OUTPUT_FORMAT$HTML, fake_get_code_in_context)
+
+    expect_identical(res[["kind"]], ODG$ELEMENT_KIND$ERROR)
+    expect_match(res[["code"]], "is not a metareactive")
+  })
+
   test_that("preprocess_odg_elements reports an error when the metareactive fails to resolve", {
-    el <- make_element(list(html = function() stop("boom")))
+    el <- make_element(list(html = fake_metareactive(function() stop("boom"))))
 
     res <- preprocess_one(el, ODG$OUTPUT_FORMAT$HTML, fake_get_code_in_context)
 
@@ -50,7 +64,7 @@ local({
   })
 
   test_that("preprocess_odg_elements drops the metareactive and keeps the other element fields", {
-    el <- make_element(list(html = function() "a plot"))
+    el <- make_element(list(html = fake_metareactive(function() "a plot")))
 
     res <- preprocess_one(el, ODG$OUTPUT_FORMAT$HTML, fake_get_code_in_context)
 
@@ -62,7 +76,7 @@ local({
   })
 
   test_that("preprocess_odg_elements treats a non-table element as default, with no char_width", {
-    el <- make_element(list(html = function() "a plot"))
+    el <- make_element(list(html = fake_metareactive(function() "a plot")))
 
     res <- preprocess_one(el, ODG$OUTPUT_FORMAT$HTML, fake_get_code_in_context)
 
@@ -72,7 +86,7 @@ local({
   })
 
   test_that("preprocess_odg_elements treats a data.frame as default (not a table) in html", {
-    el <- make_element(list(html = function() data.frame(a = 1:2)))
+    el <- make_element(list(html = fake_metareactive(function() data.frame(a = 1:2))))
 
     res <- preprocess_one(el, ODG$OUTPUT_FORMAT$HTML, fake_get_code_in_context)
 
@@ -105,16 +119,16 @@ local({
   })
 
   test_that("preprocess_odg_elements rejects an unknown output_format", {
-    el <- make_element(list(html = function() "a plot"))
+    el <- make_element(list(html = fake_metareactive(function() "a plot")))
 
     expect_error(preprocess_one(el, "bogus", fake_get_code_in_context))
   })
 
   test_that("preprocess_odg_elements processes only the selected elements, in order", {
     odg_elements <- list(
-      a = list(id = "a", metareactive = list(html = function() "A")),
-      b = list(id = "b", metareactive = list(html = function() "B")),
-      c = list(id = "c", metareactive = list(html = function() "C"))
+      a = list(id = "a", metareactive = list(html = fake_metareactive(function() "A"))),
+      b = list(id = "b", metareactive = list(html = fake_metareactive(function() "B"))),
+      c = list(id = "c", metareactive = list(html = fake_metareactive(function() "C")))
     )
     is_selected <- c(a = TRUE, b = FALSE, c = TRUE)
 
@@ -130,7 +144,7 @@ local({
   })
 
   test_that("preprocess_odg_elements returns an empty list when nothing is selected", {
-    odg_elements <- list(a = list(id = "a", metareactive = list(html = function() "A")))
+    odg_elements <- list(a = list(id = "a", metareactive = list(html = fake_metareactive(function() "A"))))
 
     res <- preprocess_odg_elements(
       odg_elements,
