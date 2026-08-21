@@ -38,7 +38,7 @@ local({
     "dataset_list_name": "D1"
   }'
 
-  test_that("a module's exported value is downloaded end to end as a rendered odg.zip", {
+  test_that("a module's exported value is downloaded end to end as a rendered PDF odg.zip", {
     app <- start_app_driver(
       rlang::quo({
         dv.manager:::..activate_odg()
@@ -66,6 +66,10 @@ local({
     ))
     app$wait_for_idle()
 
+    # unrequired right now but it will be in the future when more formats are available
+    app$set_inputs(!!ODG$ID$OUTPUT_FORMAT := ODG$OUTPUT_FORMAT$PDF, wait_ = FALSE)
+    app$wait_for_idle()
+
     downloaded_file <- app$get_download(ODG$ID$ODG_CODE)
     unzip_dir <- tempfile()
     utils::unzip(downloaded_file, exdir = unzip_dir)
@@ -77,9 +81,11 @@ local({
     }
 
     expect_false("error.txt" %in% unzipped)
-    expect_true("odg.html" %in% unzipped)
+    expect_true("odg.pdf" %in% unzipped)
 
-    html <- paste(readLines(file.path(unzip_dir, "odg.html"), warn = FALSE), collapse = "\n")
-    expect_match(html, "D1")
+    # pdf is binary test against Rmd
+    expect_true("odg.Rmd" %in% unzipped)
+    rmd <- paste(readLines(file.path(unzip_dir, "odg.Rmd"), warn = FALSE), collapse = "\n")
+    expect_match(rmd, "D1")
   })
 })
