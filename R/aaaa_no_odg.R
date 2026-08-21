@@ -14,7 +14,9 @@ NODGA[["sm_mr2"]] <- NODGA[["sm_mr"]]
 
 # shinymeta::metaExpr
 NODGA[["sm_me"]] <- function(expr, ...) {
-  eval(substitute(expr), envir = parent.frame())
+  # Force local, otherwise it overwrites variables in the parent environment
+  # What we want is for all variables to be contained in the sm_me
+  eval(substitute(local(expr)), envir = parent.frame())
 }
 
 ODGE[["A"]] <- NODGA
