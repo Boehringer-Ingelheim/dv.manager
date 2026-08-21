@@ -976,14 +976,19 @@ ODGA[["odg_server_quote"]] <- quote({
 # In specific environments we won't have access to gt (>=1.3.0)
 # To be removed when the access if granted
 latex_header_repeat <- function(x) {
-  x <- as.character(x)
-  stopifnot(length(x) == 1) # only latex output, gt objects turn into longer vectors
-  if (!grepl("\\\\endhead", x)) {
-    # the midrule line carries trailing spacing directives in some gt versions
-    x <- sub("(\\\\midrule[^\n]*\n)", "\\1\\\\endhead\n", x)
-  }
-  class(x) <- "knit_asis"
-  x
+  attrs <- attributes(x)
+  txt <- as.character(x)
+  stopifnot(length(txt) == 1) # only latex output, gt objects turn into longer vectors
+  # if (!grepl("\\\\endhead", txt)) {
+  #   # the midrule line carries trailing spacing directives in some gt versions
+  #   txt <- sub("(\\\\midrule[^\n]*\n)", "\\1\\\\endhead\n", txt)
+  # }
+  # `as.character()` drops the `knit_meta` attribute carrying gt's latex_dependency
+  # list (longtable, booktabs, ...); without it knitr emits no \usepackage lines and
+  # the document fails to compile with "Environment longtable undefined"
+  attributes(txt) <- attrs
+  class(txt) <- "knit_asis"
+  txt
 }
 
 
