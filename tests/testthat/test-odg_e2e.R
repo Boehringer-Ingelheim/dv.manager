@@ -1,14 +1,14 @@
 skip_if_not_running_shiny_tests()
 
-dv.manager:::..activate_export()
+dv.manager:::..activate_odg()
 on.exit(
-  dv.manager:::..deactivate_export(),
+  dv.manager:::..deactivate_odg(),
   add = TRUE
 )
 
-# Only test export is produced the rest is tested in the rest of test functions
-# `dv.export_enabled` gates code defined at *package load time* (see R/aaaaa_export.R), so it has to
-# be set before the subprocess app.R loads the package - `start_app_driver(options = ...)` does that.
+# Only test the output document is produced, the rest is tested in the rest of test functions
+# `..activate_odg()` installs the shinymeta aliases used by code defined at *package load time*
+# (see R/aaaaa_odg.R), so it has to run inside the subprocess app too, not only in this process.
 local({
   data <- list(
     D1 = structure(
@@ -38,19 +38,19 @@ local({
     "dataset_list_name": "D1"
   }'
 
-  test_that("a module's exported value is downloaded end to end as a rendered export.zip", {
+  test_that("a module's exported value is downloaded end to end as a rendered odg.zip", {
     app <- start_app_driver(
       rlang::quo({
-        dv.manager:::..activate_export()
+        dv.manager:::..activate_odg()
         on.exit(
-          dv.manager:::..deactivate_export(),
+          dv.manager:::..deactivate_odg(),
           add = TRUE
         )
 
         dv.manager:::run_app(
           data = !!data,
           module_list = list(
-            Export = dv.manager:::mod_export_dataset_name("mod1")
+            ODG = dv.manager:::mod_odg_dataset_name("mod1")
           ),
           filter_dataset_name = "adsl",
           filter_key = "USUBJID",
@@ -61,12 +61,12 @@ local({
 
     app$run_js(sprintf(
       "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
-      EXPORT$ID$EXPORT_CODE_MENU,
-      EXPORT$VAL$EXPORT_ALL
+      ODG$ID$ODG_CODE_MENU,
+      ODG$VAL$ODG_ALL
     ))
     app$wait_for_idle()
 
-    downloaded_file <- app$get_download(EXPORT$ID$EXPORT_CODE)
+    downloaded_file <- app$get_download(ODG$ID$ODG_CODE)
     unzip_dir <- tempfile()
     utils::unzip(downloaded_file, exdir = unzip_dir)
     unzipped <- list.files(unzip_dir)
@@ -77,9 +77,9 @@ local({
     }
 
     expect_false("error.txt" %in% unzipped)
-    expect_true("export.html" %in% unzipped)
+    expect_true("odg.html" %in% unzipped)
 
-    html <- paste(readLines(file.path(unzip_dir, "export.html"), warn = FALSE), collapse = "\n")
+    html <- paste(readLines(file.path(unzip_dir, "odg.html"), warn = FALSE), collapse = "\n")
     expect_match(html, "D1")
   })
 })

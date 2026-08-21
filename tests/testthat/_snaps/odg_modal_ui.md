@@ -1,4 +1,4 @@
-# build_export_modal_ui shows one switch per module and selects all of them by default
+# build_odg_modal_ui shows one switch per module and selects all of them by default
 
     Code
       cat(html)
@@ -14,13 +14,13 @@
                     <div class="card-body bslib-gap-spacing html-fill-item html-fill-container" style="margin-top:auto;margin-bottom:auto;flex:1 1 auto;">
                       <div class="form-check form-switch">
                         <label class="form-check-label">
-                          <input class="form-check-input" type="checkbox" role="switch" checked onchange="Shiny.setInputValue(&#39;test-export_menu_selection&#39;, {value: this.checked, id: &#39;m1&#39;});"/>
+                          <input class="form-check-input" type="checkbox" role="switch" checked onchange="Shiny.setInputValue(&#39;test-odg_menu_selection&#39;, {value: this.checked, id: &#39;m1&#39;});"/>
                           Module 1
                         </label>
                       </div>
                       <div class="form-check form-switch">
                         <label class="form-check-label">
-                          <input class="form-check-input" type="checkbox" role="switch" checked onchange="Shiny.setInputValue(&#39;test-export_menu_selection&#39;, {value: this.checked, id: &#39;m2&#39;});"/>
+                          <input class="form-check-input" type="checkbox" role="switch" checked onchange="Shiny.setInputValue(&#39;test-odg_menu_selection&#39;, {value: this.checked, id: &#39;m2&#39;});"/>
                           Module 2
                         </label>
                       </div>
@@ -45,7 +45,7 @@
                     <script data-bslib-card-init>bslib.Card.initializeAllCards();</script>
                   </div>
                 </div>
-                <a id="test-export_code" class="btn btn-default shiny-download-link disabled" href="" target="_blank" download aria-disabled="true" tabindex="-1">
+                <a id="test-odg_code" class="btn btn-default shiny-download-link disabled" href="" target="_blank" download aria-disabled="true" tabindex="-1">
                   <i class="fas fa-download" role="presentation" aria-label="download icon"></i>
                   Generate Output Documentation
                 </a>

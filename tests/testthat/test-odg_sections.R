@@ -1,6 +1,6 @@
-dv.manager:::..activate_export()
+dv.manager:::..activate_odg()
 on.exit(
-  dv.manager:::..deactivate_export(),
+  dv.manager:::..deactivate_odg(),
   add = TRUE
 )
 
@@ -95,8 +95,8 @@ local({
   })
 
   test_that("build_filter_txt_section wraps the filter code in format-appropriate verbatim tags", {
-    expect_snapshot(cat(build_filter_txt_section(EXPORT$OUTPUT_FORMAT$HTML, "FIXTURE_FILTER_TXT_CODE")))
-    expect_snapshot(cat(build_filter_txt_section(EXPORT$OUTPUT_FORMAT$PDF, "FIXTURE_FILTER_TXT_CODE")))
+    expect_snapshot(cat(build_filter_txt_section(ODG$OUTPUT_FORMAT$HTML, "FIXTURE_FILTER_TXT_CODE")))
+    expect_snapshot(cat(build_filter_txt_section(ODG$OUTPUT_FORMAT$PDF, "FIXTURE_FILTER_TXT_CODE")))
   })
 
   test_that("build_filter_txt_section rejects an unknown output_format instead of erroring deep inside sprintf", {

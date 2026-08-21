@@ -1,6 +1,6 @@
-dv.manager:::..activate_export()
+dv.manager:::..activate_odg()
 on.exit(
-  dv.manager:::..deactivate_export(),
+  dv.manager:::..deactivate_odg(),
   add = TRUE
 )
 
@@ -24,8 +24,8 @@ local({
     "m2-a" = make_element("m2-a", "m2", "Module 2", TRUE)
   )
 
-  test_that("build_export_modal_ui shows one switch per module and selects all of them by default", {
-    res <- build_export_modal_ui(fixture_elements, test_ns)
+  test_that("build_odg_modal_ui shows one switch per module and selects all of them by default", {
+    res <- build_odg_modal_ui(fixture_elements, test_ns)
 
     expect_identical(res[["selected"]], c("m1-a" = TRUE, "m1-b" = TRUE, "m2-a" = TRUE))
     html <- as.character(res[["modal_dialog"]])
@@ -34,8 +34,8 @@ local({
     expect_snapshot(cat(html))
   })
 
-  test_that("build_export_modal_ui shows every module but preselects only the outputs of selected_tab", {
-    res <- build_export_modal_ui(fixture_elements, test_ns, selected_tab = "m1")
+  test_that("build_odg_modal_ui shows every module but preselects only the outputs of selected_tab", {
+    res <- build_odg_modal_ui(fixture_elements, test_ns, selected_tab = "m1")
 
     expect_identical(res[["selected"]], c("m1-a" = TRUE, "m1-b" = TRUE, "m2-a" = FALSE))
     html <- as.character(res[["modal_dialog"]])
@@ -46,18 +46,18 @@ local({
     expect_false(is_switch_checked("m2"))
   })
 
-  test_that("build_export_modal_ui shows a fallback message and no download button when nothing is exportable", {
-    res <- build_export_modal_ui(list(), test_ns)
+  test_that("build_odg_modal_ui shows a fallback message and no download button when nothing is exportable", {
+    res <- build_odg_modal_ui(list(), test_ns)
 
     expect_identical(res[["selected"]], logical(0))
     html <- as.character(res[["modal_dialog"]])
-    expect_true(grepl("No outputs available for export", html, fixed = TRUE))
+    expect_true(grepl(ODG$MSG$NOTHING_TO_GENERATE, html, fixed = TRUE))
     expect_false(grepl("output_format", html, fixed = TRUE))
     expect_false(grepl("shiny-download-link", html, fixed = TRUE))
   })
 
-  test_that("build_export_modal_ui preselects nothing when selected_tab matches no module", {
-    res <- build_export_modal_ui(fixture_elements, test_ns, selected_tab = "does-not-exist")
+  test_that("build_odg_modal_ui preselects nothing when selected_tab matches no module", {
+    res <- build_odg_modal_ui(fixture_elements, test_ns, selected_tab = "does-not-exist")
 
     expect_identical(res[["selected"]], c("m1-a" = FALSE, "m1-b" = FALSE, "m2-a" = FALSE))
     html <- as.character(res[["modal_dialog"]])

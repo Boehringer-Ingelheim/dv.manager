@@ -32,12 +32,12 @@ local({
     )
   )
 
-  test_that("filter_to_export works with an empty filter", {
+  test_that("filter_to_odg works with an empty filter", {
     udlwfi <- unfiltered_dataset_list_with_filter_info
-    expect_snapshot(filter_to_export(udlwfi))
+    expect_snapshot(filter_to_odg(udlwfi))
   })
 
-  test_that("filter_to_export works with all actions", {
+  test_that("filter_to_odg works with all actions", {
     udlwfi <- unfiltered_dataset_list_with_filter_info
     udlwfi[["dataset_list_filter"]][["parsed"]][["filters"]] <- list(
       "subject_filter" = list(
@@ -142,13 +142,13 @@ local({
         )
       )
     )
-    expect_snapshot(filter_to_export(udlwfi)[["txt"]])
-    expect_snapshot(filter_to_export(udlwfi)[["txt"]] |> message())
-    expect_snapshot(filter_to_export(udlwfi)[["reference_txt"]] |> message())
+    expect_snapshot(filter_to_odg(udlwfi)[["txt"]])
+    expect_snapshot(filter_to_odg(udlwfi)[["txt"]] |> message())
+    expect_snapshot(filter_to_odg(udlwfi)[["reference_txt"]] |> message())
   })
 })
 
-filter_to_export <- function(unfiltered_dataset_list_with_filter_info) {
+filter_to_odg <- function(unfiltered_dataset_list_with_filter_info) {
   TC <- c(
     h = "\u2500", # ─
     v = "\u2502 ", # │(spc)

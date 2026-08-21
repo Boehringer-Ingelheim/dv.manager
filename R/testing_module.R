@@ -2772,32 +2772,32 @@ mod_CSS_test <- function(module_id) {
   mod
 }
 
-########### Export dataset name (for testing the export feature)
+########### ODG dataset name (for testing the output document generation feature)
 
-export_dataset_name_UI <- function(id) {
+odg_dataset_name_UI <- function(id) {
   # nolint
   ns <- shiny::NS(id)
   shiny::textOutput(ns("name"))
 }
 
-export_dataset_name_server <- function(id, afmm) {
+odg_dataset_name_server <- function(id, afmm) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
       output[["name"]] <- shiny::renderText(afmm[["dataset_metadata"]][["name"]]())
 
       list(
-        to_export = list(
+        to_odg = list(
           dataset_name = list(
             label = "Dataset name",
             metareactive = list(
-              html = AEE[["A"]][["sm_mr"]](
+              html = ODGE[["A"]][["sm_mr"]](
                 {
                   attr(..(afmm[["unfiltered_dataset_list"]]()), "dataset_list_name")
                 },
                 varname = "dataset_name"
               ),
-              pdf = AEE[["A"]][["sm_mr"]](
+              pdf = ODGE[["A"]][["sm_mr"]](
                 {
                   attr(..(afmm[["unfiltered_dataset_list"]]()), "dataset_list_name")
                 },
@@ -2811,16 +2811,16 @@ export_dataset_name_server <- function(id, afmm) {
   )
 }
 
-#' A module that exports the current dataset list's name, for testing the export feature
+#' A module that exports the current dataset list's name, for testing the output document generation feature
 #'
 #' @param mod_id shiny module ID
 #'
 #' @keywords internal
-mod_export_dataset_name <- function(mod_id) {
+mod_odg_dataset_name <- function(mod_id) {
   list(
-    ui = export_dataset_name_UI,
+    ui = odg_dataset_name_UI,
     server = function(afmm) {
-      export_dataset_name_server(mod_id, afmm)
+      odg_dataset_name_server(mod_id, afmm)
     },
     module_id = mod_id
   )

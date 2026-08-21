@@ -1,11 +1,11 @@
-dv.manager:::..activate_export()
+dv.manager:::..activate_odg()
 on.exit(
-  dv.manager:::..deactivate_export(),
+  dv.manager:::..deactivate_odg(),
   add = TRUE
 )
 
 local({
-  make_export_rmd <- function(chunk_body, output = "html_document") {
+  make_odg_rmd <- function(chunk_body, output = "html_document") {
     paste(
       c(
         "---",
@@ -32,7 +32,7 @@ local({
     list(fn = fn, calls = calls)
   }
 
-  test_that("render_export_document renders HTML, zips it, and never calls pdf_attach_function", {
+  test_that("render_odg_document renders HTML, zips it, and never calls pdf_attach_function", {
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
       {
@@ -45,7 +45,7 @@ local({
 
     spy <- spy_pdf_attach()
 
-    result <- render_export_document(make_export_rmd("1 + 1"), dummy_header, spy$fn, zip_path)
+    result <- render_odg_document(make_odg_rmd("1 + 1"), dummy_header, spy$fn, zip_path)
 
     expect_true(file.exists(zip_path))
     contents <- utils::unzip(zip_path, list = TRUE)[["Name"]]
@@ -55,7 +55,7 @@ local({
     expect_length(spy$calls$log, 0)
   })
 
-  test_that("render_export_document renders PDF and attaches the source Rmd and session info", {
+  test_that("render_odg_document renders PDF and attaches the source Rmd and session info", {
     skip_if_not(rmarkdown::pandoc_available(), "pandoc not available")
     skip_if_not(nzchar(Sys.which("pdflatex")), "pdflatex not available")
 
@@ -71,7 +71,7 @@ local({
 
     spy <- spy_pdf_attach()
 
-    result <- render_export_document(make_export_rmd("1 + 1", output = "pdf_document"), dummy_header, spy$fn, zip_path)
+    result <- render_odg_document(make_odg_rmd("1 + 1", output = "pdf_document"), dummy_header, spy$fn, zip_path)
 
     expect_true(file.exists(zip_path))
     contents <- utils::unzip(zip_path, list = TRUE)[["Name"]]
@@ -82,10 +82,10 @@ local({
     expect_length(spy$calls$log, 2)
     expect_true(all(endsWith(vapply(spy$calls$log, `[[`, character(1), "pdf"), ".pdf")))
     attachments <- vapply(spy$calls$log, function(x) basename(x[["attachment"]]), character(1))
-    expect_setequal(attachments, c("export.Rmd", "session_info.txt"))
+    expect_setequal(attachments, c("odg.Rmd", "session_info.txt"))
   })
 
-  test_that("render_export_document captures render errors in error.txt without calling pdf_attach_function", {
+  test_that("render_odg_document captures render errors in error.txt without calling pdf_attach_function", {
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
       {
@@ -100,8 +100,8 @@ local({
 
     result <- NULL
     expect_warning(
-      result <- render_export_document(make_export_rmd('stop("boom")'), dummy_header, spy$fn, zip_path),
-      regexp = "Error rendering export"
+      result <- render_odg_document(make_odg_rmd('stop("boom")'), dummy_header, spy$fn, zip_path),
+      regexp = "Error generating output documentation"
     )
 
     contents <- utils::unzip(zip_path, list = TRUE)[["Name"]]
@@ -110,7 +110,7 @@ local({
     expect_length(spy$calls$log, 0)
   })
 
-  test_that("render_export_document works when run inside a callr subprocess", {
+  test_that("render_odg_document works when run inside a callr subprocess", {
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
       {
@@ -122,9 +122,9 @@ local({
     )
 
     result <- callr::r(
-      render_export_document,
+      render_odg_document,
       args = list(
-        rmarkdown = make_export_rmd("1 + 1"),
+        rmarkdown = make_odg_rmd("1 + 1"),
         header = dummy_header,
         pdf_attach_function = function(pdf, attachment) invisible(NULL),
         filename = zip_path

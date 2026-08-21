@@ -1,6 +1,6 @@
-# This file contains all export related code. Remove it if required.
+# This file contains all output document generation (ODG) related code. Remove it if required.
 
-#' Render an export Rmd to a zip file
+#' Render an ODG Rmd to a zip file
 #'
 #' Runs in a fresh `callr::r()` subprocess (or can be called directly, e.g. in
 #' tests) — everything needed must arrive as an argument, nothing carries over
@@ -16,47 +16,47 @@
 #'   the error message on failure).
 #' @keywords internal
 #' @noRd
-render_export_document <- function(rmarkdown, header, pdf_attach_function, filename, quiet = TRUE) {
-  export_dir <- tempfile(pattern = "export")
+render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename, quiet = TRUE) {
+  odg_dir <- tempfile(pattern = "odg")
   if (!quiet) {
-    message(sprintf("Creating export in %s", export_dir))
+    message(sprintf("Generating output documentation in %s", odg_dir))
   }
-  dir.create(export_dir)
+  dir.create(odg_dir)
 
   old_wd <- getwd()
   on.exit(
     {
-      if (dir.exists(export_dir)) {
-        unlink(export_dir, recursive = TRUE)
+      if (dir.exists(odg_dir)) {
+        unlink(odg_dir, recursive = TRUE)
         if (!quiet) {
-          message(sprintf("Removing dir %s", export_dir))
+          message(sprintf("Removing dir %s", odg_dir))
         }
       }
       setwd(old_wd)
     },
     add = TRUE
   )
-  setwd(export_dir)
+  setwd(odg_dir)
 
-  writeLines(rmarkdown, "export.Rmd")
+  writeLines(rmarkdown, "odg.Rmd")
   writeLines(header, "header.tex")
 
   error_msg <- character(0)
   tryCatch(
     {
-      output_file <- rmarkdown::render(input = "export.Rmd", output_dir = export_dir, quiet = quiet)
+      output_file <- rmarkdown::render(input = "odg.Rmd", output_dir = odg_dir, quiet = quiet)
       if (endsWith(output_file, "pdf")) {
         session_info_file <- "session_info.txt"
         writeLines(capture.output(devtools::session_info()), session_info_file)
-        pdf_attach_function(output_file, "export.Rmd")
+        pdf_attach_function(output_file, "odg.Rmd")
         pdf_attach_function(output_file, session_info_file)
         unlink(session_info_file)
       }
     },
     error = function(e) {
       error_msg <<- e$message
-      warning(sprintf("Error rendering export in %s\n%s", export_dir, error_msg))
-      writeLines(c("Error rendering export", error_msg), "error.txt")
+      warning(sprintf("Error generating output documentation in %s\n%s", odg_dir, error_msg))
+      writeLines(c("Error generating output documentation", error_msg), "error.txt")
     }
   )
 
@@ -78,7 +78,7 @@ render_export_document <- function(rmarkdown, header, pdf_attach_function, filen
   })
   zip_filename <- utils::zip(
     filename,
-    list.files(export_dir),
+    list.files(odg_dir),
     flags = if (quiet) "-r9Xq" else "-r9X",
     zip = zip_command_path
   )
@@ -112,15 +112,15 @@ pdf_attach <- function(pdf, attachment) {
   invisible(pdf)
 }
 
-EXPORT <- local({
-  EXPORT <- poc(
+ODG <- local({
+  ODG <- poc(
     ID = poc(
-      EXPORT_CODE = "export_code",
-      EXPORT_CODE_MENU = "export_code_menu",
-      EXPORT_MENU_SELECTION = "export_menu_selection",
+      ODG_CODE = "odg_code",
+      ODG_CODE_MENU = "odg_code_menu",
+      ODG_MENU_SELECTION = "odg_menu_selection",
       OUTPUT_FORMAT = "output_format"
     ),
-    ATTR = "export_element_type",
+    ATTR = "odg_element_type",
     ELEMENT_KIND = poc(
       ERROR = "error",
       TABLE = "table",
@@ -131,23 +131,23 @@ EXPORT <- local({
       PDF = "pdf"
     ),
     MSG = poc(
-      EXPORT_BUTTON = "Generate Output Documentation",
+      ODG_BUTTON = "Generate Output Documentation",
       OUTPUTS_CARD = "Outputs",
       FORMAT_CARD = "Format",
-      NOTHING_TO_EXPORT = "No outputs available"
+      NOTHING_TO_GENERATE = "No outputs available"
     ),
     VAL = poc(
-      EXPORT_ALL = "all"
+      ODG_ALL = "all"
     )
   )
 
-  EXPORT[["TEMPLATES"]] <- list()
+  ODG[["TEMPLATES"]] <- list()
 
-  EXPORT[["TEMPLATES"]][["HEADER"]] <- local({
+  ODG[["TEMPLATES"]][["HEADER"]] <- local({
     templates <- character(0)
-    templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
+    templates[[ODG$OUTPUT_FORMAT$PDF]] <- r"--(
 ---
-title: "A export"
+title: "Output Documentation"
 author: "A user"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
@@ -180,9 +180,9 @@ knitr::opts_chunk$set(
 
 )--"
 
-    templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(
+    templates[[ODG$OUTPUT_FORMAT$HTML]] <- r"--(
 ---
-title: "A export"
+title: "Output Documentation"
 author: "A user"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
@@ -230,9 +230,9 @@ body::before {
     templates
   })
 
-  EXPORT[["TEMPLATES"]][["SESSION_INFO"]] <- local({
+  ODG[["TEMPLATES"]][["SESSION_INFO"]] <- local({
     templates <- character(0)
-    templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- r"--(
+    templates[[ODG$OUTPUT_FORMAT$PDF]] <- r"--(
 
 ```{r session_info, results = 'asis'}
   session_lines <- capture.output(devtools::session_info())   
@@ -247,7 +247,7 @@ body::before {
 
 )--"
 
-    templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- r"--(
+    templates[[ODG$OUTPUT_FORMAT$HTML]] <- r"--(
 # Session Info
 
 ```{r session_info}
@@ -259,9 +259,9 @@ body::before {
     templates
   })
 
-  EXPORT[["TEMPLATES"]][["FOOTER"]] <- local({
+  ODG[["TEMPLATES"]][["FOOTER"]] <- local({
     templates <- character(0)
-    templates[[EXPORT$OUTPUT_FORMAT$PDF]] <- ""
+    templates[[ODG$OUTPUT_FORMAT$PDF]] <- ""
 
     # Currently code is attached to the PDF file
     #   r"--(
@@ -271,27 +271,27 @@ body::before {
     # ```
     # )--"
 
-    templates[[EXPORT$OUTPUT_FORMAT$HTML]] <- ""
+    templates[[ODG$OUTPUT_FORMAT$HTML]] <- ""
 
     templates
   })
 
-  EXPORT
+  ODG
 })
 
 #' Formatters mapping (output format, element kind) to a chunk of Rmd markup
 #'
-#' `EXPORT_ELEMENT_FORMATTERS[[output_format]][[kind]]` is a `function(x)`
-#' taking a processed export element and returning markup. A `safe_list`
+#' `ODG_ELEMENT_FORMATTERS[[output_format]][[kind]]` is a `function(x)`
+#' taking a processed ODG element and returning markup. A `safe_list`
 #' rather than a `poc()` since its entries are behavior (formatter functions),
 #' not named constants — but the same fail-loudly-on-a-typo motivation applies
 #' to `[[output_format]][[kind]]` lookups.
 #' @keywords internal
 #' @noRd
-EXPORT_ELEMENT_FORMATTERS <- local({
+ODG_ELEMENT_FORMATTERS <- local({
   res <- safe_list()
-  res[[EXPORT$OUTPUT_FORMAT$PDF]] <- safe_list()
-  res[[EXPORT$OUTPUT_FORMAT$PDF]][["header"]] <- function(x) {
+  res[[ODG$OUTPUT_FORMAT$PDF]] <- safe_list()
+  res[[ODG$OUTPUT_FORMAT$PDF]][["header"]] <- function(x) {
     if (x[["is_first_module_element"]]) {
       sprintf(
         "\\section{%s}\n\n\\subsection{%s}\n\n",
@@ -302,47 +302,47 @@ EXPORT_ELEMENT_FORMATTERS <- local({
       sprintf("\\subsection{%s}\n\n", escape_latex(x[["label"]]))
     }
   }
-  res[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$ERROR]] <- function(x) {
+  res[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$ERROR]] <- function(x) {
     fmt <- "\n%s\n\n\\alertwarning{%s}\n\n"
-    sprintf(fmt, res[[EXPORT$OUTPUT_FORMAT$PDF]][["header"]](x), x[["code"]])
+    sprintf(fmt, res[[ODG$OUTPUT_FORMAT$PDF]][["header"]](x), x[["code"]])
   }
-  res[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$TABLE]] <- function(x) {
+  res[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$TABLE]] <- function(x) {
     fmt <- "\n\n\\beginwidepage{%d}\n\n\\begingroup\n\n\\wptabfont\n\n%s\n\n\\endgroup\n\n\\stopwidepage\n\n"
-    sprintf(fmt, x[["char_width"]], res[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$DEFAULT]](x))
+    sprintf(fmt, x[["char_width"]], res[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$DEFAULT]](x))
   }
-  res[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$DEFAULT]] <- function(x) {
+  res[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$DEFAULT]] <- function(x) {
     fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
-    sprintf(fmt, res[[EXPORT$OUTPUT_FORMAT$PDF]][["header"]](x), x[["id"]], x[["code"]])
+    sprintf(fmt, res[[ODG$OUTPUT_FORMAT$PDF]][["header"]](x), x[["id"]], x[["code"]])
   }
 
-  res[[EXPORT$OUTPUT_FORMAT$HTML]] <- safe_list()
-  res[[EXPORT$OUTPUT_FORMAT$HTML]][["header"]] <- function(x) {
+  res[[ODG$OUTPUT_FORMAT$HTML]] <- safe_list()
+  res[[ODG$OUTPUT_FORMAT$HTML]][["header"]] <- function(x) {
     if (x[["is_first_module_element"]]) {
       sprintf("# %s\n\n## %s\n\n", x[["module_name"]], x[["label"]])
     } else {
       sprintf("## %s\n\n", x[["label"]])
     }
   }
-  res[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$ERROR]] <- function(x) {
+  res[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$ERROR]] <- function(x) {
     fmt <- "\n%s\n\n<div class = \"alert alert-warning\" role = \"alert\">%s</div>\n\n"
-    sprintf(fmt, res[[EXPORT$OUTPUT_FORMAT$HTML]][["header"]](x), x[["code"]])
+    sprintf(fmt, res[[ODG$OUTPUT_FORMAT$HTML]][["header"]](x), x[["code"]])
   }
-  res[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$TABLE]] <- function(x) {
-    res[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$DEFAULT]](x)
+  res[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$TABLE]] <- function(x) {
+    res[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$DEFAULT]](x)
   }
-  res[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$DEFAULT]] <- function(x) {
+  res[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$DEFAULT]] <- function(x) {
     fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
-    sprintf(fmt, res[[EXPORT$OUTPUT_FORMAT$HTML]][["header"]](x), x[["id"]], x[["code"]])
+    sprintf(fmt, res[[ODG$OUTPUT_FORMAT$HTML]][["header"]](x), x[["id"]], x[["code"]])
   }
   res
 })
 
-#' Assemble the final export .Rmd from preprocessed elements and precomputed sections
+#' Assemble the final ODG .Rmd from preprocessed elements and precomputed sections
 #'
-#' @param elements_to_export List of preprocessed export elements (each with
+#' @param selected_odg_elements List of preprocessed ODG elements (each with
 #'   `kind`, `id`, `code`, `label`, `module_name`, `is_first_module_element`,
 #'   `char_width`), in the order they should appear.
-#' @param output_format One of `EXPORT$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
+#' @param output_format One of `ODG$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
 #' @param data_code Rmd code chunk describing how the source data was loaded.
 #' @param sections Named list with `date`, `hardcoded_hash`, `dynamic_hash`,
 #'   `filter_txt`, `filter_reference` markdown sections.
@@ -351,15 +351,15 @@ EXPORT_ELEMENT_FORMATTERS <- local({
 #' @return The full .Rmd document, as a single string.
 #' @keywords internal
 #' @noRd
-build_export_rmd <- function(elements_to_export, output_format, data_code, sections, templates) {
+build_odg_rmd <- function(selected_odg_elements, output_format, data_code, sections, templates) {
   output_rmd <- ""
-  for (idx in seq_along(elements_to_export)) {
-    curr_el <- elements_to_export[[idx]]
+  for (idx in seq_along(selected_odg_elements)) {
+    curr_el <- selected_odg_elements[[idx]]
     log_inform(paste0("Processing idx: ", idx))
     output_rmd <- sprintf(
       "%s\n%s\n",
       output_rmd,
-      EXPORT_ELEMENT_FORMATTERS[[output_format]][[curr_el[["kind"]]]](curr_el)
+      ODG_ELEMENT_FORMATTERS[[output_format]][[curr_el[["kind"]]]](curr_el)
     )
   }
 
@@ -400,7 +400,10 @@ build_hardcoded_hash_section <- function(dataset_list) {
       dataset_list_hash[[idx]]
     )
   }
-  note <- "These hashes are calculated in-app, they correspond to the data loaded in the app that created the export."
+  note <- paste(
+    "These hashes are calculated in-app, they correspond to the data loaded in the app",
+    "that created this output documentation."
+  )
   sprintf("%s\n\n%s\n\n", section, note)
 }
 
@@ -433,7 +436,10 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, get_code_in_con
     inline = TRUE
   )
 
-  note <- "These hashes are calculated during export rendering, and should match those in the **Hardcoded Data hash** section."
+  note <- paste(
+    "These hashes are calculated while generating the output documentation,",
+    "and should match those in the **Hardcoded Data hash** section."
+  )
   sprintf(
     "## Dynamic Data hash:\n\n```{r dynamic_data_hash, echo = FALSE, results='asis'}\n%s\n```\n\n%s\n\n",
     get_code_in_context(loop()),
@@ -471,7 +477,7 @@ build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code
     inline = TRUE
   )
 
-  note <- "These dates are calculated during export rendering."
+  note <- "These dates are calculated while generating the output documentation."
   sprintf(
     paste0(
       "## Data Modification Dates:\n\n **Date range**:\n\n`r %s`\n\n",
@@ -485,25 +491,28 @@ build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code
 
 #' Markdown section wrapping the filter description in a verbatim block
 #'
-#' @param output_format One of `EXPORT$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
+#' @param output_format One of `ODG$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
 #' @param filter_txt_code R code, as a string, that prints the filter
 #'   description at render time.
 #' @return The markdown section, as a single string.
 #' @keywords internal
 #' @noRd
 build_filter_txt_section <- function(output_format, filter_txt_code) {
-  checkmate::assert_subset(output_format, as.character(unclass(EXPORT$OUTPUT_FORMAT)))
+  checkmate::assert_subset(output_format, as.character(unclass(ODG$OUTPUT_FORMAT)))
   section <- "## Filters:"
 
-  if (output_format == EXPORT$OUTPUT_FORMAT$HTML) {
+  if (output_format == ODG$OUTPUT_FORMAT$HTML) {
     verbatim_tags <- c("<pre>", "</pre>")
-  } else if (output_format == EXPORT$OUTPUT_FORMAT$PDF) {
+  } else if (output_format == ODG$OUTPUT_FORMAT$PDF) {
     verbatim_tags <- c("\\begin{verbatim}", "\\end{verbatim}")
   }
 
-  note <- "An explicit call to the filter and parameters used can be found in the code that accompanies this export."
+  note <- paste(
+    "An explicit call to the filter and parameters used can be found in the code",
+    "that accompanies this output documentation."
+  )
   sprintf(
-    "%s\n\n%s\n\n```{r filter_export_txt, echo = FALSE, results='asis'}\n\n%s\n\n```\n\n%s\n\n%s",
+    "%s\n\n%s\n\n```{r filter_odg_txt, echo = FALSE, results='asis'}\n\n%s\n\n```\n\n%s\n\n%s",
     section,
     verbatim_tags[[1]],
     filter_txt_code,
@@ -521,61 +530,61 @@ build_filter_txt_section <- function(output_format, filter_txt_code) {
 #' @noRd
 build_filter_reference_section <- function(filter_reference_code) {
   sprintf(
-    "%s\n\n```{r filter_export_reference_list, echo = FALSE, results='asis'}\n\n%s\n\n```",
+    "%s\n\n```{r filter_odg_reference_list, echo = FALSE, results='asis'}\n\n%s\n\n```",
     "# Filter references:",
     filter_reference_code
   )
 }
 
-#' Preprocess every selected exportable element, in declaration order
+#' Preprocess every selected ODG element, in declaration order
 #'
 #' `get_code_in_context()` must receive the *call* to a metareactive, not its
 #' value: `shinymeta::expandChain()` forces that argument in meta mode to get
 #' code out of it. Resolved values (`resolved`, and the second `latex()` call
 #' below) are therefore only ever used for inspection, never handed to it.
 #'
-#' @param exportable_elements Named list of all flattened exportable elements, keyed by id.
+#' @param odg_elements Named list of all flattened ODG elements, keyed by id.
 #' @param is_selected Named logical vector, keyed by element id.
-#' @param output_format One of `EXPORT$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
+#' @param output_format One of `ODG$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
 #' @param get_code_in_context `function(x)` turning a metareactive call into the
 #'   R code reproducing it. Injected so it can be tested independently.
 #' @return Unnamed list of preprocessed elements: each with `metareactive`
-#'   dropped and `code`, `kind` (one of `EXPORT$ELEMENT_KIND`) and `char_width` added.
+#'   dropped and `code`, `kind` (one of `ODG$ELEMENT_KIND`) and `char_width` added.
 #' @keywords internal
 #' @noRd
-preprocess_export_elements <- function(exportable_elements, is_selected, output_format, get_code_in_context) {
-  checkmate::assert_subset(output_format, as.character(unclass(EXPORT$OUTPUT_FORMAT)))
-  selected <- exportable_elements[names(is_selected)[is_selected]]
+preprocess_odg_elements <- function(odg_elements, is_selected, output_format, get_code_in_context) {
+  checkmate::assert_subset(output_format, as.character(unclass(ODG$OUTPUT_FORMAT)))
+  selected <- odg_elements[names(is_selected)[is_selected]]
 
   res <- vector(mode = "list", length = length(selected))
   for (idx in seq_along(selected)) {
     log_inform(sprintf("Preprocessing element (%d)", idx))
-    export_element <- selected[[idx]]
-    log_inform(paste0("Processing:", export_element[["id"]]))
+    odg_element <- selected[[idx]]
+    log_inform(paste0("Processing:", odg_element[["id"]]))
 
     # Entries are keyed by the output format values themselves; missing -> NULL
-    metareactive <- export_element[["metareactive"]][[output_format]]
+    metareactive <- odg_element[["metareactive"]][[output_format]]
     char_width <- NULL
 
     if (is.null(metareactive)) {
-      code <- paste("Error creating", export_element[["id"]], "Not avaliable in", output_format, "format")
-      kind <- EXPORT$ELEMENT_KIND$ERROR
+      code <- paste("Error creating", odg_element[["id"]], "Not avaliable in", output_format, "format")
+      kind <- ODG$ELEMENT_KIND$ERROR
     } else if (!inherits(metareactive, "shinymeta_reactive")) {
       code <- paste(
         "Error creating",
-        export_element[["id"]],
+        odg_element[["id"]],
         "`metareactive` field is not a metareactive.",
-        "Module is not prepared or not activated for exporting."
+        "Module is not prepared or not activated for generating output documentation."
       )
-      kind <- EXPORT$ELEMENT_KIND$ERROR
+      kind <- ODG$ELEMENT_KIND$ERROR
     } else {
       resolved <- try(metareactive(), silent = TRUE)
-      is_table <- identical(output_format, EXPORT$OUTPUT_FORMAT$PDF) &&
+      is_table <- identical(output_format, ODG$OUTPUT_FORMAT$PDF) &&
         (is.data.frame(resolved) || inherits(resolved, "gt_tbl"))
 
       if (inherits(resolved, "try-error")) {
-        code <- paste("Error creating", export_element[["id"]], attr(resolved, "condition")[["message"]])
-        kind <- EXPORT$ELEMENT_KIND$ERROR
+        code <- paste("Error creating", odg_element[["id"]], attr(resolved, "condition")[["message"]])
+        kind <- ODG$ELEMENT_KIND$ERROR
       } else if (is_table) {
         # TODO: This could be moved to the formatter section
         latex <- if (is.data.frame(resolved)) {
@@ -610,27 +619,27 @@ preprocess_export_elements <- function(exportable_elements, is_selected, output_
         # Rough method for estimating an upper limit of table width
         # Code should never be narrower than the table, but it can overshoot by large sometimes
         char_width <- max(nchar(unlist(strsplit(latex(), "\n"))))
-        kind <- EXPORT$ELEMENT_KIND$TABLE
+        kind <- ODG$ELEMENT_KIND$TABLE
       } else {
         code <- get_code_in_context(metareactive())
-        kind <- EXPORT$ELEMENT_KIND$DEFAULT
+        kind <- ODG$ELEMENT_KIND$DEFAULT
       }
     }
 
-    export_element[["metareactive"]] <- NULL
-    export_element[["code"]] <- code
-    export_element[["kind"]] <- kind
-    export_element[["char_width"]] <- char_width
+    odg_element[["metareactive"]] <- NULL
+    odg_element[["code"]] <- code
+    odg_element[["kind"]] <- kind
+    odg_element[["char_width"]] <- char_width
 
-    log_inform(paste0("Preprocessed:", export_element[["id"]]))
-    res[[idx]] <- export_element
+    log_inform(paste0("Preprocessed:", odg_element[["id"]]))
+    res[[idx]] <- odg_element
   }
   res
 }
 
-#' Build the export selection modal
+#' Build the ODG selection modal
 #'
-#' @param exportable_elements Named list of all flattened exportable elements
+#' @param odg_elements Named list of all flattened ODG elements
 #'   (keyed by id), each with `module_id`, `module_name`, `label`, `info`,
 #'   `is_first_module_element`.
 #' @param ns Namespacing function for input/output ids.
@@ -642,14 +651,14 @@ preprocess_export_elements <- function(exportable_elements, is_selected, output_
 #'   switch event covers every element of that module.
 #' @keywords internal
 #' @noRd
-build_export_modal_ui <- function(exportable_elements, ns, selected_tab = NA) {
+build_odg_modal_ui <- function(odg_elements, ns, selected_tab = NA) {
   log_inform(paste("Preselecting", selected_tab, "tab elements in menu"))
 
   switches <- list()
-  selected <- logical(length(exportable_elements))
-  names(selected) <- names(exportable_elements)
+  selected <- logical(length(odg_elements))
+  names(selected) <- names(odg_elements)
 
-  for (curr_el in exportable_elements) {
+  for (curr_el in odg_elements) {
     is_selected <- is.na(selected_tab) || curr_el[["module_id"]] == selected_tab
     selected[[curr_el[["id"]]]] <- is_selected
 
@@ -668,7 +677,7 @@ build_export_modal_ui <- function(exportable_elements, ns, selected_tab = NA) {
           checked = if (is_selected) NA else NULL,
           onchange = sprintf(
             "Shiny.setInputValue('%s', {value: this.checked, id: '%s'});",
-            ns(EXPORT$ID$EXPORT_MENU_SELECTION),
+            ns(ODG$ID$ODG_MENU_SELECTION),
             curr_el[["module_id"]]
           )
         ),
@@ -679,20 +688,20 @@ build_export_modal_ui <- function(exportable_elements, ns, selected_tab = NA) {
 
   if (length(switches) > 0) {
     body_ui <- list(
-      do.call(bslib::card, c(list(bslib::card_header(EXPORT$MSG$OUTPUTS_CARD)), switches)),
+      do.call(bslib::card, c(list(bslib::card_header(ODG$MSG$OUTPUTS_CARD)), switches)),
       bslib::card(
-        bslib::card_header(EXPORT$MSG$FORMAT_CARD),
+        bslib::card_header(ODG$MSG$FORMAT_CARD),
         shiny::radioButtons(
-          ns(EXPORT$ID$OUTPUT_FORMAT),
+          ns(ODG$ID$OUTPUT_FORMAT),
           label = NULL,
           # HTML output is hidden for now, the rest of the pipeline still supports it
-          choices = list(PDF = EXPORT$OUTPUT_FORMAT$PDF)
+          choices = list(PDF = ODG$OUTPUT_FORMAT$PDF)
         )
       )
     )
-    download_button <- shiny::downloadButton(ns(EXPORT$ID$EXPORT_CODE), EXPORT$MSG$EXPORT_BUTTON)
+    download_button <- shiny::downloadButton(ns(ODG$ID$ODG_CODE), ODG$MSG$ODG_BUTTON)
   } else {
-    body_ui <- list(bslib::card(bslib::card_header(EXPORT$MSG$NOTHING_TO_EXPORT)))
+    body_ui <- list(bslib::card(bslib::card_header(ODG$MSG$NOTHING_TO_GENERATE)))
     download_button <- NULL
   }
 
@@ -714,52 +723,52 @@ build_export_modal_ui <- function(exportable_elements, ns, selected_tab = NA) {
   )
 }
 
-EA <- list()
+ODGA <- list()
 
-EA[["append_export_button"]] <- function(x, ns) {
-  log_inform("Attaching export button")
+ODGA[["append_odg_button"]] <- function(x, ns) {
+  log_inform("Attaching ODG button")
 
-  export_button <- shiny::tags[["button"]](
+  odg_button <- shiny::tags[["button"]](
     type = "button",
     class = "btn btn-default",
-    title = EXPORT$MSG$EXPORT_BUTTON,
+    title = ODG$MSG$ODG_BUTTON,
     shiny::icon("file-lines", class = "fa-lg"),
     onclick = sprintf(
       "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
-      ns(EXPORT$ID$EXPORT_CODE_MENU),
-      EXPORT$VAL$EXPORT_ALL
+      ns(ODG$ID$ODG_CODE_MENU),
+      ODG$VAL$ODG_ALL
     )
   )
 
   top_buttons <- c(
     x,
-    list(export_button)
+    list(odg_button)
   )
 
   top_buttons
 }
 
-EA[["export_server_quote"]] <- quote({
+ODGA[["odg_server_quote"]] <- quote({
   local({
-    log_inform("Running export server")
-    # Flatten exportable elements and set defaults for missing entries
-    exportable_elements <- local({
+    log_inform("Running ODG server")
+    # Flatten ODG elements and set defaults for missing entries
+    odg_elements <- local({
       res <- list()
       for (idx in seq_along(module_output)) {
         mo <- module_output[[idx]]
 
-        if ("to_export" %in% names(mo)) {
-          to_export_elements <- mo[["to_export"]]
+        if ("to_odg" %in% names(mo)) {
+          module_odg_elements <- mo[["to_odg"]]
           module_id <- names(module_output)[[idx]]
           module_name <- module_names[[module_id]]
 
-          for (jdx in seq_along(to_export_elements)) {
-            if (!checkmate::test_named(to_export_elements[[jdx]], type = "unique")) {
-              stop(sprintf("Exported elements for module %s are not named or names are not unique", module_id))
+          for (jdx in seq_along(module_odg_elements)) {
+            if (!checkmate::test_named(module_odg_elements[[jdx]], type = "unique")) {
+              stop(sprintf("ODG elements for module %s are not named or names are not unique", module_id))
             }
 
-            current_element_list_nm <- names(to_export_elements)[[jdx]]
-            current_element <- to_export_elements[[jdx]]
+            current_element_list_nm <- names(module_odg_elements)[[jdx]]
+            current_element <- module_odg_elements[[jdx]]
 
             first_module_element <- jdx == 1
             current_element[["label"]] <- current_element[["label"]] %||% current_element_list_nm
@@ -776,51 +785,57 @@ EA[["export_server_quote"]] <- quote({
       res
     })
 
-    shiny::observeEvent(input[[EXPORT$ID$EXPORT_MENU_SELECTION]], {
+    shiny::observeEvent(input[[ODG$ID$ODG_MENU_SELECTION]], {
       # switches are per module, so one event toggles every output of that module
-      selection <- input[[EXPORT$ID$EXPORT_MENU_SELECTION]]
-      module_element_ids <- names(exportable_elements)[
-        vapply(exportable_elements, function(el) el[["module_id"]] == selection[["id"]], logical(1))
+      selection <- input[[ODG$ID$ODG_MENU_SELECTION]]
+      module_element_ids <- names(odg_elements)[
+        vapply(odg_elements, function(el) el[["module_id"]] == selection[["id"]], logical(1))
       ]
-      is_output_selected_to_export[module_element_ids] <<- selection[["value"]]
+      is_output_selected_for_odg[module_element_ids] <<- selection[["value"]]
       log_inform(
         paste(
-          "Selected outputs to export",
-          paste(names(is_output_selected_to_export), is_output_selected_to_export, collapse = ", ")
+          "Selected outputs for ODG",
+          paste(names(is_output_selected_for_odg), is_output_selected_for_odg, collapse = ", ")
         )
       )
     })
 
-    is_output_selected_to_export <- NULL # TODO replace by reactiveValue so it can be used in the testServer?
-    shiny::observeEvent(input[[EXPORT$ID$EXPORT_CODE_MENU]], {
+    is_output_selected_for_odg <- NULL # TODO replace by reactiveValue so it can be used in the testServer?
+    shiny::observeEvent(input[[ODG$ID$ODG_CODE_MENU]], {
       if (is.null(attr(selected_dataset_list(), "load_fn"))) {
         dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
-        user_msg <- sprintf("Current dataset list `%s` is not configured for exporting.", dataset_list_name)
-        dev_msg <- sprintf("Export not possible for `%s`. No `load_fn` attribute found. ", dataset_list_name)
+        user_msg <- sprintf(
+          "Current dataset list `%s` is not configured for generating output documentation.",
+          dataset_list_name
+        )
+        dev_msg <- sprintf(
+          "Generating output documentation not possible for `%s`. No `load_fn` attribute found. ",
+          dataset_list_name
+        )
         log_warn(dev_msg)
         shiny::showNotification(user_msg, type = "error")
         shiny::req(FALSE)
       }
 
-      # every exportable output is listed, but only those in the tab in view start out selected
-      x <- build_export_modal_ui(exportable_elements, ns, selected_tab = input[[ID$NAV_HEADER]])
-      is_output_selected_to_export <<- x[["selected"]]
+      # every ODG output is listed, but only those in the tab in view start out selected
+      x <- build_odg_modal_ui(odg_elements, ns, selected_tab = input[[ID$NAV_HEADER]])
+      is_output_selected_for_odg <<- x[["selected"]]
 
       log_inform(
         paste(
-          "Selected outputs to export by default",
-          paste(names(is_output_selected_to_export), is_output_selected_to_export, collapse = ", ")
+          "Selected outputs for ODG by default",
+          paste(names(is_output_selected_for_odg), is_output_selected_for_odg, collapse = ", ")
         )
       )
 
       shiny::showModal(x[["modal_dialog"]])
     })
 
-    output[[EXPORT$ID$EXPORT_CODE]] <- shiny::downloadHandler(
-      filename = "export.zip",
+    output[[ODG$ID$ODG_CODE]] <- shiny::downloadHandler(
+      filename = "odg.zip",
       content = function(filename) {
-        shiny::withProgress(message = "Rendering export", expr = {
-          output_format <- input[[EXPORT$ID$OUTPUT_FORMAT]]
+        shiny::withProgress(message = "Generating output documentation", expr = {
+          output_format <- input[[ODG$ID$OUTPUT_FORMAT]]
 
           ec <- shiny::isolate({
             .ec <- shinymeta::newExpansionContext()
@@ -829,7 +844,7 @@ EA[["export_server_quote"]] <- quote({
             .ec$substituteMetaReactive(selected_dataset_list, function() {
               # This metaExpression contains part of the logic of selected dataset list, add date_range and attribute
               # It is not ideal as they may get desynchronized in the future
-              AEE[["A"]][["sm_me"]]({
+              ODGE[["A"]][["sm_me"]]({
                 df <- ..(fn)
                 df <- dv.manager::add_date_range(df)
                 attr(df, "dataset_list_name") <- ..(dln)
@@ -865,7 +880,7 @@ EA[["export_server_quote"]] <- quote({
           dynamic_hash_section <- build_dynamic_hash_section(selected_dataset_list, get_code_in_context)
 
           filter_txt_section <- local({
-            cat_mr <- AEE[["A"]][["sm_mr"]](
+            cat_mr <- ODGE[["A"]][["sm_mr"]](
               {
                 cat(..(filter_txt()))
               },
@@ -878,7 +893,7 @@ EA[["export_server_quote"]] <- quote({
 
           filter_reference_list_txt_section <- local({
             if (nchar(filter_reference_list_txt()) > 0) {
-              cat_mr <- AEE[["A"]][["sm_mr"]](
+              cat_mr <- ODGE[["A"]][["sm_mr"]](
                 {
                   cat(..(filter_reference_list_txt()))
                 },
@@ -886,7 +901,7 @@ EA[["export_server_quote"]] <- quote({
                 varname = "cat_filter_reference_list_txt"
               )
             } else {
-              cat_mr <- AEE[["A"]][["sm_mr"]](
+              cat_mr <- ODGE[["A"]][["sm_mr"]](
                 {
                   cat("No references found")
                 },
@@ -898,17 +913,17 @@ EA[["export_server_quote"]] <- quote({
             build_filter_reference_section(get_code_in_context(cat_mr()))
           })
 
-          log_inform("Preprocessing export elements")
-          elements_to_export <- preprocess_export_elements(
-            exportable_elements,
-            is_output_selected_to_export,
+          log_inform("Preprocessing ODG elements")
+          selected_odg_elements <- preprocess_odg_elements(
+            odg_elements,
+            is_output_selected_for_odg,
             output_format,
             get_code_in_context
           )
 
           log_inform("Creating rmarkdown")
-          rmarkdown <- build_export_rmd(
-            elements_to_export = elements_to_export,
+          rmarkdown <- build_odg_rmd(
+            selected_odg_elements = selected_odg_elements,
             output_format = output_format,
             data_code = data_code,
             sections = list(
@@ -919,19 +934,19 @@ EA[["export_server_quote"]] <- quote({
               filter_reference = filter_reference_list_txt_section
             ),
             templates = list(
-              header = EXPORT$TEMPLATES$HEADER[[output_format]],
-              session_info = EXPORT$TEMPLATES$SESSION_INFO[[output_format]],
-              footer = EXPORT$TEMPLATES$FOOTER[[output_format]]
+              header = ODG$TEMPLATES$HEADER[[output_format]],
+              session_info = ODG$TEMPLATES$SESSION_INFO[[output_format]],
+              footer = ODG$TEMPLATES$FOOTER[[output_format]]
             )
           )
 
           log_inform("Rendering rmarkdown")
           header <- paste(
-            readLines(system.file("export_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
+            readLines(system.file("odg_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
             collapse = "\n"
           )
           rendered_filename <- callr::r(
-            render_export_document,
+            render_odg_document,
             args = list(
               rmarkdown = rmarkdown,
               header = header,
@@ -942,7 +957,10 @@ EA[["export_server_quote"]] <- quote({
             show = TRUE
           )
           if (length(attr(rendered_filename, "error_msg")) > 0) {
-            log_warn(sprintf("Error while rendering export: %s", attr(rendered_filename, "error_msg")))
+            log_warn(sprintf(
+              "Error while generating output documentation: %s",
+              attr(rendered_filename, "error_msg")
+            ))
           }
           attr(rendered_filename, "error_msg") <- NULL
         })
@@ -969,30 +987,30 @@ latex_header_repeat <- function(x) {
 }
 
 
-..activate_export <- function() {
+..activate_odg <- function() {
   if (requireNamespace("shinymeta", quietly = TRUE)) {
-    log_warn("Export functionality is under development")
+    log_warn("Output documentation generation is under development")
 
     # These set of functions is declared inside to avoid calling shinymeta out of a function.
     # Doing that would require some extra if statements that would worsen code readability.
 
     # shinymeta::metaReactive2
-    EA[["sm_mr2"]] <- shinymeta::metaReactive2
+    ODGA[["sm_mr2"]] <- shinymeta::metaReactive2
 
     # shinymeta::metaReactive
-    EA[["sm_mr"]] <- shinymeta::metaReactive
+    ODGA[["sm_mr"]] <- shinymeta::metaReactive
 
     # shinymeta::metaExpr
-    EA[["sm_me"]] <- shinymeta::metaExpr
+    ODGA[["sm_me"]] <- shinymeta::metaExpr
 
-    AEE[["A"]] <- EA
+    ODGE[["A"]] <- ODGA
   } else {
-    log_warn("`shinymeta` package is required to activate export functionality")
-    AEE[["A"]] <- NEA
+    log_warn("`shinymeta` package is required to activate output documentation generation")
+    ODGE[["A"]] <- NODGA
   }
   invisible(NULL)
 }
 
-..deactivate_export <- function() {
-  AEE[["A"]] <- NEA
+..deactivate_odg <- function() {
+  ODGE[["A"]] <- NODGA
 }

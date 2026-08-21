@@ -1,4 +1,4 @@
-# export_element_formatters formats PDF default elements, with a section header only for the first element
+# odg_element_formatters formats PDF default elements, with a section header only for the first element
 
     Code
       cat(first)
@@ -30,7 +30,7 @@
       ```
       
 
-# export_element_formatters wraps PDF tables in a wide page sized to char_width
+# odg_element_formatters wraps PDF tables in a wide page sized to char_width
 
     Code
       cat(out)
@@ -61,7 +61,7 @@
       \stopwidepage
       
 
-# export_element_formatters flags PDF errors with alertwarning
+# odg_element_formatters flags PDF errors with alertwarning
 
     Code
       cat(out)
@@ -76,7 +76,7 @@
       \alertwarning{boom}
       
 
-# export_element_formatters formats HTML elements, and table delegates to default
+# odg_element_formatters formats HTML elements, and table delegates to default
 
     Code
       cat(default_out)
@@ -110,7 +110,7 @@
       ```
       
 
-# export_element_formatters flags HTML errors with an alert div
+# odg_element_formatters flags HTML errors with an alert div
 
     Code
       cat(out)
@@ -125,7 +125,7 @@
       <div class = "alert alert-warning" role = "alert">boom</div>
       
 
-# build_export_rmd assembles an HTML document from all pieces, in order
+# build_odg_rmd assembles an HTML document from all pieces, in order
 
     Code
       cat(rmd)
@@ -177,7 +177,7 @@
       FIXTURE_FOOTER_TEMPLATE
       
 
-# build_export_rmd wraps a PDF table element in a wide page
+# build_odg_rmd wraps a PDF table element in a wide page
 
     Code
       cat(rmd)

@@ -1,7 +1,7 @@
-# filter_to_export works with an empty filter
+# filter_to_odg works with an empty filter
 
     Code
-      filter_to_export(udlwfi)
+      filter_to_odg(udlwfi)
     Output
       $txt
       [1] "Subject filter\n\ndf1_label [df1] (2 out of 2 ─ 0 rows dropped)\n\ndf2_label [df2] (1 out of 2 ─ 1 rows dropped)\n"
@@ -10,17 +10,17 @@
       [1] ""
       
 
-# filter_to_export works with all actions
+# filter_to_odg works with all actions
 
     Code
-      filter_to_export(udlwfi)[["txt"]]
+      filter_to_odg(udlwfi)[["txt"]]
     Output
       [1] "Subject filter\n└─ union\n   └─ intersect\n      └─ complement\n         └─ not\n            └─ and\n               └─ or\n                  ├─ Variable: a_label [a]\n                  │  ├─ Dataset: df1_label [df1]\n                  │  ├─ Min: 2\n                  │  ├─ Max: 4\n                  │  └─ Include NA: FALSE\n                  │ \n                  └─ Variable: b_label [b]\n                     ├─ Dataset: df1_label [df1]\n                     ├─ Selected 26 value(s)\n                     │  ├─ a\n                     │  ├─ b\n                     │  ├─ c\n                     │  ├─ d\n                     │  ├─ e\n                     │  └─ ... (21 values not shown. See filter reference (1))\n                     └─ Include NA: FALSE\n                    \n\ndf1_label [df1] (2 out of 2 ─ 0 rows dropped)\n└─ not\n   └─ and\n      └─ or\n         ├─ Variable: a_label [a]\n         │  ├─ Dataset: df1_label [df1]\n         │  ├─ Min: 2\n         │  ├─ Max: 4\n         │  └─ Include NA: FALSE\n         │ \n         └─ Variable: b_label [b]\n            ├─ Dataset: df1_label [df1]\n            ├─ Selected 26 value(s)\n            │  ├─ a\n            │  ├─ b\n            │  ├─ c\n            │  ├─ d\n            │  ├─ e\n            │  └─ ... (21 values not shown. See filter reference (2))\n            └─ Include NA: FALSE\n           \n\ndf2_label [df2] (1 out of 2 ─ 1 rows dropped)\n"
 
 ---
 
     Code
-      message(filter_to_export(udlwfi)[["txt"]])
+      message(filter_to_odg(udlwfi)[["txt"]])
     Message
       Subject filter
       └─ union
@@ -75,7 +75,7 @@
 ---
 
     Code
-      message(filter_to_export(udlwfi)[["reference_txt"]])
+      message(filter_to_odg(udlwfi)[["reference_txt"]])
     Message
       Reference (1): 
       "a"	"b"	"c"	"d"	"e"	"f"	"g"	"h"	"i"	"j"	"k"	"l"	"m"	"n"	"o"	"p"	"q"	"r"	"s"	"t"	"u"	"v"	"w"	"x"	"y"	"z"

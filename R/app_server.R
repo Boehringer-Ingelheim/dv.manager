@@ -79,7 +79,7 @@ app_server_ <- function(input, output, session, opts) {
     }
   })
 
-  selected_dataset_list <- AEE[["A"]][["sm_mr"]](
+  selected_dataset_list <- ODGE[["A"]][["sm_mr"]](
     {
       dataset_list_name <- input[["selector"]]
       shiny::req(checkmate::test_string(dataset_list_name, min.chars = 1))
@@ -114,12 +114,12 @@ app_server_ <- function(input, output, session, opts) {
     )
   }
 
-  unfiltered_dataset_list_ <- AEE[["A"]][["sm_mr2"]](
+  unfiltered_dataset_list_ <- ODGE[["A"]][["sm_mr2"]](
     {
       ..t$add_period("unfiltered_dataset_list_", TRUE)
       on.exit(..t$add_period("unfiltered_dataset_list_", FALSE))
 
-      res_apply_subgroups <- AEE[["A"]][["sm_me"]](
+      res_apply_subgroups <- ODGE[["A"]][["sm_me"]](
         {
           dv.manager::apply_subgroups(
             ..(selected_dataset_list()),
@@ -137,7 +137,7 @@ app_server_ <- function(input, output, session, opts) {
     varname = "unfiltered_dataset_list_"
   )
 
-  unfiltered_dataset_list <- AEE[["A"]][["sm_mr2"]](
+  unfiltered_dataset_list <- ODGE[["A"]][["sm_mr2"]](
     {
       ..t$add_period("unfiltered_dataset_list", TRUE)
       on.exit(..t$add_period("unfiltered_dataset_list", FALSE))
@@ -147,7 +147,7 @@ app_server_ <- function(input, output, session, opts) {
       }
       subgroups[["set_incorrect_subgroups"]](unfiltered_dataset_list_()[["result"]][["incorrect_subgroups"]])
 
-      AEE[["A"]][["sm_me"]](
+      ODGE[["A"]][["sm_me"]](
         {
           ..(unfiltered_dataset_list_())[["result"]][["dataset_list"]]
         },
@@ -157,14 +157,14 @@ app_server_ <- function(input, output, session, opts) {
     varname = "unfiltered_dataset_list"
   )
 
-  unfiltered_dataset_list_with_filter_info_ <- AEE[["A"]][["sm_mr2"]](
+  unfiltered_dataset_list_with_filter_info_ <- ODGE[["A"]][["sm_mr2"]](
     {
       ..t$add_period("unfiltered_dataset_list_with_filter_info_", TRUE)
       on.exit(..t$add_period("unfiltered_dataset_list_with_filter_info_", FALSE))
       # Place reqs here so all elements are synchronized before going forward
       # Consider generation counters (Check current approach)
 
-      res <- AEE[["A"]][["sm_me"]](
+      res <- ODGE[["A"]][["sm_me"]](
         {
           r_unfiltered_dataset_list <- ..(shiny::isolate(unfiltered_dataset_list()))
           r_dataset_list_filter <- ..(dataset_list_filter()) # List that describes the filter no need of solving it in shinymeta
@@ -192,7 +192,7 @@ app_server_ <- function(input, output, session, opts) {
     varname = "unfiltered_dataset_list_with_filter_info_"
   )
 
-  unfiltered_dataset_list_with_filter_info <- AEE[["A"]][["sm_mr2"]](
+  unfiltered_dataset_list_with_filter_info <- ODGE[["A"]][["sm_mr2"]](
     {
       ..t$add_period("unfiltered_dataset_list_with_filter_info", TRUE)
       on.exit(..t$add_period("unfiltered_dataset_list_with_filter_info", FALSE))
@@ -207,17 +207,16 @@ app_server_ <- function(input, output, session, opts) {
           )
       )
 
-    if (unfiltered_dataset_list_with_filter_info_()[["error_list"]]$any()) {
-      msg <- shiny::div(
-        shiny::p(paste(filter_info[["error_list"]]$get_messages(), collapse = "; ")),
-        shiny::p("Please select a valid filter or clear current filter to continue")
-      )
-      shiny::showNotification(msg, type = "error", duration = NULL)
-      shiny::req(FALSE)
-    }
+      if (unfiltered_dataset_list_with_filter_info_()[["error_list"]]$any()) {
+        msg <- shiny::div(
+          shiny::p(paste(filter_info[["error_list"]]$get_messages(), collapse = "; ")),
+          shiny::p("Please select a valid filter or clear current filter to continue")
+        )
+        shiny::showNotification(msg, type = "error", duration = NULL)
+        shiny::req(FALSE)
+      }
 
-
-      res <- AEE[["A"]][["sm_me"]](
+      res <- ODGE[["A"]][["sm_me"]](
         {
           ..(unfiltered_dataset_list_with_filter_info_())
         }
@@ -230,29 +229,29 @@ app_server_ <- function(input, output, session, opts) {
     varname = "unfiltered_dataset_list_with_filter_info"
   )
 
-  filter_export <- AEE[["A"]][["sm_mr2"]](
+  filter_odg <- ODGE[["A"]][["sm_mr2"]](
     {
       shiny::req(unfiltered_dataset_list_with_filter_info())
 
-      AEE[["A"]][["sm_me"]]({
-        dv.manager::filter_to_export(
+      ODGE[["A"]][["sm_me"]]({
+        dv.manager::filter_to_odg(
           ..(unfiltered_dataset_list_with_filter_info())
         )
       })
     },
-    varname = "filter_export"
+    varname = "filter_odg"
   )
 
-  filter_txt <- AEE[["A"]][["sm_mr"]](
+  filter_txt <- ODGE[["A"]][["sm_mr"]](
     {
-      ..(filter_export())[["txt"]]
+      ..(filter_odg())[["txt"]]
     },
     varname = "filter_txt"
   )
 
-  filter_reference_list_txt <- AEE[["A"]][["sm_mr"]](
+  filter_reference_list_txt <- ODGE[["A"]][["sm_mr"]](
     {
-      ..(filter_export())[["reference_txt"]]
+      ..(filter_odg())[["reference_txt"]]
     },
     varname = "filter_reference_list_txt"
   )
@@ -261,11 +260,11 @@ app_server_ <- function(input, output, session, opts) {
     log_inform(paste0("\n", filter_txt()))
   })
 
-  filtered_dataset_list <- AEE[["A"]][["sm_mr2"]](
+  filtered_dataset_list <- ODGE[["A"]][["sm_mr2"]](
     {
       ..t$add_period("filtered_dataset_list", TRUE)
       on.exit(..t$add_period("filtered_dataset_list", FALSE))
-      fd <- AEE[["A"]][["sm_me"]]({
+      fd <- ODGE[["A"]][["sm_me"]]({
         r_unfiltered_dataset_list_with_filter_info <- ..(unfiltered_dataset_list_with_filter_info())
 
         dv.manager::get_filtered_dataset_list(r_unfiltered_dataset_list_with_filter_info)
@@ -449,7 +448,7 @@ app_server_ <- function(input, output, session, opts) {
     paste0("Dataset name: ", input$selector)
   })
 
-  date_range <- AEE[["A"]][["sm_mr"]](
+  date_range <- ODGE[["A"]][["sm_mr"]](
     {
       date_range <- attr(..(unfiltered_dataset_list()), "date_range")
 
@@ -480,7 +479,7 @@ app_server_ <- function(input, output, session, opts) {
 
   ### Export
 
-  eval(AEE[["A"]][["export_server_quote"]])
+  eval(ODGE[["A"]][["odg_server_quote"]])
 }
 
 # Convoluted way of having a testable server function

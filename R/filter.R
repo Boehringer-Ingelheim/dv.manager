@@ -1513,7 +1513,7 @@ apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) 
 # TODO: Add HTML spans with tooltip info
 # TODO: Add the state at each of the levels, it should be possible when we calculate the masks and the levels in the dataset
 
-#' Describe the active filter as a plain-text tree for the export document
+#' Describe the active filter as a plain-text tree for the output document
 #'
 #' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =,
 #'   dataset_list_filter =, ...)`, as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
@@ -1522,7 +1522,7 @@ apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) 
 #' @keywords internal
 #' @export
 #' @noRd
-filter_to_export <- function(unfiltered_dataset_list_with_filter_info) {
+filter_to_odg <- function(unfiltered_dataset_list_with_filter_info) {
   TC <- c(
     h = "\u2500", # ─
     v = "\u2502 ", # │(spc)

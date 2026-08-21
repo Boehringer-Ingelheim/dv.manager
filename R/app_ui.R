@@ -70,7 +70,7 @@ app_ui <- function(request_id) {
     # shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("question")), class = "navbar-btn"), # nolint
   )
 
-  top_buttons <- AEE[["A"]][["append_export_button"]](top_buttons, ns)
+  top_buttons <- ODGE[["A"]][["append_odg_button"]](top_buttons, ns)
 
   dataset_name <-
     shiny::div(

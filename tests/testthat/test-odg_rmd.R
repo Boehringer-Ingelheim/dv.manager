@@ -1,6 +1,6 @@
-dv.manager:::..activate_export()
+dv.manager:::..activate_odg()
 on.exit(
-  dv.manager:::..deactivate_export(),
+  dv.manager:::..deactivate_odg(),
   add = TRUE
 )
 
@@ -25,13 +25,13 @@ local({
     )
   }
 
-  test_that("export_element_formatters formats PDF default elements, with a section header only for the first element", {
-    formatters <- EXPORT_ELEMENT_FORMATTERS
+  test_that("odg_element_formatters formats PDF default elements, with a section header only for the first element", {
+    formatters <- ODG_ELEMENT_FORMATTERS
 
-    first <- formatters[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$DEFAULT]](
+    first <- formatters[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$DEFAULT]](
       make_element(is_first_module_element = TRUE)
     )
-    later <- formatters[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$DEFAULT]](
+    later <- formatters[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$DEFAULT]](
       make_element(is_first_module_element = FALSE)
     )
 
@@ -39,40 +39,40 @@ local({
     expect_snapshot(cat(later))
   })
 
-  test_that("export_element_formatters wraps PDF tables in a wide page sized to char_width", {
-    formatters <- EXPORT_ELEMENT_FORMATTERS
+  test_that("odg_element_formatters wraps PDF tables in a wide page sized to char_width", {
+    formatters <- ODG_ELEMENT_FORMATTERS
 
-    out <- formatters[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$TABLE]](
-      make_element(kind = EXPORT$ELEMENT_KIND$TABLE, char_width = 42)
+    out <- formatters[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$TABLE]](
+      make_element(kind = ODG$ELEMENT_KIND$TABLE, char_width = 42)
     )
     expect_snapshot(cat(out))
   })
 
-  test_that("export_element_formatters flags PDF errors with alertwarning", {
-    formatters <- EXPORT_ELEMENT_FORMATTERS
+  test_that("odg_element_formatters flags PDF errors with alertwarning", {
+    formatters <- ODG_ELEMENT_FORMATTERS
 
-    out <- formatters[[EXPORT$OUTPUT_FORMAT$PDF]][[EXPORT$ELEMENT_KIND$ERROR]](
-      make_element(kind = EXPORT$ELEMENT_KIND$ERROR, code = "boom")
+    out <- formatters[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$ERROR]](
+      make_element(kind = ODG$ELEMENT_KIND$ERROR, code = "boom")
     )
     expect_snapshot(cat(out))
   })
 
-  test_that("export_element_formatters formats HTML elements, and table delegates to default", {
-    formatters <- EXPORT_ELEMENT_FORMATTERS
+  test_that("odg_element_formatters formats HTML elements, and table delegates to default", {
+    formatters <- ODG_ELEMENT_FORMATTERS
     el <- make_element()
 
-    default_out <- formatters[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$DEFAULT]](el)
-    table_out <- formatters[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$TABLE]](el)
+    default_out <- formatters[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$DEFAULT]](el)
+    table_out <- formatters[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$TABLE]](el)
 
     expect_snapshot(cat(default_out))
     expect_snapshot(cat(table_out))
   })
 
-  test_that("export_element_formatters flags HTML errors with an alert div", {
-    formatters <- EXPORT_ELEMENT_FORMATTERS
+  test_that("odg_element_formatters flags HTML errors with an alert div", {
+    formatters <- ODG_ELEMENT_FORMATTERS
 
-    out <- formatters[[EXPORT$OUTPUT_FORMAT$HTML]][[EXPORT$ELEMENT_KIND$ERROR]](
-      make_element(kind = EXPORT$ELEMENT_KIND$ERROR, code = "boom")
+    out <- formatters[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$ERROR]](
+      make_element(kind = ODG$ELEMENT_KIND$ERROR, code = "boom")
     )
     expect_snapshot(cat(out))
   })
@@ -91,26 +91,26 @@ local({
     footer = "FIXTURE_FOOTER_TEMPLATE"
   )
 
-  test_that("build_export_rmd assembles an HTML document from all pieces, in order", {
+  test_that("build_odg_rmd assembles an HTML document from all pieces, in order", {
     elements <- list(
       make_element(
         id = "mod1-el1",
-        kind = EXPORT$ELEMENT_KIND$DEFAULT,
+        kind = ODG$ELEMENT_KIND$DEFAULT,
         label = "Element 1",
         is_first_module_element = TRUE
       ),
       make_element(
         id = "mod1-el2",
-        kind = EXPORT$ELEMENT_KIND$ERROR,
+        kind = ODG$ELEMENT_KIND$ERROR,
         label = "Element 2",
         is_first_module_element = FALSE,
         code = "boom"
       )
     )
 
-    rmd <- build_export_rmd(
-      elements_to_export = elements,
-      output_format = EXPORT$OUTPUT_FORMAT$HTML,
+    rmd <- build_odg_rmd(
+      selected_odg_elements = elements,
+      output_format = ODG$OUTPUT_FORMAT$HTML,
       data_code = "df <- load_data()",
       sections = fixture_sections,
       templates = fixture_templates
@@ -119,20 +119,20 @@ local({
     expect_snapshot(rmd |> cat())
   })
 
-  test_that("build_export_rmd wraps a PDF table element in a wide page", {
+  test_that("build_odg_rmd wraps a PDF table element in a wide page", {
     elements <- list(
       make_element(
         id = "mod1-el1",
-        kind = EXPORT$ELEMENT_KIND$TABLE,
+        kind = ODG$ELEMENT_KIND$TABLE,
         label = "Table 1",
         is_first_module_element = TRUE,
         char_width = 10
       )
     )
 
-    rmd <- build_export_rmd(
-      elements_to_export = elements,
-      output_format = EXPORT$OUTPUT_FORMAT$PDF,
+    rmd <- build_odg_rmd(
+      selected_odg_elements = elements,
+      output_format = ODG$OUTPUT_FORMAT$PDF,
       data_code = "df <- load_data()",
       sections = fixture_sections,
       templates = fixture_templates

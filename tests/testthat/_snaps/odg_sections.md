@@ -9,7 +9,7 @@
       
        **name**: `b` **hash**: 3283d8f999f408731e81590e84265eec
       
-      These hashes are calculated in-app, they correspond to the data loaded in the app that created the export.
+      These hashes are calculated in-app, they correspond to the data loaded in the app that created this output documentation.
       
 
 # build_hardcoded_hash_section handles an empty dataset list
@@ -19,7 +19,7 @@
     Output
       ## Hardcoded Data hash:
       
-      These hashes are calculated in-app, they correspond to the data loaded in the app that created the export.
+      These hashes are calculated in-app, they correspond to the data loaded in the app that created this output documentation.
       
 
 # build_dynamic_hash_section emits an asis loop referencing the shared dataset-list variable
@@ -35,7 +35,7 @@
       }
       ```
       
-      These hashes are calculated during export rendering, and should match those in the **Hardcoded Data hash** section.
+      These hashes are calculated while generating the output documentation, and should match those in the **Hardcoded Data hash** section.
       
 
 # build_dynamic_hash_section handles zero datasets
@@ -51,7 +51,7 @@
       }
       ```
       
-      These hashes are calculated during export rendering, and should match those in the **Hardcoded Data hash** section.
+      These hashes are calculated while generating the output documentation, and should match those in the **Hardcoded Data hash** section.
       
 
 # build_date_section embeds the date range and a per-dataset modification-time loop
@@ -72,7 +72,7 @@
       }
       ```
       
-      These dates are calculated during export rendering.
+      These dates are calculated while generating the output documentation.
       
 
 # build_date_section shows a blank modification time instead of dropping the line when meta is missing
@@ -93,7 +93,7 @@
       }
       ```
       
-      These dates are calculated during export rendering.
+      These dates are calculated while generating the output documentation.
       
 
 # build_date_section handles zero datasets
@@ -114,20 +114,19 @@
       }
       ```
       
-      These dates are calculated during export rendering.
+      These dates are calculated while generating the output documentation.
       
 
 # build_filter_txt_section wraps the filter code in format-appropriate verbatim tags
 
     Code
-      cat(build_filter_txt_section(EXPORT$OUTPUT_FORMAT$HTML,
-      "FIXTURE_FILTER_TXT_CODE"))
+      cat(build_filter_txt_section(ODG$OUTPUT_FORMAT$HTML, "FIXTURE_FILTER_TXT_CODE"))
     Output
       ## Filters:
       
       <pre>
       
-      ```{r filter_export_txt, echo = FALSE, results='asis'}
+      ```{r filter_odg_txt, echo = FALSE, results='asis'}
       
       FIXTURE_FILTER_TXT_CODE
       
@@ -135,19 +134,18 @@
       
       </pre>
       
-      An explicit call to the filter and parameters used can be found in the code that accompanies this export.
+      An explicit call to the filter and parameters used can be found in the code that accompanies this output documentation.
 
 ---
 
     Code
-      cat(build_filter_txt_section(EXPORT$OUTPUT_FORMAT$PDF,
-      "FIXTURE_FILTER_TXT_CODE"))
+      cat(build_filter_txt_section(ODG$OUTPUT_FORMAT$PDF, "FIXTURE_FILTER_TXT_CODE"))
     Output
       ## Filters:
       
       \begin{verbatim}
       
-      ```{r filter_export_txt, echo = FALSE, results='asis'}
+      ```{r filter_odg_txt, echo = FALSE, results='asis'}
       
       FIXTURE_FILTER_TXT_CODE
       
@@ -155,7 +153,7 @@
       
       \end{verbatim}
       
-      An explicit call to the filter and parameters used can be found in the code that accompanies this export.
+      An explicit call to the filter and parameters used can be found in the code that accompanies this output documentation.
 
 # build_filter_reference_section wraps the filter reference code
 
@@ -164,7 +162,7 @@
     Output
       # Filter references:
       
-      ```{r filter_export_reference_list, echo = FALSE, results='asis'}
+      ```{r filter_odg_reference_list, echo = FALSE, results='asis'}
       
       FIXTURE_FILTER_REFERENCE_CODE
       
