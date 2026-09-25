@@ -53,7 +53,8 @@ specs <- list(
     "DATASET_LIST_MOD_DATE_UNAVAILABLE_UI" = "If no mtime is available, 'Date unavailable' is displayed in the UI; a warning is logged if meta$mtime is NULL.",
     "DATASET_LIST_EMPTY_SUPPORTED" = "Datasets with zero rows are supported.",
     "DATASET_LISTS_RELOAD_DURATION" = "Datasets can be reloaded after a duration specified by data_reload (must be lubridate duration or positive numeric).",
-    "DATASET_LIST_SELECTION_BOOKMARKABLE" = "The identity of the active dataset is included in bookmarks."
+    "DATASET_LIST_SELECTION_BOOKMARKABLE" = "The identity of the active dataset is included in bookmarks.",
+    "DATASET_LIST_CACHING" = "Consecutive accesses to a dataset_list provided by a function execute, at most, a single call to that function."
   ),
 
   # --- Filtering ---

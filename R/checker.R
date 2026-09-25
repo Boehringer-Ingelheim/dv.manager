@@ -27,77 +27,62 @@ check_resolved_modules <- function(resolved_module_list) {
   return(resolved_module_list)
 }
 
-check_data <- function(data) {
-  # TODO: This function lets functions pass unchecked. It should be checked if these functions return lists of dataframes
-  # keep in mind that it should be possible to bypass this check.
+check_dataset_list <- function(dataset_list) {
+  ok <- FALSE
+  if (is.list(dataset_list)) {
+    ok <- TRUE
+    for (df in dataset_list) {
+      ok <- ok && is.data.frame(df)
+    }
+  }
+
+  if (!ok) {
+    msg <- "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes"
+    stop(msg)
+  }
+
+  dataset_list
+}
+
+check_data_while_ignoring_dataset_list_fns <- function(data) {
   # NULL data is disallowed
   if (is.null(data)) {
     msg <- "data argument is NULL. If you are trying to run an application without data, use an empty list 'dv.manager::run_app(data = list(), ...)'" # nolint
     stop(msg)
   }
 
-  ok <- TRUE
-  for (idx in seq_along(data)) {
-    dataset_list <- data[[idx]]
-    if (is.list(dataset_list)) {
-      for (jdx in seq_along(dataset_list)) {
-        ok <- ok && is.data.frame(dataset_list[[jdx]])
-      }
-    } else if (!is.function(dataset_list)) {
-      ok <- FALSE
-    }
-    if (!ok) {
-      msg <- "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes"
-      stop(msg)
-    }
-  }
-
   # Check we are passing a named list
   if (!has_all_items_named(data)) {
-    msg <- "All entries in data must be named"
+    msg <- "data argument must be a list an all its entries must be named"
     stop(msg)
+  }
+
+  for (dataset_list in data) {
+    if (!is.function(dataset_list)) {
+      check_dataset_list(dataset_list)
+    }
   }
 
   data
 }
 
-check_filter_dataset_name <- function(filter_dataset_name, dataset_lists) {
+check_filter_dataset_name <- function(filter_dataset_name, dataset_list, dataset_list_name) {
   # TODO it is possible to improve the feedback from this function. It stops in the first error found. We could check
   # all of them at once. This way the app creator can correct all the errors in one go.
-
-  if (length(dataset_lists) == 0) {
-    return(filter_dataset_name)
-  }
 
   if (is.null(filter_dataset_name)) {
     msg <- "No filter_dataset_name specified!"
     stop(msg)
   }
 
-  error_messages <- character(0)
-
-  for (idx in seq_along(dataset_lists)) {
-    dataset_list <- dataset_lists[[idx]]
-    dataset_list_name <- names(dataset_lists)[[idx]]
-    if (is.function(dataset_list)) {
-      dataset_list <- dataset_list()
-    } else {
-      dataset_list <- dataset_list
-    }
-
-    if (!filter_dataset_name %in% names(dataset_list)) {
-      stop(sprintf("%s has no `%s` table", dataset_list_name, filter_dataset_name))
-    }
+  if (!filter_dataset_name %in% names(dataset_list)) {
+    stop(sprintf("%s has no `%s` table", dataset_list_name, filter_dataset_name))
   }
 
   filter_dataset_name
 }
 
-check_filter_key <- function(filter_key, dataset_lists) {
-  if (length(dataset_lists) == 0) {
-    return(filter_key)
-  }
-
+check_filter_key <- function(filter_key, dataset_list) {
   if (is.null(filter_key)) {
     msg <- "filter_key is not specified"
     stop(msg)
@@ -105,19 +90,10 @@ check_filter_key <- function(filter_key, dataset_lists) {
 
   filter_key_present <- TRUE
 
-  for (idx in seq_along(dataset_lists)) {
-    dataset_list <- dataset_lists[[idx]]
-    if (is.function(dataset_list)) {
-      dataset_list <- dataset_list()
-    } else {
-      dataset_list <- dataset_list
-    }
-
-    for (jdx in seq_along(dataset_list)) {
-      if (!filter_key %in% names(dataset_list[[jdx]])) {
-        filter_key_present <- FALSE
-        break
-      }
+  for (idx in seq_along(dataset_list)) {
+    if (!filter_key %in% names(dataset_list[[idx]])) {
+      filter_key_present <- FALSE
+      break
     }
   }
 
@@ -131,38 +107,28 @@ check_filter_key <- function(filter_key, dataset_lists) {
   filter_key
 }
 
-check_meta_mtime_attribute <- function(datasets) {
-  check_warning <- purrr::imap(
-    datasets,
-    function(x, y) {
-      log_inform(sprintf("Checking date for dataset %s", y))
-      if (is.function(x)) {
-        d <- x()
-      } else {
-        d <- x
-      }
-      purrr::quietly(get_date_range)(
-        purrr::map(d, ~ attr(.x, "meta")[["mtime"]])
-      )
+check_meta_mtime_attribute <- function(dataset_list, dataset_list_name) {
+  log_inform(sprintf("Checking date for dataset_list %s", dataset_list_name))
+
+  captured_warnings <- character()
+  withCallingHandlers(
+    get_date_range(
+      lapply(dataset_list, function(el) attr(el, "meta")[["mtime"]])
+    ),
+    warning = function(w) {
+      captured_warnings <<- c(captured_warnings, w$message)
+      invokeRestart("muffleWarning")
     }
   )
 
-  warned_dataset <- purrr::keep(check_warning, ~ length(.x[["warnings"]]) != 0)
-
-  check_passed <- length(warned_dataset) == 0
-
+  check_passed <- length(captured_warnings) == 0
   if (check_passed) {
     log_inform("Check date: Passed")
   } else {
     log_warn("Check date: Not passed. One or more datasets are not dated.")
-    purrr::iwalk(
-      warned_dataset,
-      ~ {
-        purrr::walk(.x[["warnings"]], function(wm) {
-          log_warn(sprintf("%s -> %s", .y, wm))
-        })
-      }
-    )
+    for (wm in captured_warnings) {
+      log_warn(sprintf("%s -> %s", dataset_list_name, wm))
+    }
   }
 
   check_passed

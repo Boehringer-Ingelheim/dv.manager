@@ -377,7 +377,7 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       )
 
       res <- list(
-        filter_info = filter_info
+        filter_info = filter_info[["result"]][["filter_info"]]
       )
 
       res
