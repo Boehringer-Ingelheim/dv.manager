@@ -1,30 +1,22 @@
-# dv.manager 3.1.0-9005
+# dv.manager 3.2.0
 
-- filter clean up
-- add support for special characters in filter selectors
-- change default behavior of filters to NOT include NA values
+ - Performance:
+    - Minimize dataset function evaluation during `run_app` dataset checks
+    - Reduce reactive-time dataset function evaluation
 
-# dv.manager 3.1.0-9004
+ - UI and functionality:
+    - Add support for special characters in filter selectors
+    - Change default behavior of filters to NOT include NA values
 
-- Originally grouped data.frames keep the relevant attributes after being ungrouped
+ - Bugfix:
+    - Fix lvl dropping when filtering, that was broken in 3.1.0
+    - Fix superfluous incompatible state messages in filter
+    - Fix row counting that was not present in latest release
+    - Originally grouped data.frames keep the relevant attributes after being ungrouped
 
-# dv.manager 3.1.0-9003
-
-- Check that dataset list elements produced by functions have the expected structure
-
-# dv.manager 3.1.0-9002
-
-- Reduce reactive-time dataset function evaluation
-
-# dv.manager 3.1.0-9001
-
-- Minimize dataset function evaluation during `run_app` dataset checks
-
-# dv.manager 3.1.0-9000
-
-- Fix lvl dropping when filtering, that was broken in 3.1.0
-- Fix superfluous incompatible state messages in filter
-- Fix row counting that was not present in latest release
+ - Maintenance:
+    - Filter clean up
+    - Check that dataset list elements produced by functions have the expected structure
 
 # dv.manager 3.1.0
 
