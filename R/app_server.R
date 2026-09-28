@@ -146,6 +146,15 @@ app_server_ <- function(input, output, session, opts) {
           FC$ERRORS$UNFILTERED_DATASET_LIST_NAME_FILTER_DATASET_LIST_NAME_MISMATCH$class
         )
     )
+
+    if (filter_info[["error_list"]]$any()) {
+      msg <- shiny::div(
+        shiny::p(paste(filter_info[["error_list"]]$get_messages(), collapse = "; ")),
+        shiny::p("Please select a valid filter or clear current filter to continue")
+      )
+      shiny::showNotification(msg, type = "error", duration = NULL)
+      shiny::req(FALSE)
+    }
     res <- list(
       unfiltered_dataset_list = r_unfiltered_dataset_list,
       filter_info = filter_info[["result"]][["filter_info"]],
@@ -236,19 +245,19 @@ app_server_ <- function(input, output, session, opts) {
     url_parameters = url_parameters,
     dataset_name = shiny::reactive({
       log_warn(
-        "(Message for the module developer) afmm[[\"dataset_name\"]]() will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_plus_info\"]]()[[\"unfiltered_dataset_list\"]], \"dataset_list_name\")."
+        "(Message for the module developer) afmm[[\"dataset_name\"]]() will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_dataset_list_with_filter_info\"]]()[[\"unfiltered_dataset_list\"]], \"dataset_list_name\")."
       )
       input$selector
     }),
     dataset_metadata = list(
       name = shiny::reactive({
         log_warn(
-          "(Message for the module developer) afmm[[\"dataset_metadata\"]][[\"name\"]]() will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_plus_info\"]]()[[\"unfiltered_dataset_list\"]], \"dataset_list_name\")."
+          "(Message for the module developer) afmm[[\"dataset_metadata\"]][[\"name\"]]() will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_dataset_list_with_filter_info\"]]()[[\"unfiltered_dataset_list\"]], \"dataset_list_name\")."
         ) # nolintr
         attr(unfiltered_dataset_list(), "dataset_list_name")
       }),
       date_range = shiny::reactive({
-        "(Message for the module developer) afmm[[\"dataset_metadata\"]][[\"date_range\"]] will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_plus_info\"]]()[[\"unfiltered_dataset_list\"]], \"date_range\")."
+        "(Message for the module developer) afmm[[\"dataset_metadata\"]][[\"date_range\"]] will be deprecated in future versions. Please replace by attr(afmm[[\"unfiltered_dataset_list_with_filter_info\"]]()[[\"unfiltered_dataset_list\"]], \"date_range\")."
         attr(unfiltered_dataset_list(), "date_range")
       })
     ),

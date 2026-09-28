@@ -1783,6 +1783,19 @@ local({
         create_subject_filter_info(dataset_list = dataset_list, e, "sbj")[["subjects"]],
         "SBJ1"
       )
+      expect_identical(
+        create_subject_filter_info(dataset_list = dataset_list, e, "sbj")[["filter_info"]],
+        list(
+          d1 = list(
+            mask = c(TRUE, FALSE),
+            lvls = list(var1 = "a")
+          ),
+          d2 = list(
+            mask = c(FALSE),
+            lvls = list()
+          )
+        )
+      )
     }
   )
 
@@ -1805,6 +1818,19 @@ local({
       expect_identical(
         create_subject_filter_info(dataset_list = dataset_list, e, "sbj")[["subjects"]],
         c("SBJ1", "SBJ2", "SBJ3")
+      )
+      expect_identical(
+        create_subject_filter_info(dataset_list = dataset_list, e, "sbj")[["filter_info"]],
+        list(
+          d1 = list(
+            mask = c(TRUE, TRUE),
+            lvls = list()
+          ),
+          d2 = list(
+            mask = c(TRUE),
+            lvls = list()
+          )
+        )
       )
     }
   )
@@ -1903,6 +1929,14 @@ local({
     expect_identical(res, "label")
   })
 
+  test_that("apply_lvls_info_to_ds levels are properly dropped", {
+    unfiltered <- data.frame(x = factor(c("a", "b", "c")))
+    filtered <- unfiltered[1:2, , drop = FALSE]
+    ds_lvl <- list(x = c("a", "b"))
+    res <- apply_lvls_info_to_ds(unfiltered, filtered, ds_lvl)
+    expect_equal(levels(res$x), c("a", "b"))
+  })
+
   test_that("apply_lvls_info_to_ds dropped factor levels are restored when prescribed by ds_lvl", {
     unfiltered <- data.frame(x = factor(c("a", "b", "c")))
     filtered <- unfiltered[1:2, , drop = FALSE] # "c" absent
@@ -1926,7 +1960,7 @@ local({
     expect_equal(res$n, 1:2)
   })
 
-  test_that("apply_lvls_info_to_dsempty ds_lvl returns filtered dataset unchanged", {
+  test_that("apply_lvls_info_to_ds empty ds_lvl returns filtered dataset unchanged", {
     unfiltered <- data.frame(x = factor(c("a", "b")))
     filtered <- unfiltered[1, , drop = FALSE]
     res <- apply_lvls_info_to_ds(unfiltered, filtered, ds_lvl = list())
@@ -2183,6 +2217,14 @@ local({
               mask = c(TRUE, TRUE),
               lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "b"), var_only_subject = c("a", "b"))
             ),
+            d_both_combine_lvls = list(
+              mask = c(TRUE, TRUE, FALSE),
+              lvls = list(
+                var_combine_lvls = c("a", "b"),
+                var_combine_lvls_rev = c("a", "b", "c"),
+                var_use_subject_lvls = c("sa", "sb")
+              )
+            ),
             d_only_subject = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b")))
           )
         ),
@@ -2195,6 +2237,14 @@ local({
             d_both2 = list(
               mask = c(TRUE, FALSE),
               lvls = list(var_both1 = c("a", "b"), var_both2 = c("a", "c"), var_only_dataset = c("a", "b"))
+            ),
+            d_both_combine_lvls = list(
+              mask = c(TRUE, TRUE, TRUE),
+              lvls = list(
+                var_combine_lvls = c("a", "b", "c"),
+                var_combine_lvls_rev = c("a", "b"),
+                var_use_dataset_lvls = c("da", "db")
+              )
             ),
             d_only_dataset = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b")))
           )
@@ -2210,7 +2260,7 @@ local({
             mask = c(TRUE, FALSE),
             lvls = list(
               var_both1 = c("a", "b"),
-              var_both2 = c("a"),
+              var_both2 = c("a", "b", "c"),
               var_only_subject = c("a", "b"),
               var_only_dataset = c("a", "b")
             )
@@ -2219,9 +2269,18 @@ local({
             mask = c(TRUE, FALSE),
             lvls = list(
               var_both1 = c("a", "b"),
-              var_both2 = c("a"),
+              var_both2 = c("a", "b", "c"),
               var_only_subject = c("a", "b"),
               var_only_dataset = c("a", "b")
+            )
+          ),
+          d_both_combine_lvls = list(
+            mask = c(TRUE, TRUE, FALSE),
+            lvls = list(
+              var_combine_lvls = c("a", "b", "c"),
+              var_combine_lvls_rev = c("a", "b", "c"),
+              var_use_subject_lvls = c("sa", "sb"),
+              var_use_dataset_lvls = c("da", "db")
             )
           ),
           d_only_subject = list(mask = c(TRUE, TRUE), lvls = list(var1 = c("a", "b"), var2 = c("a", "b"))),
@@ -2237,6 +2296,7 @@ local({
     )
   })
 })
+
 
 local({
   test_that(
@@ -2603,7 +2663,12 @@ local({
       ds1 = data.frame(
         row.names = 1:6,
         range_var = c(1.0:5.0, NA),
-        sbj_var = paste0("SBJ-", 1:6)
+        sbj_var = factor(paste0("SBJ-", 1:6)),
+        subset_var = factor(letters[1:6])
+      ),
+      ds2 = data.frame(
+        sbj_var = factor(paste0("SBJ-", 1:6)),
+        subset_var = factor(letters[1:6])
       )
     )
   )
@@ -2847,6 +2912,118 @@ local({
       )
 
       expect_identical(labels_before, labels_after)
+    }
+  )
+
+  # Lvl dropping related
+  test_that(
+    "lvls of filtered values are dropped and also reintroduced when another variable filter reintroduces a row" |>
+      vdoc[["add_spec"]](c(
+        specs$FILTERING$FILTER_ACTIVE_DATASET_LIST,
+        specs$FILTERING$FILTER_LEVEL_DROP
+      )),
+    {
+      app <- start_app_driver(rlang::quo({
+        dv.manager:::run_app(
+          data = !!dataset_lists,
+          module_list = list(
+            AFMM = dv.manager:::mod_afmm_export("afmm")
+          ),
+          filter_dataset_name = "ds1",
+          filter_key = "sbj_var",
+          enableBookmarking = "url",
+          filter_default_state = '
+{
+    "filters": {
+        "datasets_filter": {
+            "children": [
+                {
+                    "kind": "dataset",
+                    "name": "ds2",
+                    "children": [
+                        {
+                            "kind": "row_operation",
+                            "operation": "and",
+                            "children": [
+                                {
+                                    "kind": "filter",
+                                    "dataset": "ds2",
+                                    "operation": "select_subset",
+                                    "variable": "subset_var",
+                                    "values": [
+                                        "d"
+                                    ],
+                                    "include_NA": true
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "subject_filter": {
+            "children": [
+                {
+                    "kind": "row_operation",
+                    "operation": "or",
+                    "children": [
+                        {
+                            "kind": "filter",
+                            "dataset": "ds1",
+                            "operation": "select_subset",
+                            "variable": "sbj_var",
+                            "values": [
+                                "SBJ-1"
+                            ],
+                            "include_NA": true
+                        },
+                        {
+                            "kind": "filter",
+                            "dataset": "ds1",
+                            "operation": "select_subset",
+                            "variable": "sbj_var",
+                            "values": [
+                                "SBJ-2"
+                            ],
+                            "include_NA": true
+                        },
+                        {
+                            "kind": "filter",
+                            "dataset": "ds1",
+                            "operation": "select_subset",
+                            "variable": "subset_var",
+                            "values": [
+                                "c"
+                            ],
+                            "include_NA": true
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "dataset_list_name": "dl1"
+}
+'
+        )
+      }))
+
+      app$wait_for_idle()
+
+      export <- shiny::isolate(app$get_values(export = TRUE)[["export"]][["afmm-afmm"]][["filtered_dataset_list"]]())
+
+      expect_identical(
+        levels(export[["ds1"]][["sbj_var"]]),
+        c("SBJ-1", "SBJ-2", "SBJ-3")
+      )
+      expect_identical(
+        levels(export[["ds1"]][["subset_var"]]),
+        c("a", "b", "c")
+      )
+      expect_identical(
+        levels(export[["ds2"]][["sbj_var"]]),
+        c("SBJ-1", "SBJ-2", "SBJ-3", "SBJ-4", "SBJ-5", "SBJ-6")
+      )
     }
   )
 })

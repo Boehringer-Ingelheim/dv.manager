@@ -313,7 +313,12 @@ local({
         current_name <- attr(unfiltered_dataset_list, "dataset_list_name")
         expect_identical(current_name, names(dataset_lists)[[1]])
 
-        dataset_metadata_name <- shiny::isolate(exported_values[["dataset_metadata"]][["name"]]())
+        dataset_metadata_name <- shiny::isolate(
+          attr(
+            exported_values[["unfiltered_dataset_list_with_filter_info"]]()[["unfiltered_dataset_list"]], 
+            "dataset_list_name")
+        )
+        
         expect_identical(dataset_metadata_name, names(dataset_lists)[[1]])
 
         module_names <- exported_values[["module_names"]]

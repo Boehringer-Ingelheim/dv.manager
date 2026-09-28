@@ -97,8 +97,16 @@ run_app <- function(
   config <- list()
   config[["module_info"]] <- check_resolved_modules(resolve_module_list(module_list))
   # The automatic mapping will influence reporting when it is implemented in the future
+  # NOTE(miguel): This call checks the overall structure of `dataset_lists` and some basic assumptions about each
+  #               dataset_list that is _not_ provided as a function.
+  #               It would make sense to merge the dataset_list checks with those in #soupie, but we need them here
+  #               to guard against errors in the config[["afmm_static"]] computation immediately below.
+  #               This means that we won't be bypassing some checks for non-functions dataset_list elements, but
+  #               they are inexpensive anyways.
+  check_data_while_ignoring_dataset_list_fns(dataset_lists)
+  dataset_lists <- cache_dataset_list_function(dataset_lists)
+
   config[["afmm_static"]] <- local({
-    check_data(dataset_lists)
     d <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
     d <- ungroup2df_datasets_dataset_lists(d)
     if (!.bypass_filter_precomputation) {
@@ -112,15 +120,38 @@ run_app <- function(
 
   if (!isTRUE(.bypass_checks)) {
     log_inform("Running EEF checkers")
-    config[["module_info"]] <- check_EEF(config[["module_info"]], config[["afmm_static"]])
-    config[["filter_dataset_name"]] <- check_filter_dataset_name(filter_dataset_name, dataset_lists)
-    config[["filter_key"]] <- check_filter_key(filter_key, dataset_lists)
-    check_meta_mtime_attribute(dataset_lists)
+
+     # allocate for [[mod_id]][[dataset_list]]
+    eef_errors_by_mod_and_dl <- local({
+      eef_errors_by_dl <- vector(mode = "list", length = length(dataset_lists))
+      names(eef_errors_by_dl) <- names(dataset_lists)
+      mod_ids <- names(config[["afmm_static"]][["module_names"]])
+      res <- rep(list(eef_errors_by_dl), length(mod_ids))
+      names(res) <- mod_ids
+      res
+    })
+
+    for (idx in rev(seq_along(dataset_lists))) {
+      dataset_list <- dataset_lists[[idx]]
+      dataset_list_name <- names(dataset_lists)[[idx]]
+      if (is.function(dataset_list)) {
+        dataset_list <- dataset_list()
+        check_dataset_list(dataset_list) # See related comment #soupie
+      }
+
+      eef_errors_by_mod_and_dl <- EEF_collect(eef_errors_by_mod_and_dl, config[["module_info"]], config[["afmm_static"]],
+                                              dataset_list, dataset_list_name)
+      check_filter_dataset_name(filter_dataset_name, dataset_list, dataset_list_name) # TODO: Fold? Only two checks, one of them dataset_list-independent
+      check_filter_key(filter_key, dataset_list)
+      check_meta_mtime_attribute(dataset_list, dataset_list_name)
+    }
+
+    config[["module_info"]] <- EEF_report(config[["module_info"]], eef_errors_by_mod_and_dl)
   } else {
-    config[["filter_dataset_name"]] <- filter_dataset_name
-    config[["filter_key"]] <- filter_key
     log_inform("EEF checkers disabled!")
   }
+  config[["filter_dataset_name"]] <- filter_dataset_name
+  config[["filter_key"]] <- filter_key
 
   config[["startup_msg"]] <- check_startup_msg(startup_msg)
   config[["title"]] <- title
