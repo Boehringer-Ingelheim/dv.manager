@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dv.manager</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,6 +55,27 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.2.0" id="dvmanager-320">dv.manager 3.2.0<a class="anchor" aria-label="anchor" href="#dvmanager-320"></a></h2>
+<ul><li>Performance:
+<ul><li>Minimize dataset function evaluation during <code>run_app</code> dataset checks</li>
+<li>Reduce reactive-time dataset function evaluation</li>
+</ul></li>
+<li>UI and functionality:
+<ul><li>Add support for special characters in filter selectors</li>
+<li>Change default behavior of filters to NOT include NA values</li>
+</ul></li>
+<li>Bugfix:
+<ul><li>Fix lvl dropping when filtering, that was broken in 3.1.0</li>
+<li>Fix superfluous incompatible state messages in filter</li>
+<li>Fix row counting that was not present in latest release</li>
+<li>Originally grouped data.frames keep the relevant attributes after being ungrouped</li>
+</ul></li>
+<li>Maintenance:
+<ul><li>Filter clean up</li>
+<li>Check that dataset list elements produced by functions have the expected structure</li>
+</ul></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="3.1.0" id="dvmanager-310">dv.manager 3.1.0<a class="anchor" aria-label="anchor" href="#dvmanager-310"></a></h2>
 <ul><li>Performance:
