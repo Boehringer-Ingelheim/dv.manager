@@ -104,19 +104,21 @@ run_app <- function(
   #               This means that we won't be bypassing some checks for non-functions dataset_list elements, but
   #               they are inexpensive anyways.
   check_data_while_ignoring_dataset_list_fns(dataset_lists)
-  dataset_lists <- cache_dataset_list_function(dataset_lists)
 
-  config[["afmm_static"]] <- local({
+  dataset_lists <- local({
     d <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
     d <- ungroup2df_datasets_dataset_lists(d)
     if (!.bypass_filter_precomputation) {
       d <- attach_computed_filter_data_as_attribute(d)
     }
-    list(
-      data = d,
-      module_names = config[["module_info"]][["module_name"]]
-    )
+    d <- cache_dataset_list_function(d)
+    d
   })
+
+  config[["afmm_static"]] <- list(
+    data = dataset_lists,
+    module_names = config[["module_info"]][["module_name"]]
+  )
 
   if (!isTRUE(.bypass_checks)) {
     log_inform("Running EEF checkers")

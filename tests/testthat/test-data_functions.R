@@ -50,3 +50,31 @@ test_that(
     expect_equal(DS1_call_count, 2L) # DS1 was not cached
   }
 )
+
+test_that(
+  vdoc[["add_spec"]](
+    "Data mapping happens before calling module `check_mod_fn` functions",
+    c(specs$PREPROCESSING$PREPROCESS_CHAR_TO_FACTOR)
+  ), {
+    df <- structure(data.frame(ID = "0", VAL = 0L), meta = list(mtime = Sys.time()))
+    
+    mod_simple_prime <- dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")
+    mod_simple_prime[["meta"]] <- list(
+      check_mod_fn = function(afmm, dataset_list) {
+        expect_equal(class(dataset_list[["DF"]][["ID"]]), "factor")
+        return(character(0))
+      }
+    )
+    
+    run_app(
+      data = list(
+        "DS1" = list(DF = df),           # plain dataset_list
+        "DS2" = function() list(DF = df) # function dataset_list
+      ),
+      module_list = list("Simple" = mod_simple_prime),
+      filter_dataset_name = "DF",
+      filter_key = "ID",
+      .launch = FALSE
+    )
+  }
+)
