@@ -328,6 +328,182 @@ test_that(
   }
 )
 
+## Testing check_dataset_names_and_labels ----
+
+local({
+  labelled <- function(df, label) {
+    attr(df, "label") <- label
+    df
+  }
+
+  test_that(
+    vdoc[["add_spec"]](
+      "check_dataset_names_and_labels should pass when dataset names and labels are unique and return the checked element",
+      c(specs$DATASETS$DATASET_LIST_NAMES_UNIQUE, specs$DATASETS$DATASET_LIST_LABELS_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        dm = labelled(data.frame(a = 1), "Demographics"),
+        ae = labelled(data.frame(a = 1), "Adverse Events"),
+        lb = data.frame(a = 1) # Unlabelled: labelled by its name
+      )
+      check_dataset_names_and_labels(dataset_list, "D1") |>
+        expect_error(regexp = NA) |>
+        expect_identical(dataset_list)
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "check_dataset_names_and_labels should error when two datasets share the same name, even with different labels",
+      c(specs$DATASETS$DATASET_LIST_NAMES_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        dm = labelled(data.frame(a = 1), "Demographics 1"),
+        dm = labelled(data.frame(a = 1), "Demographics 2")
+      )
+      check_dataset_names_and_labels(dataset_list, "D1") |>
+        expect_error(regexp = "D1 has datasets with repeated names: `dm`.", fixed = TRUE)
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "check_dataset_names_and_labels should report all repeated names in a single error",
+      c(specs$DATASETS$DATASET_LIST_NAMES_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        dm = data.frame(a = 1),
+        ae = data.frame(a = 1),
+        dm = data.frame(a = 1),
+        ae = data.frame(a = 1),
+        dm = data.frame(a = 1)
+      )
+      check_dataset_names_and_labels(dataset_list, "D1") |>
+        expect_error(regexp = "D1 has datasets with repeated names: `dm`, `ae`.", fixed = TRUE)
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "check_dataset_names_and_labels should error when two datasets share the same label attribute",
+      c(specs$DATASETS$DATASET_LIST_LABELS_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        dm1 = labelled(data.frame(a = 1), "Demographics"),
+        dm2 = labelled(data.frame(a = 1), "Demographics")
+      )
+      check_dataset_names_and_labels(dataset_list, "D1") |>
+        expect_error(regexp = "D1 has datasets with repeated labels: 'Demographics' (`dm1`, `dm2`).", fixed = TRUE)
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "check_dataset_names_and_labels should error when a dataset label matches the name of an unlabelled dataset",
+      c(specs$DATASETS$DATASET_LIST_LABELS_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        dm = data.frame(a = 1),
+        dm2 = labelled(data.frame(a = 1), "dm")
+      )
+      check_dataset_names_and_labels(dataset_list, "D1") |>
+        expect_error(regexp = "D1 has datasets with repeated labels: 'dm' (`dm`, `dm2`).", fixed = TRUE)
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "check_dataset_names_and_labels should report all repeated labels in a single error",
+      c(specs$DATASETS$DATASET_LIST_LABELS_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        dm1 = labelled(data.frame(a = 1), "Demographics"),
+        ae1 = labelled(data.frame(a = 1), "Adverse Events"),
+        dm2 = labelled(data.frame(a = 1), "Demographics"),
+        ae2 = labelled(data.frame(a = 1), "Adverse Events"),
+        dm3 = labelled(data.frame(a = 1), "Demographics")
+      )
+      check_dataset_names_and_labels(dataset_list, "D1") |>
+        expect_error(
+          regexp = "D1 has datasets with repeated labels: 'Demographics' (`dm1`, `dm2`, `dm3`); 'Adverse Events' (`ae1`, `ae2`).",
+          fixed = TRUE
+        )
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "run_app should throw an error when datasets in a dataset_list share a label",
+      c(specs$DATASETS$DATASET_LIST_LABELS_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        adsl = data.frame(USUBJID = 1),
+        dm1 = labelled(data.frame(USUBJID = 1), "Demographics"),
+        dm2 = labelled(data.frame(USUBJID = 1), "Demographics")
+      )
+      module_list <- list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1"))
+
+      # Plain dataset_list
+      run_app(
+        data = list(D1 = dataset_list),
+        module_list = module_list,
+        filter_dataset_name = "adsl",
+        .launch = FALSE
+      ) |>
+        expect_error(regexp = "D1 has datasets with repeated labels: 'Demographics' (`dm1`, `dm2`).", fixed = TRUE)
+
+      # dataset_list returned by a function
+      run_app(
+        data = list(D1 = function() dataset_list),
+        module_list = module_list,
+        filter_dataset_name = "adsl",
+        .launch = FALSE
+      ) |>
+        expect_error(regexp = "D1 has datasets with repeated labels: 'Demographics' (`dm1`, `dm2`).", fixed = TRUE)
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "run_app should throw an error when datasets in a dataset_list share a name",
+      c(specs$DATASETS$DATASET_LIST_NAMES_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        adsl = data.frame(USUBJID = 1),
+        dm = labelled(data.frame(USUBJID = 1), "Demographics 1"),
+        dm = labelled(data.frame(USUBJID = 1), "Demographics 2")
+      )
+      module_list <- list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1"))
+
+      # Plain dataset_list
+      run_app(
+        data = list(D1 = dataset_list),
+        module_list = module_list,
+        filter_dataset_name = "adsl",
+        .launch = FALSE
+      ) |>
+        expect_error(regexp = "D1 has datasets with repeated names: `dm`.", fixed = TRUE)
+
+      # dataset_list returned by a function
+      run_app(
+        data = list(D1 = function() dataset_list),
+        module_list = module_list,
+        filter_dataset_name = "adsl",
+        .launch = FALSE
+      ) |>
+        expect_error(regexp = "D1 has datasets with repeated names: `dm`.", fixed = TRUE)
+    }
+  )
+})
+
 ## Testing "check_module" ----
 
 test_that(

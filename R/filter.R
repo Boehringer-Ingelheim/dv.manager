@@ -240,17 +240,19 @@ get_filter_data_dataset_list <- function(dataset_list) {
   FDF <- FC$FDF
 
   nm_datasets <- names(dataset_list)
+  lbl_datasets <- get_lbls_robust(dataset_list)
   n_datasets <- length(nm_datasets)
   res <- vector(mode = "list", length = n_datasets)
   for (idx in seq_len(n_datasets)) {
     current_dataset <- dataset_list[[idx]]
     current_dataset_name <- nm_datasets[[idx]]
+    current_lbl <- lbl_datasets[[idx]]
 
     res[[idx]] <- vector(mode = "list", length = 4)
-    res[[idx]][[FDF$NAME]] <- nm_datasets[[idx]]
-    res[[idx]][[FDF$LABEL]] <- attr(dataset_list[[idx]], "label") %||% current_dataset_name
+    res[[idx]][[FDF$NAME]] <- current_dataset_name
+    res[[idx]][[FDF$LABEL]] <- current_lbl
     res[[idx]][[FDF$NROW]] <- nrow(current_dataset)
-    ..t$add_period(sprintf("get_single_filter_data (%s)", nm_datasets[[idx]]), TRUE)
+    ..t$add_period(sprintf("get_single_filter_data (%s)", current_dataset_name), TRUE)
 
     # Datasets may change because additional may be added (subgrouping)
     # Adding columns loses attributes, therefore FC$PRECOMPUTED_FILTER_DATA cannot be attached to dataset itself

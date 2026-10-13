@@ -1,8 +1,15 @@
 # dv.manager 3.2.2
 
+ - UI and functionality:
+   - `run_app` errors when two datasets in the same dataset list share a label, as they cannot be told apart in the filter
+   - `run_app` errors when two datasets in the same dataset list share a name
+   
+# dv.manager 3.2.1-9000
+
  - Bugfix:
    - Categorical and numerical filters removed while open no longer leave orphaned widgets behind
    - Improved security for XSS in filter states
+
 
 
 # dv.manager 3.2.1

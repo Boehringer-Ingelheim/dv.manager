@@ -82,6 +82,39 @@ check_filter_dataset_name <- function(filter_dataset_name, dataset_list, dataset
   filter_dataset_name
 }
 
+check_dataset_names_and_labels <- function(dataset_list, dataset_list_name) {
+  nms <- names(dataset_list)
+  repeated_names <- unique(nms[duplicated(nms)])
+
+  if (length(repeated_names) > 0) {
+    msg <- sprintf(
+      "%s has datasets with repeated names: %s.",
+      dataset_list_name,
+      paste0("`", repeated_names, "`", collapse = ", ")
+    )
+    stop(msg)
+  }
+
+  lbls <- get_lbls_robust(dataset_list)
+  repeated_labels <- unique(lbls[duplicated(lbls)])
+
+  if (length(repeated_labels) > 0) {
+    clashes <- vapply(
+      repeated_labels,
+      function(lbl) sprintf("'%s' (%s)", lbl, paste0("`", names(lbls)[lbls == lbl], "`", collapse = ", ")),
+      FUN.VALUE = character(1)
+    )
+    msg <- sprintf(
+      "%s has datasets with repeated labels: %s.",
+      dataset_list_name,
+      paste(clashes, collapse = "; ")
+    )
+    stop(msg)
+  }
+
+  dataset_list
+}
+
 check_filter_key <- function(filter_key, dataset_list) {
   if (is.null(filter_key)) {
     msg <- "filter_key is not specified"
