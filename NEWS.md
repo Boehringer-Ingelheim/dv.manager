@@ -1,7 +1,3 @@
-# dv.manager 3.2.1-9000
-
- Refactor previous EEF change [NON USER FACING CHANGE]
-
 # dv.manager 3.2.1
 
  - Bugfix:
