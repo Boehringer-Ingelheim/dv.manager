@@ -1,12 +1,12 @@
 # TODO: Transform afmm in a safe list that is declared fully in run app or in a constructor function, that way all names should be aligned from the beginning and we minimize
 # possible errors
 
-EEF_collect <- function(eef_errors, module_info, afmm_static, dataset_list, dataset_list_name) {
+EEF_collect <- function(eef_errors, module_info, afmm_static, dataset_list_name) {
   for (nm in names(afmm_static[["module_names"]])) {
     check_mod_fn <- module_info[["meta"]][[nm]][["check_mod_fn"]]
     if (!is.null(check_mod_fn)) {
       log_inform(paste0("------- (S) Running checker for `", nm, "` and dataset list", dataset_list_name, " ---------"))
-      eef_errors[[nm]][[dataset_list_name]] <- check_mod_fn(afmm_static, dataset_list)
+      eef_errors[[nm]][[dataset_list_name]] <- check_mod_fn(afmm_static, afmm_static[["data"]][[dataset_list_name]])
       log_inform(paste0("------- (E) Running checker for `", nm, "` and dataset list", dataset_list_name, " ---------"))
     } else {
       log_inform(paste0("No checker found for `", nm, "`"))
