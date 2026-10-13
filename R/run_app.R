@@ -104,19 +104,21 @@ run_app <- function(
   #               This means that we won't be bypassing some checks for non-functions dataset_list elements, but
   #               they are inexpensive anyways.
   check_data_while_ignoring_dataset_list_fns(dataset_lists)
-  dataset_lists <- cache_dataset_list_function(dataset_lists)
 
-  config[["afmm_static"]] <- local({
+  dataset_lists <- local({
     d <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
     d <- ungroup2df_datasets_dataset_lists(d)
     if (!.bypass_filter_precomputation) {
       d <- attach_computed_filter_data_as_attribute(d)
     }
-    list(
-      data = d,
-      module_names = config[["module_info"]][["module_name"]]
-    )
+    d <- cache_dataset_list_function(d)
+    d
   })
+
+  config[["afmm_static"]] <- list(
+    data = dataset_lists,
+    module_names = config[["module_info"]][["module_name"]]
+  )
 
   if (!isTRUE(.bypass_checks)) {
     log_inform("Running EEF checkers")
@@ -139,8 +141,13 @@ run_app <- function(
         check_dataset_list(dataset_list) # See related comment #soupie
       }
 
-      eef_errors_by_mod_and_dl <- EEF_collect(eef_errors_by_mod_and_dl, config[["module_info"]], config[["afmm_static"]],
-                                              dataset_list, dataset_list_name)
+      eef_errors_by_mod_and_dl <- EEF_collect(
+        eef_errors_by_mod_and_dl,
+        config[["module_info"]],
+        config[["afmm_static"]],
+        dataset_list, # passed separately because the version in config[["module_info"]] is potentially a function
+        dataset_list_name
+      )
       check_filter_dataset_name(filter_dataset_name, dataset_list, dataset_list_name) # TODO: Fold? Only two checks, one of them dataset_list-independent
       check_filter_key(filter_key, dataset_list)
       check_meta_mtime_attribute(dataset_list, dataset_list_name)
