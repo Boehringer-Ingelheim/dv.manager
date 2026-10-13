@@ -145,7 +145,6 @@ run_app <- function(
         eef_errors_by_mod_and_dl,
         config[["module_info"]],
         config[["afmm_static"]],
-        dataset_list,
         dataset_list_name
       )
       check_filter_dataset_name(filter_dataset_name, dataset_list, dataset_list_name) # TODO: Fold? Only two checks, one of them dataset_list-independent
