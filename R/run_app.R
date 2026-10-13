@@ -142,8 +142,8 @@ run_app <- function(
       }
 
       eef_errors_by_mod_and_dl <- EEF_collect(
-        eef_errors_by_mod_and_dl, 
-        config[["module_info"]], 
+        eef_errors_by_mod_and_dl,
+        config[["module_info"]],
         config[["afmm_static"]],
         dataset_list, # passed separately because the version in config[["module_info"]] is potentially a function
         dataset_list_name
