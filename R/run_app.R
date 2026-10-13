@@ -141,8 +141,13 @@ run_app <- function(
         check_dataset_list(dataset_list) # See related comment #soupie
       }
 
-      eef_errors_by_mod_and_dl <- EEF_collect(eef_errors_by_mod_and_dl, config[["module_info"]], config[["afmm_static"]],
-                                              dataset_list, dataset_list_name)
+      eef_errors_by_mod_and_dl <- EEF_collect(
+        eef_errors_by_mod_and_dl, 
+        config[["module_info"]], 
+        config[["afmm_static"]],
+        dataset_list, # passed separately because the version in config[["module_info"]] is potentially a function
+        dataset_list_name
+      )
       check_filter_dataset_name(filter_dataset_name, dataset_list, dataset_list_name) # TODO: Fold? Only two checks, one of them dataset_list-independent
       check_filter_key(filter_key, dataset_list)
       check_meta_mtime_attribute(dataset_list, dataset_list_name)
