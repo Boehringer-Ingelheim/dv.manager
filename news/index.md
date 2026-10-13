@@ -1,5 +1,11 @@
 # Changelog
 
+## dv.manager 3.2.1
+
+- Bugfix:
+  - Map `character` to `factors` before calling early error feedback
+    functions
+
 ## dv.manager 3.2.0
 
 - Performance:
