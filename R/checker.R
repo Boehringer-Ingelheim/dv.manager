@@ -57,6 +57,16 @@ check_data_while_ignoring_dataset_list_fns <- function(data) {
     stop(msg)
   }
 
+  nms <- names(data)
+  repeated_names <- unique(nms[duplicated(nms)])
+  if (length(repeated_names) > 0) {
+    msg <- sprintf(
+      "data argument has dataset lists with repeated names: %s.",
+      paste0("`", repeated_names, "`", collapse = ", ")
+    )
+    stop(msg)
+  }
+
   for (dataset_list in data) {
     if (!is.function(dataset_list)) {
       check_dataset_list(dataset_list)

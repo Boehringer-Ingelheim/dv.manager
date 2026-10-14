@@ -289,6 +289,40 @@ test_that(
 
 test_that(
   vdoc[["add_spec"]](
+    "check_data should error when dataset lists share a name, reporting all repeated names in a single error",
+    c(specs$DATASETS$DATASET_LISTS_NAMES_UNIQUE)
+  ),
+  {
+    data <- list(
+      D1 = list(a = data.frame(a = 1)),
+      D2 = function() list(a = data.frame(a = 1)),
+      D1 = function() list(a = data.frame(a = 1)),
+      D2 = list(a = data.frame(a = 1))
+    )
+    check_data_while_ignoring_dataset_list_fns(data) |>
+      expect_error(regexp = "data argument has dataset lists with repeated names: `D1`, `D2`.", fixed = TRUE)
+  }
+)
+
+test_that(
+  vdoc[["add_spec"]](
+    "run_app should throw an error when dataset lists share a name",
+    c(specs$DATASETS$DATASET_LISTS_NAMES_UNIQUE)
+  ),
+  {
+    dataset_list <- list(adsl = data.frame(USUBJID = 1))
+    run_app(
+      data = list(D1 = dataset_list, D1 = function() dataset_list),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
+      filter_dataset_name = "adsl",
+      .launch = FALSE
+    ) |>
+      expect_error(regexp = "data argument has dataset lists with repeated names: `D1`.", fixed = TRUE)
+  }
+)
+
+test_that(
+  vdoc[["add_spec"]](
     "check_data should pass the check when a named list of lists of dataframes or a list of functions is passed. Should return the checked element",
     c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)
   ),

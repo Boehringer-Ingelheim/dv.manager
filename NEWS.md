@@ -3,6 +3,7 @@
  - UI and functionality:
    - `run_app` errors when two datasets in the same dataset list share a label, as they cannot be told apart in the filter
    - `run_app` errors when two datasets in the same dataset list share a name
+   - `run_app` errors when two dataset lists share a name
    
 # dv.manager 3.2.1-9000
 

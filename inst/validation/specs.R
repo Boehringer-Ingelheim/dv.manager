@@ -38,7 +38,8 @@ specs <- list(
   # --- Datasets ---
   DATASETS = list(
     "DATASET_LIST_NAMED" = "Datasets must be defined as a named list (must not be NULL; error thrown if not).",
-    "DATASET_LIST_NOT_NULL" = "Dataset list must not be NULL.",
+    "DATASET_LISTS_NAMES_UNIQUE" = "Dataset list names must be unique (error thrown if not).",
+    "DATASET_LIST_NOT_NULL" ="Dataset list must not be NULL.",
     "DATASET_LIST_EMPTY_ALLOWED" = "Dataset list can be empty but not NULL.",
     "DATASET_ENTRY_STRUCTURE" = "Each dataset entry can be:
         - a list of data tables, or
