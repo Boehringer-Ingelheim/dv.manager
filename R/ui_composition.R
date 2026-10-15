@@ -281,21 +281,14 @@ compose_ui <- function(hierarchy, ui_fn_list, ns, footer, top_buttons) {
     "}"
   )
 
-  escape_special_chars <- function(x) {
-    y <- gsub("\\\\", "\\\\\\\\", x)
-    y <- gsub('"', '\\\\"', y)
-    y <- gsub("'", "\\\\'", y)
-    y <- gsub("\n", "\\\\n", y)
-    y <- gsub("\r", "\\\\r", y)
-    y <- gsub("\t", "\\\\t", y)
-    y
-  }
-
+  # FIXME: Same as the filter bootstrap (`new_filter_ui`), pass the state as a `data-*` attribute instead
   script <- shiny::tags[["script"]](
-    sprintf(
-      "dv_tab.init('%s', '%s')",
-      ns(ID$NAV_HEADER),
-      escape_special_chars(json_module_tab_selector_state)
+    shiny::HTML(
+      sprintf(
+        "dv_tab.init('%s', '%s')",
+        escape_js_string(ns(ID$NAV_HEADER)),
+        escape_js_string(json_module_tab_selector_state)
+      )
     )
   )
 
