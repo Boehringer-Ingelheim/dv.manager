@@ -1,3 +1,8 @@
+# dv.manager 3.2.1-9000
+
+ - Bugfix:
+   - Categorical and numerical filters removed while open no longer leave orphaned widgets behind
+
 # dv.manager 3.2.1
 
  - Bugfix:

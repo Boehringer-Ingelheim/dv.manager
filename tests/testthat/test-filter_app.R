@@ -422,6 +422,78 @@ local({
     app$stop()
   })
 
+  test_that(
+    "an open categorical value menu is removed together with its filter" |>
+      vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ADD_REMOVE, specs$FILTERING$FILTER_MENU_SIDEBAR)),
+    {
+      app <- shinytest2::AppDriver$new(root_app$get_url())
+      on.exit(app$stop(), add = TRUE, after = FALSE)
+
+      # bootstrap-select moves an open menu into a `.bs-container` outside the filter (`data-container`)
+      count_menu_containers <- function() app$get_js("document.querySelectorAll('.bs-container').length")
+      open_value_menu <- function(dataset_name, var_name) {
+        selector <- sprintf(
+          "dv-filter-dataset-filter[data-dataset-name='%s'] dv-filter-variable-filter[data-variable='%s'] button.dropdown-toggle",
+          dataset_name,
+          var_name
+        )
+        app$click(selector = selector)
+        app$wait_for_idle()
+      }
+
+      toggle_filter(app, dataset_name = "dataset_1", "subset_var")
+      app$wait_for_idle()
+      open_value_menu("dataset_1", "subset_var")
+      expect_equal(count_menu_containers(), 1)
+      click_remove_filter_x_button(app, "dataset_1", "subset_var")
+      app$wait_for_idle()
+      expect_equal(count_menu_containers(), 0)
+
+      toggle_filter(app, dataset_name = "dataset_1", "subset_var")
+      app$wait_for_idle()
+      open_value_menu("dataset_1", "subset_var")
+      app$click(selector = "dv-filter-clear-all-button")
+      app$wait_for_idle()
+      expect_equal(count_menu_containers(), 0)
+    }
+  )
+
+  test_that(
+    "an open date picker is removed together with its filter" |>
+      vdoc[["add_spec"]](c(specs$FILTERING$FILTER_ADD_REMOVE, specs$FILTERING$FILTER_MENU_SIDEBAR)),
+    {
+      app <- shinytest2::AppDriver$new(root_app$get_url())
+      on.exit(app$stop(), add = TRUE, after = FALSE)
+
+      # bootstrap-datepicker appends an open picker to `body`, outside the filter (`container` option)
+      count_pickers <- function() app$get_js("document.querySelectorAll('.datepicker-dropdown').length")
+      open_date_picker <- function(dataset_name, var_name) {
+        selector <- sprintf(
+          "dv-filter-dataset-filter[data-dataset-name='%s'] dv-filter-variable-filter[data-variable='%s'] div[filter_value] input",
+          dataset_name,
+          var_name
+        )
+        app$run_js(sprintf(r"--($(document.querySelector("%s")).trigger("focus");)--", selector))
+        app$wait_for_idle()
+      }
+
+      toggle_filter(app, dataset_name = "dataset_1", "date_var")
+      app$wait_for_idle()
+      open_date_picker("dataset_1", "date_var")
+      expect_equal(count_pickers(), 1)
+      click_remove_filter_x_button(app, "dataset_1", "date_var")
+      app$wait_for_idle()
+      expect_equal(count_pickers(), 0)
+
+      toggle_filter(app, dataset_name = "dataset_1", "date_var")
+      app$wait_for_idle()
+      open_date_picker("dataset_1", "date_var")
+      app$click(selector = "dv-filter-clear-all-button")
+      app$wait_for_idle()
+      expect_equal(count_pickers(), 0)
+    }
+  )
+
   local({
     dataset_name <- "dataset_1"
     var_names <- names(dataset_lists[["dataset_list_1"]][["dataset_1"]])
