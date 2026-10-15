@@ -1,7 +1,13 @@
-# dv.manager 3.2.1-9000
+# dv.manager 3.2.1-9001
+
+ - Bugfix:
+   - Improved security for XSS in filter states
+
+ # dv.manager 3.2.1-9000
 
  - Bugfix:
    - Categorical and numerical filters removed while open no longer leave orphaned widgets behind
+
 
 # dv.manager 3.2.1
 
