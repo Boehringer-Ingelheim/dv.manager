@@ -1530,7 +1530,7 @@ let destroy_variable_filter_controls = function(variable_filter_control_containe
   __time_function_start()  
   __assert(()=> variable_filter_control_container_el.tagName.toLowerCase() === SC.TAG.VARIABLE_FILTER_CONTAINER);
 
-  let select_pickers_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] [${SC.ATTRIBUTE.FILTER_VALUE}] select`);
+  let select_pickers_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.CATEGORICAL}'] select[${SC.ATTRIBUTE.FILTER_VALUE}]`);
   __logger("Destroying: " + select_pickers_to_destroy.length + " selectpickers");
   for(let i = 0; i < select_pickers_to_destroy.length; ++i) {
     if(!$(select_pickers_to_destroy[i]).data('selectpicker')) {
@@ -1539,7 +1539,7 @@ let destroy_variable_filter_controls = function(variable_filter_control_containe
     $(select_pickers_to_destroy[i]).selectpicker("destroy");
   }
 
-  let ion_range_slider_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] [${SC.ATTRIBUTE.FILTER_VALUE}] input`);
+  let ion_range_slider_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.NUMERICAL}'] input[${SC.ATTRIBUTE.FILTER_VALUE}]`);
   __logger("Destroying: " + ion_range_slider_to_destroy.length + " ion.range.sliders");
   for(let i = 0; i < ion_range_slider_to_destroy.length; ++i) {
     if(!$(ion_range_slider_to_destroy[i]).data('ionRangeSlider')) {
@@ -1548,8 +1548,8 @@ let destroy_variable_filter_controls = function(variable_filter_control_containe
     $(ion_range_slider_to_destroy[i]).data("ionRangeSlider").destroy();
   }
 
-  let date_range_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] [${SC.ATTRIBUTE.FILTER_VALUE}] input`);
-  __logger("Destroying: " + date_range_to_destroy.length + " date pickers");
+  let date_range_to_destroy = variable_filter_control_container_el.querySelectorAll(`${SC.TAG.VARIABLE_FILTER}[${SC.ATTRIBUTE.KIND}='${SC.VARIABLE.DATE}'] div[${SC.ATTRIBUTE.FILTER_VALUE}]`);
+  __logger("Destroying: " + date_range_to_destroy.length + " date range pickers");
   for(let i = 0; i < date_range_to_destroy.length; ++i) {
     if(!$(date_range_to_destroy[i]).data('datepicker')) {
       throw new Error("Attempt to destroy non datepicker element");
