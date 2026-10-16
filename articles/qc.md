@@ -1,8 +1,8 @@
 # Quality Control
 
-### ✅ dv.manager 3.2.1
+### ✅ dv.manager 3.2.2
 
-Date: 2026-Oct-13 12:44:29
+Date: 2026-Oct-16 13:29:48
 
 This document provides the Quality Control (QC) report for the R package
 to confirm that it fulfills the criteria required for a “released”
@@ -59,7 +59,7 @@ test execution.
     #>  collate  en_US.UTF-8
     #>  ctype    en_US.UTF-8
     #>  tz       Etc/UTC
-    #>  date     2026-10-13
+    #>  date     2026-10-16
     #>  pandoc   3.6.3 @ /usr/bin/ (via rmarkdown)
     #>  quarto   1.8.26 @ /usr/local/bin/quarto
     #> 
@@ -104,7 +104,7 @@ test execution.
     #>  xfun          0.57    2026-03-20 [2] RSPM
     #>  yaml          2.3.12  2025-12-10 [2] RSPM
     #> 
-    #>  [1] /tmp/RtmpcLoKu8/temp_libpath209123e3275
+    #>  [1] /tmp/RtmpmLISa7/temp_libpath20773d1ae5d
     #>  [2] /usr/local/lib/R/site-library
     #>  [3] /usr/local/lib/R/library
     #> 
