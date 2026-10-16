@@ -64,3 +64,18 @@ get_dataset_list_names <- function(dataset_list) {
 assert <- function(expr, msg) {
   if (!isTRUE(expr)) stop(msg, call. = FALSE)
 }
+
+# Escapes `x` for interpolation inside a quoted JS string literal of an inline `<script>`.
+# The HTML parser runs before the JS one and closes the script at the first `</script`, quotes or not, so `<` is
+# emitted as `\u003c`. The result must be wrapped in `shiny::HTML()`, otherwise htmltools entity-escapes `&`, `<`, `>`
+# and JS receives the literal entities.
+escape_js_string <- function(x) {
+  y <- gsub("\\\\", "\\\\\\\\", x) # Must go first so the backslashes added below are not doubled
+  y <- gsub('"', '\\\\"', y)
+  y <- gsub("'", "\\\\'", y)
+  y <- gsub("\n", "\\\\n", y)
+  y <- gsub("\r", "\\\\r", y)
+  y <- gsub("\t", "\\\\t", y)
+  y <- gsub("<", "\\\\u003c", y)
+  y
+}
