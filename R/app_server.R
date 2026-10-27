@@ -338,7 +338,7 @@ app_server_ <- function(input, output, session, opts) {
     # outputs are finished.
     # This also fires on every filter change, update (not show) so the overlay only appears while loading a dataset list
     shiny::observeEvent(unfiltered_dataset_list_with_filter_info(), {
-      session[["sendCustomMessage"]]("dv_manager_update_overlay", list(message = "Setting up modules"))
+      session[["sendCustomMessage"]]("dv_manager_update_overlay_if_visible", list(message = "Setting up modules"))
       session[["onFlushed"]](function() session[["sendCustomMessage"]]("dv_manager_hide_overlay", list()), once = TRUE)
     })
   } else {

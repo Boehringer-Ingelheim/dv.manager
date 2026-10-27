@@ -444,7 +444,7 @@ const dv_overlay = (function () {
   };
 
   // Only changes the message of an overlay already on screen, never creates one
-  let update_overlay = function(msg) {
+  let update_overlay_if_visible = function(msg) {
     if (overlay) {
       message.textContent = msg;
     }
@@ -474,8 +474,8 @@ const dv_overlay = (function () {
     show_overlay(message.message)
   });
 
-  Shiny.addCustomMessageHandler("dv_manager_update_overlay", function (message) {
-    update_overlay(message.message)
+  Shiny.addCustomMessageHandler("dv_manager_update_overlay_if_visible", function (message) {
+    update_overlay_if_visible(message.message)
   });
 
   Shiny.addCustomMessageHandler("dv_manager_hide_overlay", function (_) {
@@ -484,7 +484,7 @@ const dv_overlay = (function () {
 
   const res = {
     show: show_overlay,
-    update: update_overlay,
+    update_overlay_if_visible: update_overlay_if_visible,
     hide: hide_overlay
   }
 
