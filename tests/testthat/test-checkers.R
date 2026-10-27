@@ -15,7 +15,7 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
 
-    for (dataset_list in data){
+    for (dataset_list in data) {
       check_filter_key("A", dataset_list) |>
         expect_error(regexp = NA) |>
         expect_equal("A")
@@ -34,7 +34,7 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, D = 2))
     )
 
-    for (dataset_list in data){
+    for (dataset_list in data) {
       check_filter_key("C", dataset_list) |>
         expect_error(regexp = "Selected filtering key is not present in all datasets")
     }
@@ -61,7 +61,6 @@ test_that(
         check_filter_key("C", dataset_list) |>
           expect_error(regexp = "Selected filtering key is not present in all datasets")
       }
-      
     }
   }
 )
@@ -399,7 +398,7 @@ local({
         d1 = labelled(data.frame(a = 1), "d1 label"),
         d1 = labelled(data.frame(a = 1), "other d1 label"),
         d2 = labelled(data.frame(a = 1), "d2 label"),
-        d2 = labelled(data.frame(a = 1), "other d2 label"),
+        d2 = labelled(data.frame(a = 1), "other d2 label")
       )
       check_dataset_names_and_labels(dataset_list, "DS1") |>
         expect_error(regexp = "D1 has datasets with repeated names: `d1`, `d2`.", fixed = TRUE)
@@ -447,7 +446,7 @@ local({
         d12 = labelled(data.frame(a = 1), "d1 label"),
         d13 = labelled(data.frame(a = 1), "d1 label"),
         d2 = labelled(data.frame(a = 1), "d2 label"),
-        d22 = labelled(data.frame(a = 1), "d22 label"),
+        d22 = labelled(data.frame(a = 1), "d2 label"),
         d3 = labelled(data.frame(a = 1), "d3 label")
       )
       check_dataset_names_and_labels(dataset_list, "D1") |>
