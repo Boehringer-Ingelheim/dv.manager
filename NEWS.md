@@ -1,9 +1,9 @@
 # dv.manager 3.2.2-9000
 
  - UI and functionality:
-   - `run_app` errors when two datasets in the same dataset list share a label
-   - `run_app` errors when two datasets in the same dataset list share a name
-   - `run_app` errors when two dataset lists share a name
+   - `run_app` produces an error when two datasets in the same dataset list share a label
+   - `run_app` produces an error when two datasets in the same dataset list share a name
+   - `run_app` produces an error when two dataset lists share a name
 - Bugfix:
    - Overlay behavior is improved showed on app/start selection change removed when the app is ready for interaction
    
