@@ -51,7 +51,7 @@ test_that(
       "D1" = list(DD1 = tibble::tibble(A = 1, C = 2), DD2 = tibble::tibble(A = 1, B = 2)),
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
-   
+
     for (dataset_list in data) {
       if ("C" %in% names(dataset_list)) {
         check_filter_key("C", dataset_list) |>
@@ -358,7 +358,9 @@ test_that(
       filter_key = "C",
       .launch = FALSE
     ) |>
-      expect_error(regexp = "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes")
+      expect_error(
+        regexp = "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes"
+      )
   }
 )
 
@@ -377,11 +379,11 @@ local({
     ),
     {
       dataset_list <- list(
-        dm = labelled(data.frame(a = 1), "Demographics"),
-        ae = labelled(data.frame(a = 1), "Adverse Events"),
-        lb = data.frame(a = 1) # Unlabelled: labelled by its name
+        d1 = labelled(data.frame(a = 1), "d1 label"),
+        d2 = labelled(data.frame(a = 1), "d2 label"),
+        d3 = data.frame(a = 1) # Unlabelled: labelled by its name
       )
-      check_dataset_names_and_labels(dataset_list, "D1") |>
+      check_dataset_names_and_labels(dataset_list, "DS1") |>
         expect_error(regexp = NA) |>
         expect_identical(dataset_list)
     }
@@ -394,29 +396,13 @@ local({
     ),
     {
       dataset_list <- list(
-        dm = labelled(data.frame(a = 1), "Demographics 1"),
-        dm = labelled(data.frame(a = 1), "Demographics 2")
+        d1 = labelled(data.frame(a = 1), "d1 label"),
+        d1 = labelled(data.frame(a = 1), "other d1 label"),
+        d2 = labelled(data.frame(a = 1), "d2 label"),
+        d2 = labelled(data.frame(a = 1), "other d2 label"),
       )
-      check_dataset_names_and_labels(dataset_list, "D1") |>
-        expect_error(regexp = "D1 has datasets with repeated names: `dm`.", fixed = TRUE)
-    }
-  )
-
-  test_that(
-    vdoc[["add_spec"]](
-      "check_dataset_names_and_labels should report all repeated names in a single error",
-      c(specs$DATASETS$DATASET_LIST_NAMES_UNIQUE)
-    ),
-    {
-      dataset_list <- list(
-        dm = data.frame(a = 1),
-        ae = data.frame(a = 1),
-        dm = data.frame(a = 1),
-        ae = data.frame(a = 1),
-        dm = data.frame(a = 1)
-      )
-      check_dataset_names_and_labels(dataset_list, "D1") |>
-        expect_error(regexp = "D1 has datasets with repeated names: `dm`, `ae`.", fixed = TRUE)
+      check_dataset_names_and_labels(dataset_list, "DS1") |>
+        expect_error(regexp = "D1 has datasets with repeated names: `d1`, `d2`.", fixed = TRUE)
     }
   )
 
@@ -427,11 +413,11 @@ local({
     ),
     {
       dataset_list <- list(
-        dm1 = labelled(data.frame(a = 1), "Demographics"),
-        dm2 = labelled(data.frame(a = 1), "Demographics")
+        d1 = labelled(data.frame(a = 1), "shared label"),
+        d2 = labelled(data.frame(a = 1), "shared label")
       )
       check_dataset_names_and_labels(dataset_list, "D1") |>
-        expect_error(regexp = "D1 has datasets with repeated labels: 'Demographics' (`dm1`, `dm2`).", fixed = TRUE)
+        expect_error(regexp = "D1 has datasets with repeated labels: 'shared label' (`d1`, `d2`).", fixed = TRUE)
     }
   )
 
@@ -442,11 +428,11 @@ local({
     ),
     {
       dataset_list <- list(
-        dm = data.frame(a = 1),
-        dm2 = labelled(data.frame(a = 1), "dm")
+        d1 = data.frame(a = 1),
+        d2 = labelled(data.frame(a = 1), "d1")
       )
       check_dataset_names_and_labels(dataset_list, "D1") |>
-        expect_error(regexp = "D1 has datasets with repeated labels: 'dm' (`dm`, `dm2`).", fixed = TRUE)
+        expect_error(regexp = "D1 has datasets with repeated labels: 'd1' (`d1`, `d2`).", fixed = TRUE)
     }
   )
 
@@ -457,15 +443,16 @@ local({
     ),
     {
       dataset_list <- list(
-        dm1 = labelled(data.frame(a = 1), "Demographics"),
-        ae1 = labelled(data.frame(a = 1), "Adverse Events"),
-        dm2 = labelled(data.frame(a = 1), "Demographics"),
-        ae2 = labelled(data.frame(a = 1), "Adverse Events"),
-        dm3 = labelled(data.frame(a = 1), "Demographics")
+        d1 = labelled(data.frame(a = 1), "d1 label"),
+        d12 = labelled(data.frame(a = 1), "d1 label"),
+        d13 = labelled(data.frame(a = 1), "d1 label"),
+        d2 = labelled(data.frame(a = 1), "d2 label"),
+        d22 = labelled(data.frame(a = 1), "d22 label"),
+        d3 = labelled(data.frame(a = 1), "d3 label")
       )
       check_dataset_names_and_labels(dataset_list, "D1") |>
         expect_error(
-          regexp = "D1 has datasets with repeated labels: 'Demographics' (`dm1`, `dm2`, `dm3`); 'Adverse Events' (`ae1`, `ae2`).",
+          regexp = "D1 has datasets with repeated labels: 'd1 label' (`d1`, `d12`, `d13`); 'd2 label' (`d2`, `d22`).",
           fixed = TRUE
         )
     }
@@ -479,8 +466,8 @@ local({
     {
       dataset_list <- list(
         adsl = data.frame(USUBJID = 1),
-        dm1 = labelled(data.frame(USUBJID = 1), "Demographics"),
-        dm2 = labelled(data.frame(USUBJID = 1), "Demographics")
+        d1 = labelled(data.frame(USUBJID = 1), "shared label"),
+        d2 = labelled(data.frame(USUBJID = 1), "shared label")
       )
       module_list <- list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1"))
 
@@ -491,7 +478,7 @@ local({
         filter_dataset_name = "adsl",
         .launch = FALSE
       ) |>
-        expect_error(regexp = "D1 has datasets with repeated labels: 'Demographics' (`dm1`, `dm2`).", fixed = TRUE)
+        expect_error(regexp = "D1 has datasets with repeated labels: 'shared label' (`d1`, `d2`).", fixed = TRUE)
 
       # dataset_list returned by a function
       run_app(
@@ -500,7 +487,7 @@ local({
         filter_dataset_name = "adsl",
         .launch = FALSE
       ) |>
-        expect_error(regexp = "D1 has datasets with repeated labels: 'Demographics' (`dm1`, `dm2`).", fixed = TRUE)
+        expect_error(regexp = "D1 has datasets with repeated labels: 'shared label' (`d1`, `d2`).", fixed = TRUE)
     }
   )
 
@@ -512,8 +499,8 @@ local({
     {
       dataset_list <- list(
         adsl = data.frame(USUBJID = 1),
-        dm = labelled(data.frame(USUBJID = 1), "Demographics 1"),
-        dm = labelled(data.frame(USUBJID = 1), "Demographics 2")
+        d1 = labelled(data.frame(USUBJID = 1), "d1 label"),
+        d1 = labelled(data.frame(USUBJID = 1), "other d1 label")
       )
       module_list <- list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1"))
 
@@ -524,7 +511,7 @@ local({
         filter_dataset_name = "adsl",
         .launch = FALSE
       ) |>
-        expect_error(regexp = "D1 has datasets with repeated names: `dm`.", fixed = TRUE)
+        expect_error(regexp = "D1 has datasets with repeated names: `d1`.", fixed = TRUE)
 
       # dataset_list returned by a function
       run_app(
@@ -533,7 +520,7 @@ local({
         filter_dataset_name = "adsl",
         .launch = FALSE
       ) |>
-        expect_error(regexp = "D1 has datasets with repeated names: `dm`.", fixed = TRUE)
+        expect_error(regexp = "D1 has datasets with repeated names: `d1`.", fixed = TRUE)
     }
   )
 })
