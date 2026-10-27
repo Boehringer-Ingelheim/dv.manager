@@ -400,7 +400,7 @@ local({
         d2 = labelled(data.frame(a = 1), "d2 label"),
         d2 = labelled(data.frame(a = 1), "other d2 label")
       )
-      check_dataset_names_and_labels(dataset_list, "DS1") |>
+      check_dataset_names_and_labels(dataset_list, "D1") |>
         expect_error(regexp = "D1 has datasets with repeated names: `d1`, `d2`.", fixed = TRUE)
     }
   )
