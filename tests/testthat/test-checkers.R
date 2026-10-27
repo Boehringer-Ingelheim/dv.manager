@@ -15,7 +15,7 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
 
-    for (dataset_list in data){
+    for (dataset_list in data) {
       check_filter_key("A", dataset_list) |>
         expect_error(regexp = NA) |>
         expect_equal("A")
@@ -34,7 +34,7 @@ test_that(
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, D = 2))
     )
 
-    for (dataset_list in data){
+    for (dataset_list in data) {
       check_filter_key("C", dataset_list) |>
         expect_error(regexp = "Selected filtering key is not present in all datasets")
     }
@@ -51,7 +51,7 @@ test_that(
       "D1" = list(DD1 = tibble::tibble(A = 1, C = 2), DD2 = tibble::tibble(A = 1, B = 2)),
       "D2" = list(DD1 = tibble::tibble(A = 1, B = 2), DD2 = tibble::tibble(A = 1, C = 2))
     )
-   
+
     for (dataset_list in data) {
       if ("C" %in% names(dataset_list)) {
         check_filter_key("C", dataset_list) |>
@@ -61,7 +61,6 @@ test_that(
         check_filter_key("C", dataset_list) |>
           expect_error(regexp = "Selected filtering key is not present in all datasets")
       }
-      
     }
   }
 )
@@ -289,6 +288,40 @@ test_that(
 
 test_that(
   vdoc[["add_spec"]](
+    "check_data should error when dataset lists share a name, reporting all repeated names in a single error",
+    c(specs$DATASETS$DATASET_LISTS_NAMES_UNIQUE)
+  ),
+  {
+    data <- list(
+      D1 = list(a = data.frame(a = 1)),
+      D2 = function() list(a = data.frame(a = 1)),
+      D1 = function() list(a = data.frame(a = 1)),
+      D2 = list(a = data.frame(a = 1))
+    )
+    check_data_while_ignoring_dataset_list_fns(data) |>
+      expect_error(regexp = "data argument has dataset lists with repeated names: `D1`, `D2`.", fixed = TRUE)
+  }
+)
+
+test_that(
+  vdoc[["add_spec"]](
+    "run_app should throw an error when dataset lists share a name",
+    c(specs$DATASETS$DATASET_LISTS_NAMES_UNIQUE)
+  ),
+  {
+    dataset_list <- list(adsl = data.frame(USUBJID = 1))
+    run_app(
+      data = list(D1 = dataset_list, D1 = function() dataset_list),
+      module_list = list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1")),
+      filter_dataset_name = "adsl",
+      .launch = FALSE
+    ) |>
+      expect_error(regexp = "data argument has dataset lists with repeated names: `D1`.", fixed = TRUE)
+  }
+)
+
+test_that(
+  vdoc[["add_spec"]](
     "check_data should pass the check when a named list of lists of dataframes or a list of functions is passed. Should return the checked element",
     c(specs$DATASETS$DATASET_ENTRY_STRUCTURE)
   ),
@@ -324,9 +357,172 @@ test_that(
       filter_key = "C",
       .launch = FALSE
     ) |>
-      expect_error(regexp = "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes")
+      expect_error(
+        regexp = "data must be list of lists of dataframes, or a list of functions that returns a list of dataframes"
+      )
   }
 )
+
+## Testing check_dataset_names_and_labels ----
+
+local({
+  labelled <- function(df, label) {
+    attr(df, "label") <- label
+    df
+  }
+
+  test_that(
+    vdoc[["add_spec"]](
+      "check_dataset_names_and_labels should pass when dataset names and labels are unique and return the checked element",
+      c(specs$DATASETS$DATASET_LIST_NAMES_UNIQUE, specs$DATASETS$DATASET_LIST_LABELS_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        d1 = labelled(data.frame(a = 1), "d1 label"),
+        d2 = labelled(data.frame(a = 1), "d2 label"),
+        d3 = data.frame(a = 1) # Unlabelled: labelled by its name
+      )
+      check_dataset_names_and_labels(dataset_list, "DS1") |>
+        expect_error(regexp = NA) |>
+        expect_identical(dataset_list)
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "check_dataset_names_and_labels should error when two datasets share the same name, even with different labels",
+      c(specs$DATASETS$DATASET_LIST_NAMES_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        d1 = labelled(data.frame(a = 1), "d1 label"),
+        d1 = labelled(data.frame(a = 1), "other d1 label"),
+        d2 = labelled(data.frame(a = 1), "d2 label"),
+        d2 = labelled(data.frame(a = 1), "other d2 label")
+      )
+      check_dataset_names_and_labels(dataset_list, "D1") |>
+        expect_error(regexp = "D1 has datasets with repeated names: `d1`, `d2`.", fixed = TRUE)
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "check_dataset_names_and_labels should error when two datasets share the same label attribute",
+      c(specs$DATASETS$DATASET_LIST_LABELS_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        d1 = labelled(data.frame(a = 1), "shared label"),
+        d2 = labelled(data.frame(a = 1), "shared label")
+      )
+      check_dataset_names_and_labels(dataset_list, "D1") |>
+        expect_error(regexp = "D1 has datasets with repeated labels: 'shared label' (`d1`, `d2`).", fixed = TRUE)
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "check_dataset_names_and_labels should error when a dataset label matches the name of an unlabelled dataset",
+      c(specs$DATASETS$DATASET_LIST_LABELS_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        d1 = data.frame(a = 1),
+        d2 = labelled(data.frame(a = 1), "d1")
+      )
+      check_dataset_names_and_labels(dataset_list, "D1") |>
+        expect_error(regexp = "D1 has datasets with repeated labels: 'd1' (`d1`, `d2`).", fixed = TRUE)
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "check_dataset_names_and_labels should report all repeated labels in a single error",
+      c(specs$DATASETS$DATASET_LIST_LABELS_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        d1 = labelled(data.frame(a = 1), "d1 label"),
+        d12 = labelled(data.frame(a = 1), "d1 label"),
+        d13 = labelled(data.frame(a = 1), "d1 label"),
+        d2 = labelled(data.frame(a = 1), "d2 label"),
+        d22 = labelled(data.frame(a = 1), "d2 label"),
+        d3 = labelled(data.frame(a = 1), "d3 label")
+      )
+      check_dataset_names_and_labels(dataset_list, "D1") |>
+        expect_error(
+          regexp = "D1 has datasets with repeated labels: 'd1 label' (`d1`, `d12`, `d13`); 'd2 label' (`d2`, `d22`).",
+          fixed = TRUE
+        )
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "run_app should throw an error when datasets in a dataset_list share a label",
+      c(specs$DATASETS$DATASET_LIST_LABELS_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        adsl = data.frame(USUBJID = 1),
+        d1 = labelled(data.frame(USUBJID = 1), "shared label"),
+        d2 = labelled(data.frame(USUBJID = 1), "shared label")
+      )
+      module_list <- list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1"))
+
+      # Plain dataset_list
+      run_app(
+        data = list(D1 = dataset_list),
+        module_list = module_list,
+        filter_dataset_name = "adsl",
+        .launch = FALSE
+      ) |>
+        expect_error(regexp = "D1 has datasets with repeated labels: 'shared label' (`d1`, `d2`).", fixed = TRUE)
+
+      # dataset_list returned by a function
+      run_app(
+        data = list(D1 = function() dataset_list),
+        module_list = module_list,
+        filter_dataset_name = "adsl",
+        .launch = FALSE
+      ) |>
+        expect_error(regexp = "D1 has datasets with repeated labels: 'shared label' (`d1`, `d2`).", fixed = TRUE)
+    }
+  )
+
+  test_that(
+    vdoc[["add_spec"]](
+      "run_app should throw an error when datasets in a dataset_list share a name",
+      c(specs$DATASETS$DATASET_LIST_NAMES_UNIQUE)
+    ),
+    {
+      dataset_list <- list(
+        adsl = data.frame(USUBJID = 1),
+        d1 = labelled(data.frame(USUBJID = 1), "d1 label"),
+        d1 = labelled(data.frame(USUBJID = 1), "other d1 label")
+      )
+      module_list <- list("Simple" = dv.manager:::mod_simple("adsl", "filtered_dataset_list", "mod1"))
+
+      # Plain dataset_list
+      run_app(
+        data = list(D1 = dataset_list),
+        module_list = module_list,
+        filter_dataset_name = "adsl",
+        .launch = FALSE
+      ) |>
+        expect_error(regexp = "D1 has datasets with repeated names: `d1`.", fixed = TRUE)
+
+      # dataset_list returned by a function
+      run_app(
+        data = list(D1 = function() dataset_list),
+        module_list = module_list,
+        filter_dataset_name = "adsl",
+        .launch = FALSE
+      ) |>
+        expect_error(regexp = "D1 has datasets with repeated names: `d1`.", fixed = TRUE)
+    }
+  )
+})
 
 ## Testing "check_module" ----
 

@@ -182,11 +182,6 @@ app_server_ <- function(input, output, session, opts) {
     unfiltered_dataset_list_with_filter_info
   )
 
-  shiny::observeEvent(unfiltered_dataset_list_with_filter_info(), {
-    # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
-    session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
-  })
-
   shiny::observeEvent(
     {
       input[[ID$NAV_HEADER]]
@@ -332,11 +327,19 @@ app_server_ <- function(input, output, session, opts) {
     ..t$add_period(id, FALSE)
   }
 
-  # Not convinced as it is set somewhere else (app_ui and filter) (gvbu)
   if (length(dataset_lists) > 0) {
-    # Otherwise when no dataset_list is loaded in the app the overlay remains in screen
+    # Not a fan of priorities, but this should run first thing whenever there is a new value in the selector
+    shiny::observeEvent(
+      input[["selector"]],
+      session[["sendCustomMessage"]]("dv_manager_show_overlay", list(message = "Loading dataset")),
+      priority = 1000
+    )
+    # Once everything data is ready we wait until all modules have been processed. Onflushed runs once all observers and
+    # outputs are finished.
+    # This also fires on every filter change, update (not show) so the overlay only appears while loading a dataset list
     shiny::observeEvent(unfiltered_dataset_list_with_filter_info(), {
-      session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())
+      session[["sendCustomMessage"]]("dv_manager_update_overlay_if_visible", list(message = "Setting up modules"))
+      session[["onFlushed"]](function() session[["sendCustomMessage"]]("dv_manager_hide_overlay", list()), once = TRUE)
     })
   } else {
     session[["sendCustomMessage"]]("dv_manager_hide_overlay", list())

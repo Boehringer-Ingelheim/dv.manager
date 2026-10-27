@@ -38,6 +38,7 @@ specs <- list(
   # --- Datasets ---
   DATASETS = list(
     "DATASET_LIST_NAMED" = "Datasets must be defined as a named list (must not be NULL; error thrown if not).",
+    "DATASET_LISTS_NAMES_UNIQUE" = "Dataset list names must be unique (error thrown if not).",
     "DATASET_LIST_NOT_NULL" = "Dataset list must not be NULL.",
     "DATASET_LIST_EMPTY_ALLOWED" = "Dataset list can be empty but not NULL.",
     "DATASET_ENTRY_STRUCTURE" = "Each dataset entry can be:
@@ -48,6 +49,8 @@ specs <- list(
     "DATASET_LIST_SWITCHING_ALLOWED" = "Users can switch between datasets during execution.",
     "DATASET_LIST_SINGLE_ACTIVE" = "Only one dataset can be active at a time.",
     "DATASET_LIST_LABELS_DISPLAY" = "Dataset labels are displayed in the UI.",
+    "DATASET_LIST_NAMES_UNIQUE" = "Dataset names must be unique within a dataset list (error thrown if not).",
+    "DATASET_LIST_LABELS_UNIQUE" = "Dataset labels must be unique within a dataset list (error thrown if not). A dataset without a label attribute is labelled by its name.",
     "DATASET_LIST_MOD_DATE_SINGLE" = "If all tables have the same mtime, a single date is displayed (mtime must be POSIXct).",
     "DATASET_LIST_MOD_DATE_RANGE" = "If tables have different mtimes, earliest and latest are displayed as a range (mtime must be POSIXct).",
     "DATASET_LIST_MOD_DATE_UNAVAILABLE_UI" = "If no mtime is available, 'Date unavailable' is displayed in the UI; a warning is logged if meta$mtime is NULL.",

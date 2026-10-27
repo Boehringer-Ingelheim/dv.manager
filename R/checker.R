@@ -44,26 +44,36 @@ check_dataset_list <- function(dataset_list) {
   dataset_list
 }
 
-check_data_while_ignoring_dataset_list_fns <- function(data) {
+check_data_while_ignoring_dataset_list_fns <- function(dataset_lists) {
   # NULL data is disallowed
-  if (is.null(data)) {
+  if (is.null(dataset_lists)) {
     msg <- "data argument is NULL. If you are trying to run an application without data, use an empty list 'dv.manager::run_app(data = list(), ...)'" # nolint
     stop(msg)
   }
 
   # Check we are passing a named list
-  if (!has_all_items_named(data)) {
+  if (!has_all_items_named(dataset_lists)) {
     msg <- "data argument must be a list an all its entries must be named"
     stop(msg)
   }
 
-  for (dataset_list in data) {
+  nms <- names(dataset_lists)
+  repeated_names <- unique(nms[duplicated(nms)])
+  if (length(repeated_names) > 0) {
+    msg <- sprintf(
+      "data argument has dataset lists with repeated names: %s.",
+      paste0("`", repeated_names, "`", collapse = ", ")
+    )
+    stop(msg)
+  }
+
+  for (dataset_list in dataset_lists) {
     if (!is.function(dataset_list)) {
       check_dataset_list(dataset_list)
     }
   }
 
-  data
+  dataset_lists
 }
 
 check_filter_dataset_name <- function(filter_dataset_name, dataset_list, dataset_list_name) {
@@ -80,6 +90,39 @@ check_filter_dataset_name <- function(filter_dataset_name, dataset_list, dataset
   }
 
   filter_dataset_name
+}
+
+check_dataset_names_and_labels <- function(dataset_list, dataset_list_name) {
+  nms <- names(dataset_list)
+  repeated_names <- unique(nms[duplicated(nms)])
+
+  if (length(repeated_names) > 0) {
+    msg <- sprintf(
+      "%s has datasets with repeated names: %s.",
+      dataset_list_name,
+      paste0("`", repeated_names, "`", collapse = ", ")
+    )
+    stop(msg)
+  }
+
+  lbls <- get_lbls_robust(dataset_list)
+  repeated_labels <- unique(lbls[duplicated(lbls)])
+
+  if (length(repeated_labels) > 0) {
+    clashes <- vapply(
+      repeated_labels,
+      function(lbl) sprintf("'%s' (%s)", lbl, paste0("`", names(lbls)[lbls == lbl], "`", collapse = ", ")),
+      FUN.VALUE = character(1)
+    )
+    msg <- sprintf(
+      "%s has datasets with repeated labels: %s.",
+      dataset_list_name,
+      paste(clashes, collapse = "; ")
+    )
+    stop(msg)
+  }
+
+  dataset_list
 }
 
 check_filter_key <- function(filter_key, dataset_list) {

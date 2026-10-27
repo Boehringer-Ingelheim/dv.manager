@@ -419,12 +419,12 @@ const dv_overlay = (function () {
   }
 
   let overlay = undefined;
+  let message = undefined;
   let show_time = undefined;
+  let hide_timeout = undefined;
 
   let show_overlay = function(msg) {
-    if(overlay) {
-      hide_overlay();
-    }
+    clearTimeout(hide_timeout);
     if(!overlay){
       log("Showing overlay"); 
       overlay = document.createElement('div');      
@@ -433,37 +433,49 @@ const dv_overlay = (function () {
       document.body.appendChild(overlay);
       show_time = Date.now();
 
-      let message = document.createElement("span");
+      message = document.createElement("span");
       message.className = "text-white h1";
-      message.textContent= msg;
       overlay.appendChild(message);
       let spinner = document.createElement("div");
       spinner.className = "spinner-border text-white m-5";            
       overlay.appendChild(spinner);
     }
+    message.textContent = msg;
+  };
+
+  // Only changes the message of an overlay already on screen, never creates one
+  let update_overlay_if_visible = function(msg) {
+    if (overlay) {
+      message.textContent = msg;
+    }
   };
 
   let hide_overlay = function (_) {
     if (overlay) {      
-      log("Hiding overlay");    
-
       const elapsed = Date.now() - show_time;
       const remaining = C.MIN_VISIBLE_MS - elapsed;
 
+      clearTimeout(hide_timeout);
       if (remaining > 0) {
-        setTimeout(hide_overlay, remaining);
+        hide_timeout = setTimeout(hide_overlay, remaining);
       } else {
+        log("Hiding overlay");    
         overlay.remove();      
         overlay = undefined;
+        message = undefined;
       }
 
     } else {
-      console.warn(`#${C.ID} not found`)
+      log(`#${C.ID} not found`)
     }
   };
 
   Shiny.addCustomMessageHandler("dv_manager_show_overlay", function (message) {
     show_overlay(message.message)
+  });
+
+  Shiny.addCustomMessageHandler("dv_manager_update_overlay_if_visible", function (message) {
+    update_overlay_if_visible(message.message)
   });
 
   Shiny.addCustomMessageHandler("dv_manager_hide_overlay", function (_) {
@@ -472,6 +484,7 @@ const dv_overlay = (function () {
 
   const res = {
     show: show_overlay,
+    update_overlay_if_visible: update_overlay_if_visible,
     hide: hide_overlay
   }
 
