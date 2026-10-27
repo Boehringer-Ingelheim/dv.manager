@@ -44,20 +44,20 @@ check_dataset_list <- function(dataset_list) {
   dataset_list
 }
 
-check_data_while_ignoring_dataset_list_fns <- function(data) {
+check_data_while_ignoring_dataset_list_fns <- function(dataset_lists) {
   # NULL data is disallowed
-  if (is.null(data)) {
+  if (is.null(dataset_lists)) {
     msg <- "data argument is NULL. If you are trying to run an application without data, use an empty list 'dv.manager::run_app(data = list(), ...)'" # nolint
     stop(msg)
   }
 
   # Check we are passing a named list
-  if (!has_all_items_named(data)) {
+  if (!has_all_items_named(dataset_lists)) {
     msg <- "data argument must be a list an all its entries must be named"
     stop(msg)
   }
 
-  nms <- names(data)
+  nms <- names(dataset_lists)
   repeated_names <- unique(nms[duplicated(nms)])
   if (length(repeated_names) > 0) {
     msg <- sprintf(
@@ -67,13 +67,13 @@ check_data_while_ignoring_dataset_list_fns <- function(data) {
     stop(msg)
   }
 
-  for (dataset_list in data) {
+  for (dataset_list in dataset_lists) {
     if (!is.function(dataset_list)) {
       check_dataset_list(dataset_list)
     }
   }
 
-  data
+  dataset_lists
 }
 
 check_filter_dataset_name <- function(filter_dataset_name, dataset_list, dataset_list_name) {
