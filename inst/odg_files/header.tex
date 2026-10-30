@@ -1,0 +1,193 @@
+%% ---- wide page ------------------------------------------------------------
+%% It widens the by gettint the maximum of the estimation of wideness provided by longtable (2pass)
+%% or the provided parameter. If it is no table it uses the provided number directly.
+
+\newlength{\wpcharwd}
+\newlength{\wptblwd}
+\newlength{\wpmargin}
+\newlength{\wpminmargin}    % margin needed to keep the watermark clear of text
+\newlength{\wpcontentwd}    % widest table measured so far in the current block
+\newlength{\wpscratch}
+\newlength{\wpsaved}
+\newlength{\wpsavedtw}
+\newlength{\wpsavedosm}
+\newlength{\wpsavedesm}
+\newcounter{wpblock}
+\newif\ifwpwidened
+\newif\ifwpinblock
+
+\ifdefined\pdfpagewidth
+  \let\wppagewidth\pdfpagewidth      % pdfTeX, XeTeX
+\else
+  \let\wppagewidth\pagewidth         % LuaTeX
+\fi
+
+\newcommand{\wptabfont}{\ttfamily\fontsize{7}{8}\selectfont}
+
+\makeatletter
+
+%% Width of a block's widest table, as recorded by the previous run.
+\gdef\wpsetwidth#1#2{\global\@namedef{wp@wd@#1}{#2}}
+
+%% Sum of the column widths longtable just settled on == the table's real width.
+\def\wp@addentry#1#2{\advance\wpscratch#2\relax}
+\def\wp@measure{%
+  \ifwpinblock
+    \begingroup
+      \wpscratch\z@
+      \let\LT@entry\wp@addentry
+      \LT@save@row
+      \ifdim\wpscratch>\wpcontentwd
+        \global\wpcontentwd\wpscratch
+      \fi
+    \endgroup
+  \fi}
+
+%% longtable is loaded after this file, so hook it once the preamble is done.
+\AtBeginDocument{%
+  \@ifundefined{wpstamp}{}{%
+    \settowidth{\wpscratch}{\wpstamp}%
+    \global\wpminmargin\dimexpr\wpstampinset+\wpscratch+\wpstampgap\relax}%
+  \@ifundefined{endlongtable}{}{%
+    \let\wp@endlongtable\endlongtable
+    \def\endlongtable{\wp@endlongtable\wp@measure}}%
+}
+
+\def\wp@rerun{%
+  \PackageWarning{widepage}{Wide page \thewpblock\space width has changed.
+    Rerun to get wide page widths right}}
+
+\newcommand{\beginwidepage}[2][1in]{%
+  \stepcounter{wpblock}%
+  \setlength{\wpmargin}{#1}%
+  \ifdim\wpmargin<\wpminmargin
+    \setlength{\wpmargin}{\wpminmargin}%   never let text reach the watermark
+  \fi
+  \settowidth{\wpcharwd}{{\wptabfont 0}}%
+  \setlength{\wptblwd}{#2\wpcharwd}%
+  %% A width measured on a previous run beats the caller's estimate, but only
+  %% upwards: a block may also hold verbatim text, which no table accounts for.
+  \@ifundefined{wp@wd@\thewpblock}{}{%
+    \setlength{\wpscratch}{\@nameuse{wp@wd@\thewpblock}}%
+    \ifdim\wpscratch>\wptblwd
+      \setlength{\wptblwd}{\wpscratch}%
+    \fi}%
+  \global\setlength{\wpcontentwd}{\z@}%
+  \global\wpinblocktrue
+  \ifdim\wptblwd>\textwidth
+    \global\wpwidenedtrue
+  \else
+    \global\wpwidenedfalse
+  \fi
+  \ifwpwidened
+    \clearpage
+    \global\setlength{\wpsaved}{\wppagewidth}%
+    \global\setlength{\wpsavedtw}{\textwidth}%
+    \global\setlength{\wpsavedosm}{\oddsidemargin}%
+    \global\setlength{\wpsavedesm}{\evensidemargin}%
+    \global\setlength{\wppagewidth}{\dimexpr\wptblwd+2\wpmargin\relax}%
+    \global\setlength{\paperwidth}{\wppagewidth}%
+    \global\setlength{\textwidth}{\wptblwd}%
+    \global\setlength{\hsize}{\wptblwd}%
+    \global\setlength{\linewidth}{\wptblwd}%
+    \global\setlength{\columnwidth}{\wptblwd}%
+    \global\setlength{\oddsidemargin}{\dimexpr(\paperwidth-\wptblwd)/2-1in\relax}%
+    \global\setlength{\evensidemargin}{\oddsidemargin}%
+    \typeout{widepage: paper \the\paperwidth\space text \the\textwidth}%
+  \else
+    \typeout{widepage: table \the\wptblwd\space fits \the\textwidth, no change}%
+  \fi
+}
+
+\newcommand{\stopwidepage}{%
+  \ifdim\wpcontentwd>\z@
+    \if@filesw
+      \immediate\write\@auxout{%
+        \string\wpsetwidth{\thewpblock}{\the\wpcontentwd}}%
+    \fi
+    \@ifundefined{wp@wd@\thewpblock}{\wp@rerun}{%
+      \setlength{\wpscratch}{\@nameuse{wp@wd@\thewpblock}}%
+      \ifdim\wpscratch=\wpcontentwd\else\wp@rerun\fi}%
+  \fi
+  \global\wpinblockfalse
+  \ifwpwidened
+    \clearpage
+    \global\setlength{\wppagewidth}{\wpsaved}%
+    \global\setlength{\paperwidth}{\wpsaved}%
+    \global\setlength{\textwidth}{\wpsavedtw}%
+    \global\setlength{\hsize}{\wpsavedtw}%
+    \global\setlength{\linewidth}{\wpsavedtw}%
+    \global\setlength{\columnwidth}{\wpsavedtw}%
+    \global\setlength{\oddsidemargin}{\wpsavedosm}%
+    \global\setlength{\evensidemargin}{\wpsavedesm}%
+    \global\wpwidenedfalse
+  \fi
+}
+
+\makeatother
+
+%% ---- watermark ------------------------------------------------------------
+\usepackage{atbegshi}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+\newlength{\wpstampinset}   % paper edge -> watermark
+\newlength{\wpstampgap}     % watermark -> text block
+\setlength{\wpstampinset}{25pt}
+\setlength{\wpstampgap}{12pt}
+
+\newcommand{\wpstamp}{%
+  \rotatebox{90}{\normalfont\color{red}\fontsize{20pt}{24pt}\selectfont UNVALIDATED CONTENT}%
+}
+
+\AtBeginShipout{\AtBeginShipoutUpperLeft{%
+  \put(0,-420){%
+    \hbox to \paperwidth{\hspace*{\wpstampinset}\wpstamp\hfill\wpstamp\hspace*{\wpstampinset}}%
+  }%
+}}
+
+\newcommand{\alertwarning}[1]{\par\vspace{4pt}\noindent\fcolorbox{yellow!70!black}{yellow!20}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\color{yellow!60!black}#1}}\par\vspace{4pt}}
+
+%% ---- long cells -----------------------------------------------------------
+%% A listing cell over the length limit is cut and ends in a mark that links to a note, below the table, with the
+%% whole text. The note links back. The mark is a single PDF push button: /A follows the link and /TU, the whole
+%% text, is its tooltip. A plain link under a tooltip button would not work, the button on top takes the click.
+%% Written for xdvipdfmx (xelatex).
+\newsavebox{\longcellbox}
+
+%% {characters per line}{text}: a cell that wraps at that many characters of the current, monospace, font
+\newcommand{\longcell}[2]{\parbox[t]{#1\fontcharwd\font`0}{\raggedright #2}}
+
+%% Link target. Viewers put it at or near the top of the window, so it is raised three lines to show the line it is
+%% on, with some of the one above. \normalbaselineskip, as \baselineskip is 0pt in tables.
+\newcommand{\longcellanchor}[1]{\raisebox{3\normalbaselineskip}[0pt][0pt]{\hypertarget{#1}{}}}
+
+%% This is the reason we cannot simply use hyperref and we have to use Forms.
+%% We can move to hyperref if we drop the tooltip and the notes
+%% {note anchor}{mark}{whole text as a PDF string}
+\newcommand{\longcellmark}[3]{%
+  \sbox{\longcellbox}{\textcolor{blue}{#2}}%
+  \special{pdf:ann width \the\wd\longcellbox\space height \the\ht\longcellbox\space depth \the\dp\longcellbox\space
+    << /Subtype /Widget /FT /Btn /Ff 65536 /T (#1) /TU #3 /A << /S /GoTo /D (#1) >> /F 4 /H /I /BS << /W 0 >> >>}%
+  \usebox{\longcellbox}}
+
+\newenvironment{longcellnotes}{\par\raggedright}{\par}
+
+%% {note anchor}{cell anchor}{mark}{whole text, escaped}
+\newcommand{\longcellnote}[4]{%
+  \par\noindent
+  \sbox{\longcellbox}{#3\ }%
+  \hangindent\wd\longcellbox
+  \longcellanchor{#1}%
+  \hyperlink{#2}{\textcolor{blue}{#3}}\ #4\par}
+
+%% ---- table of contents rerun ------------------------------------------------
+%% Page breaks can still move on the second LaTeX pass (wide pages, a table of contents that outgrows the title
+%% page) and LaTeX does not warn when the .toc changes, so tinytex stops one pass early and prints stale page
+%% numbers. Ask for a rerun in words tinytex recognizes. The .toc must be closed before it is checksummed.
+\usepackage{rerunfilecheck}
+\makeatletter
+\RerunFileCheck{\jobname.toc}{%
+  \@ifundefined{tf@toc}{}{\immediate\closeout\tf@toc}%
+}{Rerun to get the table of contents right}
+\makeatother

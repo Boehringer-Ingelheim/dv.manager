@@ -27,6 +27,7 @@
 #' @param filter_default_state A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for `development` filters).
 #' @param enable_dataset_filter ( **DEPRECATED** )
 #' @param enable_subgroup  A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.
+#' @param enable_odg  A boolean flag indicating if Output Document Generation is enabled. The default value is FALSE.
 #' @param .launch by default it should always be TRUE. It should only be false for debugging and testing.
 #' When TRUE it will return the app. When FALSE it will return the options with which the app will be launched.
 #' @param .bypass_checks by default it should always be FALSE. Only for advanced use. If set to TRUE, the app creator must make sure that
@@ -58,6 +59,7 @@ run_app <- function(
   filter_type = "simple",
   enable_dataset_filter = NULL,
   enable_subgroup = FALSE,
+  enable_odg = FALSE,
   filter_default_state = NULL,
   .launch = TRUE,
   .bypass_checks = FALSE,
@@ -123,7 +125,7 @@ run_app <- function(
   if (!isTRUE(.bypass_checks)) {
     log_inform("Running EEF checkers")
 
-     # allocate for [[mod_id]][[dataset_list]]
+    # allocate for [[mod_id]][[dataset_list]]
     eef_errors_by_mod_and_dl <- local({
       eef_errors_by_dl <- vector(mode = "list", length = length(dataset_lists))
       names(eef_errors_by_dl) <- names(dataset_lists)
@@ -166,6 +168,7 @@ run_app <- function(
   config[["reload_period"]] <- get_reload_period(check_reload_period(reload_period))
   config[["filter_info"]] <- check_set_filter_info(filter_default_state)
   config[["subgroup"]] <- check_set_subgroup_info(enable_subgroup)
+  config[["odg"]] <- check_set_odg(enable_odg)
 
   assert_not_shiny_1_11_0()
 
