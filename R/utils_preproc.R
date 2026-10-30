@@ -15,6 +15,15 @@ char_vars_to_factor_vars_dataset <- function(dataset) {
   r
 }
 
+#' Turn the character columns of every dataset in a dataset list into factors, keeping their labels
+#'
+#' Exported only so the generated output documentation code can call it.
+#'
+#' @param dataset_list Named list of data.frames.
+#' @return `dataset_list`, with character columns as factors.
+#' @keywords internal
+#' @export
+#' @noRd
 char_vars_to_factor_vars_dataset_list <- function(dataset_list) {
   # nolintr
   dataset_names <- names(dataset_list)
@@ -53,6 +62,15 @@ decorate_ungroup2df_datasets_dataset_list <- function(f) {
   }
 }
 
+#' Ungroup every dataset in a dataset list into a plain data.frame, keeping its attributes
+#'
+#' Exported only so the generated output documentation code can call it.
+#'
+#' @param dataset_list Named list of data.frames, possibly grouped tibbles.
+#' @return `dataset_list`, with every dataset an ungrouped data.frame.
+#' @keywords internal
+#' @export
+#' @noRd
 ungroup2df_datasets_dataset_list <- function(dataset_list) {
   dataset_names <- names(dataset_list)
   for (dataset_name in dataset_names) {

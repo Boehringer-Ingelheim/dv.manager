@@ -408,4 +408,70 @@ test_that(
   }
 )
 
+test_that("app_server_ errors when a module has ODG elements unnamed or repeated", {
+  # Not a fan as we are mimicking too many things. Maybe we can extract the flatten in a function
+  odg_testing_options <- function(to_odg) {
+    module_info <- resolve_module_list(list(
+      "mod ODG" = list(
+        ui = function(module_id) NULL,
+        server = function(afmm) list(to_odg = to_odg),
+        module_id = "mod_odg"
+      )
+    ))
+    list(
+      afmm_static = list(data = list(), module_names = module_info[["module_name"]]),
+      module_info = module_info,
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE,
+      enable_odg = TRUE
+    )
+  }
+  msg <- "ODG elements for module mod_odg are not named or names are not unique"
+
+  unnamed <- odg_testing_options(list(list(label = "a"), list(label = "b")))
+  expect_error(shiny::testServer(app_server_test(unnamed), {}), msg)
+
+  repeated <- odg_testing_options(list(x = list(label = "a"), x = list(label = "b")))
+  expect_error(shiny::testServer(app_server_test(repeated), {}), msg)
+
+  unique_names <- odg_testing_options(list(x = list(label = "a"), y = list(label = "b")))
+  expect_no_error(shiny::testServer(app_server_test(unique_names), {}))
+})
+
+test_that("app_server_ errors when two ODG elements end up with the same chunk label", {
+  odg_testing_options <- function(module_list) {
+    module_info <- resolve_module_list(module_list)
+    list(
+      afmm_static = list(data = list(), module_names = module_info[["module_name"]]),
+      module_info = module_info,
+      filter_info = list(filter_default_state = NULL),
+      enable_subgroup = FALSE,
+      enable_odg = TRUE
+    )
+  }
+  odg_module <- function(module_id, element_names) {
+    list(
+      ui = function(module_id) NULL,
+      server = function(afmm) list(to_odg = stats::setNames(lapply(element_names, function(x) list()), element_names)),
+      module_id = module_id
+    )
+  }
+
+  # Same id: `a-b` + `c` and `a` + `b-c` both join into `a-b-c`
+  same_id <- odg_testing_options(list("Mod 1" = odg_module("a-b", "c"), "Mod 2" = odg_module("a", "b-c")))
+  expect_error(
+    shiny::testServer(app_server_test(same_id), {}),
+    "ODG elements `a-b-c` (module `a-b`) and `a-b-c` (module `a`) share the chunk label `odg-a-b-c`",
+    fixed = TRUE
+  )
+
+  # Different ids, same label once characters knitr rejects are replaced
+  same_label <- odg_testing_options(list("Mod" = odg_module("m", c("n=10", "n_10"))))
+  expect_error(
+    shiny::testServer(app_server_test(same_label), {}),
+    "ODG elements `m-n=10` (module `m`) and `m-n_10` (module `m`) share the chunk label `odg-m-n_10`",
+    fixed = TRUE
+  )
+})
+
 # nolint end

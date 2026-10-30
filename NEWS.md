@@ -1,3 +1,7 @@
+# dv.manager 3.2.2-9001
+
+- Includes first Output Document Generation version (ODG)
+
 # dv.manager 3.2.2-9000
 
  - UI and functionality:

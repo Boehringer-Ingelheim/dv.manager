@@ -652,6 +652,7 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
   complete_subject_list <- character(0)
 
   for (current_dataset in dataset_list) {
+    assert(subj_var %in% names(current_dataset), paste("subj_var not present"))
     complete_subject_list <- union(complete_subject_list, as.character(unique(current_dataset[[subj_var]])))
   }
 
@@ -685,7 +686,13 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
   return(subject_filter_info)
 }
 
-# Can be expanded to combine arbitrary filters not necessarily
+#' Combine subject- and dataset-level filter results into one filter_info
+#'
+#' Can be expanded to combine arbitrary filters, not necessarily just these two.
+#'
+#' @param filter_info `list(result = list(subject =, dataset =), error_list =)`, as returned by [get_filter_info()].
+#' @return `list(result = list(subjects =, filter_info =), error_list =)`.
+#' @export
 combine_filter_info <- function(filter_info) {
   if (filter_info[["error_list"]]$any()) {
     return(
@@ -831,6 +838,13 @@ apply_filter_info_to_dataset_list <- (function(
 }) |>
   shiny::maskReactiveContext()
 
+#' Resolve subject- and dataset-level filter results for a dataset list
+#'
+#' @param unfiltered_dataset_list Named list of data.frames, carrying a `dataset_list_name` attribute.
+#' @param dataset_list_filter Parsed filter state (`parsed`, `raw`), as produced by the filter UI.
+#' @param filter_key_var Column identifying subjects.
+#' @return `list(result = list(subject =, dataset =) or NULL, error_list =)`.
+#' @export
 get_filter_info <- (function(unfiltered_dataset_list, dataset_list_filter, filter_key_var) {
   error_list <- new_error_list()
   fi <- NULL
@@ -932,7 +946,7 @@ new_filter_ui <- function(id, subject_dataset_name, state = NULL, saved_states =
         escape_js_string(ns(ID$FILTER_STATE_JSON_INPUT)),
         escape_js_string(ns(ID$SAVED_FILTER_STATE_JSON_MSG_INPUT)),
         escape_js_string(ns(ID$FILTER_MODE_INPUT)),
-        escape_js_string(ns(ID$EXPORT_CODE_INPUT)),
+        escape_js_string(ns(ID$EXPORT_FILTER_CODE_INPUT)),
         escape_js_string(ns(ID$FILTER_LOG_INPUT))
       )
     )
@@ -1094,7 +1108,7 @@ new_filter_server <- function(
       res
     })
 
-    output[[ID$EXPORT_CODE_INPUT]] <- shiny::downloadHandler(
+    output[[ID$EXPORT_FILTER_CODE_INPUT]] <- shiny::downloadHandler(
       filename = "filter.txt",
       content = function(file) {
         if (!checkmate::test_string(input[[ID$FILTER_STATE_JSON_INPUT]])) {
@@ -1110,7 +1124,7 @@ new_filter_server <- function(
       },
       contentType = "application/json"
     )
-    shiny::outputOptions(output, ID$EXPORT_CODE_INPUT, suspendWhenHidden = FALSE)
+    shiny::outputOptions(output, ID$EXPORT_FILTER_CODE_INPUT, suspendWhenHidden = FALSE)
 
     return(
       structure(res, raw = shiny::reactive(input[[ID$FILTER_STATE_JSON_INPUT]]))
@@ -1418,6 +1432,17 @@ get_filtered_dataset_ <- function(
   fd
 }
 
+#' Apply the resolved filter info to a single dataset
+#'
+#' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =, ...)`,
+#'   as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
+#' @param name Name of the dataset to filter.
+#' @param vars Columns to keep. Omit (do not pass `NULL`) to keep all of them.
+#' @param mask Logical vector ANDed with the filter mask. Omit (do not pass `NULL`) to apply the filter mask alone.
+#' @return The filtered data.frame, with levels and labels carried over from the unfiltered dataset.
+#' @keywords internal
+#' @export
+#' @noRd
 get_filtered_dataset <- function(unfiltered_dataset_list_with_filter_info, name, vars, mask) {
   get_filtered_dataset_(
     as_safe_list(unfiltered_dataset_list_with_filter_info[["unfiltered_dataset_list"]]),
@@ -1428,6 +1453,15 @@ get_filtered_dataset <- function(unfiltered_dataset_list_with_filter_info, name,
   )
 }
 
+
+#' Apply the resolved filter info to every dataset in the list
+#'
+#' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =, ...)`,
+#'   as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
+#' @return Named list of filtered data.frames, one per entry of `unfiltered_dataset_list`.
+#' @keywords internal
+#' @export
+#' @noRd
 get_filtered_dataset_list <- function(unfiltered_dataset_list_with_filter_info) {
   ufd <- unfiltered_dataset_list_with_filter_info[["unfiltered_dataset_list"]]
   res <- vector(mode = "list", length = length(ufd))
@@ -1466,4 +1500,206 @@ apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) 
     }
   }
   filtered_dataset
+}
+
+
+# TODO: Add HTML spans with tooltip info
+# TODO: Add the state at each of the levels, it should be possible when we calculate the masks and the levels in the dataset
+
+#' Describe the active filter as a plain-text tree for the output document
+#'
+#' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =,
+#'   dataset_list_filter =, ...)`, as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
+#' @return `list(txt =, references =)`: the filter tree, as a single string, and the values of subsets too long to
+#'   print inline, as a list of character vectors (empty when none) numbered by the `See filter reference (n)` markers
+#'   left in `txt`.
+#' @keywords internal
+#' @export
+#' @noRd
+filter_to_odg <- function(unfiltered_dataset_list_with_filter_info) {
+  TC <- c(
+    h = "\u2500", # ─
+    v = "\u2502 ", # │(spc)
+    vr = "\u251C\u2500", # ├─
+    ur = "\u2514\u2500", # └─
+    spc = "  " # double space
+  )
+  MAX_PRINTED_SUBSET_VALUES <- 5
+
+  f <- unfiltered_dataset_list_with_filter_info[["dataset_list_filter"]][["parsed"]][["filters"]]
+  udl <- unfiltered_dataset_list_with_filter_info$unfiltered_dataset_list
+
+  unicode_filter <- list()
+  unicode_filter[["sbj"]] <- "Subject_filter"
+
+  reference_list <- list()
+
+  actions <- local({
+    actions <- list()
+    actions[[FC$FE$COMB$AND]] <- function(el) {
+      curr_unicode_filter <- character(0)
+      curr_unicode_filter[[1]] <- paste0(" ", el[[FC$FE$F$OPERATION]])
+      children <- el[[FC$FE$F$CHILDREN]]
+      children_length <- length(children)
+
+      for (idx in seq_along(children)) {
+        child <- children[[idx]]
+        if (idx == children_length) {
+          tree_char <- TC[["ur"]]
+          tree_prefix <- TC[["spc"]]
+        } else {
+          tree_char <- TC[["vr"]]
+          tree_prefix <- TC[["v"]]
+        }
+
+        operation <- child[[FC$FE$F$OPERATION]]
+        child_unicode <- actions[[operation]](child)
+        child_unicode[[1]] <- paste0(" ", tree_char, child_unicode[[1]])
+        idx_from_second <- seq_along(child_unicode)[-1] # secure verrsion of 2:length(x)
+        child_unicode[idx_from_second] <- paste0(" ", tree_prefix, child_unicode[idx_from_second])
+        curr_unicode_filter <- c(curr_unicode_filter, child_unicode)
+      }
+      curr_unicode_filter
+    }
+    actions[[FC$FE$COMB$OR]] <- actions[[FC$FE$COMB$AND]]
+    actions[[FC$FE$COMB$NOT]] <- actions[[FC$FE$COMB$AND]]
+    actions[[FC$SFE$COMB$UNION]] <- actions[[FC$FE$COMB$AND]]
+    actions[[FC$SFE$COMB$INTERSECT]] <- actions[[FC$FE$COMB$AND]]
+    actions[[FC$SFE$COMB$COMPLEMENT]] <- actions[[FC$FE$COMB$AND]]
+    actions[[FC$FE$OP$SUBSET]] <- function(el) {
+      cuf <- character(0)
+      var_name <- el[[FC$FE$F$VARIABLE]]
+      dataset_name <- el[[FC$FE$F$DATASET]]
+      var_label <- get_lbl_robust(udl[[dataset_name]], var_name)
+      dataset_label <- get_lbl_robust(udl, dataset_name)
+      values <- el[[FC$FE$F$VALUES]]
+      values_length <- length(values)
+
+      cuf[[length(cuf) + 1]] <- paste0(" ", "Variable: ", var_label, " [", var_name, "]")
+      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Dataset: ", dataset_label, " [", dataset_name, "]")
+      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Selected ", values_length, " value(s)")
+
+      printed_values <- local({
+        if (values_length > MAX_PRINTED_SUBSET_VALUES) {
+          nxt_reference_idx <- length(reference_list) + 1
+          reference_list[[nxt_reference_idx]] <<- values
+          c(
+            values[1:MAX_PRINTED_SUBSET_VALUES],
+            paste0(
+              "... (",
+              values_length - MAX_PRINTED_SUBSET_VALUES,
+              " values not shown. See filter reference (",
+              nxt_reference_idx,
+              "))"
+            )
+          )
+        } else {
+          values
+        }
+      })
+
+      printed_values_length <- length(printed_values)
+      vu <- character(printed_values_length)
+      for (idx in seq_along(printed_values)) {
+        if (idx == printed_values_length) {
+          tree_char <- TC[["ur"]]
+          tree_prefix <- TC[["spc"]]
+        } else {
+          tree_char <- TC[["vr"]]
+          tree_prefix <- TC[["v"]]
+        }
+
+        vu[[idx]] <- paste0(" ", TC[["v"]], " ", tree_char, " ", printed_values[idx])
+      }
+      cuf <- c(cuf, vu)
+      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["ur"]], " Include NA: ", el[[FC$FE$F$INCLUDE_NA]])
+      cuf[[length(cuf) + 1]] <- ""
+      cuf
+    }
+    actions[[FC$FE$OP$RANGE]] <- function(el) {
+      cuf <- character(0)
+      var_name <- el[[FC$FE$F$VARIABLE]]
+      dataset_name <- el[[FC$FE$F$DATASET]]
+      var_label <- get_lbl_robust(udl[[dataset_name]], var_name)
+      dataset_label <- get_lbl_robust(udl, dataset_name)
+      cuf[[length(cuf) + 1]] <- paste0(" ", "Variable: ", var_label, " [", var_name, "]")
+      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Dataset: ", dataset_label, " [", dataset_name, "]")
+      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Min: ", el[[FC$FE$F$MIN]])
+      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Max: ", el[[FC$FE$F$MAX]])
+      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["ur"]], " Include NA: ", el[[FC$FE$F$INCLUDE_NA]])
+      cuf[[length(cuf) + 1]] <- ""
+      cuf
+    }
+    actions[[FC$FE$OP$DATE]] <- actions[[FC$FE$OP$RANGE]]
+    actions
+  })
+
+  create_single_unicode_filter <- function(el, root_el) {
+    curr_unicode_filter <- root_el
+    children <- el[[FC$FE$F$CHILDREN]]
+    last_child_idx <- length(children)
+
+    for (idx in seq_along(children)) {
+      child <- children[[idx]]
+      if (idx == last_child_idx) {
+        tree_char <- TC[["ur"]]
+        tree_prefix <- TC[["spc"]]
+      } else {
+        tree_char <- TC[["vr"]]
+        tree_prefix <- TC[["v"]]
+      }
+      operation <- child[[FC$FE$F$OPERATION]]
+      child_unicode <- actions[[operation]](child)
+      child_unicode[[1]] <- paste0(tree_char, child_unicode[[1]])
+      idx_from_second <- seq_along(child_unicode)[-1] # secure verrsion of 2:length(x)
+      child_unicode[idx_from_second] <- paste0(tree_prefix, child_unicode[idx_from_second])
+      curr_unicode_filter <- c(curr_unicode_filter, child_unicode)
+    }
+
+    curr_unicode_filter
+  }
+
+  filter_unicode <- paste0(
+    create_single_unicode_filter(f[["subject_filter"]], "Subject filter"),
+    collapse = "\n"
+  )
+  ds_unicode <- local({
+    finfo <- unfiltered_dataset_list_with_filter_info[["filter_info"]]
+    res <- character(0)
+    for (nm in names(finfo)) {
+      dataset_label <- dataset_label <- get_lbl_robust(udl, nm)
+      dataset_label <- paste0(dataset_label, " [", nm, "]")
+      kept_rows <- sum(finfo[[nm]][["mask"]])
+      total_rows <- length(finfo[[nm]][["mask"]])
+      dropped_rows <- total_rows - kept_rows
+      res[[nm]] <- paste0(
+        dataset_label,
+        " (",
+        kept_rows,
+        " out of ",
+        total_rows,
+        " ",
+        TC[["h"]],
+        " ",
+        dropped_rows,
+        " rows dropped",
+        ")"
+      )
+    }
+    res
+  })
+
+  for (ds_filter in f[["datasets_filter"]][["children"]]) {
+    nm <- ds_filter[[FC$FE$F$NAME]]
+    ds_unicode[[nm]] <- paste0(
+      create_single_unicode_filter(ds_filter, ds_unicode[[nm]]),
+      collapse = "\n"
+    )
+  }
+
+  filter_unicode <- paste0(c(filter_unicode, ds_unicode), "\n", collapse = "\n")
+  list(
+    txt = filter_unicode,
+    references = reference_list
+  )
 }

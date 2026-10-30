@@ -2500,7 +2500,7 @@ local({
       }
     })
 
-    app$click(selector = "#filter-export_code_button_input")
+    app$click(selector = "#filter-export_filter_code_button_input")
     app$wait_for_idle()
 
     max_tries <- 10
