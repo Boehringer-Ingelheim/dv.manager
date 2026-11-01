@@ -1516,7 +1516,7 @@ apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) 
 #' @keywords internal
 #' @export
 #' @noRd
-filter_to_odg <- function(unfiltered_dataset_list_with_filter_info) {
+txt_tree_from_filter_info <- function(unfiltered_dataset_list_with_filter_info) {
   TC <- c(
     h = "\u2500", # ─
     v = "\u2502 ", # │(spc)
@@ -1529,16 +1529,13 @@ filter_to_odg <- function(unfiltered_dataset_list_with_filter_info) {
   f <- unfiltered_dataset_list_with_filter_info[["dataset_list_filter"]][["parsed"]][["filters"]]
   udl <- unfiltered_dataset_list_with_filter_info$unfiltered_dataset_list
 
-  unicode_filter <- list()
-  unicode_filter[["sbj"]] <- "Subject_filter"
-
   reference_list <- list()
 
   actions <- local({
     actions <- list()
     actions[[FC$FE$COMB$AND]] <- function(el) {
-      curr_unicode_filter <- character(0)
-      curr_unicode_filter[[1]] <- paste0(" ", el[[FC$FE$F$OPERATION]])
+      curr_txt_tree <- character(0)
+      curr_txt_tree[[1]] <- paste0(" ", el[[FC$FE$F$OPERATION]])
       children <- el[[FC$FE$F$CHILDREN]]
       children_length <- length(children)
 
@@ -1553,13 +1550,13 @@ filter_to_odg <- function(unfiltered_dataset_list_with_filter_info) {
         }
 
         operation <- child[[FC$FE$F$OPERATION]]
-        child_unicode <- actions[[operation]](child)
-        child_unicode[[1]] <- paste0(" ", tree_char, child_unicode[[1]])
-        idx_from_second <- seq_along(child_unicode)[-1] # secure verrsion of 2:length(x)
-        child_unicode[idx_from_second] <- paste0(" ", tree_prefix, child_unicode[idx_from_second])
-        curr_unicode_filter <- c(curr_unicode_filter, child_unicode)
+        child_txt_tree <- actions[[operation]](child)
+        child_txt_tree[[1]] <- paste0(" ", tree_char, child_txt_tree[[1]])
+        idx_from_second <- seq_along(child_txt_tree)[-1] # secure verrsion of 2:length(x)
+        child_txt_tree[idx_from_second] <- paste0(" ", tree_prefix, child_txt_tree[idx_from_second])
+        curr_txt_tree <- c(curr_txt_tree, child_txt_tree)
       }
-      curr_unicode_filter
+      curr_txt_tree
     }
     actions[[FC$FE$COMB$OR]] <- actions[[FC$FE$COMB$AND]]
     actions[[FC$FE$COMB$NOT]] <- actions[[FC$FE$COMB$AND]]
@@ -1567,7 +1564,7 @@ filter_to_odg <- function(unfiltered_dataset_list_with_filter_info) {
     actions[[FC$SFE$COMB$INTERSECT]] <- actions[[FC$FE$COMB$AND]]
     actions[[FC$SFE$COMB$COMPLEMENT]] <- actions[[FC$FE$COMB$AND]]
     actions[[FC$FE$OP$SUBSET]] <- function(el) {
-      cuf <- character(0)
+      ctt <- character(0)
       var_name <- el[[FC$FE$F$VARIABLE]]
       dataset_name <- el[[FC$FE$F$DATASET]]
       var_label <- get_lbl_robust(udl[[dataset_name]], var_name)
@@ -1575,9 +1572,9 @@ filter_to_odg <- function(unfiltered_dataset_list_with_filter_info) {
       values <- el[[FC$FE$F$VALUES]]
       values_length <- length(values)
 
-      cuf[[length(cuf) + 1]] <- paste0(" ", "Variable: ", var_label, " [", var_name, "]")
-      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Dataset: ", dataset_label, " [", dataset_name, "]")
-      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Selected ", values_length, " value(s)")
+      ctt[[length(ctt) + 1]] <- paste0(" ", "Variable: ", var_label, " [", var_name, "]")
+      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Dataset: ", dataset_label, " [", dataset_name, "]")
+      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Selected ", values_length, " value(s)")
 
       printed_values <- local({
         if (values_length > MAX_PRINTED_SUBSET_VALUES) {
@@ -1611,31 +1608,31 @@ filter_to_odg <- function(unfiltered_dataset_list_with_filter_info) {
 
         vu[[idx]] <- paste0(" ", TC[["v"]], " ", tree_char, " ", printed_values[idx])
       }
-      cuf <- c(cuf, vu)
-      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["ur"]], " Include NA: ", el[[FC$FE$F$INCLUDE_NA]])
-      cuf[[length(cuf) + 1]] <- ""
-      cuf
+      ctt <- c(ctt, vu)
+      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["ur"]], " Include NA: ", el[[FC$FE$F$INCLUDE_NA]])
+      ctt[[length(ctt) + 1]] <- ""
+      ctt
     }
     actions[[FC$FE$OP$RANGE]] <- function(el) {
-      cuf <- character(0)
+      ctt <- character(0)
       var_name <- el[[FC$FE$F$VARIABLE]]
       dataset_name <- el[[FC$FE$F$DATASET]]
       var_label <- get_lbl_robust(udl[[dataset_name]], var_name)
       dataset_label <- get_lbl_robust(udl, dataset_name)
-      cuf[[length(cuf) + 1]] <- paste0(" ", "Variable: ", var_label, " [", var_name, "]")
-      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Dataset: ", dataset_label, " [", dataset_name, "]")
-      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Min: ", el[[FC$FE$F$MIN]])
-      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["vr"]], " Max: ", el[[FC$FE$F$MAX]])
-      cuf[[length(cuf) + 1]] <- paste0(" ", TC[["ur"]], " Include NA: ", el[[FC$FE$F$INCLUDE_NA]])
-      cuf[[length(cuf) + 1]] <- ""
-      cuf
+      ctt[[length(ctt) + 1]] <- paste0(" ", "Variable: ", var_label, " [", var_name, "]")
+      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Dataset: ", dataset_label, " [", dataset_name, "]")
+      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Min: ", el[[FC$FE$F$MIN]])
+      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Max: ", el[[FC$FE$F$MAX]])
+      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["ur"]], " Include NA: ", el[[FC$FE$F$INCLUDE_NA]])
+      ctt[[length(ctt) + 1]] <- ""
+      ctt
     }
     actions[[FC$FE$OP$DATE]] <- actions[[FC$FE$OP$RANGE]]
     actions
   })
 
-  create_single_unicode_filter <- function(el, root_el) {
-    curr_unicode_filter <- root_el
+  create_single_txt_tree <- function(el, root_el) {
+    curr_txt_tree <- root_el
     children <- el[[FC$FE$F$CHILDREN]]
     last_child_idx <- length(children)
 
@@ -1649,21 +1646,21 @@ filter_to_odg <- function(unfiltered_dataset_list_with_filter_info) {
         tree_prefix <- TC[["v"]]
       }
       operation <- child[[FC$FE$F$OPERATION]]
-      child_unicode <- actions[[operation]](child)
-      child_unicode[[1]] <- paste0(tree_char, child_unicode[[1]])
-      idx_from_second <- seq_along(child_unicode)[-1] # secure verrsion of 2:length(x)
-      child_unicode[idx_from_second] <- paste0(tree_prefix, child_unicode[idx_from_second])
-      curr_unicode_filter <- c(curr_unicode_filter, child_unicode)
+      child_txt_tree <- actions[[operation]](child)
+      child_txt_tree[[1]] <- paste0(tree_char, child_txt_tree[[1]])
+      idx_from_second <- seq_along(child_txt_tree)[-1] # secure verrsion of 2:length(x)
+      child_txt_tree[idx_from_second] <- paste0(tree_prefix, child_txt_tree[idx_from_second])
+      curr_txt_tree <- c(curr_txt_tree, child_txt_tree)
     }
 
-    curr_unicode_filter
+    curr_txt_tree
   }
 
-  filter_unicode <- paste0(
-    create_single_unicode_filter(f[["subject_filter"]], "Subject filter"),
+  filter_txt_tree <- paste0(
+    create_single_txt_tree(f[["subject_filter"]], "Subject filter"),
     collapse = "\n"
   )
-  ds_unicode <- local({
+  ds_txt_tree <- local({
     finfo <- unfiltered_dataset_list_with_filter_info[["filter_info"]]
     res <- character(0)
     for (nm in names(finfo)) {
@@ -1691,15 +1688,15 @@ filter_to_odg <- function(unfiltered_dataset_list_with_filter_info) {
 
   for (ds_filter in f[["datasets_filter"]][["children"]]) {
     nm <- ds_filter[[FC$FE$F$NAME]]
-    ds_unicode[[nm]] <- paste0(
-      create_single_unicode_filter(ds_filter, ds_unicode[[nm]]),
+    ds_txt_tree[[nm]] <- paste0(
+      create_single_txt_tree(ds_filter, ds_txt_tree[[nm]]),
       collapse = "\n"
     )
   }
 
-  filter_unicode <- paste0(c(filter_unicode, ds_unicode), "\n", collapse = "\n")
+  filter_txt_tree <- paste0(c(filter_txt_tree, ds_txt_tree), "\n", collapse = "\n")
   list(
-    txt = filter_unicode,
+    txt = filter_txt_tree,
     references = reference_list
   )
 }

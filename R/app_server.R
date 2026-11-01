@@ -465,7 +465,7 @@ app_server_ <- function(input, output, session, opts) {
           shiny::req(unfiltered_dataset_list_with_filter_info())
 
           sm_me({
-            dv.manager::filter_to_odg(
+            dv.manager::txt_tree_from_filter_info(
               ..(unfiltered_dataset_list_with_filter_info())
             )
           })
