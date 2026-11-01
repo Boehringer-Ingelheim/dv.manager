@@ -2,7 +2,7 @@
 title: "Output Document Generation (ODG) (EXPERIMENTAL)"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Output Document Generation (ODG) (EXPERIMENTAL}
+  %\VignetteIndexEntry{Output Document Generation (ODG) (EXPERIMENTAL)}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
