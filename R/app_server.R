@@ -600,10 +600,10 @@ app_server_ <- function(input, output, session, opts) {
                 sm_me({
                   df <- ..(fn)
 
-                  # (s) Backarwads compatinility this should not be here
+                  # (s) Backrwards compatibility this should not be here
                   df <- dv.manager::char_vars_to_factor_vars_dataset_list(df)
                   df <- dv.manager::ungroup2df_datasets_dataset_list(df)
-                  # (e) Backarwads compatinility this should not be here
+                  # (e) Backrwards compatibility this should not be here
 
                   df <- dv.manager::add_date_range(df)
                   attr(df, "dataset_list_name") <- ..(dln)
