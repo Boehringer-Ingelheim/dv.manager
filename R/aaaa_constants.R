@@ -37,7 +37,8 @@ ID <- poc(
   )
 )
 
-
+# Names ending in `_` are private: they are used internally by app_server_ but are stripped before ODG_ID is exposed
+# to modules through `afmm[["odg"]][["id"]]`.
 ODG_ID <- poc(
   SELECTED_DATASET_LIST = "selected_dataset_list",
   UNFILTERED_DATASET_LIST = "unfiltered_dataset_list",

@@ -61,8 +61,9 @@ app_server_ <- function(input, output, session, opts) {
   filter_info <- opts[["filter_info"]]
   enable_subgroup <- opts[["enable_subgroup"]]
 
+  public_odg_ids <- do.call(poc, unclass(ODG_ID)[!endsWith(names(ODG_ID), "_")])
   afmm_static[["odg"]] <- list(
-    id = ODG_ID
+    id = public_odg_ids
   )
 
   ######################################
