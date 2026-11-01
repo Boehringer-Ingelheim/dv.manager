@@ -324,6 +324,19 @@ if (n == 0) {
   ODG
 })
 
+#' Join strings into a single string, separated by blank lines
+#'
+#' Each piece becomes its own Markdown/LaTeX paragraph. Pieces should not pad
+#' themselves with newlines, the separation is set here.
+#'
+#' @param ... Character vectors; each element is one piece. `NULL`s are dropped.
+#' @return A single string.
+#' @keywords internal
+#' @noRd
+paste_with_blank_lines <- function(...) {
+  paste(c(...), collapse = "\n\n")
+}
+
 #' Formatters mapping (output format, element kind) to a chunk of Rmd markup
 #'
 #' `ODG_ELEMENT_FORMATTERS[[output_format]][[kind]]` is a `function(x)`
@@ -331,6 +344,8 @@ if (n == 0) {
 #' rather than a `poc()` since its entries are behavior (formatter functions),
 #' not named constants — but the same fail-loudly-on-a-typo motivation applies
 #' to `[[output_format]][[kind]]` lookups.
+#'
+#' Headers end in a blank line: `"chunk"` elements append their content to them directly.
 #' @keywords internal
 #' @noRd
 ODG_ELEMENT_FORMATTERS <- local({
@@ -338,57 +353,77 @@ ODG_ELEMENT_FORMATTERS <- local({
   res[[ODG$OUTPUT_FORMAT$PDF]] <- safe_list()
   res[[ODG$OUTPUT_FORMAT$PDF]][["header"]] <- function(x) {
     if (x[["is_first_module_element"]]) {
-      sprintf(
-        "\\section{%s}\n\n\\subsection{%s}\n\n",
-        escape_latex(x[["module_name"]]),
-        escape_latex(x[["label"]])
+      paste_with_blank_lines(
+        paste0("\\section{", escape_latex(x[["module_name"]]), "}"),
+        paste0("\\subsection{", escape_latex(x[["label"]]), "}"),
+        ""
       )
     } else {
-      sprintf("\\subsection{%s}\n\n", escape_latex(x[["label"]]))
+      paste_with_blank_lines(
+        paste0("\\subsection{", escape_latex(x[["label"]]), "}"),
+        ""
+      )
     }
   }
   res[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$ERROR]] <- function(x) {
-    fmt <- "\n%s\n\n```{=latex}\n\\alertwarning{%s}\n```\n\n"
-    sprintf(fmt, res[[ODG$OUTPUT_FORMAT$PDF]][["header"]](x), escape_latex(x[["code"]]))
+    paste_with_blank_lines(
+      res[[ODG$OUTPUT_FORMAT$PDF]][["header"]](x),
+      paste0("```{=latex}\n\\alertwarning{", escape_latex(x[["code"]]), "}\n```")
+    )
   }
   res[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$TABLE]] <- function(x) {
-    fmt <- "\n\n\\beginwidepage{%d}\n\n\\begingroup\n\n\\wptabfont\n\n%s\n\n\\endgroup\n\n\\stopwidepage\n\n"
-    sprintf(
-      fmt,
-      utils_latex_tables$USE_TABLE_ESTIMATION_WIDTH,
-      res[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$DEFAULT]](x)
+    paste_with_blank_lines(
+      paste0("\\beginwidepage{", utils_latex_tables$USE_TABLE_ESTIMATION_WIDTH, "}"),
+      "\\begingroup",
+      "\\wptabfont",
+      res[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$DEFAULT]](x),
+      "\\endgroup",
+      "\\stopwidepage"
     )
   }
   # Chunks already hold their header, see `preprocess_odg_elements()`
   res[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$CHUNK]] <- function(x) {
-    sprintf("\n%s\n\n", x[["code"]])
+    x[["code"]]
   }
   res[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$DEFAULT]] <- function(x) {
-    fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
-    sprintf(fmt, res[[ODG$OUTPUT_FORMAT$PDF]][["header"]](x), x[["chunk_label"]], x[["code"]])
+    paste_with_blank_lines(
+      res[[ODG$OUTPUT_FORMAT$PDF]][["header"]](x),
+      paste0("```{r ", x[["chunk_label"]], "}\n", x[["code"]], "\n```")
+    )
   }
 
   res[[ODG$OUTPUT_FORMAT$HTML]] <- safe_list()
   res[[ODG$OUTPUT_FORMAT$HTML]][["header"]] <- function(x) {
     if (x[["is_first_module_element"]]) {
-      sprintf("# %s\n\n## %s\n\n", x[["module_name"]], x[["label"]])
+      paste_with_blank_lines(
+        paste0("# ", x[["module_name"]]),
+        paste0("## ", x[["label"]]),
+        ""
+      )
     } else {
-      sprintf("## %s\n\n", x[["label"]])
+      paste_with_blank_lines(
+        paste0("## ", x[["label"]]),
+        ""
+      )
     }
   }
   res[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$ERROR]] <- function(x) {
-    fmt <- "\n%s\n\n<div class = \"alert alert-warning\" role = \"alert\">%s</div>\n\n"
-    sprintf(fmt, res[[ODG$OUTPUT_FORMAT$HTML]][["header"]](x), x[["code"]])
+    paste_with_blank_lines(
+      res[[ODG$OUTPUT_FORMAT$HTML]][["header"]](x),
+      paste0("<div class = \"alert alert-warning\" role = \"alert\">", x[["code"]], "</div>")
+    )
   }
   res[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$TABLE]] <- function(x) {
     res[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$DEFAULT]](x)
   }
   res[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$CHUNK]] <- function(x) {
-    sprintf("\n%s\n\n", x[["code"]])
+    x[["code"]]
   }
   res[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$DEFAULT]] <- function(x) {
-    fmt <- "\n%s\n\n```{r %s}\n%s\n```\n\n"
-    sprintf(fmt, res[[ODG$OUTPUT_FORMAT$HTML]][["header"]](x), x[["chunk_label"]], x[["code"]])
+    paste_with_blank_lines(
+      res[[ODG$OUTPUT_FORMAT$HTML]][["header"]](x),
+      paste0("```{r ", x[["chunk_label"]], "}\n", x[["code"]], "\n```")
+    )
   }
   res
 })
@@ -408,29 +443,28 @@ ODG_ELEMENT_FORMATTERS <- local({
 #' @keywords internal
 #' @noRd
 build_odg_rmd <- function(selected_odg_elements, output_format, data_code, sections, templates) {
-  output_rmd <- ""
+  formatted_elements <- character(length(selected_odg_elements))
   for (idx in seq_along(selected_odg_elements)) {
     curr_el <- selected_odg_elements[[idx]]
     log_inform(paste0("Processing idx: ", idx))
-    output_rmd <- sprintf(
-      "%s\n%s\n",
-      output_rmd,
-      ODG_ELEMENT_FORMATTERS[[output_format]][[curr_el[["kind"]]]](curr_el)
-    )
+    formatted_elements[[idx]] <- ODG_ELEMENT_FORMATTERS[[output_format]][[curr_el[["kind"]]]](curr_el)
   }
 
-  sprintf(
-    "%s\n\n```{r data_source}\n%s\n```\n\n%s\n\n# Data source\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n",
+  paste_with_blank_lines(
     templates[["header"]],
-    data_code,
-    output_rmd,
+    paste0("```{r data_source}\n", data_code, "\n```"),
+    "\\pagestyle{headings}",
+    formatted_elements,
+    "\\pagestyle{plain}",
+    "# Data source",
     sections[["date"]],
     sections[["hardcoded_hash"]],
     sections[["dynamic_hash"]],
     sections[["filter_txt"]],
     sections[["filter_reference"]],
     templates[["session_info"]],
-    templates[["footer"]]
+    templates[["footer"]],
+    ""
   )
 }
 
@@ -449,18 +483,16 @@ build_hardcoded_hash_section <- function(dataset_list) {
 
   section <- "## Hardcoded Data hash:"
   for (idx in seq_along(dataset_list_hash)) {
-    section <- sprintf(
-      "%s\n\n **name**: `%s` **hash**: %s",
+    section <- paste_with_blank_lines(
       section,
-      names(dataset_list_hash)[[idx]],
-      dataset_list_hash[[idx]]
+      paste0(" **name**: `", names(dataset_list_hash)[[idx]], "` **hash**: ", dataset_list_hash[[idx]])
     )
   }
   note <- paste(
     "These hashes are calculated in-app, they correspond to the data loaded in the app",
     "that created this output documentation."
   )
-  sprintf("%s\n\n%s\n\n", section, note)
+  paste_with_blank_lines(section, note)
 }
 
 #' Markdown section recomputing each dataset's hash at render time
@@ -496,9 +528,9 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, get_code_in_con
     "These hashes are calculated while generating the output documentation,",
     "and should match those in the **Hardcoded Data hash** section."
   )
-  sprintf(
-    "## Dynamic Data hash:\n\n```{r dynamic_data_hash, echo = FALSE, results='asis'}\n%s\n```\n\n%s\n\n",
-    get_code_in_context(loop()),
+  paste_with_blank_lines(
+    "## Dynamic Data hash:",
+    paste0("```{r dynamic_data_hash, echo = FALSE, results='asis'}\n", get_code_in_context(loop()), "\n```"),
     note
   )
 }
@@ -536,13 +568,11 @@ build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code
   )
 
   note <- "These dates are calculated while generating the output documentation."
-  sprintf(
-    paste0(
-      "## Data Modification Dates:\n\n **Date range**:\n\n`r %s`\n\n",
-      "```{r data_modification_dates, echo = FALSE, results='asis'}\n%s\n```\n\n%s\n\n"
-    ),
-    get_code_in_context(date_range_mr()),
-    get_code_in_context(loop()),
+  paste_with_blank_lines(
+    "## Data Modification Dates:",
+    " **Date range**:",
+    paste0("`r ", get_code_in_context(date_range_mr()), "`"),
+    paste0("```{r data_modification_dates, echo = FALSE, results='asis'}\n", get_code_in_context(loop()), "\n```"),
     note
   )
 }
@@ -569,11 +599,12 @@ build_filter_txt_section <- function(output_format, filter_txt_code) {
     "An explicit call to the filter and parameters used can be found in the code",
     "that accompanies this output documentation."
   )
-  sprintf(
-    "%s\n\n%s\n\n```{r filter_odg_txt, echo = FALSE, results='asis'}\n\n%s\n\n```\n\n%s\n\n%s",
+  paste_with_blank_lines(
     section,
     verbatim_tags[[1]],
+    "```{r filter_odg_txt, echo = FALSE, results='asis'}",
     filter_txt_code,
+    "```",
     verbatim_tags[[2]],
     note
   )
@@ -596,11 +627,12 @@ build_filter_reference_section <- function(output_format, filter_reference_code)
     wrapper_tags <- c("```{=latex}", "```")
   }
 
-  sprintf(
-    "%s\n\n%s\n\n```{r filter_odg_reference_list, echo = FALSE, results='asis'}\n\n%s\n\n```\n\n%s",
+  paste_with_blank_lines(
     "# Filter references:",
     wrapper_tags[[1]],
+    "```{r filter_odg_reference_list, echo = FALSE, results='asis'}",
     filter_reference_code,
+    "```",
     wrapper_tags[[2]]
   )
 }

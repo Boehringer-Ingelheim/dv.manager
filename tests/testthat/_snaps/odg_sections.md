@@ -10,7 +10,6 @@
        **name**: `b` **hash**: 3283d8f999f408731e81590e84265eec
       
       These hashes are calculated in-app, they correspond to the data loaded in the app that created this output documentation.
-      
 
 # build_hardcoded_hash_section handles an empty dataset list
 
@@ -20,7 +19,6 @@
       ## Hardcoded Data hash:
       
       These hashes are calculated in-app, they correspond to the data loaded in the app that created this output documentation.
-      
 
 # build_dynamic_hash_section emits an asis loop referencing the shared dataset-list variable
 
@@ -36,7 +34,6 @@
       ```
       
       These hashes are calculated while generating the output documentation, and should match those in the **Hardcoded Data hash** section.
-      
 
 # build_dynamic_hash_section handles zero datasets
 
@@ -52,7 +49,6 @@
       ```
       
       These hashes are calculated while generating the output documentation, and should match those in the **Hardcoded Data hash** section.
-      
 
 # build_date_section embeds the date range and a per-dataset modification-time loop
 
@@ -77,7 +73,6 @@
       ```
       
       These dates are calculated while generating the output documentation.
-      
 
 # build_date_section shows the modification time as not available when meta is missing
 
@@ -102,7 +97,6 @@
       ```
       
       These dates are calculated while generating the output documentation.
-      
 
 # build_date_section handles zero datasets
 
@@ -127,7 +121,6 @@
       ```
       
       These dates are calculated while generating the output documentation.
-      
 
 # build_filter_txt_section wraps the filter code in format-appropriate verbatim tags
 

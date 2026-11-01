@@ -3,7 +3,6 @@
     Code
       cat(first)
     Output
-      
       \section{Module 1}
       
       \subsection{Element 1}
@@ -13,14 +12,12 @@
       ```{r odg-mod1-el1}
       1 + 1
       ```
-      
 
 ---
 
     Code
       cat(later)
     Output
-      
       \subsection{Element 1}
       
       
@@ -28,21 +25,17 @@
       ```{r odg-mod1-el1}
       1 + 1
       ```
-      
 
 # odg_element_formatters wraps PDF tables in a wide page
 
     Code
       cat(out)
     Output
-      
-      
       \beginwidepage{0}
       
       \begingroup
       
       \wptabfont
-      
       
       \section{Module 1}
       
@@ -54,19 +47,15 @@
       1 + 1
       ```
       
-      
-      
       \endgroup
       
       \stopwidepage
-      
 
 # odg_element_formatters flags PDF errors with alertwarning
 
     Code
       cat(out)
     Output
-      
       \section{Module 1}
       
       \subsection{Element 1}
@@ -76,14 +65,12 @@
       ```{=latex}
       \alertwarning{boom}
       ```
-      
 
 # odg_element_formatters formats HTML elements, and table delegates to default
 
     Code
       cat(default_out)
     Output
-      
       # Module 1
       
       ## Element 1
@@ -93,14 +80,12 @@
       ```{r odg-mod1-el1}
       1 + 1
       ```
-      
 
 ---
 
     Code
       cat(table_out)
     Output
-      
       # Module 1
       
       ## Element 1
@@ -110,14 +95,12 @@
       ```{r odg-mod1-el1}
       1 + 1
       ```
-      
 
 # odg_element_formatters flags HTML errors with an alert div
 
     Code
       cat(out)
     Output
-      
       # Module 1
       
       ## Element 1
@@ -125,7 +108,6 @@
       
       
       <div class = "alert alert-warning" role = "alert">boom</div>
-      
 
 # build_odg_rmd assembles an HTML document from all pieces, in order
 
@@ -138,7 +120,7 @@
       df <- load_data()
       ```
       
-      
+      \pagestyle{headings}
       
       # Module 1
       
@@ -150,17 +132,13 @@
       1 + 1
       ```
       
-      
-      
-      
       ## Element 2
       
       
       
       <div class = "alert alert-warning" role = "alert">boom</div>
       
-      
-      
+      \pagestyle{plain}
       
       # Data source
       
@@ -190,15 +168,13 @@
       df <- load_data()
       ```
       
-      
-      
+      \pagestyle{headings}
       
       \beginwidepage{0}
       
       \begingroup
       
       \wptabfont
-      
       
       \section{Module 1}
       
@@ -210,14 +186,11 @@
       1 + 1
       ```
       
-      
-      
       \endgroup
       
       \stopwidepage
       
-      
-      
+      \pagestyle{plain}
       
       # Data source
       
