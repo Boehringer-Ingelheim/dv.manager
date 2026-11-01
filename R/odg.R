@@ -178,6 +178,7 @@ knitr::opts_chunk$set(
   fig.width = 10,
   fig.height = 6,
   out.width = "90%",
+  fig.align = "center", # own paragraph per plot, so several plots in a chunk stack instead of sharing a line
   dpi = 300,
   dev = "cairo_pdf"     # vector output, sharp text
 )
