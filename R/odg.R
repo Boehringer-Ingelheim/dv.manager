@@ -898,8 +898,9 @@ utils_latex_tables <- local({
   PEN_BRK <- HDR_BRK
 
   header_labels <- function(data, columns = names(data)) {
-    labels <- get_lbl(data, columns)
-    labels[is.na(labels)] <- "No Label"
+    labels <- get_lbls(data)[columns]
+    labels[vapply(labels, is.null, logical(1))] <- "No Label"
+    labels <- unlist(labels)
     align <- ifelse(
       vapply(columns, function(cl) is.numeric(data[[cl]]), logical(1)),
       "r",
