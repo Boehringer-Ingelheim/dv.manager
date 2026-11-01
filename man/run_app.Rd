@@ -21,6 +21,7 @@ run_app(
   filter_type = "simple",
   enable_dataset_filter = NULL,
   enable_subgroup = FALSE,
+  enable_odg = FALSE,
   filter_default_state = NULL,
   .launch = TRUE,
   .bypass_checks = FALSE,
@@ -64,6 +65,8 @@ for more information on bookmarking your app.}
 \item{enable_dataset_filter}{( \strong{DEPRECATED} )}
 
 \item{enable_subgroup}{A boolean flag indicating if subgroup controls are enabled. The default value is FALSE.}
+
+\item{enable_odg}{A boolean flag indicating if Output Document Generation is enabled. The default value is FALSE.}
 
 \item{filter_default_state}{A JSON string or file (usually exported from the app) that describes the default state of the filter (Only available for \code{development} filters).}
 
