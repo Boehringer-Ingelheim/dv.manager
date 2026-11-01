@@ -1532,8 +1532,7 @@ txt_tree_from_filter_info <- function(unfiltered_dataset_list_with_filter_info) 
   reference_list <- list()
 
   actions <- local({
-    actions <- list()
-    actions[[FC$FE$COMB$AND]] <- function(el) {
+    comb_txt_tree <- function(el) {
       curr_txt_tree <- character(0)
       curr_txt_tree[[1]] <- paste0(" ", el[[FC$FE$F$OPERATION]])
       children <- el[[FC$FE$F$CHILDREN]]
@@ -1558,11 +1557,17 @@ txt_tree_from_filter_info <- function(unfiltered_dataset_list_with_filter_info) 
       }
       curr_txt_tree
     }
-    actions[[FC$FE$COMB$OR]] <- actions[[FC$FE$COMB$AND]]
-    actions[[FC$FE$COMB$NOT]] <- actions[[FC$FE$COMB$AND]]
-    actions[[FC$SFE$COMB$UNION]] <- actions[[FC$FE$COMB$AND]]
-    actions[[FC$SFE$COMB$INTERSECT]] <- actions[[FC$FE$COMB$AND]]
-    actions[[FC$SFE$COMB$COMPLEMENT]] <- actions[[FC$FE$COMB$AND]]
+
+    actions <- list()
+    actions[c(
+      FC$FE$COMB$AND,
+      FC$FE$COMB$OR,
+      FC$FE$COMB$NOT,
+      FC$SFE$COMB$UNION,
+      FC$SFE$COMB$INTERSECT,
+      FC$SFE$COMB$COMPLEMENT
+    )] <- list(comb_txt_tree)
+
     actions[[FC$FE$OP$SUBSET]] <- function(el) {
       ctt <- character(0)
       var_name <- el[[FC$FE$F$VARIABLE]]
