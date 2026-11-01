@@ -32,12 +32,12 @@ local({
     )
   )
 
-  test_that("filter_to_odg works with an empty filter", {
+  test_that("txt_tree_from_filter_info works with an empty filter", {
     udlwfi <- unfiltered_dataset_list_with_filter_info
     expect_snapshot(txt_tree_from_filter_info(udlwfi))
   })
 
-  test_that("filter_to_odg works with all actions", {
+  test_that("txt_tree_from_filter_info works with all actions", {
     udlwfi <- unfiltered_dataset_list_with_filter_info
     udlwfi[["dataset_list_filter"]][["parsed"]][["filters"]] <- list(
       "subject_filter" = list(
@@ -147,7 +147,7 @@ local({
     expect_identical(txt_tree_from_filter_info(udlwfi)[["references"]], list(letters, letters))
   })
 
-  test_that("filter_to_odg indents a childless group as a single line", {
+  test_that("txt_tree_from_filter_info indents a childless group as a single line", {
     udlwfi <- unfiltered_dataset_list_with_filter_info
     udlwfi[["dataset_list_filter"]][["parsed"]][["filters"]] <- list(
       subject_filter = list(
