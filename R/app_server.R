@@ -634,7 +634,7 @@ app_server_ <- function(input, output, session, opts) {
             #> z(x(), y())
 
             data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
-            date <- build_date_section(selected_dataset_list, date_range, get_code_in_context)
+            date_section <- build_date_section(selected_dataset_list, date_range, get_code_in_context)
             hardcoded_hash_section <- build_hardcoded_hash_section(selected_dataset_list())
             dynamic_hash_section <- build_dynamic_hash_section(selected_dataset_list, get_code_in_context)
 
@@ -712,7 +712,7 @@ app_server_ <- function(input, output, session, opts) {
               output_format = output_format,
               data_code = data_code,
               sections = list(
-                date = date,
+                date = date_section,
                 hardcoded_hash = hardcoded_hash_section,
                 dynamic_hash = dynamic_hash_section,
                 filter_txt = filter_txt_section,
