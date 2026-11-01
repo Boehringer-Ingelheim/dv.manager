@@ -513,9 +513,7 @@ app_server_ <- function(input, output, session, opts) {
               current_element[["is_first_module_element"]] <- first_module_element
               current_element[["module_name"]] <- module_name
               current_element[["module_id"]] <- module_id
-              # knitr rejects some characters in a chunk label (e.g. `=`), the prefix keeps it apart from the
-              # document's own chunks (e.g. `warnings-summary`)
-              current_element[["chunk_label"]] <- paste0("odg-", gsub("[^A-Za-z0-9_-]", "_", current_element[["id"]]))
+
               # Fails on repeated ids too (module `a-b` with element `c`, module `a` with element `b-c`), which would
               # otherwise silently replace each other in `res`
               clash <- Find(function(el) identical(el[["chunk_label"]], current_element[["chunk_label"]]), res)
