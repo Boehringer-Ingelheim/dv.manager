@@ -108,6 +108,30 @@ local({
     expect_identical(res[["kind"]], ODG$ELEMENT_KIND$TABLE)
   })
 
+  fake_chunk <- function(f) structure(f, class = "chunk")
+
+  test_that("preprocess_odg_elements hands the formatted header to a chunk and keeps its markup", {
+    el <- make_element(list(html = fake_chunk(function(header) paste0(header, "chunk body"))))
+
+    res <- preprocess_one(el, ODG$OUTPUT_FORMAT$HTML, fake_get_code_in_context)
+
+    header <- ODG_ELEMENT_FORMATTERS[[ODG$OUTPUT_FORMAT$HTML]][["header"]](el)
+    expect_identical(res[["kind"]], ODG$ELEMENT_KIND$CHUNK)
+    expect_identical(res[["code"]], paste0(header, "chunk body"))
+  })
+
+  test_that("preprocess_odg_elements reports an error when a chunk does not return a single string", {
+    bad_returns <- list(NULL, character(0), c("a", "b"), NA_character_, 1)
+    for (bad_return in bad_returns) {
+      el <- make_element(list(html = fake_chunk(function(header) bad_return)))
+
+      res <- preprocess_one(el, ODG$OUTPUT_FORMAT$HTML, fake_get_code_in_context)
+
+      expect_identical(res[["kind"]], ODG$ELEMENT_KIND$ERROR)
+      expect_match(res[["code"]], "`chunk` must return a single string")
+    }
+  })
+
   test_that("preprocess_odg_elements rejects an unknown output_format", {
     el <- make_element(list(html = fake_metareactive(function() "a plot")))
 

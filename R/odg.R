@@ -651,6 +651,7 @@ build_filter_reference_section <- function(output_format, filter_reference_code)
 #'
 #' A `"chunk"` element is a `function(header)` returning Rmd markup, which is
 #' inserted verbatim and must contain `header` (formatted for `output_format`).
+#' Anything other than a single non-NA string becomes an error element.
 #'
 #' @param odg_elements Named list of all flattened ODG elements, keyed by id.
 #' @param is_selected Named logical vector, keyed by element id.
@@ -679,8 +680,21 @@ preprocess_odg_elements <- function(odg_elements, is_selected, output_format, ge
       kind <- ODG$ELEMENT_KIND$ERROR
     } else if (inherits(codegen, "chunk")) {
       # The chunk places the header itself, e.g. after a `\beginwidepage` whose `\clearpage` would otherwise strand it
-      code <- codegen(header = ODG_ELEMENT_FORMATTERS[[output_format]][["header"]](odg_element))
-      kind <- ODG$ELEMENT_KIND$CHUNK
+      chunk_code <- codegen(header = ODG_ELEMENT_FORMATTERS[[output_format]][["header"]](odg_element))
+      if (checkmate::test_string(chunk_code)) {
+        code <- chunk_code
+        kind <- ODG$ELEMENT_KIND$CHUNK
+      } else {
+        code <- paste0(
+          "Error creating ",
+          odg_element[["id"]],
+          " `chunk` must return a single string, it returned ",
+          class(chunk_code)[[1]],
+          " of length ",
+          length(chunk_code)
+        )
+        kind <- ODG$ELEMENT_KIND$ERROR
+      }
     } else if (inherits(codegen, "shinymeta_reactive")) {
       resolved <- try(codegen(), silent = TRUE)
       is_table <- identical(output_format, ODG$OUTPUT_FORMAT$PDF) &&
@@ -704,7 +718,7 @@ preprocess_odg_elements <- function(odg_elements, is_selected, output_format, ge
             {
               ..(codegen()) |>
                 gt::as_latex() |>
-                utils_latex_tables$latex_header_repeat()
+                dv.manager::utils_latex_tables$latex_header_repeat()
             },
             inline = TRUE
           )
@@ -884,7 +898,7 @@ utils_latex_tables <- local({
   PEN_BRK <- HDR_BRK
 
   header_labels <- function(data, columns = names(data)) {
-    labels <- dv.papo:::get_labels(data, columns)
+    labels <- get_lbl(data, columns)
     labels[is.na(labels)] <- "No Label"
     align <- ifelse(
       vapply(columns, function(cl) is.numeric(data[[cl]]), logical(1)),
