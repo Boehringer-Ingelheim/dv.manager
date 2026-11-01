@@ -141,7 +141,7 @@ app_server_ <- function(input, output, session, opts) {
       res_apply_subgroups
     },
     inline = TRUE,
-    varname = "unfiltered_dataset_list_"
+    varname = ODG_ID$UNFILTERED_DATASET_LIST_
   )
 
   unfiltered_dataset_list <- sm_mr2(
