@@ -652,7 +652,7 @@ build_filter_reference_section <- function(output_format, filter_reference_code)
 #' @param output_format One of `ODG$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
 #' @param get_code_in_context `function(x)` turning a metareactive call into the
 #'   R code reproducing it. Injected so it can be tested independently.
-#' @return Unnamed list of preprocessed elements: each with `metareactive`
+#' @return Unnamed list of preprocessed elements: each with `codegen`
 #'   dropped and `code` and `kind` (one of `ODG$ELEMENT_KIND`) added.
 #' @keywords internal
 #' @noRd
@@ -667,17 +667,17 @@ preprocess_odg_elements <- function(odg_elements, is_selected, output_format, ge
     log_inform(paste0("Processing:", odg_element[["id"]]))
 
     # Entries are keyed by the output format values themselves; missing -> NULL
-    metareactive <- odg_element[["metareactive"]][[output_format]]
+    codegen <- odg_element[["codegen"]][[output_format]]
 
-    if (is.null(metareactive)) {
+    if (is.null(codegen)) {
       code <- paste("Error creating", odg_element[["id"]], "Not available in", output_format, "format")
       kind <- ODG$ELEMENT_KIND$ERROR
-    } else if (inherits(metareactive, "chunk")) {
+    } else if (inherits(codegen, "chunk")) {
       # The chunk places the header itself, e.g. after a `\beginwidepage` whose `\clearpage` would otherwise strand it
-      code <- metareactive(header = ODG_ELEMENT_FORMATTERS[[output_format]][["header"]](odg_element))
+      code <- codegen(header = ODG_ELEMENT_FORMATTERS[[output_format]][["header"]](odg_element))
       kind <- ODG$ELEMENT_KIND$CHUNK
-    } else if (inherits(metareactive, "shinymeta_reactive")) {
-      resolved <- try(metareactive(), silent = TRUE)
+    } else if (inherits(codegen, "shinymeta_reactive")) {
+      resolved <- try(codegen(), silent = TRUE)
       is_table <- identical(output_format, ODG$OUTPUT_FORMAT$PDF) &&
         (is.data.frame(resolved) || inherits(resolved, "gt_tbl"))
 
@@ -689,7 +689,7 @@ preprocess_odg_elements <- function(odg_elements, is_selected, output_format, ge
         latex <- if (is.data.frame(resolved)) {
           shinymeta::metaReactive(
             {
-              ..(metareactive()) |>
+              ..(codegen()) |>
                 dv.manager::utils_latex_tables$gt_latex_table(long_cell_id = ..(odg_element[["id"]]))
             },
             inline = TRUE
@@ -697,7 +697,7 @@ preprocess_odg_elements <- function(odg_elements, is_selected, output_format, ge
         } else if (inherits(resolved, "gt_tbl")) {
           shinymeta::metaReactive(
             {
-              ..(metareactive()) |>
+              ..(codegen()) |>
                 gt::as_latex() |>
                 utils_latex_tables$latex_header_repeat()
             },
@@ -710,20 +710,20 @@ preprocess_odg_elements <- function(odg_elements, is_selected, output_format, ge
         code <- get_code_in_context(latex())
         kind <- ODG$ELEMENT_KIND$TABLE
       } else {
-        code <- get_code_in_context(metareactive())
+        code <- get_code_in_context(codegen())
         kind <- ODG$ELEMENT_KIND$DEFAULT
       }
     } else {
       code <- paste(
         "Error creating",
         odg_element[["id"]],
-        "`metareactive` field is not a metareactive.",
+        "`codegen` field is neither a metareactive nor a chunk.",
         "Module is not prepared or not activated for generating output documentation."
       )
       kind <- ODG$ELEMENT_KIND$ERROR
     }
 
-    odg_element[["metareactive"]] <- NULL
+    odg_element[["codegen"]] <- NULL
     odg_element[["code"]] <- code
     odg_element[["kind"]] <- kind
 
