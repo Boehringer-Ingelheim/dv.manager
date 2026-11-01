@@ -108,8 +108,8 @@ run_app <- function(
   check_data_while_ignoring_dataset_list_fns(dataset_lists)
 
   dataset_lists <- local({
-    d <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
-    d <- ungroup2df_datasets_dataset_lists(d)
+    d <- from_char_vars_to_factor_vars_dataset_lists(dataset_lists)
+    d <- from_grouped_tbl_to_df_dataset_lists(d)
     if (!.bypass_filter_precomputation) {
       d <- attach_computed_filter_data_as_attribute(d)
     }

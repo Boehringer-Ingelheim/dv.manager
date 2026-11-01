@@ -601,8 +601,8 @@ app_server_ <- function(input, output, session, opts) {
                   df <- ..(fn)
 
                   # (s) Backrwards compatibility this should not be here
-                  df <- dv.manager::char_vars_to_factor_vars_dataset_list(df)
-                  df <- dv.manager::ungroup2df_datasets_dataset_list(df)
+                  df <- dv.manager::from_char_vars_to_factor_vars_dataset_list(df)
+                  df <- dv.manager::from_grouped_tbl_to_df_dataset_list(df)
                   # (e) Backrwards compatibility this should not be here
 
                   df <- dv.manager::add_date_range(df)
