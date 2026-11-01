@@ -35,7 +35,7 @@ local({
     res <- preprocess_one(el, ODG$OUTPUT_FORMAT$PDF, fake_get_code_in_context)
 
     expect_identical(res[["kind"]], ODG$ELEMENT_KIND$ERROR)
-    expect_match(res[["code"]], "Not avaliable in pdf format")
+    expect_match(res[["code"]], "Not available in pdf format")
   })
 
   test_that("preprocess_odg_elements reports an error when the codegen field is neither a metareactive nor a chunk", {
