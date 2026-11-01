@@ -41,8 +41,9 @@ articles:
   - developing_module
   - passing_data
   - css_namespace  
-  - logging  
+  - logging
   - subgroup
+  - odg
 
 - title: How does it work
   navbar: How does it work
