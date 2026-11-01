@@ -618,7 +618,7 @@ app_server_ <- function(input, output, session, opts) {
                 x,
                 .expansionContext = ec
               ) |>
-                shinymeta::formatCode(formatter = format_with_air, width = 400L) |>
+                shinymeta::formatCode(formatter = format_odg_code, width = 400L) |>
                 as.character() |>
                 paste(collapse = "\n")
             }

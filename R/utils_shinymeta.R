@@ -8,46 +8,45 @@ is.anyreactive <- function(x) {
   inherits(x, "reactive") | inherits(x, "shinymeta_reactive")
 }
 
-format_with_air <- function(text, line_width = 80L) {
-  # air binary is x86-64 glibc Linux it cannot run anywhere else
-  if (Sys.info()[["sysname"]] != "Linux" || R.version$arch != "x86_64") {
+#' Format the R code shown in the ODG report with air
+#'
+#' air is looked up in the `dv_odg_air_path` option, then in the `DV_ODG_AIR_PATH` environment variable, then on the
+#' `PATH`. Meant as the `formatter` of `shinymeta::formatCode()`.
+#'
+#' @param text `[character]` R code, one or more lines.
+#' @return `[character]` Formatted code, one element per line, or `text` unchanged if air is not found or fails.
+#' @keywords internal
+#' @noRd
+format_odg_code <- function(text) {
+  candidates <- c(getOption(ODG$AIR_PATH$OPTION, ""), Sys.getenv(ODG$AIR_PATH$ENV_VAR), unname(Sys.which("air")))
+  true_candidates <- candidates[file.exists(candidates)]
+  if (!length(true_candidates)) {
     return(text)
   }
 
-  air_bin <- system.file("bin/air", package = "dv.manager")
-  if (!file.exists(air_bin)) {
+  air_path <- true_candidates[[1]]
+
+  # A fresh dir with its own air.toml, so air does not pick up any other config
+  work_dir <- tempfile("odg_air_")
+  dir.create(work_dir)
+  on.exit(unlink(work_dir, recursive = TRUE), add = TRUE)
+  writeLines(c("[format]", "line-width = 80"), file.path(work_dir, "air.toml"))
+  stderr_path <- file.path(work_dir, "stderr")
+
+  formatted <- suppressWarnings(system2(
+    air_path,
+    c("format", "--stdin-file-path", shQuote(file.path(work_dir, "code.R"))),
+    input = text,
+    stdout = TRUE,
+    stderr = stderr_path
+  ))
+  status <- attr(formatted, "status")
+  if (!is.null(status)) {
+    msg <- c(sprintf("air exited with status %d, the code is left unformatted", status), readLines(stderr_path))
+    log_warn(paste(msg, collapse = "\n"))
     return(text)
   }
-
-  # Write an air.toml in a temp dir so Air picks up the line width
-  config_dir <- tempfile("air_config_")
-  dir.create(config_dir)
-  writeLines(
-    c("[format]", sprintf("line-width = %d", line_width)),
-    file.path(config_dir, "air.toml")
-  )
-  on.exit(unlink(config_dir, recursive = TRUE), add = TRUE)
-
-  stdin_path <- file.path(config_dir, "input.R")
-
-  stdout_file <- tempfile("air_stdout_")
-  stderr_file <- tempfile("air_stderr_")
-  on.exit(unlink(c(stdout_file, stderr_file)), add = TRUE)
-
-  status <- system2(
-    air_bin,
-    c("format", "--stdin-file-path", stdin_path),
-    input = paste(text, collapse = "\n"),
-    stdout = stdout_file,
-    stderr = stderr_file
-  )
-
-  if (status != 0) {
-    log_warn("Air formatting failed:\n", paste(readLines(stderr_file), collapse = "\n"))
-    return(text)
-  }
-
-  readLines(stdout_file)
+  formatted
 }
 
 # TODO: An overkill but for the moment we depend on gt to print latex table

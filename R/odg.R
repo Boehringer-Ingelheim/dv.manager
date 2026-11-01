@@ -138,6 +138,11 @@ ODG <- local({
     VAL = poc(
       # Currently only all ODG is possible it is kept as a dummy value for the button
       ODG_ALL = "all"
+    ),
+    # Where to find the air formatter, checked before the PATH, see `format_odg_code()`
+    AIR_PATH = poc(
+      ENV_VAR = "DV_ODG_AIR_PATH",
+      OPTION = "dv_odg_air_path"
     )
   )
 

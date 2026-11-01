@@ -47,6 +47,5 @@ Config/testthat/parallel: false
 Depends: R (>= 4.1.0)
 Remotes: boehringer-ingelheim/dv.loader@main
 VignetteBuilder: knitr
-RoxygenNote: 7.3.3
-SystemRequirements: For output document generation (enable_odg = TRUE): qpdf, zip, and a LaTeX distribution
-    providing xelatex
+SystemRequirements: qpdf, zip, xelatex (only for enable_odg = TRUE); air (optional)
+Config/roxygen2/version: 8.0.0
