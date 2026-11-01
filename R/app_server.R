@@ -62,8 +62,7 @@ app_server_ <- function(input, output, session, opts) {
   enable_subgroup <- opts[["enable_subgroup"]]
 
   afmm_static[["odg"]] <- list(
-    id = ODG_ID,
-    enable = opts[["enable_odg"]]
+    id = ODG_ID
   )
 
   ######################################
