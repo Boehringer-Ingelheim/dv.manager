@@ -1,6 +1,8 @@
 # dv.manager 3.2.2-9001
 
-- Includes first Output Document Generation version (ODG)
+ - UI and functionality:
+   - Includes first Output Document Generation version (ODG)
+   - App info module uses `sessioninfo` instead of `devtools` 
 
 # dv.manager 3.2.2-9000
 
