@@ -162,9 +162,9 @@ output:
     toc_depth: 3
     number_sections: false
     df_print: kable
-    latex_engine: xelatex
-    pandoc_args: ["-V", "monofont:DejaVu Sans Mono"]
+    latex_engine: xelatex    
     extra_dependencies: ["lscape"]
+    # Fonts are set in header
     includes:
       in_header: header.tex
 geometry: margin=2cm

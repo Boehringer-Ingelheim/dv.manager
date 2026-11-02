@@ -1,3 +1,14 @@
+%% Setting fonts
+\IfFontExistsTF{DejaVu Sans Mono}{%
+  \setmonofont{DejaVu Sans Mono}%
+}{%
+  \IfFontExistsTF{Liberation Mono}{%
+    \setmonofont{Liberation Mono}%
+  }{%
+    % Nothing found: keep fontspec's default (Latin Modern Mono)
+  }%
+}
+
 %% ---- wide page ------------------------------------------------------------
 %% It widens the by getting the maximum of the estimation of width provided by longtable (2pass)
 %% or the provided parameter. If it is no table it uses the provided number directly.
