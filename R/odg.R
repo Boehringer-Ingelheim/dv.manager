@@ -268,12 +268,23 @@ body::before {
   session_lines <- capture.output(sessioninfo::session_info())
   # Verbatim isn't measured by \beginwidepage, only longtables are; pass the width explicitly
   max_char_width <- max(nchar(session_lines, type = "width"), 0L)
-  
-  session_lines <- paste0(session_lines, collapse = "\n")
-    
-  fmt <- "\n\n\\newpage\n\n\\beginwidepage{%d}\n\n\\begingroup\n\n\\wptabfont\n\n\\section{Session Info}\n\n\\begin{verbatim}\n\n%s\n\n\\end{verbatim}\n\n\\endgroup\n\n\\stopwidepage\n\n"
-  cat(sprintf(fmt, max_char_width, session_lines))
-    
+
+  latex <- paste(
+    c(
+      "\\newpage",
+      paste0("\\beginwidepage{", max_char_width, "}"),
+      "\\begingroup",
+      "\\wptabfont",
+      "\\section{Session Info}",
+      "\\begin{verbatim}",
+      session_lines,
+      "\\end{verbatim}",
+      "\\endgroup",
+      "\\stopwidepage"
+    ),
+    collapse = "\n"
+  )
+  cat("\n\n", latex, "\n\n", sep = "")
 ```
 
 )--"
