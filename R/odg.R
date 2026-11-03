@@ -92,15 +92,9 @@ pdf_attach <- function(pdf, attachment) {
     stop("qpdf command-line tool not found on PATH")
   }
 
-  tmp <- tempfile(tmpdir = dirname(pdf), fileext = ".pdf")
-  on.exit(unlink(tmp), add = TRUE)
-
-  status <- system2("qpdf", shQuote(c(pdf, "--add-attachment", attachment, "--", tmp)))
+  status <- system2("qpdf", shQuote(c(pdf, "--add-attachment", attachment, "--", "--replace-input")))
   if (status != 0) {
     stop("qpdf failed with status ", status)
-  }
-  if (!file.rename(tmp, pdf)) {
-    stop("could not overwrite ", pdf)
   }
 
   invisible(pdf)

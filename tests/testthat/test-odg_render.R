@@ -190,31 +190,43 @@ local({
     expect_match(tex, "\\%>\\%", fixed = TRUE)
   })
 
-  test_that("pdf_attach attaches a file into a PDF", {
+  test_that("pdf_attach attaches a file into a PDF in place", {
     skip_if_not(nzchar(Sys.which("qpdf")), "qpdf not available")
 
-    pdf_path <- tempfile(fileext = ".pdf")
+    dir <- tempfile()
+    dir.create(dir)
+    on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+    pdf_path <- file.path(dir, "doc.pdf")
     grDevices::pdf(pdf_path)
     plot(1)
     grDevices::dev.off()
-    attachment_path <- tempfile(fileext = ".txt")
+    attachment_path <- file.path(dir, "attachment.txt")
     writeLines("hello", attachment_path)
-    on.exit(
-      {
-        if (file.exists(pdf_path)) {
-          unlink(pdf_path)
-        }
-        if (file.exists(attachment_path)) {
-          unlink(attachment_path)
-        }
-      },
-      add = TRUE
-    )
 
     result <- pdf_attach(pdf_path, attachment_path)
 
     expect_identical(result, pdf_path)
     listing <- system2("qpdf", c("--list-attachments", shQuote(pdf_path)), stdout = TRUE)
     expect_true(any(grepl(basename(attachment_path), listing, fixed = TRUE)))
+    # qpdf's --replace-input works through a sibling temp file; none must be left behind
+    expect_setequal(list.files(dir, all.files = TRUE, no.. = TRUE), c("doc.pdf", "attachment.txt"))
+  })
+
+  test_that("pdf_attach errors and leaves the input untouched when qpdf fails", {
+    skip_if_not(nzchar(Sys.which("qpdf")), "qpdf not available")
+
+    dir <- tempfile()
+    dir.create(dir)
+    on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+    pdf_path <- file.path(dir, "not_a.pdf")
+    writeLines("not a pdf", pdf_path)
+    attachment_path <- file.path(dir, "attachment.txt")
+    writeLines("hello", attachment_path)
+    original_md5 <- unname(tools::md5sum(pdf_path))
+
+    expect_error(pdf_attach(pdf_path, attachment_path), "qpdf failed with status")
+
+    expect_identical(unname(tools::md5sum(pdf_path)), original_md5)
+    expect_setequal(list.files(dir, all.files = TRUE, no.. = TRUE), c("not_a.pdf", "attachment.txt"))
   })
 })
