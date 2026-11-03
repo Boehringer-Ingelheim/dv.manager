@@ -353,18 +353,11 @@ ODG_ELEMENT_FORMATTERS <- local({
   res <- safe_list()
   res[[ODG$OUTPUT_FORMAT$PDF]] <- safe_list()
   res[[ODG$OUTPUT_FORMAT$PDF]][["header"]] <- function(x) {
-    if (x[["is_first_module_element"]]) {
-      paste_with_blank_lines(
-        paste0("\\section{", escape_latex(x[["module_name"]]), "}"),
-        paste0("\\subsection{", escape_latex(x[["label"]]), "}"),
-        ""
-      )
-    } else {
-      paste_with_blank_lines(
-        paste0("\\subsection{", escape_latex(x[["label"]]), "}"),
-        ""
-      )
-    }
+    paste_with_blank_lines(
+      if (x[["is_first_module_element"]]) paste0("\\section{", escape_latex(x[["module_name"]]), "}"),
+      paste0("\\subsection{", escape_latex(x[["label"]]), "}"),
+      ""
+    )
   }
   res[[ODG$OUTPUT_FORMAT$PDF]][[ODG$ELEMENT_KIND$ERROR]] <- function(x) {
     paste_with_blank_lines(
@@ -395,18 +388,11 @@ ODG_ELEMENT_FORMATTERS <- local({
 
   res[[ODG$OUTPUT_FORMAT$HTML]] <- safe_list()
   res[[ODG$OUTPUT_FORMAT$HTML]][["header"]] <- function(x) {
-    if (x[["is_first_module_element"]]) {
-      paste_with_blank_lines(
-        paste0("# ", x[["module_name"]]),
-        paste0("## ", x[["label"]]),
-        ""
-      )
-    } else {
-      paste_with_blank_lines(
-        paste0("## ", x[["label"]]),
-        ""
-      )
-    }
+    paste_with_blank_lines(
+      if (x[["is_first_module_element"]]) paste0("# ", x[["module_name"]]),
+      paste0("## ", x[["label"]]),
+      ""
+    )
   }
   res[[ODG$OUTPUT_FORMAT$HTML]][[ODG$ELEMENT_KIND$ERROR]] <- function(x) {
     paste_with_blank_lines(
