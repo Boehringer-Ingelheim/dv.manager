@@ -684,10 +684,11 @@ app_server_ <- function(input, output, session, opts) {
                 stop(e)
               }
             )
-            if (length(attr(rendered_filename, "error_msg")) > 0) {
+            error_msg_string <- attr(rendered_filename, "error_msg")
+            if (length(error_msg_string) > 0) {
               log_warn(sprintf(
                 "Error while generating output documentation: %s",
-                attr(rendered_filename, "error_msg")
+                error_msg_string
               ))
               # The zip is still downloaded, it carries error.txt
               shiny::showNotification(ODG$MSG$RENDER_FAILED, type = "error", duration = NULL)
