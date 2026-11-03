@@ -915,10 +915,10 @@ sm_me <- local({
 #'
 utils_latex_tables <- local({
   # Workaround for gt versions predating the latex.header_repeat tab_options()
-  # nolintr start
+  # nolint start
   # Usage: gt(tbl) |> tab_options(latex.use_longtable = TRUE) |> as_latex() |>
   # latex.header_repeat()
-  # nolintr end
+  # nolint end
   # In specific environments we won't have access to gt (>=1.3.0)
   # To be removed when the access if granted
   latex_header_repeat <- function(x) {
