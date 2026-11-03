@@ -694,7 +694,7 @@ build_filter_reference_section <- function(filter_odg, output_format, get_code_i
   )
 }
 
-#' Preprocess every selected ODG element, in declaration order
+#' Preprocess ODG elements, in the order given
 #'
 #' `get_code_in_context()` must receive the *call* to a metareactive, not its
 #' value: `shinymeta::expandChain()` forces that argument in meta mode to get
@@ -705,8 +705,8 @@ build_filter_reference_section <- function(filter_odg, output_format, get_code_i
 #' inserted verbatim and must contain `header` (formatted for `output_format`).
 #' Anything other than a single non-NA string becomes an error element.
 #'
-#' @param odg_elements Named list of all flattened ODG elements, keyed by id.
-#' @param is_selected Named logical vector, keyed by element id.
+#' @param odg_elements List of the flattened ODG elements to include; the caller
+#'   filters out unselected ones.
 #' @param output_format One of `ODG$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
 #' @param get_code_in_context `function(x)` turning a metareactive call into the
 #'   R code reproducing it. Injected so it can be tested independently.
@@ -714,14 +714,13 @@ build_filter_reference_section <- function(filter_odg, output_format, get_code_i
 #'   dropped and `code` and `kind` (one of `ODG$ELEMENT_KIND`) added.
 #' @keywords internal
 #' @noRd
-preprocess_odg_elements <- function(odg_elements, is_selected, output_format, get_code_in_context) {
+preprocess_odg_elements <- function(odg_elements, output_format, get_code_in_context) {
   checkmate::assert_subset(output_format, as.character(unclass(ODG$OUTPUT_FORMAT)))
-  selected <- odg_elements[names(is_selected)[is_selected]]
 
-  res <- vector(mode = "list", length = length(selected))
-  for (idx in seq_along(selected)) {
+  res <- vector(mode = "list", length = length(odg_elements))
+  for (idx in seq_along(odg_elements)) {
     log_inform(sprintf("Preprocessing element (%d)", idx))
-    odg_element <- selected[[idx]]
+    odg_element <- odg_elements[[idx]]
     log_inform(paste0("Processing:", odg_element[["id"]]))
 
     # Entries are keyed by the output format values themselves; missing -> NULL

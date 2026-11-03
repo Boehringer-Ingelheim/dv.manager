@@ -19,11 +19,10 @@ local({
   }
 
   # preprocess_odg_elements() is the only entry point now; this drives it
-  # with a single selected element to exercise the per-element logic in isolation.
+  # with a single element to exercise the per-element logic in isolation.
   preprocess_one <- function(el, output_format, get_code_in_context) {
     preprocess_odg_elements(
       list(el = el),
-      c(el = TRUE),
       output_format,
       get_code_in_context
     )[[1]]
@@ -138,31 +137,26 @@ local({
     expect_error(preprocess_one(el, "bogus", fake_get_code_in_context))
   })
 
-  test_that("preprocess_odg_elements processes only the selected elements, in order", {
+  test_that("preprocess_odg_elements processes every element it is given, in order", {
     odg_elements <- list(
+      c = list(id = "c", codegen = list(html = fake_metareactive(function() "C"))),
       a = list(id = "a", codegen = list(html = fake_metareactive(function() "A"))),
-      b = list(id = "b", codegen = list(html = fake_metareactive(function() "B"))),
-      c = list(id = "c", codegen = list(html = fake_metareactive(function() "C")))
+      b = list(id = "b", codegen = list(html = fake_metareactive(function() "B")))
     )
-    is_selected <- c(a = TRUE, b = FALSE, c = TRUE)
 
     res <- preprocess_odg_elements(
       odg_elements,
-      is_selected,
       ODG$OUTPUT_FORMAT$HTML,
       fake_get_code_in_context
     )
 
-    expect_length(res, 2)
-    expect_identical(vapply(res, `[[`, character(1), "id"), c("a", "c"))
+    expect_length(res, 3)
+    expect_identical(vapply(res, `[[`, character(1), "id"), c("c", "a", "b"))
   })
 
-  test_that("preprocess_odg_elements returns an empty list when nothing is selected", {
-    odg_elements <- list(a = list(id = "a", codegen = list(html = fake_metareactive(function() "A"))))
-
+  test_that("preprocess_odg_elements returns an empty list when given no elements", {
     res <- preprocess_odg_elements(
-      odg_elements,
-      c(a = FALSE),
+      list(),
       ODG$OUTPUT_FORMAT$HTML,
       fake_get_code_in_context
     )

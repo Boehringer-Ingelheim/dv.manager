@@ -636,8 +636,7 @@ app_server_ <- function(input, output, session, opts) {
 
             log_inform("Preprocessing ODG elements")
             selected_odg_elements <- preprocess_odg_elements(
-              odg_elements,
-              is_output_selected_for_odg,
+              odg_elements[names(is_output_selected_for_odg)[is_output_selected_for_odg]],
               output_format,
               get_code_in_context
             )
