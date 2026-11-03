@@ -476,7 +476,7 @@ build_odg_rmd <- function(selected_odg_elements, output_format, data_code, secti
 build_hardcoded_hash_section <- function(dataset_list) {
   dataset_list_hash <- vector(mode = "list", length = length(dataset_list))
   for (idx in seq_along(dataset_list)) {
-    dataset_list_hash[[idx]] <- digest::digest(dataset_list[[idx]])
+    dataset_list_hash[[idx]] <- digest::digest(dataset_list[[idx]], algo = "md5")
   }
   names(dataset_list_hash) <- names(dataset_list)
 
@@ -516,7 +516,7 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, get_code_in_con
         cat(sprintf(
           "\n\n **name**: `%s` **hash**: %s",
           names(..(selected_dataset_list_mr()))[[idx]],
-          digest::digest(..(selected_dataset_list_mr())[[idx]])
+          digest::digest(..(selected_dataset_list_mr())[[idx]], algo = "md5")
         ))
       }
     },
