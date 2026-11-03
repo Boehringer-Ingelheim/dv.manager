@@ -3,6 +3,8 @@
  - UI and functionality:
    - Includes first Output Document Generation version (ODG)
    - App info module uses `sessioninfo` instead of `devtools` 
+ - Depends on `dv.manager >= 3.3.0` (TBR), to be upgraded in DESCRIPTION before final release
+ - Points on `dv.manager@test` (TBR), to be moved back to `main` in DESCRIPTION before final release
 
 # dv.manager 3.2.2-9000
 

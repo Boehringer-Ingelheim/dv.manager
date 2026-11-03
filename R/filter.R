@@ -692,7 +692,9 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
 #'
 #' @param filter_info `list(result = list(subject =, dataset =), error_list =)`, as returned by [get_filter_info()].
 #' @return `list(result = list(subjects =, filter_info =), error_list =)`.
+#' @keywords internal
 #' @export
+#' @noRd
 combine_filter_info <- function(filter_info) {
   if (filter_info[["error_list"]]$any()) {
     return(
@@ -844,7 +846,9 @@ apply_filter_info_to_dataset_list <- (function(
 #' @param dataset_list_filter Parsed filter state (`parsed`, `raw`), as produced by the filter UI.
 #' @param filter_key_var Column identifying subjects.
 #' @return `list(result = list(subject =, dataset =) or NULL, error_list =)`.
+#' @keywords internal
 #' @export
+#' @noRd
 get_filter_info <- (function(unfiltered_dataset_list, dataset_list_filter, filter_key_var) {
   error_list <- new_error_list()
   fi <- NULL
