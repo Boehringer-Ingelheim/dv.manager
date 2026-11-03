@@ -58,6 +58,7 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
     }
   )
 
+  # This env variable is not always configured so some heuristics are included to find zip
   zip_command <- Sys.getenv("R_ZIPCMD")
   if (!nzchar(zip_command)) {
     zip_command <- unname(Sys.which("zip"))
