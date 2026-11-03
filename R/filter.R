@@ -690,7 +690,7 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
 #'
 #' Can be expanded to combine arbitrary filters, not necessarily just these two.
 #'
-#' @param filter_info `list(result = list(subject =, dataset =), error_list =)`, as returned by [get_filter_info()].
+#' @param filter_info `list(result = list(subject =, dataset =), error_list =)`, as returned by `get_filter_info()`.
 #' @return `list(result = list(subjects =, filter_info =), error_list =)`.
 #' @keywords internal
 #' @export
