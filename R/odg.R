@@ -266,7 +266,8 @@ body::before {
 
 ```{r session_info, results = 'asis'}
   session_lines <- capture.output(sessioninfo::session_info())
-  max_char_width <- 0L # Automatic estimation
+  # Verbatim isn't measured by \beginwidepage, only longtables are; pass the width explicitly
+  max_char_width <- max(nchar(session_lines, type = "width"), 0L)
   
   session_lines <- paste0(session_lines, collapse = "\n")
     
