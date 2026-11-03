@@ -102,21 +102,56 @@ local({
     })
   })
 
+  # The generated code only refers to `filter_odg` by name, so its value here never reaches the section.
+  # Primed so snapshots show only the section's own code.
+  build_filter_section <- function(build_section, output_format) {
+    gcic <- new_shared_get_code_in_context()
+    filter_odg <- shinymeta::metaReactive(list(), varname = "filter_odg")
+    prime(gcic, filter_odg)
+    build_section(filter_odg, output_format, gcic)
+  }
+
   test_that("build_filter_txt_section wraps the filter code in format-appropriate verbatim tags", {
-    expect_snapshot(cat(build_filter_txt_section(ODG$OUTPUT_FORMAT$HTML, "FIXTURE_FILTER_TXT_CODE")))
-    expect_snapshot(cat(build_filter_txt_section(ODG$OUTPUT_FORMAT$PDF, "FIXTURE_FILTER_TXT_CODE")))
+    shiny::isolate({
+      expect_snapshot(cat(build_filter_section(build_filter_txt_section, ODG$OUTPUT_FORMAT$HTML)))
+      expect_snapshot(cat(build_filter_section(build_filter_txt_section, ODG$OUTPUT_FORMAT$PDF)))
+    })
   })
 
   test_that("build_filter_txt_section rejects an unknown output_format instead of erroring deep inside sprintf", {
-    expect_error(build_filter_txt_section("bogus", "FIXTURE_FILTER_TXT_CODE"))
+    shiny::isolate({
+      expect_error(build_filter_section(build_filter_txt_section, "bogus"), "output_format")
+    })
   })
 
   test_that("build_filter_reference_section wraps the filter reference code so pandoc does not read it as markdown", {
-    expect_snapshot(cat(build_filter_reference_section(ODG$OUTPUT_FORMAT$HTML, "FIXTURE_FILTER_REFERENCE_CODE")))
-    expect_snapshot(cat(build_filter_reference_section(ODG$OUTPUT_FORMAT$PDF, "FIXTURE_FILTER_REFERENCE_CODE")))
+    shiny::isolate({
+      expect_snapshot(cat(build_filter_section(build_filter_reference_section, ODG$OUTPUT_FORMAT$HTML)))
+      expect_snapshot(cat(build_filter_section(build_filter_reference_section, ODG$OUTPUT_FORMAT$PDF)))
+    })
+  })
+
+  test_that("build_filter_reference_section prints a fallback when there are no references", {
+    shiny::isolate({
+      for (output_format in c(ODG$OUTPUT_FORMAT$HTML, ODG$OUTPUT_FORMAT$PDF)) {
+        section <- build_filter_section(build_filter_reference_section, output_format)
+
+        # Run the generated chunk as the rendered document would
+        chunk <- regmatches(
+          section,
+          regexpr("(?s)```\\{r filter_odg_reference_list[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
+        )
+        printed <- utils::capture.output(
+          eval(parse(text = chunk), list(filter_odg = list(txt = "", references = list())))
+        )
+        expect_identical(printed, "No references found", info = output_format)
+      }
+    })
   })
 
   test_that("build_filter_reference_section rejects an unknown output_format", {
-    expect_error(build_filter_reference_section("bogus", "FIXTURE_FILTER_REFERENCE_CODE"))
+    shiny::isolate({
+      expect_error(build_filter_section(build_filter_reference_section, "bogus"), "output_format")
+    })
   })
 })

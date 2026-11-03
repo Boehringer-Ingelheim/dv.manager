@@ -585,20 +585,26 @@ build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code
 
 #' Markdown section wrapping the filter description in a verbatim block
 #'
+#' @param filter_odg Metareactive returning `txt_tree_from_filter_info()`'s
+#'   `list(txt =, references =)`; only `txt` is used.
 #' @param output_format One of `ODG$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
-#' @param filter_txt_code R code, as a string, that prints the filter
-#'   description at render time.
+#' @param get_code_in_context `function(x)` turning a metareactive call into the
+#'   R code reproducing it.
 #' @return The markdown section, as a single string.
 #' @keywords internal
 #' @noRd
-build_filter_txt_section <- function(output_format, filter_txt_code) {
+build_filter_txt_section <- function(filter_odg, output_format, get_code_in_context) {
   checkmate::assert_choice(output_format, as.character(unclass(ODG$OUTPUT_FORMAT)))
   section <- "## Filters:"
 
-  if (output_format == ODG$OUTPUT_FORMAT$HTML) {
-    verbatim_tags <- c("<pre>", "</pre>")
-  } else if (output_format == ODG$OUTPUT_FORMAT$PDF) {
-    verbatim_tags <- c("\\begin{verbatim}", "\\end{verbatim}")
+  cat_mr <- sm_mr(cat(..(filter_odg())[["txt"]]), inline = TRUE, varname = "cat_filter_txt")
+
+  verbatim_tags <- if (output_format == ODG$OUTPUT_FORMAT$PDF) {
+    c("\\begin{verbatim}", "\\end{verbatim}")
+  } else if (output_format == ODG$OUTPUT_FORMAT$HTML) {
+    c("<pre>", "</pre>")
+  } else {
+    stop("Unknown format")
   }
 
   note <- paste(
@@ -609,37 +615,82 @@ build_filter_txt_section <- function(output_format, filter_txt_code) {
     section,
     verbatim_tags[[1]],
     "```{r filter_odg_txt, echo = FALSE, results='asis'}",
-    filter_txt_code,
+    get_code_in_context(cat_mr()),
     "```",
     verbatim_tags[[2]],
     note
   )
 }
 
-#' Markdown section wrapping the filter reference list
+#' Markdown section printing the filter reference list
 #'
+#' @param filter_odg Metareactive returning `txt_tree_from_filter_info()`'s
+#'   `list(txt =, references =)`; only `references` is used.
 #' @param output_format One of `ODG$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
-#' @param filter_reference_code R code, as a string, that prints the filter
-#'   reference list at render time (or a "No references found" fallback).
+#' @param get_code_in_context `function(x)` turning a metareactive call into the
+#'   R code reproducing it.
 #' @return The markdown section, as a single string.
 #' @keywords internal
 #' @noRd
-build_filter_reference_section <- function(output_format, filter_reference_code) {
+build_filter_reference_section <- function(filter_odg, output_format, get_code_in_context) {
   checkmate::assert_choice(output_format, as.character(unclass(ODG$OUTPUT_FORMAT)))
 
-  if (output_format == ODG$OUTPUT_FORMAT$HTML) {
-    wrapper_tags <- c("<pre>", "</pre>")
-  } else if (output_format == ODG$OUTPUT_FORMAT$PDF) {
-    wrapper_tags <- c("```{=latex}", "```")
+  if (output_format == ODG$OUTPUT_FORMAT$PDF) {
+    # Escaped values reach LaTeX untouched: they print exactly as selected and wrap like regular text
+    cat_mr <- sm_mr(
+      {
+        references <- ..(filter_odg())[["references"]]
+        if (length(references) == 0) {
+          cat("No references found")
+        } else {
+          entries <- character(length(references))
+          for (idx in seq_along(references)) {
+            values <- paste0(
+              "\\texttt{\"",
+              gt::escape_latex(as.character(references[[idx]])),
+              "\"}",
+              collapse = " "
+            )
+            entries[[idx]] <- sprintf("\\textbf{Reference (%d):}\\\\\n%s", idx, values)
+          }
+          cat(sprintf("\\begin{flushleft}\n%s\n\\end{flushleft}", paste(entries, collapse = "\n\n")))
+        }
+      },
+      inline = TRUE,
+      varname = "cat_filter_reference_list_txt"
+    )
+  } else if (output_format == ODG$OUTPUT_FORMAT$HTML) {
+    cat_mr <- sm_mr(
+      {
+        references <- ..(filter_odg())[["references"]]
+        if (length(references) == 0) {
+          cat("No references found")
+        } else {
+          cat(paste0(
+            paste0("Reference (", seq_along(references), "): \n"),
+            lapply(references, function(x) paste0("\"", x, "\"", collapse = "\t")),
+            "\n",
+            collapse = "\n"
+          ))
+        }
+      },
+      inline = TRUE,
+      varname = "cat_filter_reference_list_txt"
+    )
+  } else {
+    stop("Unknown format")
   }
+
+  # Keep pandoc from reading the printed references as markdown
+  tags <- if (output_format == ODG$OUTPUT_FORMAT$PDF) c("```{=latex}", "```") else c("<pre>", "</pre>")
 
   paste_with_blank_lines(
     "# Filter references:",
-    wrapper_tags[[1]],
+    tags[[1]],
     "```{r filter_odg_reference_list, echo = FALSE, results='asis'}",
-    filter_reference_code,
+    get_code_in_context(cat_mr()),
     "```",
-    wrapper_tags[[2]]
+    tags[[2]]
   )
 }
 

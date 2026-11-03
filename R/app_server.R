@@ -473,20 +473,6 @@ app_server_ <- function(input, output, session, opts) {
         varname = "filter_odg"
       )
 
-      filter_txt <- sm_mr(
-        {
-          ..(filter_odg())[["txt"]]
-        },
-        varname = "filter_txt"
-      )
-
-      filter_reference_list <- sm_mr(
-        {
-          ..(filter_odg())[["references"]]
-        },
-        varname = "filter_reference_list"
-      )
-
       # Flatten ODG elements and set defaults for missing entries
       odg_elements <- local({
         res <- list()
@@ -640,65 +626,13 @@ app_server_ <- function(input, output, session, opts) {
             hardcoded_hash_section <- build_hardcoded_hash_section(selected_dataset_list())
             dynamic_hash_section <- build_dynamic_hash_section(selected_dataset_list, get_code_in_context)
 
-            filter_txt_section <- local({
-              cat_mr <- sm_mr(
-                {
-                  cat(..(filter_txt()))
-                },
-                inline = TRUE,
-                varname = "cat_filter_txt"
-              )
+            filter_txt_section <- build_filter_txt_section(filter_odg, output_format, get_code_in_context)
 
-              build_filter_txt_section(output_format, get_code_in_context(cat_mr()))
-            })
-
-            filter_reference_list_txt_section <- local({
-              if (length(filter_reference_list()) == 0) {
-                cat_mr <- sm_mr(
-                  {
-                    cat("No references found")
-                  },
-                  inline = TRUE,
-                  varname = "cat_filter_reference_list_txt"
-                )
-              } else if (output_format == ODG$OUTPUT_FORMAT$PDF) {
-                # Escaped values reach LaTeX untouched: they print exactly as selected and wrap like regular text
-                cat_mr <- sm_mr(
-                  {
-                    references <- ..(filter_reference_list())
-                    entries <- character(length(references))
-                    for (idx in seq_along(references)) {
-                      values <- paste0(
-                        "\\texttt{\"",
-                        gt::escape_latex(as.character(references[[idx]])),
-                        "\"}",
-                        collapse = " "
-                      )
-                      entries[[idx]] <- sprintf("\\textbf{Reference (%d):}\\\\\n%s", idx, values)
-                    }
-                    cat(sprintf("\\begin{flushleft}\n%s\n\\end{flushleft}", paste(entries, collapse = "\n\n")))
-                  },
-                  inline = TRUE,
-                  varname = "cat_filter_reference_list_txt"
-                )
-              } else {
-                cat_mr <- sm_mr(
-                  {
-                    references <- ..(filter_reference_list())
-                    cat(paste0(
-                      paste0("Reference (", seq_along(references), "): \n"),
-                      lapply(references, function(x) paste0("\"", x, "\"", collapse = "\t")),
-                      "\n",
-                      collapse = "\n"
-                    ))
-                  },
-                  inline = TRUE,
-                  varname = "cat_filter_reference_list_txt"
-                )
-              }
-
-              build_filter_reference_section(output_format, get_code_in_context(cat_mr()))
-            })
+            filter_reference_list_txt_section <- build_filter_reference_section(
+              filter_odg,
+              output_format,
+              get_code_in_context
+            )
 
             log_inform("Preprocessing ODG elements")
             selected_odg_elements <- preprocess_odg_elements(

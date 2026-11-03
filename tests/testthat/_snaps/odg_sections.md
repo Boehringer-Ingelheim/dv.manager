@@ -125,7 +125,7 @@
 # build_filter_txt_section wraps the filter code in format-appropriate verbatim tags
 
     Code
-      cat(build_filter_txt_section(ODG$OUTPUT_FORMAT$HTML, "FIXTURE_FILTER_TXT_CODE"))
+      cat(build_filter_section(build_filter_txt_section, ODG$OUTPUT_FORMAT$HTML))
     Output
       ## Filters:
       
@@ -133,7 +133,7 @@
       
       ```{r filter_odg_txt, echo = FALSE, results='asis'}
       
-      FIXTURE_FILTER_TXT_CODE
+      local(cat(filter_odg[["txt"]]))
       
       ```
       
@@ -144,7 +144,7 @@
 ---
 
     Code
-      cat(build_filter_txt_section(ODG$OUTPUT_FORMAT$PDF, "FIXTURE_FILTER_TXT_CODE"))
+      cat(build_filter_section(build_filter_txt_section, ODG$OUTPUT_FORMAT$PDF))
     Output
       ## Filters:
       
@@ -152,7 +152,7 @@
       
       ```{r filter_odg_txt, echo = FALSE, results='asis'}
       
-      FIXTURE_FILTER_TXT_CODE
+      local(cat(filter_odg[["txt"]]))
       
       ```
       
@@ -163,8 +163,7 @@
 # build_filter_reference_section wraps the filter reference code so pandoc does not read it as markdown
 
     Code
-      cat(build_filter_reference_section(ODG$OUTPUT_FORMAT$HTML,
-      "FIXTURE_FILTER_REFERENCE_CODE"))
+      cat(build_filter_section(build_filter_reference_section, ODG$OUTPUT_FORMAT$HTML))
     Output
       # Filter references:
       
@@ -172,7 +171,15 @@
       
       ```{r filter_odg_reference_list, echo = FALSE, results='asis'}
       
-      FIXTURE_FILTER_REFERENCE_CODE
+      local({
+          references <- filter_odg[["references"]]
+          if (length(references) == 0) {
+              cat("No references found")
+          }
+          else {
+              cat(paste0(paste0("Reference (", seq_along(references), "): \n"), lapply(references, function(x) paste0("\"", x, "\"", collapse = "\t")), "\n", collapse = "\n"))
+          }
+      })
       
       ```
       
@@ -181,8 +188,7 @@
 ---
 
     Code
-      cat(build_filter_reference_section(ODG$OUTPUT_FORMAT$PDF,
-      "FIXTURE_FILTER_REFERENCE_CODE"))
+      cat(build_filter_section(build_filter_reference_section, ODG$OUTPUT_FORMAT$PDF))
     Output
       # Filter references:
       
@@ -190,7 +196,20 @@
       
       ```{r filter_odg_reference_list, echo = FALSE, results='asis'}
       
-      FIXTURE_FILTER_REFERENCE_CODE
+      local({
+          references <- filter_odg[["references"]]
+          if (length(references) == 0) {
+              cat("No references found")
+          }
+          else {
+              entries <- character(length(references))
+              for (idx in seq_along(references)) {
+                  values <- paste0("\\texttt{\"", gt::escape_latex(as.character(references[[idx]])), "\"}", collapse = " ")
+                  entries[[idx]] <- sprintf("\\textbf{Reference (%d):}\\\\\n%s", idx, values)
+              }
+              cat(sprintf("\\begin{flushleft}\n%s\n\\end{flushleft}", paste(entries, collapse = "\n\n")))
+          }
+      })
       
       ```
       
