@@ -29,7 +29,7 @@
       
       ```{r dynamic_data_hash, echo = FALSE, results='asis'}
       for (idx in seq_along(selected_dataset_list)) {
-          cat(sprintf("\n\n **name**: `%s` **hash**: %s", names(selected_dataset_list)[[idx]], digest::digest(selected_dataset_list[[idx]])))
+          cat(sprintf("\n\n **name**: `%s` **hash**: %s", names(selected_dataset_list)[[idx]], digest::digest(selected_dataset_list[[idx]], algo = "md5")))
       }
       ```
       
@@ -44,7 +44,7 @@
       
       ```{r dynamic_data_hash, echo = FALSE, results='asis'}
       for (idx in seq_along(selected_dataset_list)) {
-          cat(sprintf("\n\n **name**: `%s` **hash**: %s", names(selected_dataset_list)[[idx]], digest::digest(selected_dataset_list[[idx]])))
+          cat(sprintf("\n\n **name**: `%s` **hash**: %s", names(selected_dataset_list)[[idx]], digest::digest(selected_dataset_list[[idx]], algo = "md5")))
       }
       ```
       
