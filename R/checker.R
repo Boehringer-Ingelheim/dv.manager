@@ -222,6 +222,12 @@ check_set_subgroup_info <- function(enable_subgroup) {
   res
 }
 
+check_set_odg <- function(enable_odg) {
+  checkmate::assert_logical(enable_odg, len = 1, any.missing = FALSE)
+  res <- list(enable = enable_odg)
+  res
+}
+
 check_parsable_json_input <- function(x) {
   utils::capture.output(p <- try(deserialize_filter_state_from_client(x), silent = TRUE))
   if (inherits(p, "try-error")) {

@@ -44,10 +44,10 @@ local({
   )
 
   test_that(
-    "char_vars_to_factor_vars_dataset transform character variable into factors variables" |>
+    "from_char_vars_to_factor_vars_dataset transform character variable into factors variables" |>
       vdoc[["add_spec"]](c(specs$PREPROCESSING$PREPROCESS_CHAR_TO_FACTOR)),
     {
-      r <- char_vars_to_factor_vars_dataset(d1)
+      r <- from_char_vars_to_factor_vars_dataset(d1)
       expect_identical(r, e1)
     }
   )
@@ -56,28 +56,28 @@ local({
     "char_vars_to_factor_vars respect lables" |>
       vdoc[["add_spec"]](c(specs$PREPROCESSING$PREPROCESS_CHAR_TO_FACTOR)),
     {
-      r <- char_vars_to_factor_vars_dataset(dl)
+      r <- from_char_vars_to_factor_vars_dataset(dl)
       expect_identical(attr(r[["ds1"]][["char_var1"]], "label"), "char_var1_label")
     }
   )
 
   test_that(
-    "decorate_char_vars_to_factor_vars_dataset_list decorates a functions that returns a list of data.frames and transforms character variables into factor variables" |>
+    "decorate_from_char_vars_to_factor_vars_dataset_list decorates a functions that returns a list of data.frames and transforms character variables into factor variables" |>
       vdoc[["add_spec"]](c(specs$PREPROCESSING$PREPROCESS_CHAR_TO_FACTOR)),
     {
       # nolintr
       f <- function() dl
-      dec_f <- decorate_char_vars_to_factor_vars_dataset_list(f)
+      dec_f <- decorate_from_char_vars_to_factor_vars_dataset_list(f)
       e <- edl
       expect_identical(dec_f(), e)
     }
   )
 
   test_that(
-    "char_vars_to_factor_vars_dataset_lists applies decorators and transformations to dataset_lists" |>
+    "from_char_vars_to_factor_vars_dataset_lists applies decorators and transformations to dataset_lists" |>
       vdoc[["add_spec"]](c(specs$PREPROCESSING$PREPROCESS_CHAR_TO_FACTOR)),
     {
-      r <- char_vars_to_factor_vars_dataset_lists(dataset_lists)
+      r <- from_char_vars_to_factor_vars_dataset_lists(dataset_lists)
       expect_identical(r[["dl1"]][["ds1"]], expected_dataset_lists[["dl1"]][["ds1"]])
       expect_identical(r[["dl1"]][["ds2"]], expected_dataset_lists[["dl1"]][["ds2"]])
       expect_identical(r[["dl2"]]()[["ds1"]], expected_dataset_lists[["dl2"]]()[["ds1"]])
@@ -160,31 +160,31 @@ local({
   )
 
   test_that(
-    "ungroup2df_datasets_dataset_list ungroups and transforms into data.frames datasets in a dataset_list" |>
+    "from_grouped_tbl_to_df_dataset_list ungroups and transforms into data.frames datasets in a dataset_list" |>
       vdoc[["add_spec"]](c(specs$PREPROCESSING$PREPROCESS_UNGROUP, specs$PREPROCESSING$PREPROCESS_TIBBLE_TO_DF)),
     {
-      r <- ungroup2df_datasets_dataset_list(dl)
+      r <- from_grouped_tbl_to_df_dataset_list(dl)
       expect_identical(r, edl)
     }
   )
 
   test_that(
-    "decorate_ungroup2df_datasets_dataset_list decorates a functions that returns a list of data.frames and ungroups and transforms into data.frames all datasets in the list" |>
+    "decorate_from_grouped_tbl_to_df_dataset_list decorates a functions that returns a list of data.frames and ungroups and transforms into data.frames all datasets in the list" |>
       vdoc[["add_spec"]](c(specs$PREPROCESSING$PREPROCESS_UNGROUP, specs$PREPROCESSING$PREPROCESS_TIBBLE_TO_DF)),
     {
       # nolintr
       f <- function() dl
-      dec_f <- decorate_ungroup2df_datasets_dataset_list(f)
+      dec_f <- decorate_from_grouped_tbl_to_df_dataset_list(f)
       e <- edl
       expect_identical(dec_f(), e)
     }
   )
 
   test_that(
-    "ungroup2df_datasets_dataset_lists applies decorators and transformations to dataset_lists" |>
+    "from_grouped_tbl_to_df_dataset_lists applies decorators and transformations to dataset_lists" |>
       vdoc[["add_spec"]](c(specs$PREPROCESSING$PREPROCESS_UNGROUP, specs$PREPROCESSING$PREPROCESS_TIBBLE_TO_DF)),
     {
-      r <- ungroup2df_datasets_dataset_lists(dataset_lists)
+      r <- from_grouped_tbl_to_df_dataset_lists(dataset_lists)
       expect_identical(r[["dl1"]][["ds1"]], expected_dataset_lists[["dl1"]][["ds1"]])
       expect_identical(r[["dl1"]][["ds2"]], expected_dataset_lists[["dl1"]][["ds2"]])
       expect_identical(r[["dl2"]]()[["ds1"]], expected_dataset_lists[["dl2"]]()[["ds1"]])

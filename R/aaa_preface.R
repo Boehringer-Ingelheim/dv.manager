@@ -213,6 +213,9 @@ new_error_list <- function() {
       if (!is.list(x)) {
         x <- list(message = x)
       }
+
+      stopifnot(is.character(x[["message"]]) && length(x[["message"]]) == 1)
+
       errors[[length(errors) + 1]] <<- do.call(errorCondition, x)
     }
   }

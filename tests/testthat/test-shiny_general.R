@@ -319,6 +319,7 @@ local({
             "dataset_list_name")
         )
         
+        dataset_metadata_name <- suppressWarnings(shiny::isolate(exported_values[["dataset_metadata"]][["name"]]()))
         expect_identical(dataset_metadata_name, names(dataset_lists)[[1]])
 
         module_names <- exported_values[["module_names"]]

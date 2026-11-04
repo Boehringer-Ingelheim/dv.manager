@@ -18,7 +18,7 @@ mod_app_info <- local({
       shiny::actionButton(ns("refresh_server_init"), label = "Refresh"),
       shiny::div(id = ns("server_init_time_detail"), class = "mt-1"),
       shiny::div(id = ns("server_init_time"), class = "mt-1"),
-      shiny::h1("devtools::session_info"),
+      shiny::h1("sessioninfo::session_info"),
       shiny::actionButton(ns("refresh_session_info"), label = "Refresh"),
       shiny::verbatimTextOutput(ns("session_info"))
     )
@@ -108,12 +108,12 @@ mod_app_info <- local({
           on.exit(..t$add_period("session_info", FALSE))
           shiny::validate(
             shiny::need(
-              requireNamespace("devtools", quietly = TRUE),
-              "devtools package is required to see session info"
+              requireNamespace("sessioninfo", quietly = TRUE),
+              "sessioninfo package is required to see session info"
             )
           )
           shiny::req(input[["refresh_session_info"]] > 0)
-          devtools::session_info()
+          sessioninfo::session_info()
         })
         return(NULL)
       }

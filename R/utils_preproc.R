@@ -1,4 +1,4 @@
-char_vars_to_factor_vars_dataset <- function(dataset) {
+from_char_vars_to_factor_vars_dataset <- function(dataset) {
   # nolintr
   var_names <- names(dataset)
   r <- dataset
@@ -15,45 +15,63 @@ char_vars_to_factor_vars_dataset <- function(dataset) {
   r
 }
 
-char_vars_to_factor_vars_dataset_list <- function(dataset_list) {
+#' Turn the character columns of every dataset in a dataset list into factors, keeping their labels
+#'
+#' Exported only so the generated output documentation code can call it.
+#'
+#' @param dataset_list Named list of data.frames.
+#' @return `dataset_list`, with character columns as factors.
+#' @keywords internal
+#' @export
+#' @noRd
+from_char_vars_to_factor_vars_dataset_list <- function(dataset_list) {
   # nolintr
   dataset_names <- names(dataset_list)
   for (dataset_name in dataset_names) {
     dataset <- dataset_list[[dataset_name]]
-    factored_dataset <- char_vars_to_factor_vars_dataset(dataset)
+    factored_dataset <- from_char_vars_to_factor_vars_dataset(dataset)
     dataset_list[[dataset_name]] <- factored_dataset
   }
   dataset_list
 }
 
-decorate_char_vars_to_factor_vars_dataset_list <- function(f) {
+decorate_from_char_vars_to_factor_vars_dataset_list <- function(f) {
   # nolintr
   function() {
-    char_vars_to_factor_vars_dataset_list(f())
+    from_char_vars_to_factor_vars_dataset_list(f())
   }
 }
 
-char_vars_to_factor_vars_dataset_lists <- function(dataset_lists) {
+from_char_vars_to_factor_vars_dataset_lists <- function(dataset_lists) {
   # nolintr
   lapply(dataset_lists, function(d) {
     if (is.function(d)) {
-      decorate_char_vars_to_factor_vars_dataset_list(d)
+      decorate_from_char_vars_to_factor_vars_dataset_list(d)
     } else if (is.list(d)) {
-      char_vars_to_factor_vars_dataset_list(d)
+      from_char_vars_to_factor_vars_dataset_list(d)
     } else {
       stop("Unknown type")
     }
   })
 }
 
-decorate_ungroup2df_datasets_dataset_list <- function(f) {
+decorate_from_grouped_tbl_to_df_dataset_list <- function(f) {
   # nolintr
   function() {
-    ungroup2df_datasets_dataset_list(f())
+    from_grouped_tbl_to_df_dataset_list(f())
   }
 }
 
-ungroup2df_datasets_dataset_list <- function(dataset_list) {
+#' Ungroup every dataset in a dataset list into a plain data.frame, keeping its attributes
+#'
+#' Exported only so the generated output documentation code can call it.
+#'
+#' @param dataset_list Named list of data.frames, possibly grouped tibbles.
+#' @return `dataset_list`, with every dataset an ungrouped data.frame.
+#' @keywords internal
+#' @export
+#' @noRd
+from_grouped_tbl_to_df_dataset_list <- function(dataset_list) {
   dataset_names <- names(dataset_list)
   for (dataset_name in dataset_names) {
     d <- dataset_list[[dataset_name]]
@@ -70,13 +88,13 @@ ungroup2df_datasets_dataset_list <- function(dataset_list) {
   dataset_list
 }
 
-ungroup2df_datasets_dataset_lists <- function(dataset_lists) {
+from_grouped_tbl_to_df_dataset_lists <- function(dataset_lists) {
   # nolintr
   lapply(dataset_lists, function(d) {
     if (is.function(d)) {
-      decorate_ungroup2df_datasets_dataset_list(d)
+      decorate_from_grouped_tbl_to_df_dataset_list(d)
     } else if (is.list(d)) {
-      ungroup2df_datasets_dataset_list(d)
+      from_grouped_tbl_to_df_dataset_list(d)
     } else {
       stop("Unknown type")
     }

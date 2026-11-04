@@ -1,0 +1,84 @@
+---
+title: "Output Document Generation (ODG) (EXPERIMENTAL)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Output Document Generation (ODG) (EXPERIMENTAL)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+## Goal
+
+Creates an Rmd document that is renderd into a PDF with the selected outputs in the application.
+
+- On: `run_app(..., enable_odg = TRUE)`.
+- Dataset list needs a `load_fn` attribute: a function with no arguments and independent from its parent environment.
+- A module can return an entry `to_odg` from its server.
+
+## What the module server returns
+
+```
+server(afmm) returns
+└─ list(
+     to_odg = list(                       # named, names unique within the module
+       <element_name> = list(             # elements appear in this order
+         label   = "...",                 # optional: section title, defaults to <element_name>
+         info    = "...",                 # optional: defaults to label
+         codegen = list(                  # one entry per output format
+           pdf  = <metareactive | chunk>,
+           html = <metareactive | chunk>
+         )
+       ),
+       ...
+     )
+   )
+```
+
+## `codegen` option 1: metareactive
+
+```{r}
+listing <- shinymeta::metaReactive(
+  {
+    adsl <- ..(afmm[["filtered_dataset_list"]]())[["adsl"]]
+    adsl[adsl[["AGE"]] > ..(input[["min_age"]]), ]
+  },
+  varname = "listing"
+)
+
+list(
+  to_odg = list(
+    listing = list(
+      label = "Listing",
+      codegen = list(pdf = listing, html = listing)
+    )
+  )
+)
+```
+
+## `codegen` option 2: chunk
+
+```{r}
+chunk <- structure(
+  function(header) {
+    paste0(header, "```{r}\nplot(1:10)\n```")
+  },
+  class = "chunk"
+)
+```
+
+- A `function(header)` with class `"chunk"` that returns Rmd markup as a single string. The markup is inserted as is.
+- `header` is the section title, already formatted for the output format and ending in a blank line.
+
+## Code formatting with air
+
+The R code in the document is formatted with [air], using the following logic.
+
+1. `options(dv_odg_air_path = "/path/to/air")`
+2. environment variable `DV_ODG_AIR_PATH`
+3. `air` on the `PATH`
+4. Otherwise, unformatted.
+

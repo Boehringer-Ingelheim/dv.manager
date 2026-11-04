@@ -65,11 +65,27 @@ app_ui <- function(request_id) {
       )
     )
 
+  odg_button <- local({
+    if (isTRUE(get_config("odg")[["enable"]])) {
+      shiny::tags[["button"]](
+        type = "button",
+        class = "btn btn-default",
+        title = ODG$MSG$ODG_BUTTON,
+        shiny::icon("file-lines", class = "fa-lg"),
+        onclick = sprintf(
+          "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
+          ns(ODG$ID$ODG_CODE_MENU),
+          ODG$VAL$ODG_ALL
+        )
+      )
+    } else {
+      NULL
+    }
+  })
+
   top_buttons <- list(
-    shiny::bookmarkButton("", class = "navbar-btn")
-    # Remove export functionality until new order
-    # shiny::actionButton(ns("open_report_modal"), shiny::span(shiny::icon("download")), class = "navbar-btn"), # nolint
-    # shiny::actionButton(ns("open_options_modal"), shiny::span(shiny::icon("question")), class = "navbar-btn"), # nolint
+    shiny::bookmarkButton("", class = "navbar-btn"),
+    odg_button
   )
 
   dataset_name <-
