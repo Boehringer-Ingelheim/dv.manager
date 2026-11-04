@@ -73,5 +73,10 @@ local({
     expect_true("odg.Rmd" %in% unzipped)
     rmd <- paste(readLines(file.path(unzip_dir, "odg.Rmd"), warn = FALSE), collapse = "\n")
     expect_match(rmd, "D1")
+
+    # The document reloads the data itself, it must hash the same as the data in the app
+    tex <- paste(readLines(file.path(unzip_dir, "odg.tex"), warn = FALSE), collapse = "\n")
+    expect_match(tex, "Dynamic Data hash", fixed = TRUE)
+    expect_no_match(tex, "Hash mismatch", fixed = TRUE)
   })
 })

@@ -623,8 +623,14 @@ app_server_ <- function(input, output, session, opts) {
 
             data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
             date_section <- build_date_section(selected_dataset_list, date_range, get_code_in_context)
-            hardcoded_hash_section <- build_hardcoded_hash_section(selected_dataset_list())
-            dynamic_hash_section <- build_dynamic_hash_section(selected_dataset_list, get_code_in_context)
+            in_app_hashes <- hash_dataset_list(selected_dataset_list())
+            hardcoded_hash_section <- build_hardcoded_hash_section(in_app_hashes)
+            dynamic_hash_section <- build_dynamic_hash_section(
+              selected_dataset_list,
+              in_app_hashes,
+              output_format,
+              get_code_in_context
+            )
 
             filter_txt_section <- build_filter_txt_section(filter_odg, output_format, get_code_in_context)
 

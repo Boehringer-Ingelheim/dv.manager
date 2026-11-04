@@ -134,6 +134,7 @@ ODG <- local({
       # Currently only all ODG is possible it is kept as a dummy value for the button
       ODG_ALL = "all"
     ),
+    HASH_ALGO = "md5",
     # Where to find the air formatter, checked before the PATH, see `format_odg_code()`
     AIR_PATH = poc(
       ENV_VAR = "DV_ODG_AIR_PATH",
@@ -467,24 +468,28 @@ build_odg_rmd <- function(selected_odg_elements, output_format, data_code, secti
   )
 }
 
-#' Markdown section listing a content hash per dataset, computed now
+#' Content hash per dataset
 #'
-#' @param dataset_list Named list of data.frames (the resolved dataset list).
+#' @param dataset_list Named list of data.frames.
+#' @return Named character vector, one hash per dataset.
+#' @keywords internal
+#' @noRd
+hash_dataset_list <- function(dataset_list) {
+  vapply(dataset_list, digest::digest, character(1), algo = ODG$HASH_ALGO)
+}
+
+#' Markdown section listing the in-app content hash per dataset
+#'
+#' @param dataset_hashes Named character vector, as returned by `hash_dataset_list()`.
 #' @return The markdown section, as a single string.
 #' @keywords internal
 #' @noRd
-build_hardcoded_hash_section <- function(dataset_list) {
-  dataset_list_hash <- vector(mode = "list", length = length(dataset_list))
-  for (idx in seq_along(dataset_list)) {
-    dataset_list_hash[[idx]] <- digest::digest(dataset_list[[idx]], algo = "md5")
-  }
-  names(dataset_list_hash) <- names(dataset_list)
-
+build_hardcoded_hash_section <- function(dataset_hashes) {
   section <- "## Hardcoded Data hash:"
-  for (idx in seq_along(dataset_list_hash)) {
+  for (idx in seq_along(dataset_hashes)) {
     section <- paste_with_blank_lines(
       section,
-      paste0(" **name**: `", names(dataset_list_hash)[[idx]], "` **hash**: ", dataset_list_hash[[idx]])
+      paste0(" **name**: `", names(dataset_hashes)[[idx]], "` **hash**: ", dataset_hashes[[idx]])
     )
   }
   note <- paste(
@@ -496,36 +501,54 @@ build_hardcoded_hash_section <- function(dataset_list) {
 
 #' Markdown section recomputing each dataset's hash at render time
 #'
-#' Emits one `asis` chunk looping over the dataset list, so the section adapts to
-#' whatever it holds at render time and never names it or its length itself: the
-#' reference comes from `get_code_in_context()`. It collapses to a bare reference
-#' (no re-emitted assignment) only because the shared expansion context has
-#' already emitted that assignment into the data-source chunk, so this must be
-#' called after the data code is generated.
-#'
 #' @param selected_dataset_list_mr Metareactive resolving to the dataset list.
+#' @param in_app_hashes Named character vector, `hash_dataset_list()` of the dataset list loaded in the app.
+#' @param output_format One of `ODG$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
 #' @param get_code_in_context `function(x)` turning a metareactive call into the
 #'   R code reproducing it. Injected so it can be tested independently.
 #' @return The markdown section, as a single string.
 #' @keywords internal
 #' @noRd
-build_dynamic_hash_section <- function(selected_dataset_list_mr, get_code_in_context) {
+build_dynamic_hash_section <- function(selected_dataset_list_mr, in_app_hashes, output_format, get_code_in_context) {
+  checkmate::assert_choice(output_format, as.character(unclass(ODG$OUTPUT_FORMAT)))
+  checkmate::assert_character(in_app_hashes, any.missing = FALSE, names = "unique")
+
+  alert_tags <- if (output_format == ODG$OUTPUT_FORMAT$PDF) {
+    c("\n\n```{=latex}\n\\begin{alertdanger}\n```", "\n\n```{=latex}\n\\end{alertdanger}\n```")
+  } else {
+    c("\n\n<div class=\"alert alert-danger\" role=\"alert\">", "\n\n</div>")
+  }
+
   loop <- shinymeta::metaReactive(
     {
-      for (idx in seq_along(..(selected_dataset_list_mr()))) {
-        cat(sprintf(
-          "\n\n **name**: `%s` **hash**: %s",
-          names(..(selected_dataset_list_mr()))[[idx]],
-          digest::digest(..(selected_dataset_list_mr())[[idx]], algo = "md5")
-        ))
+      in_app_hash <- ..(in_app_hashes)
+      not_found <- "Dataset not found"
+      for (name in union(names(..(selected_dataset_list_mr())), names(in_app_hash))) {
+        hash <- if (name %in% names(..(selected_dataset_list_mr()))) {
+          digest::digest(..(selected_dataset_list_mr())[[name]], algo = ..(ODG$HASH_ALGO))
+        } else {
+          not_found
+        }
+        expected_hash <- if (name %in% names(in_app_hash)) in_app_hash[[name]] else not_found
+        line <- sprintf("\n\n **name**: `%s` **hash**: %s", name, hash)
+        if (!identical(hash, expected_hash)) {
+          line <- paste0(
+            ..(alert_tags[[1]]),
+            "\n\n **Hash mismatch**: the data used to generate this document is not the data loaded in the app.",
+            line,
+            sprintf(" **in-app hash**: %s", expected_hash),
+            ..(alert_tags[[2]])
+          )
+        }
+        cat(line)
       }
     },
     inline = TRUE
   )
 
   note <- paste(
-    "These hashes are calculated while generating the output documentation,",
-    "and should match those in the **Hardcoded Data hash** section."
+    "These hashes are calculated while generating the output documentation and checked against those in the",
+    "**Hardcoded Data hash** section. Any mismatch is highlighted."
   )
   paste_with_blank_lines(
     "## Dynamic Data hash:",

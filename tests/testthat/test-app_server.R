@@ -457,6 +457,10 @@ test_that("app_server_ errors when two ODG elements end up with the same chunk l
     )
   }
 
+  # Same element name in different modules is fine, the module id keeps the labels apart
+  shared_name <- odg_testing_options(list("Mod 1" = odg_module("a", "plot"), "Mod 2" = odg_module("b", "plot")))
+  expect_no_error(shiny::testServer(app_server_test(shared_name), {}))
+
   # Same id: `a-b` + `c` and `a` + `b-c` both join into `a-b-c`
   same_id <- odg_testing_options(list("Mod 1" = odg_module("a-b", "c"), "Mod 2" = odg_module("a", "b-c")))
   expect_error(

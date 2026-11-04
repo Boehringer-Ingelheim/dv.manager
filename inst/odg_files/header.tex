@@ -159,6 +159,18 @@
 
 \newcommand{\alertwarning}[1]{\par\vspace{4pt}\noindent\fcolorbox{yellow!70!black}{yellow!20}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\color{yellow!60!black}#1}}\par\vspace{4pt}}
 
+%% An environment, not a command: begin and end come in separate raw blocks so pandoc converts the markdown between
+\newsavebox{\alertdangerbox}
+\newenvironment{alertdanger}{%
+  \par\vspace{4pt}\noindent
+  \begin{lrbox}{\alertdangerbox}%
+  \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule}\color{red!70!black}%
+}{%
+  \end{minipage}%
+  \end{lrbox}%
+  \fcolorbox{red!70!black}{red!10}{\usebox{\alertdangerbox}}\par\vspace{4pt}%
+}
+
 %% ---- long cells -----------------------------------------------------------
 %% A listing cell over the length limit is cut and ends in a mark that links to a note, below the table, with the
 %% whole text. The note links back. The mark is a single PDF push button: /A follows the link and /TU, the whole
