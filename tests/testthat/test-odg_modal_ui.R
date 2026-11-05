@@ -46,6 +46,18 @@ local({
     expect_false(is_switch_checked("m2"))
   })
 
+  test_that("build_odg_modal_ui shows a file name field, prefilled or with the default as placeholder", {
+    html <- as.character(build_odg_modal_ui(fixture_elements, test_ns)[["modal_dialog"]])
+    expect_match(
+      html,
+      sprintf('id="%s" type="text" class="shiny-input-text form-control" value=""', test_ns(ODG$ID$FILE_NAME))
+    )
+    expect_match(html, sprintf('placeholder="%s"', ODG$FILE_NAME$DEFAULT), fixed = TRUE)
+
+    html <- as.character(build_odg_modal_ui(fixture_elements, test_ns, file_name = "my_report")[["modal_dialog"]])
+    expect_match(html, 'value="my_report"', fixed = TRUE)
+  })
+
   test_that("build_odg_modal_ui shows a fallback message and no download button when nothing is exportable", {
     res <- build_odg_modal_ui(list(), test_ns)
 
@@ -53,6 +65,7 @@ local({
     html <- as.character(res[["modal_dialog"]])
     expect_true(grepl(ODG$MSG$NOTHING_TO_GENERATE, html, fixed = TRUE))
     expect_false(grepl("output_format", html, fixed = TRUE))
+    expect_false(grepl(ODG$ID$FILE_NAME, html, fixed = TRUE))
     expect_false(grepl("shiny-download-link", html, fixed = TRUE))
   })
 

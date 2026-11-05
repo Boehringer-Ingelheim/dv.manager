@@ -9,12 +9,16 @@
 #' @param pdf_attach_function `function(pdf, attachment)` used to attach files
 #'   to a rendered PDF. Injected so it can be tested independently.
 #' @param filename Path the resulting zip file is written to.
+#' @param document_name Base name of the .Rmd and of its rendered output, as returned by `sanitize_odg_file_name()`.
 #' @param quiet Silences both `rmarkdown::render()` and the zip step's output.
 #' @return `filename`, with an `error_msg` attribute (character(0) on success,
 #'   the error message on failure). Errors if no zip command is found or zipping fails.
 #' @keywords internal
 #' @noRd
-render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename, quiet = TRUE) {
+render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename, document_name, quiet = TRUE) {
+  checkmate::assert_string(document_name, pattern = "^[A-Za-z0-9_][A-Za-z0-9_-]*$")
+  rmd_file <- paste0(document_name, ".Rmd")
+
   odg_dir <- tempfile(pattern = "odg")
   if (!quiet) {
     message(sprintf("Generating output documentation in %s", odg_dir))
@@ -36,17 +40,17 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
   )
   setwd(odg_dir)
 
-  writeLines(rmarkdown, "odg.Rmd")
+  writeLines(rmarkdown, rmd_file)
   writeLines(header, "header.tex")
 
   error_msg <- character(0)
   tryCatch(
     {
-      output_file <- rmarkdown::render(input = "odg.Rmd", output_dir = odg_dir, quiet = quiet)
+      output_file <- rmarkdown::render(input = rmd_file, output_dir = odg_dir, quiet = quiet)
       if (endsWith(output_file, "pdf")) {
         session_info_file <- "session_info.txt"
         writeLines(capture.output(sessioninfo::session_info()), session_info_file)
-        pdf_attach_function(output_file, "odg.Rmd")
+        pdf_attach_function(output_file, rmd_file)
         pdf_attach_function(output_file, session_info_file)
         unlink(session_info_file)
       }
@@ -106,7 +110,8 @@ ODG <- local({
       ODG_CODE = "odg_code",
       ODG_CODE_MENU = "odg_code_menu",
       ODG_MENU_SELECTION = "odg_menu_selection",
-      OUTPUT_FORMAT = "output_format"
+      OUTPUT_FORMAT = "output_format",
+      FILE_NAME = "odg_file_name"
     ),
     ATTR = "odg_element_type",
     ELEMENT_KIND = poc(
@@ -123,6 +128,7 @@ ODG <- local({
       ODG_BUTTON = "Generate Output Documentation",
       OUTPUTS_CARD = "Outputs",
       FORMAT_CARD = "Format",
+      FILE_NAME_CARD = "File name",
       NOTHING_TO_GENERATE = "No outputs available",
       RENDER_FAILED = paste(
         "The output documentation could not be rendered.",
@@ -135,6 +141,11 @@ ODG <- local({
       ODG_ALL = "all"
     ),
     HASH_ALGO = "md5",
+    FILE_NAME = poc(
+      DEFAULT = "odg",
+      MAX_CHARS = 100L,
+      RESERVED = "header"
+    ),
     # Where to find the air formatter, checked before the PATH, see `format_odg_code()`
     AIR_PATH = poc(
       ENV_VAR = "DV_ODG_AIR_PATH",
@@ -149,7 +160,6 @@ ODG <- local({
     templates[[ODG$OUTPUT_FORMAT$PDF]] <- r"--(
 ---
 title: "Output Documentation"
-author: "A user"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   pdf_document:
@@ -214,7 +224,6 @@ knitr::knit_hooks$set(
     templates[[ODG$OUTPUT_FORMAT$HTML]] <- r"--(
 ---
 title: "Output Documentation"
-author: "A user"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
@@ -337,6 +346,25 @@ if (n == 0) {
 
   ODG
 })
+
+#' @param x Typed file name, or `NULL`.
+#' @return A sanitized `ODG$FILE_NAME$DEFAULT` if it fails.
+#' @keywords internal
+#' @noRd
+sanitize_odg_file_name <- function(x) {
+  if (!checkmate::test_string(x, na.ok = FALSE)) {
+    x <- ""
+  }
+  x <- trimws(x)
+  x <- sub("\\.(zip|pdf|rmd|html|tex)$", "", x, ignore.case = TRUE)
+  x <- gsub("[^A-Za-z0-9_-]+", "_", x, perl = TRUE)
+  x <- sub("^-", "_", x)
+  x <- substr(x, 1L, ODG$FILE_NAME$MAX_CHARS)
+  if (tolower(x) %in% ODG$FILE_NAME$RESERVED) {
+    x <- paste0(x, "_")
+  }
+  if (nzchar(x)) x else ODG$FILE_NAME$DEFAULT
+}
 
 #' Join strings into a single string, separated by blank lines
 #'
@@ -827,13 +855,14 @@ preprocess_odg_elements <- function(odg_elements, output_format, get_code_in_con
 #' @param ns Namespacing function for input/output ids.
 #' @param selected_tab Module id whose outputs are checked by default, or `NA`
 #'   (default) or `NULL` (the tab input is not set yet) to check all of them. Every module is listed either way.
+#' @param file_name Initial value of the file name field; empty shows the default as placeholder.
 #' @return `list(modal_dialog =, selected =)`: the modal UI, and a named
 #'   logical vector (keyed by element id) of which elements are checked by
 #'   default. The modal shows one switch per module, keyed by module id, so a
 #'   switch event covers every element of that module.
 #' @keywords internal
 #' @noRd
-build_odg_modal_ui <- function(odg_elements, ns, selected_tab = NA) {
+build_odg_modal_ui <- function(odg_elements, ns, selected_tab = NA, file_name = "") {
   log_inform(paste("Preselecting", selected_tab, "tab elements in menu"))
 
   switches <- list()
@@ -880,6 +909,16 @@ build_odg_modal_ui <- function(odg_elements, ns, selected_tab = NA) {
           label = NULL,
           # HTML output is hidden for now, the rest of the pipeline still supports it
           choices = list(PDF = ODG$OUTPUT_FORMAT$PDF)
+        )
+      ),
+      bslib::card(
+        bslib::card_header(ODG$MSG$FILE_NAME_CARD),
+        shiny::textInput(
+          ns(ODG$ID$FILE_NAME),
+          label = NULL,
+          value = file_name,
+          width = "100%",
+          placeholder = ODG$FILE_NAME$DEFAULT
         )
       )
     )

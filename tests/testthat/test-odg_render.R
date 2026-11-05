@@ -40,14 +40,13 @@ local({
     spy <- spy_pdf_attach()
     wd <- getwd()
 
-    result <- render_odg_document(make_odg_rmd("1 + 1"), dummy_header, spy$fn, zip_path)
+    result <- render_odg_document(make_odg_rmd("1 + 1"), dummy_header, spy$fn, zip_path, "my_report")
 
     expect_identical(as.vector(result), zip_path)
     expect_identical(getwd(), wd)
     expect_true(file.exists(zip_path))
     contents <- utils::unzip(zip_path, list = TRUE)[["Name"]]
-    expect_true(any(endsWith(contents, ".html")))
-    expect_false("error.txt" %in% contents)
+    expect_setequal(contents, c("my_report.Rmd", "my_report.html", "header.tex"))
     expect_length(attr(result, "error_msg"), 0)
     expect_length(spy$calls$log, 0)
   })
@@ -58,7 +57,7 @@ local({
 
     no_attach <- function(pdf, attachment) NULL
     expect_error(
-      suppressWarnings(render_odg_document(make_odg_rmd("1 + 1"), dummy_header, no_attach, zip_path)),
+      suppressWarnings(render_odg_document(make_odg_rmd("1 + 1"), dummy_header, no_attach, zip_path, "odg")),
       "zip failed with status"
     )
     expect_false(file.exists(zip_path))
@@ -80,18 +79,24 @@ local({
 
     spy <- spy_pdf_attach()
 
-    result <- render_odg_document(make_odg_rmd("1 + 1", output = "pdf_document"), dummy_header, spy$fn, zip_path)
+    result <- render_odg_document(
+      make_odg_rmd("1 + 1", output = "pdf_document"),
+      dummy_header,
+      spy$fn,
+      zip_path,
+      "my_report"
+    )
 
     expect_true(file.exists(zip_path))
     contents <- utils::unzip(zip_path, list = TRUE)[["Name"]]
-    expect_true(any(endsWith(contents, ".pdf")))
+    expect_true("my_report.pdf" %in% contents)
     expect_length(attr(result, "error_msg"), 0)
 
     # Attaches the rendered Rmd source and a session-info file, both to the same pdf
     expect_length(spy$calls$log, 2)
     expect_true(all(endsWith(vapply(spy$calls$log, `[[`, character(1), "pdf"), ".pdf")))
     attachments <- vapply(spy$calls$log, function(x) basename(x[["attachment"]]), character(1))
-    expect_setequal(attachments, c("odg.Rmd", "session_info.txt"))
+    expect_setequal(attachments, c("my_report.Rmd", "session_info.txt"))
   })
 
   test_that("render_odg_document captures render errors in error.txt without calling pdf_attach_function", {
@@ -109,7 +114,7 @@ local({
 
     result <- NULL
     expect_warning(
-      result <- render_odg_document(make_odg_rmd('stop("boom")'), dummy_header, spy$fn, zip_path),
+      result <- render_odg_document(make_odg_rmd('stop("boom")'), dummy_header, spy$fn, zip_path, "odg"),
       regexp = "Error generating output documentation"
     )
 
@@ -136,7 +141,8 @@ local({
         rmarkdown = make_odg_rmd("1 + 1"),
         header = dummy_header,
         pdf_attach_function = function(pdf, attachment) invisible(NULL),
-        filename = zip_path
+        filename = zip_path,
+        document_name = "odg"
       )
     )
 
@@ -179,7 +185,7 @@ local({
       collapse = "\n"
     )
 
-    result <- render_odg_document(rmd, header, function(pdf, attachment) invisible(NULL), zip_path)
+    result <- render_odg_document(rmd, header, function(pdf, attachment) invisible(NULL), zip_path, "odg")
     expect_length(attr(result, "error_msg"), 0)
 
     unzip_dir <- tempfile()
@@ -188,6 +194,15 @@ local({
     # Unparsable raw LaTeX makes pandoc print the whole command as text: `\textbackslash alertwarning\{...`
     expect_match(tex, "\\alertwarning{Error creating mod\\_1-tbl", fixed = TRUE)
     expect_match(tex, "\\%>\\%", fixed = TRUE)
+  })
+
+  test_that("render_odg_document rejects a document name that is not a plain file name", {
+    for (document_name in c("../odg", "-odg", "my report", "")) {
+      expect_error(
+        render_odg_document("", "", function(pdf, attachment) invisible(NULL), tempfile(), document_name),
+        "document_name"
+      )
+    }
   })
 
   test_that("pdf_attach attaches a file into a PDF in place", {

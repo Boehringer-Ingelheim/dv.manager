@@ -29,7 +29,7 @@ local({
     "dataset_list_name": "D1"
   }'
 
-  test_that("a module's exported value is downloaded end to end as a rendered PDF odg.zip", {
+  test_that("a module's exported value is downloaded end to end as a rendered PDF, named as typed", {
     app <- start_app_driver(
       rlang::quo({
         dv.manager:::run_app(
@@ -54,9 +54,11 @@ local({
 
     # unrequired right now but it will be in the future when more formats are available
     app$set_inputs(!!ODG$ID$OUTPUT_FORMAT := ODG$OUTPUT_FORMAT$PDF, wait_ = FALSE)
+    app$set_inputs(!!ODG$ID$FILE_NAME := "My report", wait_ = FALSE)
     app$wait_for_idle()
 
     downloaded_file <- app$get_download(ODG$ID$ODG_CODE)
+    expect_identical(basename(downloaded_file), "My_report.zip")
     unzip_dir <- tempfile()
     utils::unzip(downloaded_file, exdir = unzip_dir)
     unzipped <- list.files(unzip_dir)
@@ -67,15 +69,15 @@ local({
     }
 
     expect_false("error.txt" %in% unzipped)
-    expect_true("odg.pdf" %in% unzipped)
+    expect_true("My_report.pdf" %in% unzipped)
 
     # pdf is binary test against Rmd
-    expect_true("odg.Rmd" %in% unzipped)
-    rmd <- paste(readLines(file.path(unzip_dir, "odg.Rmd"), warn = FALSE), collapse = "\n")
+    expect_true("My_report.Rmd" %in% unzipped)
+    rmd <- paste(readLines(file.path(unzip_dir, "My_report.Rmd"), warn = FALSE), collapse = "\n")
     expect_match(rmd, "D1")
 
     # The document reloads the data itself, it must hash the same as the data in the app
-    tex <- paste(readLines(file.path(unzip_dir, "odg.tex"), warn = FALSE), collapse = "\n")
+    tex <- paste(readLines(file.path(unzip_dir, "My_report.tex"), warn = FALSE), collapse = "\n")
     expect_match(tex, "Dynamic Data hash", fixed = TRUE)
     expect_no_match(tex, "Hash mismatch", fixed = TRUE)
   })

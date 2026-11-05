@@ -69,9 +69,9 @@ app_ui <- function(request_id) {
     if (isTRUE(get_config("odg")[["enable"]])) {
       shiny::tags[["button"]](
         type = "button",
-        class = "btn btn-default",
+        class = "btn btn-default navbar-btn",
         title = ODG$MSG$ODG_BUTTON,
-        shiny::icon("file-lines", class = "fa-lg"),
+        shiny::icon("file-lines"),
         onclick = sprintf(
           "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
           ns(ODG$ID$ODG_CODE_MENU),

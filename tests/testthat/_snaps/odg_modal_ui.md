@@ -44,6 +44,16 @@
                     </div>
                     <script data-bslib-card-init>bslib.Card.initializeAllCards();</script>
                   </div>
+                  <div class="card bslib-card bslib-mb-spacing html-fill-item html-fill-container" data-bslib-card-init data-require-bs-caller="card()" data-require-bs-version="5">
+                    <div class="card-header bslib-gap-spacing">File name</div>
+                    <div class="card-body bslib-gap-spacing html-fill-item html-fill-container" style="margin-top:auto;margin-bottom:auto;flex:1 1 auto;">
+                      <div class="form-group shiny-input-container" style="width:100%;">
+                        <label class="control-label shiny-label-null" for="test-odg_file_name" id="test-odg_file_name-label"></label>
+                        <input id="test-odg_file_name" type="text" class="shiny-input-text form-control" value="" placeholder="odg" data-update-on="change"/>
+                      </div>
+                    </div>
+                    <script data-bslib-card-init>bslib.Card.initializeAllCards();</script>
+                  </div>
                 </div>
                 <a id="test-odg_code" class="btn btn-default shiny-download-link disabled" href="" target="_blank" download aria-disabled="true" tabindex="-1">
                   <i class="fas fa-download" role="presentation" aria-label="download icon"></i>

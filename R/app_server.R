@@ -559,7 +559,12 @@ app_server_ <- function(input, output, session, opts) {
         }
 
         # every ODG output is listed, but only those in the tab in view start out selected
-        x <- build_odg_modal_ui(odg_elements, ns, selected_tab = input[[ID$NAV_HEADER]])
+        x <- build_odg_modal_ui(
+          odg_elements,
+          ns,
+          selected_tab = input[[ID$NAV_HEADER]],
+          file_name = input[[ODG$ID$FILE_NAME]] %||% ""
+        )
         is_output_selected_for_odg <<- x[["selected"]]
 
         log_inform(
@@ -573,10 +578,11 @@ app_server_ <- function(input, output, session, opts) {
       })
 
       output[[ODG$ID$ODG_CODE]] <- shiny::downloadHandler(
-        filename = "odg.zip",
+        filename = function() paste0(sanitize_odg_file_name(input[[ODG$ID$FILE_NAME]]), ".zip"),
         content = function(filename) {
           shiny::withProgress(message = "Generating output documentation", expr = {
             output_format <- input[[ODG$ID$OUTPUT_FORMAT]]
+            document_name <- sanitize_odg_file_name(input[[ODG$ID$FILE_NAME]])
 
             ec <- shiny::isolate({
               .ec <- shinymeta::newExpansionContext()
@@ -679,6 +685,7 @@ app_server_ <- function(input, output, session, opts) {
                   header = header,
                   pdf_attach_function = pdf_attach,
                   filename = filename,
+                  document_name = document_name,
                   quiet = FALSE # We want to access it in the app log
                 ),
                 show = TRUE
