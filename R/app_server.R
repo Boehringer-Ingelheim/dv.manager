@@ -577,6 +577,12 @@ app_server_ <- function(input, output, session, opts) {
         shiny::showModal(x[["modal_dialog"]])
       })
 
+      # Possible but unlikely race, the menu inputs travel over the websocket, the download is a separate HTTP
+      # request, so a download started right after a change can still read the previous filename.
+      # A possible fix is to have a button that generatez the zip and a download buttont activated
+      # after the generation that downloads the file. It may be better also as any error can be shown
+      # in the app.
+
       output[[ODG$ID$ODG_CODE]] <- shiny::downloadHandler(
         filename = function() paste0(sanitize_odg_file_name(input[[ODG$ID$FILE_NAME]]), ".zip"),
         content = function(filename) {
