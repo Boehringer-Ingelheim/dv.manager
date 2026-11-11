@@ -1,3 +1,11 @@
+# dv.manager 3.2.2-9002
+
+ - UI and functionality:
+   - Introudces file name field for ODG
+   - The ODG dynamic data hash section highlights mismatching datasets
+   - The ODG PDF no longer shows the placeholder author "A user"
+   - The ODG button uses the same navbar style as the bookmark button
+
 # dv.manager 3.2.2-9001
 
  - UI and functionality:
