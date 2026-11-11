@@ -602,9 +602,6 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, in_app_hashes, 
 #' bare `NULL` would collapse the whole `sprintf()` to `character(0)`, dropping
 #' that dataset's line entirely, and `format(NULL)` prints `"NULL"`.
 #'
-#' Shares `build_dynamic_hash_section()`'s ordering requirement: call it after
-#' the data code has been generated with the same expansion context.
-#'
 #' @param selected_dataset_list_mr Metareactive resolving to the dataset list.
 #' @param date_range_mr Metareactive resolving to the dataset list date range.
 #' @param get_code_in_context `function(x)` turning a metareactive call into the
