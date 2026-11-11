@@ -683,11 +683,11 @@ app_server_ <- function(input, output, session, opts) {
                 args = list(
                   rmarkdown = rmarkdown,
                   header = header,
-                  pdf_attach_function = pdf_attach,
                   filename = filename,
                   document_name = document_name,
                   quiet = FALSE # We want to access it in the app log
                 ),
+                package = "dv.manager", # dv.manager namespace
                 show = TRUE
               ),
               error = function(e) {

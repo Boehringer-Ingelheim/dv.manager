@@ -63,13 +63,21 @@ local({
     utils::unzip(downloaded_file, exdir = unzip_dir)
     unzipped <- list.files(unzip_dir)
 
-    if ("error.txt" %in% unzipped) {
-      cat("\n---- error.txt ----\n")
-      cat(readLines(file.path(unzip_dir, "error.txt")), sep = "\n")
+    error_file <- ODG$FILE_NAME$RESERVED$ERROR
+    if (error_file %in% unzipped) {
+      cat(sprintf("\n---- %s ----\n", error_file))
+      cat(readLines(file.path(unzip_dir, error_file)), sep = "\n")
     }
 
-    expect_false("error.txt" %in% unzipped)
+    expect_false(error_file %in% unzipped)
     expect_true("My_report.pdf" %in% unzipped)
+
+    # The PDF carries its source and the session info; the session info file itself is not shipped
+    session_info_file <- ODG$FILE_NAME$RESERVED$SESSION_INFO
+    attachments <- system2("qpdf", c("--list-attachments", shQuote(file.path(unzip_dir, "My_report.pdf"))), stdout = TRUE)
+    expect_true(any(startsWith(attachments, "My_report.Rmd ")), info = paste(attachments, collapse = "\n"))
+    expect_true(any(startsWith(attachments, paste0(session_info_file, " "))), info = paste(attachments, collapse = "\n"))
+    expect_false(session_info_file %in% unzipped)
 
     # pdf is binary test against Rmd
     expect_true("My_report.Rmd" %in% unzipped)

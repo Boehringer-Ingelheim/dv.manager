@@ -1,22 +1,23 @@
 #' Render an ODG Rmd to a zip file
 #'
-#' Runs in a fresh `callr::r()` subprocess (or can be called directly, e.g. in
-#' tests) — everything needed must arrive as an argument, nothing carries over
-#' from the caller's session.
+#' The app runs it in a `callr::r()` subprocess with `package = "dv.manager"`, so package objects resolve against the
+#' installed dv.manager, not a `load_all()`ed tree.
 #'
 #' @param rmarkdown The full .Rmd document content, as a single string.
-#' @param header The `header.tex` content, as a single string.
-#' @param pdf_attach_function `function(pdf, attachment)` used to attach files
-#'   to a rendered PDF. Injected so it can be tested independently.
+#' @param header The LaTeX header content, as a single string.
 #' @param filename Path the resulting zip file is written to.
 #' @param document_name Base name of the .Rmd and of its rendered output, as returned by `sanitize_odg_file_name()`.
 #' @param quiet Silences both `rmarkdown::render()` and the zip step's output.
 #' @return `filename`, with an `error_msg` attribute (character(0) on success,
-#'   the error message on failure). Errors if no zip command is found or zipping fails.
+#'   the error message on failure). Errors if `document_name` is not sanitized, if no zip command is found, or if
+#'   zipping fails.
 #' @keywords internal
 #' @noRd
-render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename, document_name, quiet = TRUE) {
-  checkmate::assert_string(document_name, pattern = "^[A-Za-z0-9_][A-Za-z0-9_-]*$")
+render_odg_document <- function(rmarkdown, header, filename, document_name, quiet = TRUE) {
+  checkmate::assert_string(document_name)
+  if (!identical(document_name, sanitize_odg_file_name(document_name))) {
+    stop(sprintf("`document_name` (%s) is not a sanitized file name, see `sanitize_odg_file_name()`", document_name))
+  }
   rmd_file <- paste0(document_name, ".Rmd")
 
   odg_dir <- tempfile(pattern = "odg")
@@ -41,24 +42,24 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
   setwd(odg_dir)
 
   writeLines(rmarkdown, rmd_file)
-  writeLines(header, "header.tex")
+  writeLines(header, ODG$FILE_NAME$RESERVED$HEADER)
 
   error_msg <- character(0)
   tryCatch(
     {
       output_file <- rmarkdown::render(input = rmd_file, output_dir = odg_dir, quiet = quiet)
       if (endsWith(output_file, "pdf")) {
-        session_info_file <- "session_info.txt"
+        session_info_file <- ODG$FILE_NAME$RESERVED$SESSION_INFO
         writeLines(capture.output(sessioninfo::session_info()), session_info_file)
-        pdf_attach_function(output_file, rmd_file)
-        pdf_attach_function(output_file, session_info_file)
+        pdf_attach(output_file, rmd_file)
+        pdf_attach(output_file, session_info_file)
         unlink(session_info_file)
       }
     },
     error = function(e) {
       error_msg <<- e$message
       warning(sprintf("Error generating output documentation in %s\n%s", odg_dir, error_msg))
-      writeLines(c("Error generating output documentation", error_msg), "error.txt")
+      writeLines(c("Error generating output documentation", error_msg), ODG$FILE_NAME$RESERVED$ERROR)
     }
   )
 
@@ -105,6 +106,13 @@ pdf_attach <- function(pdf, attachment) {
 }
 
 ODG <- local({
+  # Written next to the document by `render_odg_document()`, a document name never shares their names
+  reserved_files <- poc(
+    HEADER = "header.tex",
+    SESSION_INFO = "session_info.txt",
+    ERROR = "error.txt"
+  )
+
   ODG <- poc(
     ID = poc(
       ODG_CODE = "odg_code",
@@ -132,7 +140,7 @@ ODG <- local({
       NOTHING_TO_GENERATE = "No outputs available",
       RENDER_FAILED = paste(
         "The output documentation could not be rendered.",
-        "The downloaded file includes the error details (error.txt)."
+        sprintf("The downloaded file includes the error details (%s).", reserved_files$ERROR)
       ),
       GENERATION_FAILED = "The output documentation could not be generated. No file was downloaded."
     ),
@@ -144,7 +152,7 @@ ODG <- local({
     FILE_NAME = poc(
       DEFAULT = "odg",
       MAX_CHARS = 100L,
-      RESERVED = "header"
+      RESERVED = reserved_files
     ),
     # Where to find the air formatter, checked before the PATH, see `format_odg_code()`
     AIR_PATH = poc(
@@ -347,8 +355,11 @@ if (n == 0) {
   ODG
 })
 
+#' Turn a typed file name into a portable base name for the output documentation
+#'
 #' @param x Typed file name, or `NULL`.
-#' @return A sanitized `ODG$FILE_NAME$DEFAULT` if it fails.
+#' @return The sanitized name, never the name of one of `ODG$FILE_NAME$RESERVED` without its extension, or
+#'   `ODG$FILE_NAME$DEFAULT` if nothing usable is left.
 #' @keywords internal
 #' @noRd
 sanitize_odg_file_name <- function(x) {
@@ -360,7 +371,7 @@ sanitize_odg_file_name <- function(x) {
   x <- gsub("[^A-Za-z0-9_-]+", "_", x, perl = TRUE)
   x <- sub("^-", "_", x)
   x <- substr(x, 1L, ODG$FILE_NAME$MAX_CHARS)
-  if (tolower(x) %in% ODG$FILE_NAME$RESERVED) {
+  if (tolower(x) %in% tolower(sub("\\.[^.]*$", "", unlist(ODG$FILE_NAME$RESERVED)))) {
     x <- paste0(x, "_")
   }
   if (nzchar(x)) x else ODG$FILE_NAME$DEFAULT

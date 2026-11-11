@@ -17,16 +17,7 @@ local({
 
   dummy_header <- "% dummy header"
 
-  spy_pdf_attach <- function() {
-    calls <- new.env()
-    calls$log <- list()
-    fn <- function(pdf, attachment) {
-      calls$log[[length(calls$log) + 1]] <- list(pdf = pdf, attachment = attachment)
-    }
-    list(fn = fn, calls = calls)
-  }
-
-  test_that("render_odg_document renders HTML, zips it, and never calls pdf_attach_function", {
+  test_that("render_odg_document renders HTML and zips it", {
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
       {
@@ -37,35 +28,34 @@ local({
       add = TRUE
     )
 
-    spy <- spy_pdf_attach()
     wd <- getwd()
 
-    result <- render_odg_document(make_odg_rmd("1 + 1"), dummy_header, spy$fn, zip_path, "my_report")
+    result <- render_odg_document(make_odg_rmd("1 + 1"), dummy_header, zip_path, "my_report")
 
     expect_identical(as.vector(result), zip_path)
     expect_identical(getwd(), wd)
     expect_true(file.exists(zip_path))
     contents <- utils::unzip(zip_path, list = TRUE)[["Name"]]
-    expect_setequal(contents, c("my_report.Rmd", "my_report.html", "header.tex"))
+    expect_setequal(contents, c("my_report.Rmd", "my_report.html", ODG$FILE_NAME$RESERVED$HEADER))
     expect_length(attr(result, "error_msg"), 0)
-    expect_length(spy$calls$log, 0)
   })
 
   test_that("render_odg_document errors when the zip command fails", {
     zip_path <- tempfile(fileext = ".zip")
     withr::local_envvar(R_ZIPCMD = file.path(tempdir(), "no-such-zip"))
 
-    no_attach <- function(pdf, attachment) NULL
     expect_error(
-      suppressWarnings(render_odg_document(make_odg_rmd("1 + 1"), dummy_header, no_attach, zip_path, "odg")),
+      suppressWarnings(render_odg_document(make_odg_rmd("1 + 1"), dummy_header, zip_path, "odg")),
       "zip failed with status"
     )
     expect_false(file.exists(zip_path))
   })
 
-  test_that("render_odg_document renders PDF and attaches the source Rmd and session info", {
+  # The attachments are checked in test-odg_e2e.R
+  test_that("render_odg_document renders PDF", {
     skip_if_not(rmarkdown::pandoc_available(), "pandoc not available")
     skip_if_not(nzchar(Sys.which("pdflatex")), "pdflatex not available")
+    skip_if_not(nzchar(Sys.which("qpdf")), "qpdf not available")
 
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
@@ -77,29 +67,15 @@ local({
       add = TRUE
     )
 
-    spy <- spy_pdf_attach()
-
-    result <- render_odg_document(
-      make_odg_rmd("1 + 1", output = "pdf_document"),
-      dummy_header,
-      spy$fn,
-      zip_path,
-      "my_report"
-    )
+    result <- render_odg_document(make_odg_rmd("1 + 1", output = "pdf_document"), dummy_header, zip_path, "my_report")
 
     expect_true(file.exists(zip_path))
     contents <- utils::unzip(zip_path, list = TRUE)[["Name"]]
     expect_true("my_report.pdf" %in% contents)
     expect_length(attr(result, "error_msg"), 0)
-
-    # Attaches the rendered Rmd source and a session-info file, both to the same pdf
-    expect_length(spy$calls$log, 2)
-    expect_true(all(endsWith(vapply(spy$calls$log, `[[`, character(1), "pdf"), ".pdf")))
-    attachments <- vapply(spy$calls$log, function(x) basename(x[["attachment"]]), character(1))
-    expect_setequal(attachments, c("my_report.Rmd", "session_info.txt"))
   })
 
-  test_that("render_odg_document captures render errors in error.txt without calling pdf_attach_function", {
+  test_that("render_odg_document captures render errors in the error file", {
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
       {
@@ -110,49 +86,21 @@ local({
       add = TRUE
     )
 
-    spy <- spy_pdf_attach()
-
     result <- NULL
     expect_warning(
-      result <- render_odg_document(make_odg_rmd('stop("boom")'), dummy_header, spy$fn, zip_path, "odg"),
+      result <- render_odg_document(make_odg_rmd('stop("boom")'), dummy_header, zip_path, "odg"),
       regexp = "Error generating output documentation"
     )
 
     contents <- utils::unzip(zip_path, list = TRUE)[["Name"]]
-    expect_true("error.txt" %in% contents)
+    expect_true(ODG$FILE_NAME$RESERVED$ERROR %in% contents)
     expect_match(attr(result, "error_msg"), "boom")
-    expect_length(spy$calls$log, 0)
-  })
-
-  test_that("render_odg_document works when run inside a callr subprocess", {
-    zip_path <- tempfile(fileext = ".zip")
-    on.exit(
-      {
-        if (file.exists(zip_path)) {
-          unlink(zip_path)
-        }
-      },
-      add = TRUE
-    )
-
-    result <- callr::r(
-      render_odg_document,
-      args = list(
-        rmarkdown = make_odg_rmd("1 + 1"),
-        header = dummy_header,
-        pdf_attach_function = function(pdf, attachment) invisible(NULL),
-        filename = zip_path,
-        document_name = "odg"
-      )
-    )
-
-    expect_true(file.exists(zip_path))
-    expect_length(attr(result, "error_msg"), 0)
   })
 
   test_that("a PDF error element whose message holds LaTeX and markdown characters renders as a warning box", {
     skip_if_not(rmarkdown::pandoc_available(), "pandoc not available")
     skip_if_not(nzchar(Sys.which("xelatex")), "xelatex not available")
+    skip_if_not(nzchar(Sys.which("qpdf")), "qpdf not available")
 
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
@@ -185,7 +133,7 @@ local({
       collapse = "\n"
     )
 
-    result <- render_odg_document(rmd, header, function(pdf, attachment) invisible(NULL), zip_path, "odg")
+    result <- render_odg_document(rmd, header, zip_path, "odg")
     expect_length(attr(result, "error_msg"), 0)
 
     unzip_dir <- tempfile()
@@ -196,13 +144,20 @@ local({
     expect_match(tex, "\\%>\\%", fixed = TRUE)
   })
 
-  test_that("render_odg_document rejects a document name that is not a plain file name", {
-    for (document_name in c("../odg", "-odg", "my report", "")) {
-      expect_error(
-        render_odg_document("", "", function(pdf, attachment) invisible(NULL), tempfile(), document_name),
-        "document_name"
-      )
+  test_that("render_odg_document rejects a document name sanitize_odg_file_name would change", {
+    # Errors before writing anything, so nothing is rendered
+    names <- c("../odg", "-odg", "my report", "", "header", "Header", "session_info", "ERROR", strrep("a", 101))
+    for (document_name in names) {
+      expect_error(render_odg_document("", "", tempfile(), document_name), "document_name", info = document_name)
     }
+  })
+
+  test_that("the PDF template includes the header file render_odg_document writes", {
+    expect_match(
+      ODG$TEMPLATES$HEADER[[ODG$OUTPUT_FORMAT$PDF]],
+      paste0("in_header: ", ODG$FILE_NAME$RESERVED$HEADER, "\n"),
+      fixed = TRUE
+    )
   })
 
   test_that("pdf_attach attaches a file into a PDF in place", {

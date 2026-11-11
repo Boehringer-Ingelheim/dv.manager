@@ -16,8 +16,10 @@ local({
     }
   })
 
-  test_that("sanitize_odg_file_name renames the names that would overwrite a file next to the document", {
+  test_that("sanitize_odg_file_name renames the names shared with a file written next to the document", {
     expect_identical(sanitize_odg_file_name("header"), "header_")
     expect_identical(sanitize_odg_file_name("Header"), "Header_")
+    expect_identical(sanitize_odg_file_name("session_info"), "session_info_")
+    expect_identical(sanitize_odg_file_name("ERROR.pdf"), "ERROR_")
   })
 })
