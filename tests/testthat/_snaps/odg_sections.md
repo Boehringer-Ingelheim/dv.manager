@@ -28,24 +28,26 @@
       ## Dynamic Data hash:
       
       ```{r dynamic_data_hash, echo = FALSE, results='asis'}
-      in_app_hash <- c(a = "55a120a9c16e53051c6fb3c477eca7dc", b = "3283d8f999f408731e81590e84265eec")
-      not_found <- "Dataset not found"
-      for (name in union(names(selected_dataset_list), names(in_app_hash))) {
-          hash <- if (name %in% names(selected_dataset_list)) {
-              digest::digest(selected_dataset_list[[name]], algo = "md5")
+      local({
+          in_app_hash <- c(a = "55a120a9c16e53051c6fb3c477eca7dc", b = "3283d8f999f408731e81590e84265eec")
+          not_found <- "Dataset not found"
+          for (name in union(names(selected_dataset_list), names(in_app_hash))) {
+              hash <- if (name %in% names(selected_dataset_list)) {
+                  digest::digest(selected_dataset_list[[name]], algo = "md5")
+              }
+              else {
+                  not_found
+              }
+              expected_hash <- if (name %in% names(in_app_hash)) 
+                  in_app_hash[[name]]
+              else not_found
+              line <- sprintf("\n\n **name**: `%s` **hash**: %s", name, hash)
+              if (!identical(hash, expected_hash)) {
+                  line <- paste0("\n\n<div class=\"alert alert-danger\" role=\"alert\">", "\n\n **Hash mismatch**: the data used to generate this document is not the data loaded in the app.", line, sprintf(" **in-app hash**: %s", expected_hash), "\n\n</div>")
+              }
+              cat(line)
           }
-          else {
-              not_found
-          }
-          expected_hash <- if (name %in% names(in_app_hash)) 
-              in_app_hash[[name]]
-          else not_found
-          line <- sprintf("\n\n **name**: `%s` **hash**: %s", name, hash)
-          if (!identical(hash, expected_hash)) {
-              line <- paste0("\n\n<div class=\"alert alert-danger\" role=\"alert\">", "\n\n **Hash mismatch**: the data used to generate this document is not the data loaded in the app.", line, sprintf(" **in-app hash**: %s", expected_hash), "\n\n</div>")
-          }
-          cat(line)
-      }
+      })
       ```
       
       These hashes are calculated while generating the output documentation and checked against those in the **Hardcoded Data hash** section. Any mismatch is highlighted.
@@ -58,24 +60,26 @@
       ## Dynamic Data hash:
       
       ```{r dynamic_data_hash, echo = FALSE, results='asis'}
-      in_app_hash <- c(a = "55a120a9c16e53051c6fb3c477eca7dc", b = "3283d8f999f408731e81590e84265eec")
-      not_found <- "Dataset not found"
-      for (name in union(names(selected_dataset_list), names(in_app_hash))) {
-          hash <- if (name %in% names(selected_dataset_list)) {
-              digest::digest(selected_dataset_list[[name]], algo = "md5")
+      local({
+          in_app_hash <- c(a = "55a120a9c16e53051c6fb3c477eca7dc", b = "3283d8f999f408731e81590e84265eec")
+          not_found <- "Dataset not found"
+          for (name in union(names(selected_dataset_list), names(in_app_hash))) {
+              hash <- if (name %in% names(selected_dataset_list)) {
+                  digest::digest(selected_dataset_list[[name]], algo = "md5")
+              }
+              else {
+                  not_found
+              }
+              expected_hash <- if (name %in% names(in_app_hash)) 
+                  in_app_hash[[name]]
+              else not_found
+              line <- sprintf("\n\n **name**: `%s` **hash**: %s", name, hash)
+              if (!identical(hash, expected_hash)) {
+                  line <- paste0("\n\n```{=latex}\n\\begin{alertdanger}\n```", "\n\n **Hash mismatch**: the data used to generate this document is not the data loaded in the app.", line, sprintf(" **in-app hash**: %s", expected_hash), "\n\n```{=latex}\n\\end{alertdanger}\n```")
+              }
+              cat(line)
           }
-          else {
-              not_found
-          }
-          expected_hash <- if (name %in% names(in_app_hash)) 
-              in_app_hash[[name]]
-          else not_found
-          line <- sprintf("\n\n **name**: `%s` **hash**: %s", name, hash)
-          if (!identical(hash, expected_hash)) {
-              line <- paste0("\n\n```{=latex}\n\\begin{alertdanger}\n```", "\n\n **Hash mismatch**: the data used to generate this document is not the data loaded in the app.", line, sprintf(" **in-app hash**: %s", expected_hash), "\n\n```{=latex}\n\\end{alertdanger}\n```")
-          }
-          cat(line)
-      }
+      })
       ```
       
       These hashes are calculated while generating the output documentation and checked against those in the **Hardcoded Data hash** section. Any mismatch is highlighted.
@@ -88,24 +92,26 @@
       ## Dynamic Data hash:
       
       ```{r dynamic_data_hash, echo = FALSE, results='asis'}
-      in_app_hash <- character(0)
-      not_found <- "Dataset not found"
-      for (name in union(names(selected_dataset_list), names(in_app_hash))) {
-          hash <- if (name %in% names(selected_dataset_list)) {
-              digest::digest(selected_dataset_list[[name]], algo = "md5")
+      local({
+          in_app_hash <- character(0)
+          not_found <- "Dataset not found"
+          for (name in union(names(selected_dataset_list), names(in_app_hash))) {
+              hash <- if (name %in% names(selected_dataset_list)) {
+                  digest::digest(selected_dataset_list[[name]], algo = "md5")
+              }
+              else {
+                  not_found
+              }
+              expected_hash <- if (name %in% names(in_app_hash)) 
+                  in_app_hash[[name]]
+              else not_found
+              line <- sprintf("\n\n **name**: `%s` **hash**: %s", name, hash)
+              if (!identical(hash, expected_hash)) {
+                  line <- paste0("\n\n<div class=\"alert alert-danger\" role=\"alert\">", "\n\n **Hash mismatch**: the data used to generate this document is not the data loaded in the app.", line, sprintf(" **in-app hash**: %s", expected_hash), "\n\n</div>")
+              }
+              cat(line)
           }
-          else {
-              not_found
-          }
-          expected_hash <- if (name %in% names(in_app_hash)) 
-              in_app_hash[[name]]
-          else not_found
-          line <- sprintf("\n\n **name**: `%s` **hash**: %s", name, hash)
-          if (!identical(hash, expected_hash)) {
-              line <- paste0("\n\n<div class=\"alert alert-danger\" role=\"alert\">", "\n\n **Hash mismatch**: the data used to generate this document is not the data loaded in the app.", line, sprintf(" **in-app hash**: %s", expected_hash), "\n\n</div>")
-          }
-          cat(line)
-      }
+      })
       ```
       
       These hashes are calculated while generating the output documentation and checked against those in the **Hardcoded Data hash** section. Any mismatch is highlighted.
@@ -201,13 +207,13 @@
       date_range`
       
       ```{r data_modification_dates, echo = FALSE, results='asis'}
-      for (idx in seq_along(selected_dataset_list)) {
+      local(for (idx in seq_along(selected_dataset_list)) {
           mtime <- attr(selected_dataset_list[[idx]], "meta")[["mtime"]]
           mtime <- if (is.null(mtime)) 
               "Time not available"
           else format(mtime)
           cat(sprintf("\n\n **name**: `%s` **modification time**: %s", names(selected_dataset_list)[[idx]], mtime))
-      }
+      })
       ```
       
       These dates are calculated while generating the output documentation.
@@ -225,13 +231,13 @@
       date_range`
       
       ```{r data_modification_dates, echo = FALSE, results='asis'}
-      for (idx in seq_along(selected_dataset_list)) {
+      local(for (idx in seq_along(selected_dataset_list)) {
           mtime <- attr(selected_dataset_list[[idx]], "meta")[["mtime"]]
           mtime <- if (is.null(mtime)) 
               "Time not available"
           else format(mtime)
           cat(sprintf("\n\n **name**: `%s` **modification time**: %s", names(selected_dataset_list)[[idx]], mtime))
-      }
+      })
       ```
       
       These dates are calculated while generating the output documentation.
@@ -249,13 +255,13 @@
       date_range`
       
       ```{r data_modification_dates, echo = FALSE, results='asis'}
-      for (idx in seq_along(selected_dataset_list)) {
+      local(for (idx in seq_along(selected_dataset_list)) {
           mtime <- attr(selected_dataset_list[[idx]], "meta")[["mtime"]]
           mtime <- if (is.null(mtime)) 
               "Time not available"
           else format(mtime)
           cat(sprintf("\n\n **name**: `%s` **modification time**: %s", names(selected_dataset_list)[[idx]], mtime))
-      }
+      })
       ```
       
       These dates are calculated while generating the output documentation.

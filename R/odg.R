@@ -547,7 +547,7 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, in_app_hashes, 
     c("\n\n<div class=\"alert alert-danger\" role=\"alert\">", "\n\n</div>")
   }
 
-  loop <- shinymeta::metaReactive(
+  loop <- sm_mr(
     {
       in_app_hash <- ..(in_app_hashes)
       not_found <- "Dataset not found"
@@ -602,7 +602,7 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, in_app_hashes, 
 #' @keywords internal
 #' @noRd
 build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code_in_context) {
-  loop <- shinymeta::metaReactive(
+  loop <- sm_mr(
     {
       for (idx in seq_along(..(selected_dataset_list_mr()))) {
         mtime <- attr(..(selected_dataset_list_mr())[[idx]], "meta")[["mtime"]]

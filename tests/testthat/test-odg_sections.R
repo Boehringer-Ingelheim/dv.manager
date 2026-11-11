@@ -31,13 +31,14 @@ local({
     build_dynamic_hash_section(sdl, hash_dataset_list(in_app_list), output_format, gcic)
   }
 
-  # Run the generated chunk as the rendered document would
-  run_dynamic_hash_chunk <- function(section, dataset_list) {
+  # Run the generated chunk as the rendered document would, in `envir` standing in for the document's environment
+  run_dynamic_hash_chunk <- function(section, dataset_list, envir = new.env()) {
     chunk <- regmatches(
       section,
       regexpr("(?s)```\\{r dynamic_data_hash[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
     )
-    printed <- utils::capture.output(eval(parse(text = chunk), list(selected_dataset_list = dataset_list)))
+    envir[["selected_dataset_list"]] <- dataset_list
+    printed <- utils::capture.output(eval(parse(text = chunk), envir))
     paste(printed, collapse = "\n")
   }
 
@@ -84,6 +85,17 @@ local({
       pdf <- run_dynamic_hash_chunk(build_dynamic_hash_section_for(in_app_list, ODG$OUTPUT_FORMAT$PDF), dataset_list)
       expect_snapshot(cat(html))
       expect_snapshot(cat(pdf))
+    })
+  })
+
+  test_that("the dynamic hash chunk leaves no variables behind in the document's environment", {
+    shiny::isolate({
+      # A mismatch, so every branch of the loop runs
+      dataset_list <- list(a = data.frame(x = 1:2))
+      envir <- new.env()
+      section <- build_dynamic_hash_section_for(list(b = data.frame(y = 1)), ODG$OUTPUT_FORMAT$PDF)
+      run_dynamic_hash_chunk(section, dataset_list, envir)
+      expect_identical(ls(envir, all.names = TRUE), "selected_dataset_list")
     })
   })
 
