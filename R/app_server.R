@@ -579,7 +579,7 @@ app_server_ <- function(input, output, session, opts) {
 
       # Possible but unlikely race, the menu inputs travel over the websocket, the download is a separate HTTP
       # request, so a download started right after a change can still read the previous filename.
-      # A possible fix is to have a button that generatez the zip and a download buttont activated
+      # A possible fix is to have a button that generates the zip and a download button activated
       # after the generation that downloads the file. It may be better also as any error can be shown
       # in the app.
 
