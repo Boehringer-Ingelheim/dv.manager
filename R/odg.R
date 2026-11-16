@@ -177,7 +177,8 @@ output:
     number_sections: false
     df_print: kable
     latex_engine: xelatex    
-    extra_dependencies: ["lscape"]
+    # fvextra: modules (e.g. dv.papo) emit breakable `Verbatim` blocks
+    extra_dependencies: ["lscape", "fvextra"]
     # Fonts are set in header
     includes:
       in_header: header.tex
