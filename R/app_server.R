@@ -634,6 +634,8 @@ app_server_ <- function(input, output, session, opts) {
             #> z(x(), y())
 
             data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
+            filtered_data_code <- get_code_in_context(invisible(filtered_dataset_list()))
+
             date_section <- build_date_section(selected_dataset_list, date_range, get_code_in_context)
             in_app_hashes <- hash_dataset_list(selected_dataset_list())
             hardcoded_hash_section <- build_hardcoded_hash_section(in_app_hashes)
@@ -664,6 +666,7 @@ app_server_ <- function(input, output, session, opts) {
               selected_odg_elements = selected_odg_elements,
               output_format = output_format,
               data_code = data_code,
+              filtered_data_code = filtered_data_code,
               sections = list(
                 date = date_section,
                 hardcoded_hash = hardcoded_hash_section,

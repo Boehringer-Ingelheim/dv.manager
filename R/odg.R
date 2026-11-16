@@ -478,7 +478,7 @@ ODG_ELEMENT_FORMATTERS <- local({
 #' @return The full .Rmd document, as a single string.
 #' @keywords internal
 #' @noRd
-build_odg_rmd <- function(selected_odg_elements, output_format, data_code, sections, templates) {
+build_odg_rmd <- function(selected_odg_elements, output_format, data_code, filtered_data_code, sections, templates) {
   formatted_elements <- character(length(selected_odg_elements))
   for (idx in seq_along(selected_odg_elements)) {
     curr_el <- selected_odg_elements[[idx]]
@@ -488,7 +488,7 @@ build_odg_rmd <- function(selected_odg_elements, output_format, data_code, secti
 
   paste_with_blank_lines(
     templates[["header"]],
-    paste0("```{r data_source}\n", data_code, "\n```"),
+    paste0("```{r data_source}\n", data_code, "\n", filtered_data_code, "\n```"),
     "\\pagestyle{headings}",
     formatted_elements,
     "\\pagestyle{plain}",
