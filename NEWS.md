@@ -5,7 +5,11 @@
    - The ODG dynamic data hash section highlights mismatching datasets
    - The ODG PDF no longer shows the placeholder author "A user"
    - The ODG button uses the same navbar style as the bookmark button
-   - `run_app` produces an error when a module id is `odg` or starts with `odg-`
+   - ODG chunks added by dv.manager are labelled under the `odg-` namespace (e.g. `odg-setup`, `odg-data_source`).
+     `run_app` produces an error when a module id is `odg` or starts with `odg-`
+   - `filtered dataset list` is always included
+   - Adds `fvextra`, to the template
+   - ODG vignette describes the document contents and chunk labelling conventions 
 
 # dv.manager 3.2.2-9001
 
