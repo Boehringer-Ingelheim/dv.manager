@@ -19,6 +19,19 @@ check_resolved_modules <- function(resolved_module_list) {
     stop(msg)
   }
 
+  reserved_ns <- ODG$RESERVED_NAMESPACE
+  module_ids <- resolved_module_list[["module_id"]]
+  reserved_ids <- module_ids[module_ids == reserved_ns | startsWith(module_ids, paste0(reserved_ns, "-"))]
+  if (length(reserved_ids) > 0) {
+    msg <- sprintf(
+      "module ids cannot be `%s` or start with `%s-`, found: %s",
+      reserved_ns,
+      reserved_ns,
+      paste0("`", reserved_ids, "`", collapse = ", ")
+    )
+    stop(msg)
+  }
+
   if (any(duplicated(resolved_module_list[["module_name"]]))) {
     msg <- "module_list has repeated module_names"
     stop(msg)

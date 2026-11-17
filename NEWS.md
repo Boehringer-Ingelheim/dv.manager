@@ -5,6 +5,7 @@
    - The ODG dynamic data hash section highlights mismatching datasets
    - The ODG PDF no longer shows the placeholder author "A user"
    - The ODG button uses the same navbar style as the bookmark button
+   - `run_app` produces an error when a module id is `odg` or starts with `odg-`
 
 # dv.manager 3.2.2-9001
 

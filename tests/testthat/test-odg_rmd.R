@@ -6,7 +6,7 @@ local({
     module_name = "Module 1",
     is_first_module_element = TRUE,
     code = "1 + 1",
-    chunk_label = paste0("odg-", id)
+    chunk_label = id
   ) {
     list(
       id = id,

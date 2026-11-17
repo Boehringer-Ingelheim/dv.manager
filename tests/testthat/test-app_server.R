@@ -465,7 +465,7 @@ test_that("app_server_ errors when two ODG elements end up with the same chunk l
   same_id <- odg_testing_options(list("Mod 1" = odg_module("a-b", "c"), "Mod 2" = odg_module("a", "b-c")))
   expect_error(
     shiny::testServer(app_server_test(same_id), {}),
-    "ODG elements `a-b-c` (module `a-b`) and `a-b-c` (module `a`) share the chunk label `odg-a-b-c`",
+    "ODG elements `a-b-c` (module `a-b`) and `a-b-c` (module `a`) share the chunk label `a-b-c`",
     fixed = TRUE
   )
 
@@ -473,7 +473,7 @@ test_that("app_server_ errors when two ODG elements end up with the same chunk l
   same_label <- odg_testing_options(list("Mod" = odg_module("m", c("n=10", "n_10"))))
   expect_error(
     shiny::testServer(app_server_test(same_label), {}),
-    "ODG elements `m-n=10` (module `m`) and `m-n_10` (module `m`) share the chunk label `odg-m-n_10`",
+    "ODG elements `m-n=10` (module `m`) and `m-n_10` (module `m`) share the chunk label `m-n_10`",
     fixed = TRUE
   )
 })

@@ -35,7 +35,7 @@ local({
   run_dynamic_hash_chunk <- function(section, dataset_list, envir = new.env()) {
     chunk <- regmatches(
       section,
-      regexpr("(?s)```\\{r dynamic_data_hash[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
+      regexpr("(?s)```\\{r odg-dynamic_data_hash[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
     )
     envir[["selected_dataset_list"]] <- dataset_list
     printed <- utils::capture.output(eval(parse(text = chunk), envir))
@@ -132,7 +132,7 @@ local({
       # Run the generated chunk as the rendered document would
       chunk <- regmatches(
         section,
-        regexpr("(?s)```\\{r data_modification_dates[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
+        regexpr("(?s)```\\{r odg-data_modification_dates[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
       )
       printed <- utils::capture.output(
         eval(parse(text = chunk), list(selected_dataset_list = list(a = data.frame(x = 1))))
@@ -192,7 +192,7 @@ local({
         # Run the generated chunk as the rendered document would
         chunk <- regmatches(
           section,
-          regexpr("(?s)```\\{r filter_odg_reference_list[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
+          regexpr("(?s)```\\{r odg-filter_odg_reference_list[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
         )
         printed <- utils::capture.output(
           eval(parse(text = chunk), list(filter_odg = list(txt = "", references = list())))

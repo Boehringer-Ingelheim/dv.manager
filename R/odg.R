@@ -149,6 +149,8 @@ ODG <- local({
       ODG_ALL = "all"
     ),
     HASH_ALGO = "md5",
+    # See "Chunk labels" in vignette("odg")
+    RESERVED_NAMESPACE = "odg",
     FILE_NAME = poc(
       DEFAULT = "odg",
       MAX_CHARS = 100L,
@@ -186,7 +188,7 @@ geometry: margin=2cm
 papersize: a4
 ---
 
-```{r setup, include=FALSE}
+```{r odg-setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = FALSE,
   tidy = TRUE,
@@ -200,7 +202,7 @@ knitr::opts_chunk$set(
     
 ```
   
-```{r condition_catcher, include=FALSE}
+```{r odg-condition_catcher, include=FALSE}
 # storage for everything we capture
 .condition_log <- data.frame(
   chunk   = character(0),
@@ -246,7 +248,7 @@ output:
     self_contained: true
 ---
 
-```{r setup, include = FALSE}
+```{r odg-setup, include = FALSE}
 knitr::opts_chunk$set(
   out.width = "100%",
   tidy = TRUE
@@ -283,7 +285,7 @@ body::before {
     templates <- character(0)
     templates[[ODG$OUTPUT_FORMAT$PDF]] <- r"--(
 
-```{r session_info, results = 'asis'}
+```{r odg-session_info, results = 'asis'}
   session_lines <- capture.output(sessioninfo::session_info())
   # Verbatim isn't measured by \beginwidepage, only longtables are; pass the width explicitly
   max_char_width <- max(nchar(session_lines, type = "width"), 0L)
@@ -311,7 +313,7 @@ body::before {
     templates[[ODG$OUTPUT_FORMAT$HTML]] <- r"--(
 # Session Info
 
-```{r session_info}
+```{r odg-session_info}
   sessioninfo::session_info()
 ```
 
@@ -323,7 +325,7 @@ body::before {
   ODG[["TEMPLATES"]][["FOOTER"]] <- local({
     templates <- character(0)
     templates[[ODG$OUTPUT_FORMAT$PDF]] <- r"--(
-```{r warnings-summary, echo=FALSE, results='asis'}
+```{r odg-warnings-summary, echo=FALSE, results='asis'}
 n <- nrow(.condition_log)
 color <- if (n == 0) "black" else "red"
 
@@ -344,7 +346,7 @@ if (n == 0) {
     #   r"--(
     # # Annex: Code
 
-    # ```{r show-code, ref.label = setdiff(knitr::all_labels(), c("setup", "show-code")), echo=TRUE, eval=FALSE}
+    # ```{r odg-show-code, ref.label = setdiff(knitr::all_labels(), c("odg-setup", "odg-show-code")), echo=TRUE, eval=FALSE} # nolint
     # ```
     # )--"
 
@@ -489,7 +491,7 @@ build_odg_rmd <- function(selected_odg_elements, output_format, data_code, filte
 
   paste_with_blank_lines(
     templates[["header"]],
-    paste0("```{r data_source}\n", data_code, "\n", filtered_data_code, "\n```"),
+    paste0("```{r odg-data_source}\n", data_code, "\n", filtered_data_code, "\n```"),
     "\\pagestyle{headings}",
     formatted_elements,
     "\\pagestyle{plain}",
@@ -589,7 +591,7 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, in_app_hashes, 
   )
   paste_with_blank_lines(
     "## Dynamic Data hash:",
-    paste0("```{r dynamic_data_hash, echo = FALSE, results='asis'}\n", get_code_in_context(loop()), "\n```"),
+    paste0("```{r odg-dynamic_data_hash, echo = FALSE, results='asis'}\n", get_code_in_context(loop()), "\n```"),
     note
   )
 }
@@ -628,7 +630,7 @@ build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code
     "## Data Modification Dates:",
     " **Date range**:",
     paste0("`r ", get_code_in_context(date_range_mr()), "`"),
-    paste0("```{r data_modification_dates, echo = FALSE, results='asis'}\n", get_code_in_context(loop()), "\n```"),
+    paste0("```{r odg-data_modification_dates, echo = FALSE, results='asis'}\n", get_code_in_context(loop()), "\n```"),
     note
   )
 }
@@ -664,7 +666,7 @@ build_filter_txt_section <- function(filter_odg, output_format, get_code_in_cont
   paste_with_blank_lines(
     section,
     verbatim_tags[[1]],
-    "```{r filter_odg_txt, echo = FALSE, results='asis'}",
+    "```{r odg-filter_odg_txt, echo = FALSE, results='asis'}",
     get_code_in_context(cat_mr()),
     "```",
     verbatim_tags[[2]],
@@ -737,7 +739,7 @@ build_filter_reference_section <- function(filter_odg, output_format, get_code_i
   paste_with_blank_lines(
     "# Filter references:",
     tags[[1]],
-    "```{r filter_odg_reference_list, echo = FALSE, results='asis'}",
+    "```{r odg-filter_odg_reference_list, echo = FALSE, results='asis'}",
     get_code_in_context(cat_mr()),
     "```",
     tags[[2]]

@@ -27,7 +27,7 @@
     Output
       ## Dynamic Data hash:
       
-      ```{r dynamic_data_hash, echo = FALSE, results='asis'}
+      ```{r odg-dynamic_data_hash, echo = FALSE, results='asis'}
       local({
           in_app_hash <- c(a = "55a120a9c16e53051c6fb3c477eca7dc", b = "3283d8f999f408731e81590e84265eec")
           not_found <- "Dataset not found"
@@ -59,7 +59,7 @@
     Output
       ## Dynamic Data hash:
       
-      ```{r dynamic_data_hash, echo = FALSE, results='asis'}
+      ```{r odg-dynamic_data_hash, echo = FALSE, results='asis'}
       local({
           in_app_hash <- c(a = "55a120a9c16e53051c6fb3c477eca7dc", b = "3283d8f999f408731e81590e84265eec")
           not_found <- "Dataset not found"
@@ -91,7 +91,7 @@
     Output
       ## Dynamic Data hash:
       
-      ```{r dynamic_data_hash, echo = FALSE, results='asis'}
+      ```{r odg-dynamic_data_hash, echo = FALSE, results='asis'}
       local({
           in_app_hash <- character(0)
           not_found <- "Dataset not found"
@@ -206,7 +206,7 @@
       `r date_range <- as.POSIXct(c("2026-01-01", "2026-01-02"), tz = "UTC")
       date_range`
       
-      ```{r data_modification_dates, echo = FALSE, results='asis'}
+      ```{r odg-data_modification_dates, echo = FALSE, results='asis'}
       local(for (idx in seq_along(selected_dataset_list)) {
           mtime <- attr(selected_dataset_list[[idx]], "meta")[["mtime"]]
           mtime <- if (is.null(mtime)) 
@@ -230,7 +230,7 @@
       `r date_range <- as.POSIXct(character(0))
       date_range`
       
-      ```{r data_modification_dates, echo = FALSE, results='asis'}
+      ```{r odg-data_modification_dates, echo = FALSE, results='asis'}
       local(for (idx in seq_along(selected_dataset_list)) {
           mtime <- attr(selected_dataset_list[[idx]], "meta")[["mtime"]]
           mtime <- if (is.null(mtime)) 
@@ -254,7 +254,7 @@
       `r date_range <- as.POSIXct(character(0))
       date_range`
       
-      ```{r data_modification_dates, echo = FALSE, results='asis'}
+      ```{r odg-data_modification_dates, echo = FALSE, results='asis'}
       local(for (idx in seq_along(selected_dataset_list)) {
           mtime <- attr(selected_dataset_list[[idx]], "meta")[["mtime"]]
           mtime <- if (is.null(mtime)) 
@@ -275,7 +275,7 @@
       
       <pre>
       
-      ```{r filter_odg_txt, echo = FALSE, results='asis'}
+      ```{r odg-filter_odg_txt, echo = FALSE, results='asis'}
       
       local(cat(filter_odg[["txt"]]))
       
@@ -294,7 +294,7 @@
       
       \begin{verbatim}
       
-      ```{r filter_odg_txt, echo = FALSE, results='asis'}
+      ```{r odg-filter_odg_txt, echo = FALSE, results='asis'}
       
       local(cat(filter_odg[["txt"]]))
       
@@ -313,7 +313,7 @@
       
       <pre>
       
-      ```{r filter_odg_reference_list, echo = FALSE, results='asis'}
+      ```{r odg-filter_odg_reference_list, echo = FALSE, results='asis'}
       
       local({
           references <- filter_odg[["references"]]
@@ -338,7 +338,7 @@
       
       ```{=latex}
       
-      ```{r filter_odg_reference_list, echo = FALSE, results='asis'}
+      ```{r odg-filter_odg_reference_list, echo = FALSE, results='asis'}
       
       local({
           references <- filter_odg[["references"]]

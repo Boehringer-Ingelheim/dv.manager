@@ -87,6 +87,18 @@ chunk <- structure(
 - A `function(header)` with class `"chunk"` that returns Rmd markup as a single string. The markup is inserted as is.
 - `header` is the section title, already formatted for the output format and ending in a blank line.
 
+## Chunk labels
+
+Chunk labels must be unique in the document. As convention we reuse the Shiny ids, `<namespace>-<name>`.
+
+- Some chunk labels are assigned by dv.manager. Those lables have the namespace `odg-` (`odg-setup`, `odg-data_source`, ...).
+  - No module id can be `odg` or start with `odg-`.
+- `<module_id>-`: the module's chunks.
+  - metareactive: labelled `<module_id>-<element_name>`. Characters knitr rejects become `_`.
+  - chunk: the module labels its own chunks. Every chunk must be labelled using the shiny namespace (`session$ns(NULL)` for a single chunk).
+  Any other id that must be unique in the document (e.g. LaTeX link targets) must be labelled and namespaced also.
+    - Unlabelled chunks are also an option, knitr numbers them.
+
 ## Code formatting with air
 
 The R code in the document is formatted with [air], using the following logic.
