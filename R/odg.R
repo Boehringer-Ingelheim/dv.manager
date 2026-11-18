@@ -148,7 +148,7 @@ ODG <- local({
       # Currently only all ODG is possible it is kept as a dummy value for the button
       ODG_ALL = "all"
     ),
-    HASH_ALGO = "md5",
+    HASH_ALGO = "xxhash64",
     # See "Chunk labels" in vignette("odg")
     RESERVED_NAMESPACE = "odg",
     FILE_NAME = poc(
