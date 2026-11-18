@@ -151,8 +151,10 @@ local({
   })
 
   test_that("a PDF error element whose message holds LaTeX and markdown characters renders as a warning box", {
-    skip_if_not(rmarkdown::pandoc_available(), "pandoc not available")
-    skip_if_not(nzchar(Sys.which("xelatex")), "xelatex not available")
+    stopifnot(
+      "pandoc not available" = rmarkdown::pandoc_available(),
+      "xelatex not available" = nzchar(Sys.which("xelatex"))
+    )
 
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
