@@ -32,7 +32,7 @@ The download is a zip with the document as a PDF and the files that produced it.
 
 ### For app creators:
 
-## `load_fn`
+#### `load_fn`
 
 Only the body of `load_fn` is copied into the document, and the document runs in a new R process. So `load_fn` must 
 be self-contained, i.e. it must be able to run by itself in a new clean R session, therefore:
