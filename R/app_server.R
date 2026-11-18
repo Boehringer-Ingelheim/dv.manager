@@ -597,7 +597,8 @@ app_server_ <- function(input, output, session, opts) {
                 # This metaExpression contains part of the logic of selected dataset list, add date_range and attribute
                 # It is not ideal as they may get desynchronized in the future
                 sm_me({
-                  df <- ..(fn)
+                  # local(): a return() in load_fn ends the load only, the steps below still run
+                  df <- local(..(fn))
 
                   # (s) Backwards compatibility this should not be here
                   df <- dv.manager::from_char_vars_to_factor_vars_dataset_list(df)

@@ -17,6 +17,7 @@ Creates an Rmd document that is renderd into a PDF with the selected outputs in 
 
 - On: `run_app(..., enable_odg = TRUE)`.
 - Dataset list needs a `load_fn` attribute: a function with no arguments and independent from its parent environment.
+That reproduces the dataset_list from scratch.
 - A module can return an entry `to_odg` from its server.
 
 ## Document contents
@@ -29,9 +30,32 @@ The download is a zip with the document as a PDF and the files that produced it.
 - Where the data comes from: modification dates, a hash per dataset to check it is the data loaded in the app, and the filters applied.
 - The session info and any warnings raised while rendering.
 
+### For app creators:
+
+## `load_fn`
+
+Only the body of `load_fn` is copied into the document, and the document runs in a new R process. So `load_fn` must 
+be self-contained, i.e. it must be able to run by itself in a new clean R session, therefore:
+
+- Have no arguments. Not even with defaults.
+- Not use its closure: nothing from the environment where it was defined.
+- Call package functions with `pkg::`. The document does not attach the packages the app attached with `library()`.
+
+```{r}
+# Works: everything the body needs is in the body
+attr(data, "load_fn") <- function() {
+  list(adsl = haven::read_sas("/data/study/adsl.sas7bdat"))
+}
+
+# Fails in the document: `path` only exists where the function was defined
+path <- "/data/study/adsl.sas7bdat"
+attr(data, "load_fn") <- function() list(adsl = haven::read_sas(path))
+```
+
 ### For developers
 
 The document is an R Markdown file that rebuilds everything from code: first the data (`load_fn`, subgroups and filter), then one chunk per `to_odg` element. It is rendered in a separate R process, so each element's code must run without the app session. An element that cannot be produced shows an error in its place instead of failing the document.
+
 
 ## What the module server returns
 
