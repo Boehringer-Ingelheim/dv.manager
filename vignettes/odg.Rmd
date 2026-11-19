@@ -111,6 +111,15 @@ chunk <- structure(
 - A `function(header)` with class `"chunk"` that returns Rmd markup as a single string. The markup is inserted as is.
 - `header` is the section title, already formatted for the output format and ending in a blank line.
 
+### Limitations of the system
+
+Data is extracted from the application and written as code in the Rmd file. In the cases where that data is deparsed
+using `deparse1` function a loss in precision starting at the 15th significant digit is possible.
+This loss does not happen for the trial data but only for the selection of the menus that is transformed into a string
+to be included in the code in the Rmd.
+The produced PDF will be self-consistent meaning that the code written in the Rmd produces exactly the PDF,
+but it may not reflect the exact estate of the application due to this loss of precision.
+
 ## Chunk labels
 
 Chunk labels must be unique in the document. As convention we reuse the Shiny ids, `<namespace>-<name>`.
