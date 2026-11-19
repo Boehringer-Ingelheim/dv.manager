@@ -111,14 +111,23 @@ chunk <- structure(
 - A `function(header)` with class `"chunk"` that returns Rmd markup as a single string. The markup is inserted as is.
 - `header` is the section title, already formatted for the output format and ending in a blank line.
 
-### Limitations of the system
+## Precision of the values written into the document
 
-Data is extracted from the application and written as code in the Rmd file. In the cases where that data is deparsed
-using `deparse1` function a loss in precision starting at the 15th significant digit is possible.
-This loss does not happen for the trial data but only for the selection of the menus that is transformed into a string
-to be included in the code in the Rmd.
-The produced PDF will be self-consistent meaning that the code written in the Rmd produces exactly the PDF,
-but it may not reflect the exact estate of the application due to this loss of precision.
+The document is rebuilt from code, so every value taken from the app is written into the Rmd as text. The PDF is
+always self-consistent: the code in the Rmd produces exactly the PDF.
+
+- **Data:** reloaded by `load_fn`, never written as text, so it is exact.
+- **Filter and subgroups:** written as the JSON text the app received, and parsed by the same function in the app and
+  in the document. Range bounds are exact, so the document keeps the same rows as the app.
+- **Values a module writes into its code**, with `..()` in a metareactive or with `deparse()`/`deparse1()` in a chunk:
+  numbers keep 15 significant digits. A number that needs more is rounded, e.g. `400 / 3` (`133.33333333333334`) is
+  written as `133.333333333333`. When such a value is compared with the data, e.g. a threshold equal to a data value,
+  the document can keep different rows than the app. Write the number with 17 significant digits to keep it exact:
+
+```{r}
+# The document reads `as.numeric("133.33333333333334")`, the same double as in the app
+threshold <- as.numeric(..(sprintf("%.17g", input[["threshold"]])))
+```
 
 ## Chunk labels
 

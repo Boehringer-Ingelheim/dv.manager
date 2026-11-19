@@ -1005,8 +1005,7 @@ new_filter_server <- function(
   selected_dataset_list,
   subject_filter_dataset_name,
   after_filter_info,
-  skip_dataset_filters = FALSE,
-  strict = FALSE
+  skip_dataset_filters = FALSE
 ) {
   mod <- function(input, output, session) {
     shiny::setBookmarkExclude(
@@ -1091,27 +1090,6 @@ new_filter_server <- function(
       }
     })
 
-    res <- shiny::reactive({
-      log_inform(paste("Processing filter", ns(id)))
-      json_r <- input[[ID$FILTER_STATE_JSON_INPUT]]
-
-      if (checkmate::test_string(json_r, min.chars = 1)) {
-        if (strict) {
-          assert(from_filter_validate(json_r), "failed to validate message from filter")
-        }
-        parsed_json <- deserialize_filter_state_from_client(json_r)
-        log_inform("Received regular JSON filter")
-        res <- list(
-          parsed = parsed_json %||% NA_character_,
-          raw = json_r
-        )
-      } else {
-        log_inform("Received NA JSON filter")
-        res <- NA_character_
-      }
-      res
-    })
-
     output[[ID$EXPORT_FILTER_CODE_INPUT]] <- shiny::downloadHandler(
       filename = "filter.txt",
       content = function(file) {
@@ -1131,10 +1109,40 @@ new_filter_server <- function(
     shiny::outputOptions(output, ID$EXPORT_FILTER_CODE_INPUT, suspendWhenHidden = FALSE)
 
     return(
-      structure(res, raw = shiny::reactive(input[[ID$FILTER_STATE_JSON_INPUT]]))
+      structure(shiny::reactive(input[[ID$FILTER_STATE_JSON_INPUT]]))
     )
   }
   shiny::moduleServer(id, mod)
+}
+
+#' Parse the filter state sent by the filter UI
+#'
+#' @param json_filter Filter state as a JSON string, or `NULL` before the filter sends one.
+#' @param id Label for the log.
+#' @param strict Validate `json_filter` against the filter schema before parsing.
+#' @return `list(parsed =, raw =)`, or `NA_character_` if `json_filter` is not a non-empty string.
+#' @keywords internal
+#' @export
+r_filter_from_json_filter <- function(json_filter, id = NA, strict = FALSE) {
+  ({
+    log_inform(paste("Processing filter", id))
+
+    if (checkmate::test_string(json_filter, min.chars = 1)) {
+      if (strict) {
+        assert(from_filter_validate(json_filter), "failed to validate message from filter")
+      }
+      parsed_json <- deserialize_filter_state_from_client(json_filter)
+      log_inform("Received regular JSON filter")
+      res <- list(
+        parsed = parsed_json %||% NA_character_,
+        raw = json_filter
+      )
+    } else {
+      log_inform("Received NA JSON filter")
+      res <- NA_character_
+    }
+    res
+  })
 }
 
 binary_serialize_filter_data <- function(x) {

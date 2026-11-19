@@ -360,13 +360,15 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       )
     })
 
-    subgroup_filter <- new_filter_server(
+    raw_filter <- new_filter_server(
       ID_SG$FILTER,
       selected_dataset_list,
       subject_filter_dataset_name,
       filtered_subgroup_dataset_list,
       skip_dataset_filters = TRUE
     ) # FIXME: Pass filtered one
+
+    subgroup_filter <- shiny::reactive(r_filter_from_json_filter(raw_filter(), ns(id)))
 
     filtered_subgroup_dataset_list <- shiny::reactive({
       # Place reqs here so all elements are synchronized before going forward

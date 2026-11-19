@@ -251,11 +251,17 @@ app_server_ <- function(input, output, session, opts) {
     varname = ODG_ID$FILTERED_DATASET_LIST
   )
 
-  dataset_list_filter <- new_filter_server(
+  raw_filter <- new_filter_server(
     ID$FILTER,
     unfiltered_dataset_list,
     subject_filter_dataset_name,
     unfiltered_dataset_list_with_filter_info
+  )
+
+  dataset_list_filter <- sm_mr(
+    dv.manager::r_filter_from_json_filter(..(raw_filter())),
+    inline = TRUE,
+    varname = ODG_ID$DATASET_FILTER_
   )
 
   shiny::observeEvent(
