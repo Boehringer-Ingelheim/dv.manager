@@ -259,7 +259,7 @@ app_server_ <- function(input, output, session, opts) {
   )
 
   dataset_list_filter <- sm_mr(
-    dv.manager::r_filter_from_json_filter(..(raw_filter())),
+    dv.manager::r_filter_from_json_filter(..(raw_filter()), "main_server"),
     inline = TRUE,
     varname = ODG_ID$DATASET_FILTER_
   )
