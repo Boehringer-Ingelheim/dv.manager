@@ -1,3 +1,32 @@
+#### PREFACE STARTS
+
+# @order 1 First block read so it can group all the other docs required just because of ODG
+# For convenience it also imports `..` function from {shinymeta}
+#
+# For convenience it also imports `opt_chunk` function from {knitr}. Otherwise the checker complains that the package
+# is never used because it is only used inside the templates.
+#
+#' Functions exported for the output document generation (ODG)
+#'
+#' Internal, do not use. This document groups all functions in dv.manager that must be exported because of ODG. They are
+#'  not meant to be called by apps or modules, and they can change without notice.
+#'
+#' @param dataset_list Named list of data.frames.
+#' @param filter_key_var Column identifying subjects.
+#' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =,
+#'   dataset_list_filter =, ...)`, as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
+#' @name odg_exported_functions
+#'
+#' @importFrom shinymeta ..
+#'
+#' @importFrom knitr opts_chunk
+#'
+#' @keywords internal
+#' @order 1
+NULL
+
+#### PREFACE ENDS
+
 #' Render an ODG Rmd to a zip file
 #'
 #' Runs in a fresh `callr::r()` subprocess (or can be called directly, e.g. in
@@ -8,13 +37,36 @@
 #' @param header The `header.tex` content, as a single string.
 #' @param pdf_attach_function `function(pdf, attachment)` used to attach files
 #'   to a rendered PDF. Injected so it can be tested independently.
-#' @param filename Path the resulting zip file is written to.
+#' @param absolute_zip_path Absolute path the resulting zip file is written to. The zip is written from inside the
+#'   temporary render directory, deleted on exit, where a relative path would resolve.
+#' @param document_name Base name of the .Rmd and of its rendered output, as returned by `sanitize_odg_file_name()`.
+#'   Must not be `header` in any case: a PDF render writes `<document_name>.tex`, which would overwrite `header.tex`.
 #' @param quiet Silences both `rmarkdown::render()` and the zip step's output.
-#' @return `filename`, with an `error_msg` attribute (character(0) on success,
-#'   the error message on failure). Errors if no zip command is found or zipping fails.
+#' @return `absolute_zip_path`, with an `error_msg` attribute (character(0) on success,
+#'   the error message on failure). Errors if `document_name` collides with `header.tex`, if no zip command is found
+#'   or if zipping fails.
 #' @keywords internal
 #' @noRd
-render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename, quiet = TRUE) {
+render_odg_document <- function(
+  rmarkdown,
+  header,
+  pdf_attach_function,
+  absolute_zip_path,
+  document_name,
+  quiet = TRUE
+) {
+  # Constants from ODG are not used here. This runs in an empty session so it should be as independent as possible
+  # from the environment, otherwise when using devtools load_all things can get messy.
+  header_file <- "header.tex"
+  session_info_file <- "session_info.txt"
+  error_file <- "error.txt"
+
+  checkmate::assert_string(document_name, min.chars = 1)
+  if (identical(tolower(paste0(document_name, ".tex")), tolower(header_file))) {
+    stop(sprintf("`document_name` (%s) would overwrite %s when rendering a PDF", document_name, header_file))
+  }
+  rmd_file <- paste0(document_name, ".Rmd")
+
   odg_dir <- tempfile(pattern = "odg")
   if (!quiet) {
     message(sprintf("Generating output documentation in %s", odg_dir))
@@ -36,17 +88,25 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
   )
   setwd(odg_dir)
 
-  writeLines(rmarkdown, "odg.Rmd")
-  writeLines(header, "header.tex")
+  writeLines(rmarkdown, rmd_file)
+  writeLines(header, header_file)
 
   error_msg <- character(0)
   tryCatch(
     {
-      output_file <- rmarkdown::render(input = "odg.Rmd", output_dir = odg_dir, quiet = quiet)
+      # `render()` evaluates in `parent.frame()` by default. This lets the rmd change values in parent.frame()
+      # One chunk coud overwrite `absolute_zip_path`, `odg_dir`, `error_msg`, ... and change the behavior or cause an
+      # error
+      # Although we control we evaluate in a new environment.
+      output_file <- rmarkdown::render(
+        input = rmd_file,
+        output_dir = odg_dir,
+        quiet = quiet,
+        envir = new.env(parent = globalenv())
+      )
       if (endsWith(output_file, "pdf")) {
-        session_info_file <- "session_info.txt"
-        writeLines(capture.output(sessioninfo::session_info()), session_info_file)
-        pdf_attach_function(output_file, "odg.Rmd")
+        writeLines(utils::capture.output(sessioninfo::session_info()), session_info_file)
+        pdf_attach_function(output_file, rmd_file)
         pdf_attach_function(output_file, session_info_file)
         unlink(session_info_file)
       }
@@ -54,7 +114,7 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
     error = function(e) {
       error_msg <<- e$message
       warning(sprintf("Error generating output documentation in %s\n%s", odg_dir, error_msg))
-      writeLines(c("Error generating output documentation", error_msg), "error.txt")
+      writeLines(c("Error generating output documentation", error_msg), error_file)
     }
   )
 
@@ -68,7 +128,7 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
   }
   # `utils::zip()` returns the command's exit status, not the zip file
   zip_status <- utils::zip(
-    filename,
+    absolute_zip_path,
     list.files(odg_dir),
     flags = if (quiet) "-r9Xq" else "-r9X",
     zip = zip_command
@@ -76,7 +136,7 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
   if (zip_status != 0) {
     stop("zip failed with status ", zip_status)
   }
-  structure(filename, error_msg = error_msg)
+  structure(absolute_zip_path, error_msg = error_msg)
 }
 
 #' Attach a file to a PDF in place
@@ -101,12 +161,17 @@ pdf_attach <- function(pdf, attachment) {
 }
 
 ODG <- local({
+  # See "Chunk labels" in vignette("odg")
+  reserved_namespace <- "odg"
+  chunk_label <- function(name) paste0(reserved_namespace, "-", name)
+
   ODG <- poc(
     ID = poc(
       ODG_CODE = "odg_code",
       ODG_CODE_MENU = "odg_code_menu",
       ODG_MENU_SELECTION = "odg_menu_selection",
-      OUTPUT_FORMAT = "output_format"
+      OUTPUT_FORMAT = "output_format",
+      FILE_NAME = "odg_file_name"
     ),
     ATTR = "odg_element_type",
     ELEMENT_KIND = poc(
@@ -123,16 +188,52 @@ ODG <- local({
       ODG_BUTTON = "Generate Output Documentation",
       OUTPUTS_CARD = "Outputs",
       FORMAT_CARD = "Format",
+      FILE_NAME_CARD = "File name",
       NOTHING_TO_GENERATE = "No outputs available",
       RENDER_FAILED = paste(
         "The output documentation could not be rendered.",
         "The downloaded file includes the error details (error.txt)."
       ),
-      GENERATION_FAILED = "The output documentation could not be generated. No file was downloaded."
+      GENERATION_FAILED = "The output documentation could not be generated. No file was downloaded.",
+      ROUNDED_BOUND = "(rounded)"
     ),
     VAL = poc(
       # Currently only all ODG is possible it is kept as a dummy value for the button
       ODG_ALL = "all"
+    ),
+    HASH_ALGO = "xxhash64",
+    # Variables the document defines, named by the metareactives' `varname`. Names ending in `_` are private: used
+    # by app_server_ only, the others are exposed to modules through `afmm[["odg"]][["id"]]`
+    VARNAME = poc(
+      SELECTED_DATASET_LIST = "selected_dataset_list",
+      UNFILTERED_DATASET_LIST_ = "unfiltered_dataset_list_",
+      UNFILTERED_DATASET_LIST = "unfiltered_dataset_list",
+      FILTERED_DATASET_LIST = "filtered_dataset_list",
+      UNFILTERED_INFO_DATASET_LIST_ = "unfiltered_dataset_list_with_filter_info_",
+      UNFILTERED_INFO_DATASET_LIST = "unfiltered_dataset_list_with_filter_info",
+      DATASET_FILTER_ = "dataset_filter_",
+      DATE_RANGE_ = "date_range",
+      FILTER_TXT_TREE_ = "filter_odg",
+      CAT_FILTER_TXT_ = "cat_filter_txt",
+      CAT_FILTER_REFERENCE_LIST_TXT_ = "cat_filter_reference_list_txt"
+    ),
+    RESERVED_NAMESPACE = reserved_namespace,
+    # Templates refer to them as `{{<NAME>}}`
+    CHUNK_LABEL = poc(
+      SETUP = chunk_label("setup"),
+      CONDITION_CATCHER = chunk_label("condition_catcher"),
+      DATA_SOURCE = chunk_label("data_source"),
+      DYNAMIC_DATA_HASH = chunk_label("dynamic_data_hash"),
+      DATA_MODIFICATION_DATES = chunk_label("data_modification_dates"),
+      FILTER_TXT = chunk_label("filter_odg_txt"),
+      FILTER_REFERENCE_LIST = chunk_label("filter_odg_reference_list"),
+      SESSION_INFO = chunk_label("session_info"),
+      WARNINGS_SUMMARY = chunk_label("warnings_summary")
+    ),
+    FILE_NAME = poc(
+      DEFAULT = "odg",
+      MAX_CHARS = 100L,
+      RESERVED = "header"
     ),
     # Where to find the air formatter, checked before the PATH, see `format_odg_code()`
     AIR_PATH = poc(
@@ -148,7 +249,6 @@ ODG <- local({
     templates[[ODG$OUTPUT_FORMAT$PDF]] <- r"--(
 ---
 title: "Output Documentation"
-author: "A user"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   pdf_document:
@@ -158,7 +258,8 @@ output:
     number_sections: false
     df_print: kable
     latex_engine: xelatex    
-    extra_dependencies: ["lscape"]
+    # fvextra: modules (e.g. dv.papo) emit breakable `Verbatim` blocks
+    extra_dependencies: ["lscape", "fvextra"]
     # Fonts are set in header
     includes:
       in_header: header.tex
@@ -166,7 +267,7 @@ geometry: margin=2cm
 papersize: a4
 ---
 
-```{r setup, include=FALSE}
+```{r {{SETUP}}, include=FALSE}
 knitr::opts_chunk$set(
   echo = FALSE,
   tidy = TRUE,
@@ -180,7 +281,7 @@ knitr::opts_chunk$set(
     
 ```
   
-```{r condition_catcher, include=FALSE}
+```{r {{CONDITION_CATCHER}}, include=FALSE}
 # storage for everything we capture
 .condition_log <- data.frame(
   chunk   = character(0),
@@ -213,7 +314,6 @@ knitr::knit_hooks$set(
     templates[[ODG$OUTPUT_FORMAT$HTML]] <- r"--(
 ---
 title: "Output Documentation"
-author: "A user"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
@@ -227,7 +327,7 @@ output:
     self_contained: true
 ---
 
-```{r setup, include = FALSE}
+```{r {{SETUP}}, include = FALSE}
 knitr::opts_chunk$set(
   out.width = "100%",
   tidy = TRUE
@@ -264,8 +364,8 @@ body::before {
     templates <- character(0)
     templates[[ODG$OUTPUT_FORMAT$PDF]] <- r"--(
 
-```{r session_info, results = 'asis'}
-  session_lines <- capture.output(sessioninfo::session_info())
+```{r {{SESSION_INFO}}, results = 'asis'}
+  session_lines <- utils::capture.output(sessioninfo::session_info())
   # Verbatim isn't measured by \beginwidepage, only longtables are; pass the width explicitly
   max_char_width <- max(nchar(session_lines, type = "width"), 0L)
 
@@ -292,7 +392,7 @@ body::before {
     templates[[ODG$OUTPUT_FORMAT$HTML]] <- r"--(
 # Session Info
 
-```{r session_info}
+```{r {{SESSION_INFO}}}
   sessioninfo::session_info()
 ```
 
@@ -304,7 +404,7 @@ body::before {
   ODG[["TEMPLATES"]][["FOOTER"]] <- local({
     templates <- character(0)
     templates[[ODG$OUTPUT_FORMAT$PDF]] <- r"--(
-```{r warnings-summary, echo=FALSE, results='asis'}
+```{r {{WARNINGS_SUMMARY}}, echo=FALSE, results='asis'}
 n <- nrow(.condition_log)
 color <- if (n == 0) "black" else "red"
 
@@ -313,10 +413,14 @@ cat(sprintf("# Warnings \\& Messages \\texorpdfstring{\\textcolor{%s}{(%d)}}{(%d
 if (n == 0) {
   cat("No warnings or messages were produced during rendering.\n")
 } else {
-  for (i in seq_len(n)) {
-    row <- .condition_log[i, ]
-    cat(sprintf("- **[%s]** `%s`: %s\n", toupper(row$type), row$chunk, row$message))
-  }
+  # Raw LaTeX with escaped text, as markdown would read `*`, `_`, `$`, ... in the messages as markup
+  items <- sprintf(
+    "\\item \\textbf{[%s]} \\texttt{%s}: %s",
+    toupper(.condition_log$type),
+    gt::escape_latex(.condition_log$chunk),
+    gt::escape_latex(.condition_log$message)
+  )
+  cat("```{=latex}", "\\begin{itemize}", items, "\\end{itemize}", "```", sep = "\n")
 }
 ```
 )--"
@@ -325,7 +429,7 @@ if (n == 0) {
     #   r"--(
     # # Annex: Code
 
-    # ```{r show-code, ref.label = setdiff(knitr::all_labels(), c("setup", "show-code")), echo=TRUE, eval=FALSE}
+    # ```{r odg-show-code, ref.label = setdiff(knitr::all_labels(), c("odg-setup", "odg-show-code")), echo=TRUE, eval=FALSE} # nolint
     # ```
     # )--"
 
@@ -334,8 +438,35 @@ if (n == 0) {
     templates
   })
 
+  # The templates are raw strings, so they refer to the chunk labels as `{{<NAME>}}` placeholders
+  ODG[["TEMPLATES"]] <- lapply(ODG[["TEMPLATES"]], function(templates) {
+    for (name in names(ODG$CHUNK_LABEL)) {
+      templates <- gsub(paste0("{{", name, "}}"), ODG$CHUNK_LABEL[[name]], templates, fixed = TRUE)
+    }
+    templates
+  })
+
   ODG
 })
+
+#' @param x Typed file name, or `NULL`.
+#' @return A sanitized filename or default if it fails.
+#' @keywords internal
+#' @noRd
+sanitize_odg_file_name <- function(x) {
+  if (!checkmate::test_string(x, na.ok = FALSE)) {
+    x <- ""
+  }
+  x <- trimws(x)
+  x <- sub("\\.(zip|pdf|rmd|html|tex)$", "", x, ignore.case = TRUE)
+  x <- gsub("[^A-Za-z0-9_-]+", "_", x, perl = TRUE)
+  x <- sub("^-", "_", x)
+  x <- substr(x, 1L, ODG$FILE_NAME$MAX_CHARS)
+  if (tolower(x) %in% ODG$FILE_NAME$RESERVED) {
+    x <- paste0(x, "_")
+  }
+  if (nzchar(x)) x else ODG$FILE_NAME$DEFAULT
+}
 
 #' Join strings into a single string, separated by blank lines
 #'
@@ -441,7 +572,7 @@ ODG_ELEMENT_FORMATTERS <- local({
 #' @return The full .Rmd document, as a single string.
 #' @keywords internal
 #' @noRd
-build_odg_rmd <- function(selected_odg_elements, output_format, data_code, sections, templates) {
+build_odg_rmd <- function(selected_odg_elements, output_format, data_code, filtered_data_code, sections, templates) {
   formatted_elements <- character(length(selected_odg_elements))
   for (idx in seq_along(selected_odg_elements)) {
     curr_el <- selected_odg_elements[[idx]]
@@ -451,7 +582,7 @@ build_odg_rmd <- function(selected_odg_elements, output_format, data_code, secti
 
   paste_with_blank_lines(
     templates[["header"]],
-    paste0("```{r data_source}\n", data_code, "\n```"),
+    paste0("```{r ", ODG$CHUNK_LABEL$DATA_SOURCE, "}\n", data_code, "\n", filtered_data_code, "\n```"),
     "\\pagestyle{headings}",
     formatted_elements,
     "\\pagestyle{plain}",
@@ -467,24 +598,28 @@ build_odg_rmd <- function(selected_odg_elements, output_format, data_code, secti
   )
 }
 
-#' Markdown section listing a content hash per dataset, computed now
+#' Content hash per dataset
 #'
-#' @param dataset_list Named list of data.frames (the resolved dataset list).
+#' @param dataset_list Named list of data.frames.
+#' @return Named character vector, one hash per dataset.
+#' @keywords internal
+#' @noRd
+hash_dataset_list <- function(dataset_list) {
+  vapply(dataset_list, digest::digest, character(1), algo = ODG$HASH_ALGO)
+}
+
+#' Markdown section listing the in-app content hash per dataset
+#'
+#' @param dataset_hashes Named character vector, as returned by `hash_dataset_list()`.
 #' @return The markdown section, as a single string.
 #' @keywords internal
 #' @noRd
-build_hardcoded_hash_section <- function(dataset_list) {
-  dataset_list_hash <- vector(mode = "list", length = length(dataset_list))
-  for (idx in seq_along(dataset_list)) {
-    dataset_list_hash[[idx]] <- digest::digest(dataset_list[[idx]], algo = "md5")
-  }
-  names(dataset_list_hash) <- names(dataset_list)
-
+build_hardcoded_hash_section <- function(dataset_hashes) {
   section <- "## Hardcoded Data hash:"
-  for (idx in seq_along(dataset_list_hash)) {
+  for (idx in seq_along(dataset_hashes)) {
     section <- paste_with_blank_lines(
       section,
-      paste0(" **name**: `", names(dataset_list_hash)[[idx]], "` **hash**: ", dataset_list_hash[[idx]])
+      paste0(" **name**: `", names(dataset_hashes)[[idx]], "` **hash**: ", dataset_hashes[[idx]])
     )
   }
   note <- paste(
@@ -496,40 +631,62 @@ build_hardcoded_hash_section <- function(dataset_list) {
 
 #' Markdown section recomputing each dataset's hash at render time
 #'
-#' Emits one `asis` chunk looping over the dataset list, so the section adapts to
-#' whatever it holds at render time and never names it or its length itself: the
-#' reference comes from `get_code_in_context()`. It collapses to a bare reference
-#' (no re-emitted assignment) only because the shared expansion context has
-#' already emitted that assignment into the data-source chunk, so this must be
-#' called after the data code is generated.
-#'
 #' @param selected_dataset_list_mr Metareactive resolving to the dataset list.
+#' @param in_app_hashes Named character vector, `hash_dataset_list()` of the dataset list loaded in the app.
+#' @param output_format One of `ODG$OUTPUT_FORMAT` (`"html"`/`"pdf"`).
 #' @param get_code_in_context `function(x)` turning a metareactive call into the
 #'   R code reproducing it. Injected so it can be tested independently.
 #' @return The markdown section, as a single string.
 #' @keywords internal
 #' @noRd
-build_dynamic_hash_section <- function(selected_dataset_list_mr, get_code_in_context) {
-  loop <- shinymeta::metaReactive(
+build_dynamic_hash_section <- function(selected_dataset_list_mr, in_app_hashes, output_format, get_code_in_context) {
+  checkmate::assert_choice(output_format, as.character(unclass(ODG$OUTPUT_FORMAT)))
+  checkmate::assert_character(in_app_hashes, any.missing = FALSE, names = "unique")
+
+  alert_tags <- if (output_format == ODG$OUTPUT_FORMAT$PDF) {
+    c("\n\n```{=latex}\n\\begin{alertdanger}\n```", "\n\n```{=latex}\n\\end{alertdanger}\n```")
+  } else {
+    c("\n\n<div class=\"alert alert-danger\" role=\"alert\">", "\n\n</div>")
+  }
+
+  loop <- sm_mr(
     {
-      for (idx in seq_along(..(selected_dataset_list_mr()))) {
-        cat(sprintf(
-          "\n\n **name**: `%s` **hash**: %s",
-          names(..(selected_dataset_list_mr()))[[idx]],
-          digest::digest(..(selected_dataset_list_mr())[[idx]], algo = "md5")
-        ))
+      in_app_hash <- ..(in_app_hashes)
+      not_found <- "Dataset not found"
+      for (name in union(names(..(selected_dataset_list_mr())), names(in_app_hash))) {
+        hash <- if (name %in% names(..(selected_dataset_list_mr()))) {
+          digest::digest(..(selected_dataset_list_mr())[[name]], algo = ..(ODG$HASH_ALGO))
+        } else {
+          not_found
+        }
+        expected_hash <- if (name %in% names(in_app_hash)) in_app_hash[[name]] else not_found
+        line <- sprintf("\n\n **name**: `%s` **hash**: %s", name, hash)
+        if (!identical(hash, expected_hash)) {
+          line <- paste0(
+            ..(alert_tags[[1]]),
+            "\n\n **Hash mismatch**: the data used to generate this document is not the data loaded in the app.",
+            line,
+            sprintf(" **in-app hash**: %s", expected_hash),
+            ..(alert_tags[[2]])
+          )
+        }
+        cat(line)
       }
     },
     inline = TRUE
   )
 
   note <- paste(
-    "These hashes are calculated while generating the output documentation,",
-    "and should match those in the **Hardcoded Data hash** section."
+    "These hashes are calculated while generating the output documentation and checked against those in the",
+    "**Hardcoded Data hash** section. Any mismatch is highlighted."
   )
   paste_with_blank_lines(
     "## Dynamic Data hash:",
-    paste0("```{r dynamic_data_hash, echo = FALSE, results='asis'}\n", get_code_in_context(loop()), "\n```"),
+    paste0(
+      "```{r ", ODG$CHUNK_LABEL$DYNAMIC_DATA_HASH, ", echo = FALSE, results='asis'}\n",
+      get_code_in_context(loop()),
+      "\n```"
+    ),
     note
   )
 }
@@ -540,9 +697,6 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, get_code_in_con
 #' bare `NULL` would collapse the whole `sprintf()` to `character(0)`, dropping
 #' that dataset's line entirely, and `format(NULL)` prints `"NULL"`.
 #'
-#' Shares `build_dynamic_hash_section()`'s ordering requirement: call it after
-#' the data code has been generated with the same expansion context.
-#'
 #' @param selected_dataset_list_mr Metareactive resolving to the dataset list.
 #' @param date_range_mr Metareactive resolving to the dataset list date range.
 #' @param get_code_in_context `function(x)` turning a metareactive call into the
@@ -551,7 +705,7 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, get_code_in_con
 #' @keywords internal
 #' @noRd
 build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code_in_context) {
-  loop <- shinymeta::metaReactive(
+  loop <- sm_mr(
     {
       for (idx in seq_along(..(selected_dataset_list_mr()))) {
         mtime <- attr(..(selected_dataset_list_mr())[[idx]], "meta")[["mtime"]]
@@ -571,7 +725,11 @@ build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code
     "## Data Modification Dates:",
     " **Date range**:",
     paste0("`r ", get_code_in_context(date_range_mr()), "`"),
-    paste0("```{r data_modification_dates, echo = FALSE, results='asis'}\n", get_code_in_context(loop()), "\n```"),
+    paste0(
+      "```{r ", ODG$CHUNK_LABEL$DATA_MODIFICATION_DATES, ", echo = FALSE, results='asis'}\n",
+      get_code_in_context(loop()),
+      "\n```"
+    ),
     note
   )
 }
@@ -590,7 +748,7 @@ build_filter_txt_section <- function(filter_odg, output_format, get_code_in_cont
   checkmate::assert_choice(output_format, as.character(unclass(ODG$OUTPUT_FORMAT)))
   section <- "## Filters:"
 
-  cat_mr <- sm_mr(cat(..(filter_odg())[["txt"]]), inline = TRUE, varname = "cat_filter_txt")
+  cat_mr <- sm_mr(cat(..(filter_odg())[["txt"]]), inline = TRUE, varname = ODG$VARNAME$CAT_FILTER_TXT_)
 
   verbatim_tags <- if (output_format == ODG$OUTPUT_FORMAT$PDF) {
     c("\\begin{verbatim}", "\\end{verbatim}")
@@ -602,12 +760,16 @@ build_filter_txt_section <- function(filter_odg, output_format, get_code_in_cont
 
   note <- paste(
     "An explicit call to the filter and parameters used can be found in the code",
-    "that accompanies this output documentation."
+    "that accompanies this output documentation.",
+    "Range bounds marked",
+    ODG$MSG$ROUNDED_BOUND,
+    "are printed with 15 significant digits,",
+    "the filter applies their exact value. Check the code in the Rmd to see the exact value applied."
   )
   paste_with_blank_lines(
     section,
     verbatim_tags[[1]],
-    "```{r filter_odg_txt, echo = FALSE, results='asis'}",
+    paste0("```{r ", ODG$CHUNK_LABEL$FILTER_TXT, ", echo = FALSE, results='asis'}"),
     get_code_in_context(cat_mr()),
     "```",
     verbatim_tags[[2]],
@@ -650,7 +812,7 @@ build_filter_reference_section <- function(filter_odg, output_format, get_code_i
         }
       },
       inline = TRUE,
-      varname = "cat_filter_reference_list_txt"
+      varname = ODG$VARNAME$CAT_FILTER_REFERENCE_LIST_TXT_
     )
   } else if (output_format == ODG$OUTPUT_FORMAT$HTML) {
     cat_mr <- sm_mr(
@@ -668,7 +830,7 @@ build_filter_reference_section <- function(filter_odg, output_format, get_code_i
         }
       },
       inline = TRUE,
-      varname = "cat_filter_reference_list_txt"
+      varname = ODG$VARNAME$CAT_FILTER_REFERENCE_LIST_TXT_
     )
   } else {
     stop("Unknown format")
@@ -680,7 +842,7 @@ build_filter_reference_section <- function(filter_odg, output_format, get_code_i
   paste_with_blank_lines(
     "# Filter references:",
     tags[[1]],
-    "```{r filter_odg_reference_list, echo = FALSE, results='asis'}",
+    paste0("```{r ", ODG$CHUNK_LABEL$FILTER_REFERENCE_LIST, ", echo = FALSE, results='asis'}"),
     get_code_in_context(cat_mr()),
     "```",
     tags[[2]]
@@ -724,19 +886,27 @@ preprocess_odg_elements <- function(odg_elements, output_format, get_code_in_con
       kind <- ODG$ELEMENT_KIND$ERROR
     } else if (inherits(codegen, "chunk")) {
       # The chunk places the header itself, e.g. after a `\beginwidepage` whose `\clearpage` would otherwise strand it
-      chunk_code <- codegen(header = ODG_ELEMENT_FORMATTERS[[output_format]][["header"]](odg_element))
-      if (checkmate::test_string(chunk_code)) {
-        code <- chunk_code
-        kind <- ODG$ELEMENT_KIND$CHUNK
+      chunk_code <- try(
+        codegen(header = ODG_ELEMENT_FORMATTERS[[output_format]][["header"]](odg_element)),
+        silent = TRUE
+      )
+      if (!inherits(chunk_code, "try-error")) {
+        if (checkmate::test_string(chunk_code)) {
+          code <- chunk_code
+          kind <- ODG$ELEMENT_KIND$CHUNK
+        } else {
+          code <- paste0(
+            "Error creating ",
+            odg_element[["id"]],
+            " `chunk` must return a single string, it returned ",
+            class(chunk_code)[[1]],
+            " of length ",
+            length(chunk_code)
+          )
+          kind <- ODG$ELEMENT_KIND$ERROR
+        }
       } else {
-        code <- paste0(
-          "Error creating ",
-          odg_element[["id"]],
-          " `chunk` must return a single string, it returned ",
-          class(chunk_code)[[1]],
-          " of length ",
-          length(chunk_code)
-        )
+        code <- paste("Error creating", odg_element[["id"]], attr(chunk_code, "condition")[["message"]])
         kind <- ODG$ELEMENT_KIND$ERROR
       }
     } else if (inherits(codegen, "shinymeta_reactive")) {
@@ -750,10 +920,11 @@ preprocess_odg_elements <- function(odg_elements, output_format, get_code_in_con
       } else if (is_table) {
         # TODO: This could be moved to the formatter section
         latex <- if (is.data.frame(resolved)) {
+          # The id goes into LaTeX link targets and PDF strings, `chunk_label` is unique and has no special characters
           shinymeta::metaReactive(
             {
               ..(codegen()) |>
-                dv.manager::utils_latex_tables$gt_latex_table(long_cell_id = ..(odg_element[["id"]]))
+                dv.manager::utils_latex_tables$gt_latex_table(long_cell_id = ..(odg_element[["chunk_label"]]))
             },
             inline = TRUE
           )
@@ -761,6 +932,7 @@ preprocess_odg_elements <- function(odg_elements, output_format, get_code_in_con
           shinymeta::metaReactive(
             {
               ..(codegen()) |>
+                gt::tab_options(latex.use_longtable = TRUE) |>
                 gt::as_latex() |>
                 dv.manager::utils_latex_tables$latex_header_repeat()
             },
@@ -804,13 +976,14 @@ preprocess_odg_elements <- function(odg_elements, output_format, get_code_in_con
 #' @param ns Namespacing function for input/output ids.
 #' @param selected_tab Module id whose outputs are checked by default, or `NA`
 #'   (default) or `NULL` (the tab input is not set yet) to check all of them. Every module is listed either way.
+#' @param file_name Initial value of the file name field; empty shows the default as placeholder.
 #' @return `list(modal_dialog =, selected =)`: the modal UI, and a named
 #'   logical vector (keyed by element id) of which elements are checked by
 #'   default. The modal shows one switch per module, keyed by module id, so a
 #'   switch event covers every element of that module.
 #' @keywords internal
 #' @noRd
-build_odg_modal_ui <- function(odg_elements, ns, selected_tab = NA) {
+build_odg_modal_ui <- function(odg_elements, ns, selected_tab = NA, file_name = "") {
   log_inform(paste("Preselecting", selected_tab, "tab elements in menu"))
 
   switches <- list()
@@ -838,8 +1011,8 @@ build_odg_modal_ui <- function(odg_elements, ns, selected_tab = NA) {
           onchange = sprintf(
             # selection is reset when modal opens, same value is sent twice
             "Shiny.setInputValue('%s', {value: this.checked, id: '%s'}, {priority: 'event'});",
-            ns(ODG$ID$ODG_MENU_SELECTION),
-            curr_el[["module_id"]]
+            escape_js_string(ns(ODG$ID$ODG_MENU_SELECTION)),
+            escape_js_string(curr_el[["module_id"]])
           )
         ),
         curr_el[["module_name"]]
@@ -857,6 +1030,16 @@ build_odg_modal_ui <- function(odg_elements, ns, selected_tab = NA) {
           label = NULL,
           # HTML output is hidden for now, the rest of the pipeline still supports it
           choices = list(PDF = ODG$OUTPUT_FORMAT$PDF)
+        )
+      ),
+      bslib::card(
+        bslib::card_header(ODG$MSG$FILE_NAME_CARD),
+        shiny::textInput(
+          ns(ODG$ID$FILE_NAME),
+          label = NULL,
+          value = file_name,
+          width = "100%",
+          placeholder = ODG$FILE_NAME$DEFAULT
         )
       )
     )
@@ -907,12 +1090,8 @@ sm_me <- local({
 })
 
 
-#' Namespace of helpers for ODG latex
-#'
-#' @keywords internal
-#' @noRd
+#' @describeIn odg_exported_functions Namespace of helpers that write LaTeX tables, used by the PDF table elements.
 #' @export
-#'
 utils_latex_tables <- local({
   # Workaround for gt versions predating the latex.header_repeat tab_options()
   # nolint start

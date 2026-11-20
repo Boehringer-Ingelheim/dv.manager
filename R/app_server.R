@@ -61,7 +61,7 @@ app_server_ <- function(input, output, session, opts) {
   filter_info <- opts[["filter_info"]]
   enable_subgroup <- opts[["enable_subgroup"]]
 
-  public_odg_ids <- do.call(poc, unclass(ODG_ID)[!endsWith(names(ODG_ID), "_")])
+  public_odg_ids <- do.call(poc, unclass(ODG$VARNAME)[!endsWith(names(ODG$VARNAME), "_")])
   afmm_static[["odg"]] <- list(
     id = public_odg_ids
   )
@@ -104,7 +104,7 @@ app_server_ <- function(input, output, session, opts) {
       attr(df, "dataset_list_name") <- dataset_list_name
       df
     },
-    varname = ODG_ID$SELECTED_DATASET_LIST
+    varname = ODG$VARNAME$SELECTED_DATASET_LIST
   )
 
   if (enable_subgroup) {
@@ -141,7 +141,7 @@ app_server_ <- function(input, output, session, opts) {
       res_apply_subgroups
     },
     inline = TRUE,
-    varname = ODG_ID$UNFILTERED_DATASET_LIST_
+    varname = ODG$VARNAME$UNFILTERED_DATASET_LIST_
   )
 
   unfiltered_dataset_list <- sm_mr2(
@@ -152,16 +152,35 @@ app_server_ <- function(input, output, session, opts) {
       for (error in unfiltered_dataset_list_()[["error_list"]]$get_messages()) {
         shiny::showNotification(error, type = "warning")
       }
-      subgroups[["set_incorrect_subgroups"]](unfiltered_dataset_list_()[["result"]][["incorrect_subgroups"]])
+      app_incorrect_subgroups <- unfiltered_dataset_list_()[["result"]][["incorrect_subgroups"]]
+      subgroups[["set_incorrect_subgroups"]](app_incorrect_subgroups)
 
       sm_me(
         {
-          ..(unfiltered_dataset_list_())[["result"]][["dataset_list"]]
+          res_apply_subgroups <- ..(unfiltered_dataset_list_())
+          # ODG: only met in the document, the app leaves incorrect subgroups out with a warning, which
+          # `app_incorrect_subgroups` records. The document reloads the data with `load_fn`, which may return
+          # different data than the app holds, so other subgroups may fail
+          incorrect_in_app <- ..(app_incorrect_subgroups)
+          incorrect_in_document <- res_apply_subgroups[["result"]][["incorrect_subgroups"]]
+          if (!setequal(incorrect_in_document, incorrect_in_app)) {
+            stop(paste(
+              "The subgroups cannot be applied as in the app to the data loaded for this document,",
+              "it may differ from the data in the app.",
+              sprintf(
+                "Subgroups not applied in the app: [%s], in this document: [%s].",
+                toString(incorrect_in_app),
+                toString(incorrect_in_document)
+              ),
+              paste(res_apply_subgroups[["error_list"]]$get_messages(), collapse = "; ")
+            ))
+          }
+          res_apply_subgroups[["result"]][["dataset_list"]]
         },
         localize = TRUE
       )
     },
-    varname = ODG_ID$UNFILTERED_DATASET_LIST
+    varname = ODG$VARNAME$UNFILTERED_DATASET_LIST
   )
 
   unfiltered_dataset_list_with_filter_info_ <- sm_mr2(
@@ -196,7 +215,7 @@ app_server_ <- function(input, output, session, opts) {
       res
     },
     inline = TRUE,
-    varname = ODG_ID$UNFILTERED_INFO_DATASET_LIST_
+    varname = ODG$VARNAME$UNFILTERED_INFO_DATASET_LIST_
   )
 
   unfiltered_dataset_list_with_filter_info <- sm_mr2(
@@ -225,15 +244,26 @@ app_server_ <- function(input, output, session, opts) {
 
       res <- sm_me(
         {
-          ..(unfiltered_dataset_list_with_filter_info_())
-        }
+          with_filter_info <- ..(unfiltered_dataset_list_with_filter_info_())
+          # ODG: only met in the document, the app handles these errors above. The document reloads the data with
+          # `load_fn`, which may return different data than the app holds, e.g. without a filtered variable
+          if (with_filter_info[["error_list"]]$any()) {
+            stop(paste(
+              "The filter cannot be applied to the data loaded for this document,",
+              "it may differ from the data in the app:",
+              paste(with_filter_info[["error_list"]]$get_messages(), collapse = "; ")
+            ))
+          }
+          with_filter_info
+        },
+        localize = TRUE
       )
 
       ..t$add_event("received unfiltered_dataset_list_with_filter_info")
 
       res
     },
-    varname = ODG_ID$UNFILTERED_INFO_DATASET_LIST
+    varname = ODG$VARNAME$UNFILTERED_INFO_DATASET_LIST
   )
 
   filtered_dataset_list <- sm_mr2(
@@ -248,14 +278,20 @@ app_server_ <- function(input, output, session, opts) {
       ..t$add_event("received filtered_dataset_list")
       fd
     },
-    varname = ODG_ID$FILTERED_DATASET_LIST
+    varname = ODG$VARNAME$FILTERED_DATASET_LIST
   )
 
-  dataset_list_filter <- new_filter_server(
+  raw_filter <- new_filter_server(
     ID$FILTER,
     unfiltered_dataset_list,
     subject_filter_dataset_name,
     unfiltered_dataset_list_with_filter_info
+  )
+
+  dataset_list_filter <- sm_mr(
+    dv.manager::r_filter_from_json_filter(..(raw_filter()), "main_server"),
+    inline = TRUE,
+    varname = ODG$VARNAME$DATASET_FILTER_
   )
 
   shiny::observeEvent(
@@ -443,7 +479,7 @@ app_server_ <- function(input, output, session, opts) {
       }
       date_string
     },
-    varname = "date_range",
+    varname = ODG$VARNAME$DATE_RANGE_,
     localize = TRUE
   )
 
@@ -470,7 +506,7 @@ app_server_ <- function(input, output, session, opts) {
             )
           })
         },
-        varname = "filter_odg"
+        varname = ODG$VARNAME$FILTER_TXT_TREE_
       )
 
       # Flatten ODG elements and set defaults for missing entries
@@ -499,9 +535,8 @@ app_server_ <- function(input, output, session, opts) {
               current_element[["is_first_module_element"]] <- first_module_element
               current_element[["module_name"]] <- module_name
               current_element[["module_id"]] <- module_id
-              # knitr rejects some characters in a chunk label (e.g. `=`), the prefix keeps it apart from the
-              # document's own chunks (e.g. `warnings-summary`)
-              current_element[["chunk_label"]] <- paste0("odg-", gsub("[^A-Za-z0-9_-]", "_", current_element[["id"]]))
+              # See "Chunk labels" in vignette("odg")
+              current_element[["chunk_label"]] <- gsub("[^A-Za-z0-9_-]", "_", current_element[["id"]])
               # Fails on repeated ids too (module `a-b` with element `c`, module `a` with element `b-c`), which would
               # otherwise silently replace each other in `res`
               clash <- Find(function(el) identical(el[["chunk_label"]], current_element[["chunk_label"]]), res)
@@ -543,15 +578,18 @@ app_server_ <- function(input, output, session, opts) {
 
       is_output_selected_for_odg <- NULL # TODO replace by reactiveValue so it can be used in the testServer?
       shiny::observeEvent(input[[ODG$ID$ODG_CODE_MENU]], {
-        if (is.null(attr(selected_dataset_list(), "load_fn"))) {
+        load_fn <- attr(selected_dataset_list(), "load_fn")
+        # Only its body goes into the document, see vignette("odg")
+        if (!checkmate::test_function(load_fn, nargs = 0)) {
           dataset_list_name <- attr(selected_dataset_list(), "dataset_list_name")
           user_msg <- sprintf(
             "Current dataset list `%s` is not configured for generating output documentation.",
             dataset_list_name
           )
           dev_msg <- sprintf(
-            "Generating output documentation not possible for `%s`. No `load_fn` attribute found. ",
-            dataset_list_name
+            "Generating output documentation not possible for `%s`. %s",
+            dataset_list_name,
+            if (is.null(load_fn)) "No `load_fn` attribute found." else "`load_fn` must be a function without arguments."
           )
           log_warn(dev_msg)
           shiny::showNotification(user_msg, type = "error")
@@ -559,7 +597,12 @@ app_server_ <- function(input, output, session, opts) {
         }
 
         # every ODG output is listed, but only those in the tab in view start out selected
-        x <- build_odg_modal_ui(odg_elements, ns, selected_tab = input[[ID$NAV_HEADER]])
+        x <- build_odg_modal_ui(
+          odg_elements,
+          ns,
+          selected_tab = input[[ID$NAV_HEADER]],
+          file_name = input[[ODG$ID$FILE_NAME]] %||% ""
+        )
         is_output_selected_for_odg <<- x[["selected"]]
 
         log_inform(
@@ -572,129 +615,162 @@ app_server_ <- function(input, output, session, opts) {
         shiny::showModal(x[["modal_dialog"]])
       })
 
+      # Possible but unlikely race, the menu inputs travel over the websocket, the download is a separate HTTP
+      # request, so a download started right after a change can still read the previous filename.
+      # A possible fix is to have a button that generates the zip and a download button activated
+      # after the generation that downloads the file. It may be better also as any error can be shown
+      # in the app.
+
       output[[ODG$ID$ODG_CODE]] <- shiny::downloadHandler(
-        filename = "odg.zip",
-        content = function(filename) {
-          shiny::withProgress(message = "Generating output documentation", expr = {
-            output_format <- input[[ODG$ID$OUTPUT_FORMAT]]
+        filename = function() paste0(sanitize_odg_file_name(input[[ODG$ID$FILE_NAME]]), ".zip"),
+        content = function(absolute_zip_path) {
+          # Whatever fails here leaves no file to download, and the browser only reports a failed download
+          tryCatch(
+            shiny::withProgress(message = "Generating output documentation", expr = {
+              output_format <- input[[ODG$ID$OUTPUT_FORMAT]]
+              document_name <- sanitize_odg_file_name(input[[ODG$ID$FILE_NAME]])
 
-            ec <- shiny::isolate({
-              .ec <- shinymeta::newExpansionContext()
-              fn <- body(attr(selected_dataset_list(), "load_fn"))
-              dln <- attr(selected_dataset_list(), "dataset_list_name")
-              .ec$substituteMetaReactive(selected_dataset_list, function() {
-                # This metaExpression contains part of the logic of selected dataset list, add date_range and attribute
-                # It is not ideal as they may get desynchronized in the future
-                sm_me({
-                  df <- ..(fn)
+              # The ODG menu already refuses to open for such a `load_fn`, the download does not rely on it
+              load_fn <- attr(selected_dataset_list(), "load_fn")
+              if (!checkmate::test_function(load_fn, nargs = 0)) {
+                stop(sprintf(
+                  "`load_fn` of dataset list `%s` must be a function without arguments",
+                  attr(selected_dataset_list(), "dataset_list_name")
+                ))
+              }
 
-                  # (s) Backwards compatibility this should not be here
-                  df <- dv.manager::from_char_vars_to_factor_vars_dataset_list(df)
-                  df <- dv.manager::from_grouped_tbl_to_df_dataset_list(df)
-                  # (e) Backwards compatibility this should not be here
+              ec <- shiny::isolate({
+                .ec <- shinymeta::newExpansionContext()
+                fn <- body(load_fn)
+                dln <- attr(selected_dataset_list(), "dataset_list_name")
+                .ec$substituteMetaReactive(selected_dataset_list, function() {
+                  # This metaExpression contains part of the logic of selected dataset list, add date_range and
+                  # attribute. It is not ideal as they may get desynchronized in the future
+                  sm_me({
+                    # local(): a return() in load_fn ends the load only, the steps below still run
+                    df <- local(..(fn))
 
-                  df <- dv.manager::add_date_range(df)
-                  attr(df, "dataset_list_name") <- ..(dln)
-                  df
+                    # (s) Backwards compatibility this should not be here
+                    df <- dv.manager::from_char_vars_to_factor_vars_dataset_list(df)
+                    df <- dv.manager::from_grouped_tbl_to_df_dataset_list(df)
+                    # (e) Backwards compatibility this should not be here
+
+                    df <- dv.manager::add_date_range(df)
+                    attr(df, "dataset_list_name") <- ..(dln)
+                    df
+                  })
                 })
+                .ec
               })
-              .ec
-            })
 
-            get_code_in_context <- function(x) {
-              shinymeta::expandChain(
-                x,
-                .expansionContext = ec
-              ) |>
-                shinymeta::formatCode(formatter = format_odg_code, width = 400L) |>
-                as.character() |>
-                paste(collapse = "\n")
-            }
+              get_code_in_context <- function(x) {
+                shinymeta::expandChain(
+                  x,
+                  .expansionContext = ec
+                ) |>
+                  shinymeta::formatCode(formatter = format_odg_code, width = 400L) |>
+                  as.character() |>
+                  paste(collapse = "\n")
+              }
 
-            # Order of calls to get_code_in_context is relevant, once an element has been expanded in a given
-            # expansion context, any additional attempt to expand it will return an empty string
-            # Therefore we need to make sure that all relevant elements are included in the report and also
-            # in the correct order. It is better to resolve those outside of the call as the internal order of resolving
-            # due to promises may not be the same.
-            #> x <- function() message("x")
-            #> y <- function() message("y")
-            #> z <- function(a,b){b;a}
-            #> z(x(), y())
+              # Order of calls to get_code_in_context is relevant, once an element has been expanded in a given
+              # expansion context, any additional attempt to expand it will return an empty string
+              # Therefore we need to make sure that all relevant elements are included in the report and also
+              # in the correct order. It is better to resolve those outside of the call as the internal order of
+              # resolving due to promises may not be the same.
+              #> x <- function() message("x")
+              #> y <- function() message("y")
+              #> z <- function(a,b){b;a}
+              #> z(x(), y())
 
-            data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
-            date_section <- build_date_section(selected_dataset_list, date_range, get_code_in_context)
-            hardcoded_hash_section <- build_hardcoded_hash_section(selected_dataset_list())
-            dynamic_hash_section <- build_dynamic_hash_section(selected_dataset_list, get_code_in_context)
+              data_code <- get_code_in_context(invisible(unfiltered_dataset_list_with_filter_info()))
+              filtered_data_code <- get_code_in_context(invisible(filtered_dataset_list()))
 
-            filter_txt_section <- build_filter_txt_section(filter_odg, output_format, get_code_in_context)
-
-            filter_reference_list_txt_section <- build_filter_reference_section(
-              filter_odg,
-              output_format,
-              get_code_in_context
-            )
-
-            log_inform("Preprocessing ODG elements")
-            selected_odg_elements <- preprocess_odg_elements(
-              odg_elements[names(is_output_selected_for_odg)[is_output_selected_for_odg]],
-              output_format,
-              get_code_in_context
-            )
-
-            log_inform("Creating rmarkdown")
-            rmarkdown <- build_odg_rmd(
-              selected_odg_elements = selected_odg_elements,
-              output_format = output_format,
-              data_code = data_code,
-              sections = list(
-                date = date_section,
-                hardcoded_hash = hardcoded_hash_section,
-                dynamic_hash = dynamic_hash_section,
-                filter_txt = filter_txt_section,
-                filter_reference = filter_reference_list_txt_section
-              ),
-              templates = list(
-                header = ODG$TEMPLATES$HEADER[[output_format]],
-                session_info = ODG$TEMPLATES$SESSION_INFO[[output_format]],
-                footer = ODG$TEMPLATES$FOOTER[[output_format]]
+              date_section <- build_date_section(selected_dataset_list, date_range, get_code_in_context)
+              in_app_hashes <- hash_dataset_list(selected_dataset_list())
+              hardcoded_hash_section <- build_hardcoded_hash_section(in_app_hashes)
+              dynamic_hash_section <- build_dynamic_hash_section(
+                selected_dataset_list,
+                in_app_hashes,
+                output_format,
+                get_code_in_context
               )
-            )
 
-            log_inform("Rendering rmarkdown")
-            header <- paste(
-              readLines(system.file("odg_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
-              collapse = "\n"
-            )
-            rendered_filename <- tryCatch(
-              callr::r(
+              filter_txt_section <- build_filter_txt_section(filter_odg, output_format, get_code_in_context)
+
+              filter_reference_list_txt_section <- build_filter_reference_section(
+                filter_odg,
+                output_format,
+                get_code_in_context
+              )
+
+              log_inform("Preprocessing ODG elements")
+              selected_odg_elements <- preprocess_odg_elements(
+                odg_elements[names(is_output_selected_for_odg)[is_output_selected_for_odg]],
+                output_format,
+                get_code_in_context
+              )
+
+              log_inform("Creating rmarkdown")
+              rmarkdown <- build_odg_rmd(
+                selected_odg_elements = selected_odg_elements,
+                output_format = output_format,
+                data_code = data_code,
+                filtered_data_code = filtered_data_code,
+                sections = list(
+                  date = date_section,
+                  hardcoded_hash = hardcoded_hash_section,
+                  dynamic_hash = dynamic_hash_section,
+                  filter_txt = filter_txt_section,
+                  filter_reference = filter_reference_list_txt_section
+                ),
+                templates = list(
+                  header = ODG$TEMPLATES$HEADER[[output_format]],
+                  session_info = ODG$TEMPLATES$SESSION_INFO[[output_format]],
+                  footer = ODG$TEMPLATES$FOOTER[[output_format]]
+                )
+              )
+
+              log_inform("Rendering rmarkdown")
+              header <- paste(
+                readLines(system.file("odg_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
+                collapse = "\n"
+              )
+              rendered_zip_path <- callr::r(
                 render_odg_document,
                 args = list(
                   rmarkdown = rmarkdown,
                   header = header,
                   pdf_attach_function = pdf_attach,
-                  filename = filename,
+                  absolute_zip_path = absolute_zip_path,
+                  document_name = document_name,
                   quiet = FALSE # We want to access it in the app log
                 ),
                 show = TRUE
-              ),
-              error = function(e) {
-                # e.g. no zip command or a crashed subprocess, there is no file to download
-                log_warn(sprintf("Error while generating output documentation: %s", conditionMessage(e)))
-                shiny::showNotification(ODG$MSG$GENERATION_FAILED, type = "error", duration = NULL)
-                stop(e)
+              )
+              error_msg_string <- attr(rendered_zip_path, "error_msg")
+              if (length(error_msg_string) > 0) {
+                log_warn(sprintf(
+                  "Error while generating output documentation: %s",
+                  error_msg_string
+                ))
+                # The zip is still downloaded, it carries error.txt
+                shiny::showNotification(ODG$MSG$RENDER_FAILED, type = "error", duration = NULL)
               }
-            )
-            error_msg_string <- attr(rendered_filename, "error_msg")
-            if (length(error_msg_string) > 0) {
+              attr(rendered_zip_path, "error_msg") <- NULL
+            }),
+            error = function(e) {
+              # e.g. an invalid `load_fn`, a filter that cannot be applied (silent error, empty message), no zip
+              # command or a crashed subprocess
               log_warn(sprintf(
-                "Error while generating output documentation: %s",
-                error_msg_string
+                "Error while generating output documentation (%s): %s",
+                class(e)[[1]],
+                conditionMessage(e)
               ))
-              # The zip is still downloaded, it carries error.txt
-              shiny::showNotification(ODG$MSG$RENDER_FAILED, type = "error", duration = NULL)
+              shiny::showNotification(ODG$MSG$GENERATION_FAILED, type = "error", duration = NULL)
+              stop(e)
             }
-            attr(rendered_filename, "error_msg") <- NULL
-          })
+          )
         }
       )
     })

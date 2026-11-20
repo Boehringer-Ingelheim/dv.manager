@@ -1,11 +1,11 @@
 local({
   test_that("build_hardcoded_hash_section lists a content hash per dataset", {
     dataset_list <- list(a = data.frame(x = 1:2), b = data.frame(y = "z"))
-    expect_snapshot(cat(build_hardcoded_hash_section(dataset_list)))
+    expect_snapshot(cat(build_hardcoded_hash_section(hash_dataset_list(dataset_list))))
   })
 
   test_that("build_hardcoded_hash_section handles an empty dataset list", {
-    expect_snapshot(cat(build_hardcoded_hash_section(list())))
+    expect_snapshot(cat(build_hardcoded_hash_section(hash_dataset_list(list()))))
   })
 
   # use shinymeta machinery, not a stub
@@ -23,26 +23,79 @@ local({
     invisible(get_code_in_context(mr()))
   }
 
-  test_that("build_dynamic_hash_section emits an asis loop referencing the shared dataset-list variable", {
-    shiny::isolate({
-      gcic <- new_shared_get_code_in_context()
-      sdl <- shinymeta::metaReactive(
-        list(a = data.frame(x = 1:2), b = data.frame(y = "z")),
-        varname = "selected_dataset_list"
-      )
-      prime(gcic, sdl)
+  # The generated code only refers to `selected_dataset_list` by name, so its value here never reaches the section
+  build_dynamic_hash_section_for <- function(in_app_list, output_format) {
+    gcic <- new_shared_get_code_in_context()
+    sdl <- shinymeta::metaReactive(list(), varname = "selected_dataset_list")
+    prime(gcic, sdl)
+    build_dynamic_hash_section(sdl, hash_dataset_list(in_app_list), output_format, gcic)
+  }
 
-      expect_snapshot(cat(build_dynamic_hash_section(sdl, gcic)))
+  # Run the generated chunk as the rendered document would, in `envir` standing in for the document's environment
+  run_dynamic_hash_chunk <- function(section, dataset_list, envir = new.env()) {
+    chunk <- regmatches(
+      section,
+      regexpr("(?s)```\\{r odg-dynamic_data_hash[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
+    )
+    envir[["selected_dataset_list"]] <- dataset_list
+    printed <- utils::capture.output(eval(parse(text = chunk), envir))
+    paste(printed, collapse = "\n")
+  }
+
+  test_that("build_dynamic_hash_section emits an asis loop checking the dataset-list variable against the in-app hashes", {
+    shiny::isolate({
+      in_app_list <- list(a = data.frame(x = 1:2), b = data.frame(y = "z"))
+      expect_snapshot(cat(build_dynamic_hash_section_for(in_app_list, ODG$OUTPUT_FORMAT$HTML)))
+      expect_snapshot(cat(build_dynamic_hash_section_for(in_app_list, ODG$OUTPUT_FORMAT$PDF)))
     })
   })
 
   test_that("build_dynamic_hash_section handles zero datasets", {
     shiny::isolate({
-      gcic <- new_shared_get_code_in_context()
-      sdl <- shinymeta::metaReactive(list(), varname = "selected_dataset_list")
-      prime(gcic, sdl)
+      section <- build_dynamic_hash_section_for(list(), ODG$OUTPUT_FORMAT$HTML)
+      expect_snapshot(cat(section))
+      expect_identical(run_dynamic_hash_chunk(section, list()), "")
+    })
+  })
 
-      expect_snapshot(cat(build_dynamic_hash_section(sdl, gcic)))
+  test_that("build_dynamic_hash_section rejects an unknown output_format", {
+    shiny::isolate({
+      expect_error(build_dynamic_hash_section_for(list(), "bogus"), "output_format")
+    })
+  })
+
+  test_that("the dynamic hash chunk highlights nothing when the data matches the in-app data", {
+    shiny::isolate({
+      dataset_list <- list(a = data.frame(x = 1:2), b = data.frame(y = "z"))
+      for (output_format in c(ODG$OUTPUT_FORMAT$HTML, ODG$OUTPUT_FORMAT$PDF)) {
+        printed <- run_dynamic_hash_chunk(build_dynamic_hash_section_for(dataset_list, output_format), dataset_list)
+        expect_no_match(printed, "Hash mismatch", info = output_format)
+        expect_no_match(printed, "alert", info = output_format)
+      }
+    })
+  })
+
+  test_that("the dynamic hash chunk highlights changed datasets and those only one side has", {
+    shiny::isolate({
+      # `a` changed, `b` unchanged, `c` only in the app, `d` only in the document
+      in_app_list <- list(a = data.frame(x = 1:3), b = data.frame(y = "z"), c = data.frame(w = 1))
+      dataset_list <- list(a = data.frame(x = 1:2), b = data.frame(y = "z"), d = data.frame(v = 1))
+
+      html <- run_dynamic_hash_chunk(build_dynamic_hash_section_for(in_app_list, ODG$OUTPUT_FORMAT$HTML), dataset_list)
+      pdf <- run_dynamic_hash_chunk(build_dynamic_hash_section_for(in_app_list, ODG$OUTPUT_FORMAT$PDF), dataset_list)
+      expect_snapshot(cat(html))
+      expect_snapshot(cat(pdf))
+    })
+  })
+
+  test_that("the dynamic hash chunk leaves no variables behind in the document's environment", {
+    shiny::isolate({
+      # A mismatch, so every branch of the loop runs
+      dataset_list <- list(a = data.frame(x = 1:2))
+      envir <- new.env()
+      section <- build_dynamic_hash_section_for(list(b = data.frame(y = 1)), ODG$OUTPUT_FORMAT$PDF)
+      run_dynamic_hash_chunk(section, dataset_list, envir)
+      expect_identical(ls(envir, all.names = TRUE), "selected_dataset_list")
     })
   })
 
@@ -79,7 +132,7 @@ local({
       # Run the generated chunk as the rendered document would
       chunk <- regmatches(
         section,
-        regexpr("(?s)```\\{r data_modification_dates[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
+        regexpr("(?s)```\\{r odg-data_modification_dates[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
       )
       printed <- utils::capture.output(
         eval(parse(text = chunk), list(selected_dataset_list = list(a = data.frame(x = 1))))
@@ -139,7 +192,7 @@ local({
         # Run the generated chunk as the rendered document would
         chunk <- regmatches(
           section,
-          regexpr("(?s)```\\{r filter_odg_reference_list[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
+          regexpr("(?s)```\\{r odg-filter_odg_reference_list[^\n]*\n\\K.*?(?=\n```)", section, perl = TRUE)
         )
         printed <- utils::capture.output(
           eval(parse(text = chunk), list(filter_odg = list(txt = "", references = list())))

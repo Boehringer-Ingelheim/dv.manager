@@ -564,6 +564,26 @@ test_that(
   }
 )
 
+test_that(
+  vdoc[["add_spec"]](
+    "check_module should error when a module_id is `odg` or starts with `odg-`",
+    c(specs$MODULES$MODULE_DEFINITION_STRUCTURE)
+  ),
+  {
+    check_ids <- function(ids) {
+      module_list <- lapply(ids, function(id) list(ui = 1, server = function(x) x, module_id = id))
+      check_resolved_modules(resolve_module_list(stats::setNames(module_list, ids)))
+    }
+
+    check_ids(c("a", "odg", "odg-x")) |>
+      expect_error(regexp = "module ids cannot be `odg` or start with `odg-`, found: `odg`, `odg-x`", fixed = TRUE)
+
+    # Only the `odg` namespace is reserved
+    check_ids(c("odg_x", "odgx", "x-odg")) |>
+      expect_no_error()
+  }
+)
+
 test_that("check_set_filter_info should error when filter_default_state is not a JSON parsable string", {
   check_set_filter_info("UNPARSABLE") |>
     expect_error(regexp = "^`filter_default_state` cannot be parsed as JSON")

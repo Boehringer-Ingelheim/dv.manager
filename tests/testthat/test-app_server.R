@@ -457,11 +457,15 @@ test_that("app_server_ errors when two ODG elements end up with the same chunk l
     )
   }
 
+  # Same element name in different modules is fine, the module id keeps the labels apart
+  shared_name <- odg_testing_options(list("Mod 1" = odg_module("a", "plot"), "Mod 2" = odg_module("b", "plot")))
+  expect_no_error(shiny::testServer(app_server_test(shared_name), {}))
+
   # Same id: `a-b` + `c` and `a` + `b-c` both join into `a-b-c`
   same_id <- odg_testing_options(list("Mod 1" = odg_module("a-b", "c"), "Mod 2" = odg_module("a", "b-c")))
   expect_error(
     shiny::testServer(app_server_test(same_id), {}),
-    "ODG elements `a-b-c` (module `a-b`) and `a-b-c` (module `a`) share the chunk label `odg-a-b-c`",
+    "ODG elements `a-b-c` (module `a-b`) and `a-b-c` (module `a`) share the chunk label `a-b-c`",
     fixed = TRUE
   )
 
@@ -469,9 +473,33 @@ test_that("app_server_ errors when two ODG elements end up with the same chunk l
   same_label <- odg_testing_options(list("Mod" = odg_module("m", c("n=10", "n_10"))))
   expect_error(
     shiny::testServer(app_server_test(same_label), {}),
-    "ODG elements `m-n=10` (module `m`) and `m-n_10` (module `m`) share the chunk label `odg-m-n_10`",
+    "ODG elements `m-n=10` (module `m`) and `m-n_10` (module `m`) share the chunk label `m-n_10`",
     fixed = TRUE
   )
 })
 
 # nolint end
+
+test_that("afmm exposes only the public ODG variable names to modules", {
+  module_info <- resolve_module_list(list())
+  testing_options <- list(
+    afmm_static = list(data = list(), module_names = module_info[["module_name"]]),
+    module_info = module_info,
+    filter_info = list(filter_default_state = NULL),
+    enable_subgroup = FALSE,
+    enable_odg = TRUE
+  )
+
+  shiny::testServer(app_server_test(testing_options), {
+    # Modules (e.g. dv.papo) refer to these variables of the document by name
+    expect_identical(
+      unclass(afmm_static[["odg"]][["id"]]),
+      list(
+        SELECTED_DATASET_LIST = "selected_dataset_list",
+        UNFILTERED_DATASET_LIST = "unfiltered_dataset_list",
+        FILTERED_DATASET_LIST = "filtered_dataset_list",
+        UNFILTERED_INFO_DATASET_LIST = "unfiltered_dataset_list_with_filter_info"
+      )
+    )
+  })
+})
