@@ -118,6 +118,7 @@
       
       ```{r odg-data_source}
       df <- load_data()
+      filtered_df <- filter_data(df)
       ```
       
       \pagestyle{headings}
@@ -166,6 +167,7 @@
       
       ```{r odg-data_source}
       df <- load_data()
+      filtered_df <- filter_data(df)
       ```
       
       \pagestyle{headings}

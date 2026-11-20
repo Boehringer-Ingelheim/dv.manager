@@ -5,9 +5,9 @@
     Output
       ## Hardcoded Data hash:
       
-       **name**: `a` **hash**: 55a120a9c16e53051c6fb3c477eca7dc
+       **name**: `a` **hash**: 4c5be99243505147
       
-       **name**: `b` **hash**: 3283d8f999f408731e81590e84265eec
+       **name**: `b` **hash**: e3d711106256114f
       
       These hashes are calculated in-app, they correspond to the data loaded in the app that created this output documentation.
 
@@ -29,11 +29,11 @@
       
       ```{r odg-dynamic_data_hash, echo = FALSE, results='asis'}
       local({
-          in_app_hash <- c(a = "55a120a9c16e53051c6fb3c477eca7dc", b = "3283d8f999f408731e81590e84265eec")
+          in_app_hash <- c(a = "4c5be99243505147", b = "e3d711106256114f")
           not_found <- "Dataset not found"
           for (name in union(names(selected_dataset_list), names(in_app_hash))) {
               hash <- if (name %in% names(selected_dataset_list)) {
-                  digest::digest(selected_dataset_list[[name]], algo = "md5")
+                  digest::digest(selected_dataset_list[[name]], algo = "xxhash64")
               }
               else {
                   not_found
@@ -61,11 +61,11 @@
       
       ```{r odg-dynamic_data_hash, echo = FALSE, results='asis'}
       local({
-          in_app_hash <- c(a = "55a120a9c16e53051c6fb3c477eca7dc", b = "3283d8f999f408731e81590e84265eec")
+          in_app_hash <- c(a = "4c5be99243505147", b = "e3d711106256114f")
           not_found <- "Dataset not found"
           for (name in union(names(selected_dataset_list), names(in_app_hash))) {
               hash <- if (name %in% names(selected_dataset_list)) {
-                  digest::digest(selected_dataset_list[[name]], algo = "md5")
+                  digest::digest(selected_dataset_list[[name]], algo = "xxhash64")
               }
               else {
                   not_found
@@ -97,7 +97,7 @@
           not_found <- "Dataset not found"
           for (name in union(names(selected_dataset_list), names(in_app_hash))) {
               hash <- if (name %in% names(selected_dataset_list)) {
-                  digest::digest(selected_dataset_list[[name]], algo = "md5")
+                  digest::digest(selected_dataset_list[[name]], algo = "xxhash64")
               }
               else {
                   not_found
@@ -127,17 +127,17 @@
       
        **Hash mismatch**: the data used to generate this document is not the data loaded in the app.
       
-       **name**: `a` **hash**: 55a120a9c16e53051c6fb3c477eca7dc **in-app hash**: ae70b3e712eb52323015844f25e86b87
+       **name**: `a` **hash**: 4c5be99243505147 **in-app hash**: d2f4e68889aec86a
       
       </div>
       
-       **name**: `b` **hash**: 3283d8f999f408731e81590e84265eec
+       **name**: `b` **hash**: e3d711106256114f
       
       <div class="alert alert-danger" role="alert">
       
        **Hash mismatch**: the data used to generate this document is not the data loaded in the app.
       
-       **name**: `d` **hash**: cf63f2dd95e145cdcd917998d295ee6b **in-app hash**: Dataset not found
+       **name**: `d` **hash**: 6beddb0fa38b45cf **in-app hash**: Dataset not found
       
       </div>
       
@@ -145,7 +145,7 @@
       
        **Hash mismatch**: the data used to generate this document is not the data loaded in the app.
       
-       **name**: `c` **hash**: Dataset not found **in-app hash**: 3a6613ebe6511d997736ce5865201f9a
+       **name**: `c` **hash**: Dataset not found **in-app hash**: 194a9469fc6f7b82
       
       </div>
 
@@ -162,13 +162,13 @@
       
        **Hash mismatch**: the data used to generate this document is not the data loaded in the app.
       
-       **name**: `a` **hash**: 55a120a9c16e53051c6fb3c477eca7dc **in-app hash**: ae70b3e712eb52323015844f25e86b87
+       **name**: `a` **hash**: 4c5be99243505147 **in-app hash**: d2f4e68889aec86a
       
       ```{=latex}
       \end{alertdanger}
       ```
       
-       **name**: `b` **hash**: 3283d8f999f408731e81590e84265eec
+       **name**: `b` **hash**: e3d711106256114f
       
       ```{=latex}
       \begin{alertdanger}
@@ -176,7 +176,7 @@
       
        **Hash mismatch**: the data used to generate this document is not the data loaded in the app.
       
-       **name**: `d` **hash**: cf63f2dd95e145cdcd917998d295ee6b **in-app hash**: Dataset not found
+       **name**: `d` **hash**: 6beddb0fa38b45cf **in-app hash**: Dataset not found
       
       ```{=latex}
       \end{alertdanger}
@@ -188,7 +188,7 @@
       
        **Hash mismatch**: the data used to generate this document is not the data loaded in the app.
       
-       **name**: `c` **hash**: Dataset not found **in-app hash**: 3a6613ebe6511d997736ce5865201f9a
+       **name**: `c` **hash**: Dataset not found **in-app hash**: 194a9469fc6f7b82
       
       ```{=latex}
       \end{alertdanger}

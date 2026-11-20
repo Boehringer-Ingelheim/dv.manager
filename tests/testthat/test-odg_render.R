@@ -179,6 +179,7 @@ local({
       list(error_element),
       output_format,
       data_code = "NULL",
+      filtered_data_code = "NULL",
       sections = list(date = "", hardcoded_hash = "", dynamic_hash = "", filter_txt = "", filter_reference = ""),
       templates = list(header = ODG$TEMPLATES$HEADER[[output_format]], session_info = "", footer = "")
     )
