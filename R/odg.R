@@ -372,10 +372,14 @@ cat(sprintf("# Warnings \\& Messages \\texorpdfstring{\\textcolor{%s}{(%d)}}{(%d
 if (n == 0) {
   cat("No warnings or messages were produced during rendering.\n")
 } else {
-  for (i in seq_len(n)) {
-    row <- .condition_log[i, ]
-    cat(sprintf("- **[%s]** `%s`: %s\n", toupper(row$type), row$chunk, row$message))
-  }
+  # Raw LaTeX with escaped text, as markdown would read `*`, `_`, `$`, ... in the messages as markup
+  items <- sprintf(
+    "\\item \\textbf{[%s]} \\texttt{%s}: %s",
+    toupper(.condition_log$type),
+    gt::escape_latex(.condition_log$chunk),
+    gt::escape_latex(.condition_log$message)
+  )
+  cat("```{=latex}", "\\begin{itemize}", items, "\\end{itemize}", "```", sep = "\n")
 }
 ```
 )--"

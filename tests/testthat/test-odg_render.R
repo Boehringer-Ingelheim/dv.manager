@@ -217,6 +217,59 @@ local({
     expect_match(tex, "\\%>\\%", fixed = TRUE)
   })
 
+  test_that("the PDF warnings summary prints condition messages verbatim", {
+    stopifnot(
+      "pandoc not available" = rmarkdown::pandoc_available(),
+      "xelatex not available" = nzchar(Sys.which("xelatex"))
+    )
+
+    zip_path <- tempfile(fileext = ".zip")
+    on.exit(unlink(zip_path), add = TRUE)
+
+    # A backslash used to stop the render (`\new` is an undefined control sequence), the rest was read as markup
+    msg <- "cannot open C:\\new\\file *bold* _u_ $a^2$ <b> 100% #1 {x} ~y &"
+    warning_element <- list(
+      id = "mod_1-warn",
+      chunk_label = "mod_1-warn",
+      kind = ODG$ELEMENT_KIND$DEFAULT,
+      code = sprintf("warning(%s)", deparse(msg)),
+      label = "Warns",
+      module_name = "Module 1",
+      is_first_module_element = TRUE
+    )
+    output_format <- ODG$OUTPUT_FORMAT$PDF
+    rmd <- build_odg_rmd(
+      list(warning_element),
+      output_format,
+      data_code = "NULL",
+      filtered_data_code = "NULL",
+      sections = list(date = "", hardcoded_hash = "", dynamic_hash = "", filter_txt = "", filter_reference = ""),
+      templates = list(
+        header = ODG$TEMPLATES$HEADER[[output_format]],
+        session_info = "",
+        footer = ODG$TEMPLATES$FOOTER[[output_format]]
+      )
+    )
+    header <- paste(
+      readLines(system.file("odg_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
+      collapse = "\n"
+    )
+
+    result <- render_odg_document(rmd, header, function(pdf, attachment) invisible(NULL), zip_path, "odg")
+    expect_length(attr(result, "error_msg"), 0)
+
+    unzip_dir <- tempfile()
+    utils::unzip(zip_path, exdir = unzip_dir)
+    expect_true(file.exists(file.path(unzip_dir, "odg.pdf")))
+
+    skip_if_not(nzchar(Sys.which("pdftotext")), "pdftotext not available")
+    txt_file <- tempfile(fileext = ".txt")
+    system2("pdftotext", c("-raw", shQuote(file.path(unzip_dir, "odg.pdf")), shQuote(txt_file)))
+    pdf_txt <- paste(readLines(txt_file, warn = FALSE), collapse = " ")
+    expect_match(pdf_txt, msg, fixed = TRUE)
+    expect_match(pdf_txt, "[WARNING] mod_1-warn", fixed = TRUE)
+  })
+
   test_that("a PDF table element from a gt_tbl with default options renders as a longtable", {
     stopifnot(
       "pandoc not available" = rmarkdown::pandoc_available(),
