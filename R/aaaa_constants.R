@@ -46,5 +46,5 @@ ODG_ID <- poc(
   FILTERED_DATASET_LIST = "filtered_dataset_list",
   UNFILTERED_INFO_DATASET_LIST_ = "unfiltered_dataset_list_with_filter_info_",
   UNFILTERED_INFO_DATASET_LIST = "unfiltered_dataset_list_with_filter_info",
-  DATASET_FILTER_ = "ODG_ID$DATASET_FILTER_"
+  DATASET_FILTER_ = "dataset_filter_"
 )
