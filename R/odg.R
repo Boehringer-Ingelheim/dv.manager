@@ -863,10 +863,11 @@ preprocess_odg_elements <- function(odg_elements, output_format, get_code_in_con
       } else if (is_table) {
         # TODO: This could be moved to the formatter section
         latex <- if (is.data.frame(resolved)) {
+          # The id goes into LaTeX link targets and PDF strings, `chunk_label` is unique and has no special characters
           shinymeta::metaReactive(
             {
               ..(codegen()) |>
-                dv.manager::utils_latex_tables$gt_latex_table(long_cell_id = ..(odg_element[["id"]]))
+                dv.manager::utils_latex_tables$gt_latex_table(long_cell_id = ..(odg_element[["chunk_label"]]))
             },
             inline = TRUE
           )

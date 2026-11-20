@@ -270,6 +270,54 @@ local({
     expect_match(pdf_txt, "[WARNING] mod_1-warn", fixed = TRUE)
   })
 
+  test_that("a PDF table with a cut long cell renders when the element id holds LaTeX special characters", {
+    stopifnot(
+      "pandoc not available" = rmarkdown::pandoc_available(),
+      "xelatex not available" = nzchar(Sys.which("xelatex"))
+    )
+
+    zip_path <- tempfile(fileext = ".zip")
+    on.exit(unlink(zip_path), add = TRUE)
+
+    # The id prefixes the link targets of cut cells: `%` ends the line, `#` is a macro parameter, `(` ends a PDF string
+    id <- "mod%1-t#b(l)"
+    table_element <- list(
+      id = id,
+      chunk_label = gsub("[^A-Za-z0-9_-]", "_", id), # as app_server_() sets it
+      label = "Long cells",
+      module_name = "Module 1",
+      is_first_module_element = TRUE,
+      codegen = list(pdf = shinymeta::metaReactive(data.frame(txt = strrep("long text ", 25)), varname = "long_src"))
+    )
+    output_format <- ODG$OUTPUT_FORMAT$PDF
+    get_code_in_context <- function(x) paste(as.character(shinymeta::expandChain(x)), collapse = "\n")
+    elements <- shiny::isolate(preprocess_odg_elements(list(table_element), output_format, get_code_in_context))
+    expect_identical(elements[[1]][["kind"]], ODG$ELEMENT_KIND$TABLE)
+
+    rmd <- build_odg_rmd(
+      elements,
+      output_format,
+      data_code = "NULL",
+      filtered_data_code = "NULL",
+      sections = list(date = "", hardcoded_hash = "", dynamic_hash = "", filter_txt = "", filter_reference = ""),
+      templates = list(header = ODG$TEMPLATES$HEADER[[output_format]], session_info = "", footer = "")
+    )
+    header <- paste(
+      readLines(system.file("odg_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
+      collapse = "\n"
+    )
+
+    result <- render_odg_document(rmd, header, function(pdf, attachment) invisible(NULL), zip_path, "odg")
+    expect_length(attr(result, "error_msg"), 0)
+
+    unzip_dir <- tempfile()
+    utils::unzip(zip_path, exdir = unzip_dir)
+    expect_true(file.exists(file.path(unzip_dir, "odg.pdf")))
+    tex <- paste(readLines(file.path(unzip_dir, "odg.tex"), warn = FALSE), collapse = "\n")
+    expect_match(tex, "\\longcellanchor{mod_1-t_b_l_-cell-1}", fixed = TRUE)
+    expect_match(tex, "\\longcellmark{mod_1-t_b_l_-note-1}", fixed = TRUE)
+  })
+
   test_that("a PDF table element from a gt_tbl with default options renders as a longtable", {
     stopifnot(
       "pandoc not available" = rmarkdown::pandoc_available(),
