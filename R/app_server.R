@@ -225,8 +225,19 @@ app_server_ <- function(input, output, session, opts) {
 
       res <- sm_me(
         {
-          ..(unfiltered_dataset_list_with_filter_info_())
-        }
+          with_filter_info <- ..(unfiltered_dataset_list_with_filter_info_())
+          # ODG: only met in the document, the app handles these errors above. The document reloads the data with
+          # `load_fn`, which may return different data than the app holds, e.g. without a filtered variable
+          if (with_filter_info[["error_list"]]$any()) {
+            stop(paste(
+              "The filter cannot be applied to the data loaded for this document,",
+              "it may differ from the data in the app:",
+              paste(with_filter_info[["error_list"]]$get_messages(), collapse = "; ")
+            ))
+          }
+          with_filter_info
+        },
+        localize = TRUE
       )
 
       ..t$add_event("received unfiltered_dataset_list_with_filter_info")

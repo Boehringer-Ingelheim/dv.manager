@@ -70,3 +70,38 @@ test_that("the generated code keeps the same rows as the app when filter bounds 
     expect_identical(doc_filtered_dataset_list, filtered_dataset_list())
   })
 })
+
+test_that("the generated code stops with the filter errors when the filter does not apply to the reloaded data", {
+  module_info <- resolve_module_list(list())
+  testing_options <- list(
+    afmm_static = list(data = precision_dataset_list(), module_names = module_info[["module_name"]]),
+    filter_dataset_name = "adsl",
+    module_info = module_info,
+    filter_key = "USUBJID",
+    filter_info = list(filter_default_state = NULL),
+    enable_subgroup = FALSE
+  )
+
+  shiny::testServer(app_server_test(testing_options), {
+    session$setInputs(selector = "DL")
+    session$setInputs(`filter-filter_state_json_input` = precision_filter_json(-1 / 3, 400 / 3))
+
+    ec <- shinymeta::newExpansionContext()
+    ec$substituteMetaReactive(selected_dataset_list, function() shinymeta::metaExpr(app_selected_dataset_list))
+    code <- shinymeta::expandChain(invisible(filtered_dataset_list()), .expansionContext = ec) |>
+      shinymeta::formatCode(formatter = format_odg_code, width = 400L) |>
+      as.character() |>
+      paste(collapse = "\n")
+
+    # `load_fn` reloads the data in the document, here it no longer has the filtered variable
+    reloaded_dataset_list <- selected_dataset_list()
+    reloaded_dataset_list[["adsl"]][["VAL"]] <- NULL
+    doc_env <- new.env(parent = globalenv())
+    doc_env[["app_selected_dataset_list"]] <- reloaded_dataset_list
+
+    expect_error(
+      eval(parse(text = code), envir = doc_env),
+      "may differ from the data in the app.*does not contain col `VAL`"
+    )
+  })
+})
