@@ -84,7 +84,15 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
   error_msg <- character(0)
   tryCatch(
     {
-      output_file <- rmarkdown::render(input = rmd_file, output_dir = odg_dir, quiet = quiet)
+      # `render()` evaluates in `parent.frame()` by default. This lets the rmd change values in parent.frame()
+      # One chunk coud overwrite `filename`, `odg_dir`, `error_msg`, ... and change the behavior or cause an error
+      # Although we control we evaluate in a new environment.
+      output_file <- rmarkdown::render(
+        input = rmd_file,
+        output_dir = odg_dir,
+        quiet = quiet,
+        envir = new.env(parent = globalenv())
+      )
       if (endsWith(output_file, "pdf")) {
         writeLines(utils::capture.output(sessioninfo::session_info()), session_info_file)
         pdf_attach_function(output_file, rmd_file)
@@ -812,19 +820,27 @@ preprocess_odg_elements <- function(odg_elements, output_format, get_code_in_con
       kind <- ODG$ELEMENT_KIND$ERROR
     } else if (inherits(codegen, "chunk")) {
       # The chunk places the header itself, e.g. after a `\beginwidepage` whose `\clearpage` would otherwise strand it
-      chunk_code <- codegen(header = ODG_ELEMENT_FORMATTERS[[output_format]][["header"]](odg_element))
-      if (checkmate::test_string(chunk_code)) {
-        code <- chunk_code
-        kind <- ODG$ELEMENT_KIND$CHUNK
+      chunk_code <- try(
+        codegen(header = ODG_ELEMENT_FORMATTERS[[output_format]][["header"]](odg_element)),
+        silent = TRUE
+      )
+      if (!inherits(chunk_code, "try-error")) {
+        if (checkmate::test_string(chunk_code)) {
+          code <- chunk_code
+          kind <- ODG$ELEMENT_KIND$CHUNK
+        } else {
+          code <- paste0(
+            "Error creating ",
+            odg_element[["id"]],
+            " `chunk` must return a single string, it returned ",
+            class(chunk_code)[[1]],
+            " of length ",
+            length(chunk_code)
+          )
+          kind <- ODG$ELEMENT_KIND$ERROR
+        }
       } else {
-        code <- paste0(
-          "Error creating ",
-          odg_element[["id"]],
-          " `chunk` must return a single string, it returned ",
-          class(chunk_code)[[1]],
-          " of length ",
-          length(chunk_code)
-        )
+        code <- paste("Error creating", odg_element[["id"]], attr(chunk_code, "condition")[["message"]])
         kind <- ODG$ELEMENT_KIND$ERROR
       }
     } else if (inherits(codegen, "shinymeta_reactive")) {

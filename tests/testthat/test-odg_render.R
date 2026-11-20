@@ -63,6 +63,24 @@ local({
     expect_false(file.exists(zip_path))
   })
 
+  test_that("render_odg_document evaluates the document apart from its own variables", {
+    zip_path <- tempfile(fileext = ".zip")
+    probe_path <- tempfile(fileext = ".txt")
+    on.exit(unlink(c(zip_path, probe_path)), add = TRUE)
+
+    # A chunk assigning `filename` would otherwise redirect the zip into the temporary dir deleted on exit
+    chunk_body <- c(
+      sprintf('writeLines(as.character(exists("odg_dir")), "%s")', probe_path),
+      'filename <- "hijacked.zip"'
+    )
+    result <- render_odg_document(make_odg_rmd(chunk_body), dummy_header, spy_pdf_attach()$fn, zip_path, "odg")
+
+    expect_identical(readLines(probe_path), "FALSE")
+    expect_identical(as.vector(result), zip_path)
+    expect_true(file.exists(zip_path))
+    expect_length(attr(result, "error_msg"), 0)
+  })
+
   test_that("render_odg_document renders PDF and attaches the source Rmd and session info", {
     skip_if_not(rmarkdown::pandoc_available(), "pandoc not available")
     skip_if_not(nzchar(Sys.which("pdflatex")), "pdflatex not available")
