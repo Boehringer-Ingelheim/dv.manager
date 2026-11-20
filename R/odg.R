@@ -55,6 +55,8 @@ render_odg_document <- function(
   document_name,
   quiet = TRUE
 ) {
+  # Constants from ODG are not used here. This runs in an empty session so it should be as independent as possible
+  # from the environment, otherwise when using devtools load_all things can get messy.
   header_file <- "header.tex"
   session_info_file <- "session_info.txt"
   error_file <- "error.txt"
