@@ -161,6 +161,10 @@ pdf_attach <- function(pdf, attachment) {
 }
 
 ODG <- local({
+  # See "Chunk labels" in vignette("odg")
+  reserved_namespace <- "odg"
+  chunk_label <- function(name) paste0(reserved_namespace, "-", name)
+
   ODG <- poc(
     ID = poc(
       ODG_CODE = "odg_code",
@@ -198,8 +202,34 @@ ODG <- local({
       ODG_ALL = "all"
     ),
     HASH_ALGO = "xxhash64",
-    # See "Chunk labels" in vignette("odg")
-    RESERVED_NAMESPACE = "odg",
+    # Variables the document defines, named by the metareactives' `varname`. Names ending in `_` are private: used
+    # by app_server_ only, the others are exposed to modules through `afmm[["odg"]][["id"]]`
+    VARNAME = poc(
+      SELECTED_DATASET_LIST = "selected_dataset_list",
+      UNFILTERED_DATASET_LIST_ = "unfiltered_dataset_list_",
+      UNFILTERED_DATASET_LIST = "unfiltered_dataset_list",
+      FILTERED_DATASET_LIST = "filtered_dataset_list",
+      UNFILTERED_INFO_DATASET_LIST_ = "unfiltered_dataset_list_with_filter_info_",
+      UNFILTERED_INFO_DATASET_LIST = "unfiltered_dataset_list_with_filter_info",
+      DATASET_FILTER_ = "dataset_filter_",
+      DATE_RANGE_ = "date_range",
+      FILTER_TXT_TREE_ = "filter_odg",
+      CAT_FILTER_TXT_ = "cat_filter_txt",
+      CAT_FILTER_REFERENCE_LIST_TXT_ = "cat_filter_reference_list_txt"
+    ),
+    RESERVED_NAMESPACE = reserved_namespace,
+    # Templates refer to them as `{{<NAME>}}`
+    CHUNK_LABEL = poc(
+      SETUP = chunk_label("setup"),
+      CONDITION_CATCHER = chunk_label("condition_catcher"),
+      DATA_SOURCE = chunk_label("data_source"),
+      DYNAMIC_DATA_HASH = chunk_label("dynamic_data_hash"),
+      DATA_MODIFICATION_DATES = chunk_label("data_modification_dates"),
+      FILTER_TXT = chunk_label("filter_odg_txt"),
+      FILTER_REFERENCE_LIST = chunk_label("filter_odg_reference_list"),
+      SESSION_INFO = chunk_label("session_info"),
+      WARNINGS_SUMMARY = chunk_label("warnings_summary")
+    ),
     FILE_NAME = poc(
       DEFAULT = "odg",
       MAX_CHARS = 100L,
@@ -237,7 +267,7 @@ geometry: margin=2cm
 papersize: a4
 ---
 
-```{r odg-setup, include=FALSE}
+```{r {{SETUP}}, include=FALSE}
 knitr::opts_chunk$set(
   echo = FALSE,
   tidy = TRUE,
@@ -251,7 +281,7 @@ knitr::opts_chunk$set(
     
 ```
   
-```{r odg-condition_catcher, include=FALSE}
+```{r {{CONDITION_CATCHER}}, include=FALSE}
 # storage for everything we capture
 .condition_log <- data.frame(
   chunk   = character(0),
@@ -297,7 +327,7 @@ output:
     self_contained: true
 ---
 
-```{r odg-setup, include = FALSE}
+```{r {{SETUP}}, include = FALSE}
 knitr::opts_chunk$set(
   out.width = "100%",
   tidy = TRUE
@@ -334,7 +364,7 @@ body::before {
     templates <- character(0)
     templates[[ODG$OUTPUT_FORMAT$PDF]] <- r"--(
 
-```{r odg-session_info, results = 'asis'}
+```{r {{SESSION_INFO}}, results = 'asis'}
   session_lines <- utils::capture.output(sessioninfo::session_info())
   # Verbatim isn't measured by \beginwidepage, only longtables are; pass the width explicitly
   max_char_width <- max(nchar(session_lines, type = "width"), 0L)
@@ -362,7 +392,7 @@ body::before {
     templates[[ODG$OUTPUT_FORMAT$HTML]] <- r"--(
 # Session Info
 
-```{r odg-session_info}
+```{r {{SESSION_INFO}}}
   sessioninfo::session_info()
 ```
 
@@ -374,7 +404,7 @@ body::before {
   ODG[["TEMPLATES"]][["FOOTER"]] <- local({
     templates <- character(0)
     templates[[ODG$OUTPUT_FORMAT$PDF]] <- r"--(
-```{r odg-warnings-summary, echo=FALSE, results='asis'}
+```{r {{WARNINGS_SUMMARY}}, echo=FALSE, results='asis'}
 n <- nrow(.condition_log)
 color <- if (n == 0) "black" else "red"
 
@@ -405,6 +435,14 @@ if (n == 0) {
 
     templates[[ODG$OUTPUT_FORMAT$HTML]] <- ""
 
+    templates
+  })
+
+  # The templates are raw strings, so they refer to the chunk labels as `{{<NAME>}}` placeholders
+  ODG[["TEMPLATES"]] <- lapply(ODG[["TEMPLATES"]], function(templates) {
+    for (name in names(ODG$CHUNK_LABEL)) {
+      templates <- gsub(paste0("{{", name, "}}"), ODG$CHUNK_LABEL[[name]], templates, fixed = TRUE)
+    }
     templates
   })
 
@@ -544,7 +582,7 @@ build_odg_rmd <- function(selected_odg_elements, output_format, data_code, filte
 
   paste_with_blank_lines(
     templates[["header"]],
-    paste0("```{r odg-data_source}\n", data_code, "\n", filtered_data_code, "\n```"),
+    paste0("```{r ", ODG$CHUNK_LABEL$DATA_SOURCE, "}\n", data_code, "\n", filtered_data_code, "\n```"),
     "\\pagestyle{headings}",
     formatted_elements,
     "\\pagestyle{plain}",
@@ -644,7 +682,11 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, in_app_hashes, 
   )
   paste_with_blank_lines(
     "## Dynamic Data hash:",
-    paste0("```{r odg-dynamic_data_hash, echo = FALSE, results='asis'}\n", get_code_in_context(loop()), "\n```"),
+    paste0(
+      "```{r ", ODG$CHUNK_LABEL$DYNAMIC_DATA_HASH, ", echo = FALSE, results='asis'}\n",
+      get_code_in_context(loop()),
+      "\n```"
+    ),
     note
   )
 }
@@ -683,7 +725,11 @@ build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code
     "## Data Modification Dates:",
     " **Date range**:",
     paste0("`r ", get_code_in_context(date_range_mr()), "`"),
-    paste0("```{r odg-data_modification_dates, echo = FALSE, results='asis'}\n", get_code_in_context(loop()), "\n```"),
+    paste0(
+      "```{r ", ODG$CHUNK_LABEL$DATA_MODIFICATION_DATES, ", echo = FALSE, results='asis'}\n",
+      get_code_in_context(loop()),
+      "\n```"
+    ),
     note
   )
 }
@@ -702,7 +748,7 @@ build_filter_txt_section <- function(filter_odg, output_format, get_code_in_cont
   checkmate::assert_choice(output_format, as.character(unclass(ODG$OUTPUT_FORMAT)))
   section <- "## Filters:"
 
-  cat_mr <- sm_mr(cat(..(filter_odg())[["txt"]]), inline = TRUE, varname = "cat_filter_txt")
+  cat_mr <- sm_mr(cat(..(filter_odg())[["txt"]]), inline = TRUE, varname = ODG$VARNAME$CAT_FILTER_TXT_)
 
   verbatim_tags <- if (output_format == ODG$OUTPUT_FORMAT$PDF) {
     c("\\begin{verbatim}", "\\end{verbatim}")
@@ -723,7 +769,7 @@ build_filter_txt_section <- function(filter_odg, output_format, get_code_in_cont
   paste_with_blank_lines(
     section,
     verbatim_tags[[1]],
-    "```{r odg-filter_odg_txt, echo = FALSE, results='asis'}",
+    paste0("```{r ", ODG$CHUNK_LABEL$FILTER_TXT, ", echo = FALSE, results='asis'}"),
     get_code_in_context(cat_mr()),
     "```",
     verbatim_tags[[2]],
@@ -766,7 +812,7 @@ build_filter_reference_section <- function(filter_odg, output_format, get_code_i
         }
       },
       inline = TRUE,
-      varname = "cat_filter_reference_list_txt"
+      varname = ODG$VARNAME$CAT_FILTER_REFERENCE_LIST_TXT_
     )
   } else if (output_format == ODG$OUTPUT_FORMAT$HTML) {
     cat_mr <- sm_mr(
@@ -784,7 +830,7 @@ build_filter_reference_section <- function(filter_odg, output_format, get_code_i
         }
       },
       inline = TRUE,
-      varname = "cat_filter_reference_list_txt"
+      varname = ODG$VARNAME$CAT_FILTER_REFERENCE_LIST_TXT_
     )
   } else {
     stop("Unknown format")
@@ -796,7 +842,7 @@ build_filter_reference_section <- function(filter_odg, output_format, get_code_i
   paste_with_blank_lines(
     "# Filter references:",
     tags[[1]],
-    "```{r odg-filter_odg_reference_list, echo = FALSE, results='asis'}",
+    paste0("```{r ", ODG$CHUNK_LABEL$FILTER_REFERENCE_LIST, ", echo = FALSE, results='asis'}"),
     get_code_in_context(cat_mr()),
     "```",
     tags[[2]]

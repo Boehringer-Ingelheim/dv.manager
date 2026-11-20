@@ -61,7 +61,7 @@ app_server_ <- function(input, output, session, opts) {
   filter_info <- opts[["filter_info"]]
   enable_subgroup <- opts[["enable_subgroup"]]
 
-  public_odg_ids <- do.call(poc, unclass(ODG_ID)[!endsWith(names(ODG_ID), "_")])
+  public_odg_ids <- do.call(poc, unclass(ODG$VARNAME)[!endsWith(names(ODG$VARNAME), "_")])
   afmm_static[["odg"]] <- list(
     id = public_odg_ids
   )
@@ -104,7 +104,7 @@ app_server_ <- function(input, output, session, opts) {
       attr(df, "dataset_list_name") <- dataset_list_name
       df
     },
-    varname = ODG_ID$SELECTED_DATASET_LIST
+    varname = ODG$VARNAME$SELECTED_DATASET_LIST
   )
 
   if (enable_subgroup) {
@@ -141,7 +141,7 @@ app_server_ <- function(input, output, session, opts) {
       res_apply_subgroups
     },
     inline = TRUE,
-    varname = ODG_ID$UNFILTERED_DATASET_LIST_
+    varname = ODG$VARNAME$UNFILTERED_DATASET_LIST_
   )
 
   unfiltered_dataset_list <- sm_mr2(
@@ -180,7 +180,7 @@ app_server_ <- function(input, output, session, opts) {
         localize = TRUE
       )
     },
-    varname = ODG_ID$UNFILTERED_DATASET_LIST
+    varname = ODG$VARNAME$UNFILTERED_DATASET_LIST
   )
 
   unfiltered_dataset_list_with_filter_info_ <- sm_mr2(
@@ -215,7 +215,7 @@ app_server_ <- function(input, output, session, opts) {
       res
     },
     inline = TRUE,
-    varname = ODG_ID$UNFILTERED_INFO_DATASET_LIST_
+    varname = ODG$VARNAME$UNFILTERED_INFO_DATASET_LIST_
   )
 
   unfiltered_dataset_list_with_filter_info <- sm_mr2(
@@ -263,7 +263,7 @@ app_server_ <- function(input, output, session, opts) {
 
       res
     },
-    varname = ODG_ID$UNFILTERED_INFO_DATASET_LIST
+    varname = ODG$VARNAME$UNFILTERED_INFO_DATASET_LIST
   )
 
   filtered_dataset_list <- sm_mr2(
@@ -278,7 +278,7 @@ app_server_ <- function(input, output, session, opts) {
       ..t$add_event("received filtered_dataset_list")
       fd
     },
-    varname = ODG_ID$FILTERED_DATASET_LIST
+    varname = ODG$VARNAME$FILTERED_DATASET_LIST
   )
 
   raw_filter <- new_filter_server(
@@ -291,7 +291,7 @@ app_server_ <- function(input, output, session, opts) {
   dataset_list_filter <- sm_mr(
     dv.manager::r_filter_from_json_filter(..(raw_filter()), "main_server"),
     inline = TRUE,
-    varname = ODG_ID$DATASET_FILTER_
+    varname = ODG$VARNAME$DATASET_FILTER_
   )
 
   shiny::observeEvent(
@@ -479,7 +479,7 @@ app_server_ <- function(input, output, session, opts) {
       }
       date_string
     },
-    varname = "date_range",
+    varname = ODG$VARNAME$DATE_RANGE_,
     localize = TRUE
   )
 
@@ -506,7 +506,7 @@ app_server_ <- function(input, output, session, opts) {
             )
           })
         },
-        varname = "filter_odg"
+        varname = ODG$VARNAME$FILTER_TXT_TREE_
       )
 
       # Flatten ODG elements and set defaults for missing entries

@@ -479,3 +479,27 @@ test_that("app_server_ errors when two ODG elements end up with the same chunk l
 })
 
 # nolint end
+
+test_that("afmm exposes only the public ODG variable names to modules", {
+  module_info <- resolve_module_list(list())
+  testing_options <- list(
+    afmm_static = list(data = list(), module_names = module_info[["module_name"]]),
+    module_info = module_info,
+    filter_info = list(filter_default_state = NULL),
+    enable_subgroup = FALSE,
+    enable_odg = TRUE
+  )
+
+  shiny::testServer(app_server_test(testing_options), {
+    # Modules (e.g. dv.papo) refer to these variables of the document by name
+    expect_identical(
+      unclass(afmm_static[["odg"]][["id"]]),
+      list(
+        SELECTED_DATASET_LIST = "selected_dataset_list",
+        UNFILTERED_DATASET_LIST = "unfiltered_dataset_list",
+        FILTERED_DATASET_LIST = "filtered_dataset_list",
+        UNFILTERED_INFO_DATASET_LIST = "unfiltered_dataset_list_with_filter_info"
+      )
+    )
+  })
+})
