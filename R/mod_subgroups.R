@@ -497,10 +497,13 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       NULL
     }
 
+    # `r_filter_from_json_filter()` returns `NA` until the filter sends its state, `list(parsed, raw)` after
+    is_filter_ready <- function(x) is.list(x)
+
     shiny::observeEvent(input[[ID_SG$ASSIGN_BTN]], {
       idx <- as.integer(input[[ID_SG$ASSIGN_BTN]])
       r_new_subgroup_filter <- subgroup_filter()
-      notify_and_early_out(!isTRUE(is.na(r_new_subgroup_filter[["raw"]])), "Filter is not ready")
+      notify_and_early_out(is_filter_ready(r_new_subgroup_filter), "Filter is not ready")
 
       new_assignment <- r_new_subgroup_filter[["raw"]]
       current_assignments <- cat_assignments()
@@ -526,21 +529,13 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       subject_dataset <- selected_dataset_list()[[subject_filter_dataset_name]]
       current_subgroups <- subgroups()
 
-      assert(
-        length(intersect(names(current_subgroups), names(subject_dataset))) == 0,
-        "Current subgroups cannot be in subject dataset by design. Are you passing the dataset with already added subgroups to the module? Check assumptions"
-      )
-
       name_errors <- validate_subgroup_name(r_subgroup_name, subject_dataset, subject_filter_dataset_name)
       notify_conditions_and_early_out(name_errors$get_errors())
 
       errors <- new_error_list()
       if (r_subgroup_cat_num == 2) {
         r_subgroup_filter <- subgroup_filter()
-        if (isTRUE(is.na(r_subgroup_filter[["raw"]]))) {
-          errors$push("Filter is not ready")
-          return(list(subgroup = NULL, errors = errors))
-        }
+        notify_and_early_out(is_filter_ready(r_subgroup_filter), "Filter is not ready")
 
         r_true_label <- if (checkmate::test_string(input[[get_cat_label_id(1)]], min.chars = 1)) {
           input[[get_cat_label_id(1)]]
@@ -608,11 +603,13 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
 
       new_subgroups <- current_subgroups
       new_subgroups[[r_subgroup_name]] <- new_subgroup
+      # Only the new subgroup: subgroups are applied independently of each other, and an existing one may not apply
+      # to the current data (e.g. it was created on another dataset list), which must not block adding this one
       apply_check <- apply_subgroups(
         selected_dataset_list(),
         subject_filter_dataset_name,
         filter_key_var,
-        new_subgroups
+        new_subgroups[r_subgroup_name]
       )
 
       notify_conditions_and_early_out(apply_check[["error_list"]]$get_errors())
