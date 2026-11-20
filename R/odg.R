@@ -1,3 +1,32 @@
+#### PREFACE STARTS
+
+# @order 1 First block read so it can group all the other docs required just because of ODG
+# For convenience it also imports `..` function from {shinymeta}
+#
+# For convenience it also imports `opt_chunk` function from {knitr}. Otherwise the checker complains that the package
+# is never used because it is only used inside the templates.
+#
+#' Functions exported for the output document generation (ODG)
+#'
+#' Internal, do not use. This document groups all functions in dv.manager that must be exported because of ODG. They are
+#'  not meant to be called by apps or modules, and they can change without notice.
+#'
+#' @param dataset_list Named list of data.frames.
+#' @param filter_key_var Column identifying subjects.
+#' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =,
+#'   dataset_list_filter =, ...)`, as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
+#' @name odg_exported_functions
+#'
+#' @importFrom shinymeta ..
+#'
+#' @importFrom knitr opts_chunk
+#'
+#' @keywords internal
+#' @order 1
+NULL
+
+#### PREFACE ENDS
+
 #' Render an ODG Rmd to a zip file
 #'
 #' Runs in a fresh `callr::r()` subprocess (or can be called directly, e.g. in
@@ -57,7 +86,7 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
     {
       output_file <- rmarkdown::render(input = rmd_file, output_dir = odg_dir, quiet = quiet)
       if (endsWith(output_file, "pdf")) {
-        writeLines(capture.output(sessioninfo::session_info()), session_info_file)
+        writeLines(utils::capture.output(sessioninfo::session_info()), session_info_file)
         pdf_attach_function(output_file, rmd_file)
         pdf_attach_function(output_file, session_info_file)
         unlink(session_info_file)
@@ -286,7 +315,7 @@ body::before {
     templates[[ODG$OUTPUT_FORMAT$PDF]] <- r"--(
 
 ```{r odg-session_info, results = 'asis'}
-  session_lines <- capture.output(sessioninfo::session_info())
+  session_lines <- utils::capture.output(sessioninfo::session_info())
   # Verbatim isn't measured by \beginwidepage, only longtables are; pass the width explicitly
   max_char_width <- max(nchar(session_lines, type = "width"), 0L)
 
@@ -977,12 +1006,8 @@ sm_me <- local({
 })
 
 
-#' Namespace of helpers for ODG latex
-#'
-#' @keywords internal
-#' @noRd
+#' @describeIn odg_exported_functions Namespace of helpers that write LaTeX tables, used by the PDF table elements.
 #' @export
-#'
 utils_latex_tables <- local({
   # Workaround for gt versions predating the latex.header_repeat tab_options()
   # nolint start
