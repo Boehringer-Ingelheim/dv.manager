@@ -849,6 +849,7 @@ preprocess_odg_elements <- function(odg_elements, output_format, get_code_in_con
           shinymeta::metaReactive(
             {
               ..(codegen()) |>
+                gt::tab_options(latex.use_longtable = TRUE) |>
                 gt::as_latex() |>
                 dv.manager::utils_latex_tables$latex_header_repeat()
             },

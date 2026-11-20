@@ -199,6 +199,59 @@ local({
     expect_match(tex, "\\%>\\%", fixed = TRUE)
   })
 
+  test_that("a PDF table element from a gt_tbl with default options renders as a longtable", {
+    stopifnot(
+      "pandoc not available" = rmarkdown::pandoc_available(),
+      "xelatex not available" = nzchar(Sys.which("xelatex"))
+    )
+
+    zip_path <- tempfile(fileext = ".zip")
+    on.exit(
+      {
+        if (file.exists(zip_path)) {
+          unlink(zip_path)
+        }
+      },
+      add = TRUE
+    )
+
+    # gt's default as_latex() output is a `table`/`tabular*`, where the `\endhead` added for repeated headers is undefined
+    gt_element <- list(
+      id = "mod_1-gt",
+      label = "Gt table",
+      module_name = "Module 1",
+      is_first_module_element = TRUE,
+      codegen = list(pdf = shinymeta::metaReactive(gt::gt(data.frame(a = 1:2, b = c("x", "y"))), varname = "gt_src"))
+    )
+    output_format <- ODG$OUTPUT_FORMAT$PDF
+    get_code_in_context <- function(x) paste(as.character(shinymeta::expandChain(x)), collapse = "\n")
+    elements <- shiny::isolate(preprocess_odg_elements(list(gt_element), output_format, get_code_in_context))
+    expect_identical(elements[[1]][["kind"]], ODG$ELEMENT_KIND$TABLE)
+
+    rmd <- build_odg_rmd(
+      elements,
+      output_format,
+      data_code = "NULL",
+      filtered_data_code = "NULL",
+      sections = list(date = "", hardcoded_hash = "", dynamic_hash = "", filter_txt = "", filter_reference = ""),
+      templates = list(header = ODG$TEMPLATES$HEADER[[output_format]], session_info = "", footer = "")
+    )
+    header <- paste(
+      readLines(system.file("odg_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
+      collapse = "\n"
+    )
+
+    result <- render_odg_document(rmd, header, function(pdf, attachment) invisible(NULL), zip_path, "odg")
+    expect_length(attr(result, "error_msg"), 0)
+
+    unzip_dir <- tempfile()
+    utils::unzip(zip_path, exdir = unzip_dir)
+    expect_true(file.exists(file.path(unzip_dir, "odg.pdf")))
+    tex <- paste(readLines(file.path(unzip_dir, "odg.tex"), warn = FALSE), collapse = "\n")
+    expect_match(tex, "\\begin{longtable}", fixed = TRUE)
+    expect_match(tex, "\\endhead", fixed = TRUE)
+  })
+
   test_that("render_odg_document rejects an empty document name or one whose PDF render would overwrite the header", {
     # Errors before writing anything, so nothing is rendered
     for (document_name in c("", "header", "Header", "HEADER")) {
