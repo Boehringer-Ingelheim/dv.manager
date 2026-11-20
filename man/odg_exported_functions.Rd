@@ -97,7 +97,8 @@ list of filtered data.frames, one per entry of \code{unfiltered_dataset_list}.
 
 \item \code{txt_tree_from_filter_info()}: Describe the active filter as a plain-text tree for the output document.
 Returns \code{list(txt =, references =)}: the tree as a single string, and the values of subsets too long to print
-inline, numbered by the \verb{See filter reference (n)} markers left in \code{txt}.
+inline, numbered by the \verb{See filter reference (n)} markers left in \code{txt}. Range bounds print with 15 significant
+digits; a bound that needs more is marked \code{(rounded)}, while the filter applies its exact value.
 
 \item \code{apply_subgroups()}: Apply configured subgroups to the subject-level dataset. Returns
 \code{list(result = safe_list(dataset_list, correct_subgroups, incorrect_subgroups), error_list)}.

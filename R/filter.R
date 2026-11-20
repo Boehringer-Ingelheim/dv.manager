@@ -1500,7 +1500,8 @@ apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) 
 
 #' @describeIn odg_exported_functions Describe the active filter as a plain-text tree for the output document.
 #'   Returns `list(txt =, references =)`: the tree as a single string, and the values of subsets too long to print
-#'   inline, numbered by the `See filter reference (n)` markers left in `txt`.
+#'   inline, numbered by the `See filter reference (n)` markers left in `txt`. Range bounds print with 15 significant
+#'   digits; a bound that needs more is marked `(rounded)`, while the filter applies its exact value.
 #' @export
 txt_tree_from_filter_info <- function(unfiltered_dataset_list_with_filter_info) {
   TC <- c(
@@ -1604,6 +1605,13 @@ txt_tree_from_filter_info <- function(unfiltered_dataset_list_with_filter_info) 
       ctt[[length(ctt) + 1]] <- ""
       ctt
     }
+    # Numbers print with 15 significant digits, so a bound needing more (e.g. 59.999999999999993 prints as 60) is
+    # marked: the filter applies its exact value
+    format_bound <- function(x) {
+      txt <- as.character(x)
+      is_rounded <- is.numeric(x) && length(x) == 1 && !is.na(x) && as.numeric(txt) != x
+      if (is_rounded) paste(txt, ODG$MSG$ROUNDED_BOUND) else txt
+    }
     actions[[FC$FE$OP$RANGE]] <- function(el) {
       ctt <- character(0)
       var_name <- el[[FC$FE$F$VARIABLE]]
@@ -1612,8 +1620,8 @@ txt_tree_from_filter_info <- function(unfiltered_dataset_list_with_filter_info) 
       dataset_label <- get_lbl_robust(udl, dataset_name)
       ctt[[length(ctt) + 1]] <- paste0(" ", "Variable: ", var_label, " [", var_name, "]")
       ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Dataset: ", dataset_label, " [", dataset_name, "]")
-      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Min: ", el[[FC$FE$F$MIN]])
-      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Max: ", el[[FC$FE$F$MAX]])
+      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Min: ", format_bound(el[[FC$FE$F$MIN]]))
+      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Max: ", format_bound(el[[FC$FE$F$MAX]]))
       ctt[[length(ctt) + 1]] <- paste0(" ", TC[["ur"]], " Include NA: ", el[[FC$FE$F$INCLUDE_NA]])
       ctt[[length(ctt) + 1]] <- ""
       ctt

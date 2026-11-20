@@ -179,7 +179,8 @@ ODG <- local({
         "The output documentation could not be rendered.",
         "The downloaded file includes the error details (error.txt)."
       ),
-      GENERATION_FAILED = "The output documentation could not be generated. No file was downloaded."
+      GENERATION_FAILED = "The output documentation could not be generated. No file was downloaded.",
+      ROUNDED_BOUND = "(rounded)"
     ),
     VAL = poc(
       # Currently only all ODG is possible it is kept as a dummy value for the button
@@ -698,7 +699,11 @@ build_filter_txt_section <- function(filter_odg, output_format, get_code_in_cont
 
   note <- paste(
     "An explicit call to the filter and parameters used can be found in the code",
-    "that accompanies this output documentation."
+    "that accompanies this output documentation.",
+    "Range bounds marked",
+    ODG$MSG$ROUNDED_BOUND,
+    "are printed with 15 significant digits,",
+    "the filter applies their exact value. Check the code in the Rmd to see the exact value applied."
   )
   paste_with_blank_lines(
     section,
