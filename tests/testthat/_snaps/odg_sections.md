@@ -283,7 +283,7 @@
       
       </pre>
       
-      An explicit call to the filter and parameters used can be found in the code that accompanies this output documentation. Range bounds marked (rounded) are printed with 15 significant digits, the filter applies their exact value.
+      An explicit call to the filter and parameters used can be found in the code that accompanies this output documentation. Range bounds marked (rounded) are printed with 15 significant digits, the filter applies their exact value. Check the code in the Rmd to see the exact value applied.
 
 ---
 
@@ -302,7 +302,7 @@
       
       \end{verbatim}
       
-      An explicit call to the filter and parameters used can be found in the code that accompanies this output documentation. Range bounds marked (rounded) are printed with 15 significant digits, the filter applies their exact value.
+      An explicit call to the filter and parameters used can be found in the code that accompanies this output documentation. Range bounds marked (rounded) are printed with 15 significant digits, the filter applies their exact value. Check the code in the Rmd to see the exact value applied.
 
 # build_filter_reference_section wraps the filter reference code so pandoc does not read it as markdown
 
