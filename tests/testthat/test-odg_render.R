@@ -68,10 +68,10 @@ local({
     probe_path <- tempfile(fileext = ".txt")
     on.exit(unlink(c(zip_path, probe_path)), add = TRUE)
 
-    # A chunk assigning `filename` would otherwise redirect the zip into the temporary dir deleted on exit
+    # A chunk assigning `absolute_zip_path` would otherwise redirect the zip into the temporary dir deleted on exit
     chunk_body <- c(
       sprintf('writeLines(as.character(exists("odg_dir")), "%s")', probe_path),
-      'filename <- "hijacked.zip"'
+      'absolute_zip_path <- "hijacked.zip"'
     )
     result <- render_odg_document(make_odg_rmd(chunk_body), dummy_header, spy_pdf_attach()$fn, zip_path, "odg")
 
@@ -159,7 +159,7 @@ local({
         rmarkdown = make_odg_rmd("1 + 1"),
         header = dummy_header,
         pdf_attach_function = function(pdf, attachment) invisible(NULL),
-        filename = zip_path,
+        absolute_zip_path = zip_path,
         document_name = "odg"
       )
     )

@@ -37,16 +37,24 @@ NULL
 #' @param header The `header.tex` content, as a single string.
 #' @param pdf_attach_function `function(pdf, attachment)` used to attach files
 #'   to a rendered PDF. Injected so it can be tested independently.
-#' @param filename Path the resulting zip file is written to.
+#' @param absolute_zip_path Absolute path the resulting zip file is written to. The zip is written from inside the
+#'   temporary render directory, deleted on exit, where a relative path would resolve.
 #' @param document_name Base name of the .Rmd and of its rendered output, as returned by `sanitize_odg_file_name()`.
 #'   Must not be `header` in any case: a PDF render writes `<document_name>.tex`, which would overwrite `header.tex`.
 #' @param quiet Silences both `rmarkdown::render()` and the zip step's output.
-#' @return `filename`, with an `error_msg` attribute (character(0) on success,
+#' @return `absolute_zip_path`, with an `error_msg` attribute (character(0) on success,
 #'   the error message on failure). Errors if `document_name` collides with `header.tex`, if no zip command is found
 #'   or if zipping fails.
 #' @keywords internal
 #' @noRd
-render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename, document_name, quiet = TRUE) {
+render_odg_document <- function(
+  rmarkdown,
+  header,
+  pdf_attach_function,
+  absolute_zip_path,
+  document_name,
+  quiet = TRUE
+) {
   header_file <- "header.tex"
   session_info_file <- "session_info.txt"
   error_file <- "error.txt"
@@ -85,7 +93,8 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
   tryCatch(
     {
       # `render()` evaluates in `parent.frame()` by default. This lets the rmd change values in parent.frame()
-      # One chunk coud overwrite `filename`, `odg_dir`, `error_msg`, ... and change the behavior or cause an error
+      # One chunk coud overwrite `absolute_zip_path`, `odg_dir`, `error_msg`, ... and change the behavior or cause an
+      # error
       # Although we control we evaluate in a new environment.
       output_file <- rmarkdown::render(
         input = rmd_file,
@@ -117,7 +126,7 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
   }
   # `utils::zip()` returns the command's exit status, not the zip file
   zip_status <- utils::zip(
-    filename,
+    absolute_zip_path,
     list.files(odg_dir),
     flags = if (quiet) "-r9Xq" else "-r9X",
     zip = zip_command
@@ -125,7 +134,7 @@ render_odg_document <- function(rmarkdown, header, pdf_attach_function, filename
   if (zip_status != 0) {
     stop("zip failed with status ", zip_status)
   }
-  structure(filename, error_msg = error_msg)
+  structure(absolute_zip_path, error_msg = error_msg)
 }
 
 #' Attach a file to a PDF in place

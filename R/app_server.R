@@ -623,7 +623,7 @@ app_server_ <- function(input, output, session, opts) {
 
       output[[ODG$ID$ODG_CODE]] <- shiny::downloadHandler(
         filename = function() paste0(sanitize_odg_file_name(input[[ODG$ID$FILE_NAME]]), ".zip"),
-        content = function(filename) {
+        content = function(absolute_zip_path) {
           # Whatever fails here leaves no file to download, and the browser only reports a failed download
           tryCatch(
             shiny::withProgress(message = "Generating output documentation", expr = {
@@ -736,19 +736,19 @@ app_server_ <- function(input, output, session, opts) {
                 readLines(system.file("odg_files/header.tex", package = "dv.manager", mustWork = TRUE), warn = FALSE),
                 collapse = "\n"
               )
-              rendered_filename <- callr::r(
+              rendered_zip_path <- callr::r(
                 render_odg_document,
                 args = list(
                   rmarkdown = rmarkdown,
                   header = header,
                   pdf_attach_function = pdf_attach,
-                  filename = filename,
+                  absolute_zip_path = absolute_zip_path,
                   document_name = document_name,
                   quiet = FALSE # We want to access it in the app log
                 ),
                 show = TRUE
               )
-              error_msg_string <- attr(rendered_filename, "error_msg")
+              error_msg_string <- attr(rendered_zip_path, "error_msg")
               if (length(error_msg_string) > 0) {
                 log_warn(sprintf(
                   "Error while generating output documentation: %s",
@@ -757,7 +757,7 @@ app_server_ <- function(input, output, session, opts) {
                 # The zip is still downloaded, it carries error.txt
                 shiny::showNotification(ODG$MSG$RENDER_FAILED, type = "error", duration = NULL)
               }
-              attr(rendered_filename, "error_msg") <- NULL
+              attr(rendered_zip_path, "error_msg") <- NULL
             }),
             error = function(e) {
               # e.g. an invalid `load_fn`, a filter that cannot be applied (silent error, empty message), no zip
