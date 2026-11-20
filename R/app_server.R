@@ -152,11 +152,30 @@ app_server_ <- function(input, output, session, opts) {
       for (error in unfiltered_dataset_list_()[["error_list"]]$get_messages()) {
         shiny::showNotification(error, type = "warning")
       }
-      subgroups[["set_incorrect_subgroups"]](unfiltered_dataset_list_()[["result"]][["incorrect_subgroups"]])
+      app_incorrect_subgroups <- unfiltered_dataset_list_()[["result"]][["incorrect_subgroups"]]
+      subgroups[["set_incorrect_subgroups"]](app_incorrect_subgroups)
 
       sm_me(
         {
-          ..(unfiltered_dataset_list_())[["result"]][["dataset_list"]]
+          res_apply_subgroups <- ..(unfiltered_dataset_list_())
+          # ODG: only met in the document, the app leaves incorrect subgroups out with a warning, which
+          # `app_incorrect_subgroups` records. The document reloads the data with `load_fn`, which may return
+          # different data than the app holds, so other subgroups may fail
+          incorrect_in_app <- ..(app_incorrect_subgroups)
+          incorrect_in_document <- res_apply_subgroups[["result"]][["incorrect_subgroups"]]
+          if (!setequal(incorrect_in_document, incorrect_in_app)) {
+            stop(paste(
+              "The subgroups cannot be applied as in the app to the data loaded for this document,",
+              "it may differ from the data in the app.",
+              sprintf(
+                "Subgroups not applied in the app: [%s], in this document: [%s].",
+                toString(incorrect_in_app),
+                toString(incorrect_in_document)
+              ),
+              paste(res_apply_subgroups[["error_list"]]$get_messages(), collapse = "; ")
+            ))
+          }
+          res_apply_subgroups[["result"]][["dataset_list"]]
         },
         localize = TRUE
       )

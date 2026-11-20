@@ -215,6 +215,8 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
     log_inform(sprintf("Adding subgroup: %s", name))
 
     categorized_subject_mask <- rep_len(FALSE, nrow(subject_dataset))
+    # `error_list` collects the errors of all subgroups, this flag only those of the current one
+    found_error <- FALSE
 
     if (name %in% names(subject_dataset)) {
       error_list$push(sprintf(
@@ -222,11 +224,12 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
         name,
         subject_filter_dataset_name
       ))
+      found_error <- TRUE
     } else if (any(duplicated(cat_labels))) {
       error_list$push(sprintf("Skipping subgroup: `%s`. Category labels are duplicated.", name))
+      found_error <- TRUE
     } else {
       new_var <- rep_len(NA_character_, nrow(subject_dataset))
-      subgroup_ok <- TRUE
 
       for (cat_idx in seq_along(cat_filters)) {
         # Others will be treated separately
@@ -236,28 +239,28 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
 
         parsed_category_filter <- deserialize_filter_state_from_client(category_filter)[["filters"]][["subject_filter"]]
 
+        # This should cover the case when it is not possible to apply the filter because the variable it is not
+        # available, this may happen when we switch datasets and a variable dissappears unlikely but possible, or
+        # between data updates
         category_subjects <- tryCatch(
-          {
-            # This should cover the case when it is not possible to apply the filter because the variable it is not available
-            # this may happen when we switch datasets and a variable dissappears unlikely but possible, or between data updates
-            category_subjects <- create_subject_filter_info(dataset_list, parsed_category_filter, filter_key_var)
-            category_subjects <- category_subjects[["subjects"]]
-            list(category_subjects = category_subjects, error_list = error_list)
-          },
-          error = function(e) {
-            error_list$push(sprintf("Skipping subgroup: `%s`. Generic filtering error: `%s`.", name, e$message))
-            list(character(0), error_list = error_list)
-          }
+          create_subject_filter_info(dataset_list, parsed_category_filter, filter_key_var)[["subjects"]],
+          error = function(e) e
         )
+        if (inherits(category_subjects, "error")) {
+          error_list$push(sprintf(
+            "Skipping subgroup: `%s`. Generic filtering error: `%s`.",
+            name,
+            conditionMessage(category_subjects)
+          ))
+          found_error <- TRUE
+          break
+        }
 
-        category_mask <- subject_dataset[[filter_key_var]] %in% category_subjects[["category_subjects"]]
+        category_mask <- subject_dataset[[filter_key_var]] %in% category_subjects
 
         if (any(categorized_subject_mask & category_mask)) {
           error_list$push(sprintf("Subgroup: `%s` has at least one subject in two categories", name))
-        }
-
-        if (error_list$any()) {
-          subgroup_ok <- FALSE
+          found_error <- TRUE
           break
         }
 
@@ -265,15 +268,17 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
         categorized_subject_mask <- categorized_subject_mask | category_mask
       }
 
-      if (subgroup_ok) {
+      if (!found_error) {
         other_category_label <- cat_labels[[length(cat_labels)]]
         other_category_mask <- !categorized_subject_mask
         new_var[other_category_mask] <- other_category_label
         subject_dataset[[name]] <- factor(new_var, levels = cat_labels)
         attr(subject_dataset[[name]], "label") <- label
-      } else {
-        correct_subgroups <- setdiff(correct_subgroups, name)
       }
+    }
+
+    if (found_error) {
+      correct_subgroups <- setdiff(correct_subgroups, name)
     }
   }
 
