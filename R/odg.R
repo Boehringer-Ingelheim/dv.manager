@@ -954,8 +954,8 @@ build_odg_modal_ui <- function(odg_elements, ns, selected_tab = NA, file_name = 
           onchange = sprintf(
             # selection is reset when modal opens, same value is sent twice
             "Shiny.setInputValue('%s', {value: this.checked, id: '%s'}, {priority: 'event'});",
-            ns(ODG$ID$ODG_MENU_SELECTION),
-            curr_el[["module_id"]]
+            escape_js_string(ns(ODG$ID$ODG_MENU_SELECTION)),
+            escape_js_string(curr_el[["module_id"]])
           )
         ),
         curr_el[["module_name"]]

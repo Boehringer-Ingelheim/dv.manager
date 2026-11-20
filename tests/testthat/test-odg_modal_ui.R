@@ -78,4 +78,21 @@ local({
     expect_true(grepl("Module 2", html, fixed = TRUE))
     expect_true(grepl("output_format", html, fixed = TRUE))
   })
+
+  test_that("build_odg_modal_ui switches escape the module id in their JS string", {
+    module_id <- "it's \"quoted\" \\ </script> mod"
+    elements <- list(x = make_element(paste0(module_id, "-a"), module_id, "Module", TRUE))
+    html <- as.character(build_odg_modal_ui(elements, test_ns)[["modal_dialog"]])
+
+    # The browser decodes the attribute's HTML entities before running it as JS
+    switch_tag <- regmatches(html, regexpr('<input[^>]*role="switch"[^>]*>', html))
+    onchange <- sub('.*onchange="([^"]*)".*', "\\1", switch_tag)
+    entities <- c(
+      "&quot;" = '"', "&#39;" = "'", "&lt;" = "<", "&gt;" = ">", "&#10;" = "\n", "&#13;" = "\r", "&amp;" = "&"
+    )
+    for (entity in names(entities)) onchange <- gsub(entity, entities[[entity]], onchange, fixed = TRUE)
+
+    # Unescaped, the `'` in the id closes the JS string and the handler does not parse
+    expect_match(onchange, r"[id: 'it\'s \"quoted\" \\ \u003c/script> mod'}]", fixed = TRUE)
+  })
 })
