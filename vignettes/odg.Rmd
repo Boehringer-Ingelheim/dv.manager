@@ -66,9 +66,8 @@ server(afmm) returns
        <element_name> = list(             # elements appear in this order
          label   = "...",                 # optional: section title, defaults to <element_name>
          info    = "...",                 # optional: defaults to label
-         codegen = list(                  # one entry per output format
-           pdf  = <metareactive | chunk>,
-           html = <metareactive | chunk>
+         codegen = list(
+           pdf = <metareactive | chunk>
          )
        ),
        ...
@@ -91,7 +90,7 @@ list(
   to_odg = list(
     listing = list(
       label = "Listing",
-      codegen = list(pdf = listing, html = listing)
+      codegen = list(pdf = listing)
     )
   )
 )
@@ -109,7 +108,7 @@ chunk <- structure(
 ```
 
 - A `function(header)` with class `"chunk"` that returns Rmd markup as a single string. The markup is inserted as is.
-- `header` is the section title, already formatted for the output format and ending in a blank line.
+- `header` is the section title, already formatted as LaTeX and ending in a blank line.
 
 ## Precision of the values written into the document
 
