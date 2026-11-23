@@ -26,6 +26,20 @@ local({
     list(fn = fn, calls = calls)
   }
 
+  # Rendering the ODG template needs xelatex
+  # Reading the PDF back needs pdftotext
+  # Attaching files needs qpdf
+  stop_if_cannot_render <- function() {
+    stopifnot(
+      "pandoc not available" = rmarkdown::pandoc_available(),
+      "xelatex not available" = nzchar(Sys.which("xelatex"))
+    )
+  }
+
+  stop_if_no_pdftotext <- function() stopifnot("pdftotext not available" = nzchar(Sys.which("pdftotext")))
+
+  stop_if_no_qpdf <- function() stopifnot("qpdf not available" = nzchar(Sys.which("qpdf")))
+
   test_that("render_odg_document renders HTML, zips it, and never calls pdf_attach_function", {
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
@@ -82,8 +96,11 @@ local({
   })
 
   test_that("render_odg_document renders PDF and attaches the source Rmd and session info", {
-    skip_if_not(rmarkdown::pandoc_available(), "pandoc not available")
-    skip_if_not(nzchar(Sys.which("pdflatex")), "pdflatex not available")
+    # A plain `pdf_document` renders with pdflatex, not with the xelatex of the ODG template
+    stopifnot(
+      "pandoc not available" = rmarkdown::pandoc_available(),
+      "pdflatex not available" = nzchar(Sys.which("pdflatex"))
+    )
 
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
@@ -169,10 +186,7 @@ local({
   })
 
   test_that("a PDF error element whose message holds LaTeX and markdown characters renders as a warning box", {
-    stopifnot(
-      "pandoc not available" = rmarkdown::pandoc_available(),
-      "xelatex not available" = nzchar(Sys.which("xelatex"))
-    )
+    stop_if_cannot_render()
 
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
@@ -218,10 +232,8 @@ local({
   })
 
   test_that("the PDF warnings summary prints condition messages verbatim", {
-    stopifnot(
-      "pandoc not available" = rmarkdown::pandoc_available(),
-      "xelatex not available" = nzchar(Sys.which("xelatex"))
-    )
+    stop_if_cannot_render()
+    stop_if_no_pdftotext()
 
     zip_path <- tempfile(fileext = ".zip")
     on.exit(unlink(zip_path), add = TRUE)
@@ -262,7 +274,6 @@ local({
     utils::unzip(zip_path, exdir = unzip_dir)
     expect_true(file.exists(file.path(unzip_dir, "odg.pdf")))
 
-    skip_if_not(nzchar(Sys.which("pdftotext")), "pdftotext not available")
     txt_file <- tempfile(fileext = ".txt")
     system2("pdftotext", c("-raw", shQuote(file.path(unzip_dir, "odg.pdf")), shQuote(txt_file)))
     pdf_txt <- paste(readLines(txt_file, warn = FALSE), collapse = " ")
@@ -271,10 +282,7 @@ local({
   })
 
   test_that("a PDF table with a cut long cell renders when the element id holds LaTeX special characters", {
-    stopifnot(
-      "pandoc not available" = rmarkdown::pandoc_available(),
-      "xelatex not available" = nzchar(Sys.which("xelatex"))
-    )
+    stop_if_cannot_render()
 
     zip_path <- tempfile(fileext = ".zip")
     on.exit(unlink(zip_path), add = TRUE)
@@ -319,10 +327,7 @@ local({
   })
 
   test_that("a PDF table element from a gt_tbl with default options renders as a longtable", {
-    stopifnot(
-      "pandoc not available" = rmarkdown::pandoc_available(),
-      "xelatex not available" = nzchar(Sys.which("xelatex"))
-    )
+    stop_if_cannot_render()
 
     zip_path <- tempfile(fileext = ".zip")
     on.exit(
@@ -383,7 +388,7 @@ local({
   })
 
   test_that("pdf_attach attaches a file into a PDF in place", {
-    skip_if_not(nzchar(Sys.which("qpdf")), "qpdf not available")
+    stop_if_no_qpdf()
 
     dir <- tempfile()
     dir.create(dir)
@@ -405,7 +410,7 @@ local({
   })
 
   test_that("pdf_attach errors and leaves the input untouched when qpdf fails", {
-    skip_if_not(nzchar(Sys.which("qpdf")), "qpdf not available")
+    stop_if_no_qpdf()
 
     dir <- tempfile()
     dir.create(dir)
