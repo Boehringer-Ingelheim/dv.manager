@@ -86,8 +86,6 @@ local({
   })
 
   test_that("preprocess_odg_elements converts a pdf data.frame into a table", {
-    skip_if_not_installed("gt")
-
     el <- make_element(list(pdf = shiny::isolate(shinymeta::metaReactive(data.frame(a = 1:2), varname = "src"))))
 
     res <- shiny::isolate(preprocess_one(el, ODG$OUTPUT_FORMAT$PDF, fake_get_code_in_context))
@@ -96,8 +94,6 @@ local({
   })
 
   test_that("preprocess_odg_elements converts a pdf gt_tbl into a table", {
-    skip_if_not_installed("gt")
-
     el <- make_element(
       list(pdf = shiny::isolate(shinymeta::metaReactive(gt::gt(data.frame(a = 1:2)), varname = "src")))
     )
