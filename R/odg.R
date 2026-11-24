@@ -149,14 +149,13 @@ render_odg_document <- function(
 pdf_attach <- function(pdf, attachment) {
   stopifnot(file.exists(pdf), file.exists(attachment))
   if (!nzchar(Sys.which("qpdf"))) {
-    stop("qpdf command-line tool not found on PATH")
+    warning("qpdf command-line tool not found on PATH")
+  } else {
+    status <- system2("qpdf", shQuote(c(pdf, "--add-attachment", attachment, "--", "--replace-input")))
+    if (status != 0) {
+      stop("qpdf failed with status ", status)
+    }
   }
-
-  status <- system2("qpdf", shQuote(c(pdf, "--add-attachment", attachment, "--", "--replace-input")))
-  if (status != 0) {
-    stop("qpdf failed with status ", status)
-  }
-
   invisible(pdf)
 }
 
@@ -683,7 +682,9 @@ build_dynamic_hash_section <- function(selected_dataset_list_mr, in_app_hashes, 
   paste_with_blank_lines(
     "## Dynamic Data hash:",
     paste0(
-      "```{r ", ODG$CHUNK_LABEL$DYNAMIC_DATA_HASH, ", echo = FALSE, results='asis'}\n",
+      "```{r ",
+      ODG$CHUNK_LABEL$DYNAMIC_DATA_HASH,
+      ", echo = FALSE, results='asis'}\n",
       get_code_in_context(loop()),
       "\n```"
     ),
@@ -726,7 +727,9 @@ build_date_section <- function(selected_dataset_list_mr, date_range_mr, get_code
     " **Date range**:",
     paste0("`r ", get_code_in_context(date_range_mr()), "`"),
     paste0(
-      "```{r ", ODG$CHUNK_LABEL$DATA_MODIFICATION_DATES, ", echo = FALSE, results='asis'}\n",
+      "```{r ",
+      ODG$CHUNK_LABEL$DATA_MODIFICATION_DATES,
+      ", echo = FALSE, results='asis'}\n",
       get_code_in_context(loop()),
       "\n```"
     ),
