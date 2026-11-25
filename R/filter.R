@@ -1607,6 +1607,7 @@ txt_tree_from_filter_info <- function(unfiltered_dataset_list_with_filter_info) 
     }
     # Numbers print with 15 significant digits, so a bound needing more (e.g. 59.999999999999993 prints as 60) is
     # marked: the filter applies its exact value
+    # TODO: Check if it is possible to replace the rounded warning by an heuristic than prints the correct precision
     format_bound <- function(x) {
       txt <- as.character(x)
       is_rounded <- is.numeric(x) && length(x) == 1 && !is.na(x) && as.numeric(txt) != x

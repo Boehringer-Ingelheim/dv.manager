@@ -13,6 +13,7 @@ app_ui <- function(request_id) {
   if (is.environment(request_id)) {
     log_inform("Running app_ui as an app")
     id <- character(0)
+    #TODO: clean the module version of dv.manager
   } else if (is.character(request_id)) {
     id <- request_id
     log_inform(sprintf("Running app_ui as a module with id: %s", ns(NULL)))

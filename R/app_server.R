@@ -615,7 +615,7 @@ app_server_ <- function(input, output, session, opts) {
         shiny::showModal(x[["modal_dialog"]])
       })
 
-      # Possible but unlikely race, the menu inputs travel over the websocket, the download is a separate HTTP
+      # FIXME: Possible but unlikely race, the menu inputs travel over the websocket, the download is a separate HTTP
       # request, so a download started right after a change can still read the previous filename.
       # A possible fix is to have a button that generates the zip and a download button activated
       # after the generation that downloads the file. It may be better also as any error can be shown
