@@ -9,7 +9,7 @@
       
       
       
-      ```{r odg-mod1-el1}
+      ```{r mod1-el1}
       1 + 1
       ```
 
@@ -22,7 +22,7 @@
       
       
       
-      ```{r odg-mod1-el1}
+      ```{r mod1-el1}
       1 + 1
       ```
 
@@ -43,7 +43,7 @@
       
       
       
-      ```{r odg-mod1-el1}
+      ```{r mod1-el1}
       1 + 1
       ```
       
@@ -77,7 +77,7 @@
       
       
       
-      ```{r odg-mod1-el1}
+      ```{r mod1-el1}
       1 + 1
       ```
 
@@ -92,7 +92,7 @@
       
       
       
-      ```{r odg-mod1-el1}
+      ```{r mod1-el1}
       1 + 1
       ```
 
@@ -116,8 +116,9 @@
     Output
       FIXTURE_HEADER_TEMPLATE
       
-      ```{r data_source}
+      ```{r odg-data_source}
       df <- load_data()
+      filtered_df <- filter_data(df)
       ```
       
       \pagestyle{headings}
@@ -128,7 +129,7 @@
       
       
       
-      ```{r odg-mod1-el1}
+      ```{r mod1-el1}
       1 + 1
       ```
       
@@ -164,8 +165,9 @@
     Output
       FIXTURE_HEADER_TEMPLATE
       
-      ```{r data_source}
+      ```{r odg-data_source}
       df <- load_data()
+      filtered_df <- filter_data(df)
       ```
       
       \pagestyle{headings}
@@ -182,7 +184,7 @@
       
       
       
-      ```{r odg-mod1-el1}
+      ```{r mod1-el1}
       1 + 1
       ```
       

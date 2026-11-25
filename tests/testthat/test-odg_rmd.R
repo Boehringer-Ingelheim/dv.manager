@@ -6,7 +6,7 @@ local({
     module_name = "Module 1",
     is_first_module_element = TRUE,
     code = "1 + 1",
-    chunk_label = paste0("odg-", id)
+    chunk_label = id
   ) {
     list(
       id = id,
@@ -106,6 +106,7 @@ local({
       selected_odg_elements = elements,
       output_format = ODG$OUTPUT_FORMAT$HTML,
       data_code = "df <- load_data()",
+      filtered_data_code = "filtered_df <- filter_data(df)",
       sections = fixture_sections,
       templates = fixture_templates
     )
@@ -127,6 +128,7 @@ local({
       selected_odg_elements = elements,
       output_format = ODG$OUTPUT_FORMAT$PDF,
       data_code = "df <- load_data()",
+      filtered_data_code = "filtered_df <- filter_data(df)",
       sections = fixture_sections,
       templates = fixture_templates
     )

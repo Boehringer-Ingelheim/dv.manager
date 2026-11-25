@@ -196,16 +196,11 @@ validate_subgroup_name <- function(subgroup_name, subject_dataset, subject_filte
   return(errors)
 }
 
-#' Apply configured subgroups to the subject-level dataset
-#'
-#' @param dataset_list Named list of data.frames, keyed by dataset name.
+#' @describeIn odg_exported_functions Apply configured subgroups to the subject-level dataset. Returns
+#'   `list(result = safe_list(dataset_list, correct_subgroups, incorrect_subgroups), error_list)`.
 #' @param subject_filter_dataset_name Name of the subject-level dataset in `dataset_list` subgroups are added to.
-#' @param filter_key_var Column identifying subjects, used to build each subgroup's membership mask.
 #' @param subgroups Named list of subgroup definitions (`label`, `cat_labels`, `cat_filters`).
-#' @return `list(result = safe_list(dataset_list, correct_subgroups, incorrect_subgroups), error_list)`.
-#' @keywords internal
 #' @export
-#' @noRd
 apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_key_var, subgroups) {
   subject_dataset <- dataset_list[[subject_filter_dataset_name]]
   error_list <- new_error_list()
@@ -220,6 +215,8 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
     log_inform(sprintf("Adding subgroup: %s", name))
 
     categorized_subject_mask <- rep_len(FALSE, nrow(subject_dataset))
+    # `error_list` collects the errors of all subgroups, this flag only those of the current one
+    found_error <- FALSE
 
     if (name %in% names(subject_dataset)) {
       error_list$push(sprintf(
@@ -227,11 +224,12 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
         name,
         subject_filter_dataset_name
       ))
+      found_error <- TRUE
     } else if (any(duplicated(cat_labels))) {
       error_list$push(sprintf("Skipping subgroup: `%s`. Category labels are duplicated.", name))
+      found_error <- TRUE
     } else {
       new_var <- rep_len(NA_character_, nrow(subject_dataset))
-      subgroup_ok <- TRUE
 
       for (cat_idx in seq_along(cat_filters)) {
         # Others will be treated separately
@@ -241,28 +239,28 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
 
         parsed_category_filter <- deserialize_filter_state_from_client(category_filter)[["filters"]][["subject_filter"]]
 
+        # This should cover the case when it is not possible to apply the filter because the variable it is not
+        # available, this may happen when we switch datasets and a variable dissappears unlikely but possible, or
+        # between data updates
         category_subjects <- tryCatch(
-          {
-            # This should cover the case when it is not possible to apply the filter because the variable it is not available
-            # this may happen when we switch datasets and a variable dissappears unlikely but possible, or between data updates
-            category_subjects <- create_subject_filter_info(dataset_list, parsed_category_filter, filter_key_var)
-            category_subjects <- category_subjects[["subjects"]]
-            list(category_subjects = category_subjects, error_list = error_list)
-          },
-          error = function(e) {
-            error_list$push(sprintf("Skipping subgroup: `%s`. Generic filtering error: `%s`.", name, e$message))
-            list(character(0), error_list = error_list)
-          }
+          create_subject_filter_info(dataset_list, parsed_category_filter, filter_key_var)[["subjects"]],
+          error = function(e) e
         )
+        if (inherits(category_subjects, "error")) {
+          error_list$push(sprintf(
+            "Skipping subgroup: `%s`. Generic filtering error: `%s`.",
+            name,
+            conditionMessage(category_subjects)
+          ))
+          found_error <- TRUE
+          break
+        }
 
-        category_mask <- subject_dataset[[filter_key_var]] %in% category_subjects[["category_subjects"]]
+        category_mask <- subject_dataset[[filter_key_var]] %in% category_subjects
 
         if (any(categorized_subject_mask & category_mask)) {
           error_list$push(sprintf("Subgroup: `%s` has at least one subject in two categories", name))
-        }
-
-        if (error_list$any()) {
-          subgroup_ok <- FALSE
+          found_error <- TRUE
           break
         }
 
@@ -270,15 +268,17 @@ apply_subgroups <- (function(dataset_list, subject_filter_dataset_name, filter_k
         categorized_subject_mask <- categorized_subject_mask | category_mask
       }
 
-      if (subgroup_ok) {
+      if (!found_error) {
         other_category_label <- cat_labels[[length(cat_labels)]]
         other_category_mask <- !categorized_subject_mask
         new_var[other_category_mask] <- other_category_label
         subject_dataset[[name]] <- factor(new_var, levels = cat_labels)
         attr(subject_dataset[[name]], "label") <- label
-      } else {
-        correct_subgroups <- setdiff(correct_subgroups, name)
       }
+    }
+
+    if (found_error) {
+      correct_subgroups <- setdiff(correct_subgroups, name)
     }
   }
 
@@ -360,13 +360,15 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       )
     })
 
-    subgroup_filter <- new_filter_server(
+    raw_filter <- new_filter_server(
       ID_SG$FILTER,
       selected_dataset_list,
       subject_filter_dataset_name,
       filtered_subgroup_dataset_list,
       skip_dataset_filters = TRUE
     ) # FIXME: Pass filtered one
+
+    subgroup_filter <- shiny::reactive(r_filter_from_json_filter(raw_filter(), ns(id)))
 
     filtered_subgroup_dataset_list <- shiny::reactive({
       # Place reqs here so all elements are synchronized before going forward
@@ -495,10 +497,13 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       NULL
     }
 
+    # `r_filter_from_json_filter()` returns `NA` until the filter sends its state, `list(parsed, raw)` after
+    is_filter_ready <- function(x) is.list(x)
+
     shiny::observeEvent(input[[ID_SG$ASSIGN_BTN]], {
       idx <- as.integer(input[[ID_SG$ASSIGN_BTN]])
       r_new_subgroup_filter <- subgroup_filter()
-      notify_and_early_out(!isTRUE(is.na(r_new_subgroup_filter[["raw"]])), "Filter is not ready")
+      notify_and_early_out(is_filter_ready(r_new_subgroup_filter), "Filter is not ready")
 
       new_assignment <- r_new_subgroup_filter[["raw"]]
       current_assignments <- cat_assignments()
@@ -524,21 +529,13 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
       subject_dataset <- selected_dataset_list()[[subject_filter_dataset_name]]
       current_subgroups <- subgroups()
 
-      assert(
-        length(intersect(names(current_subgroups), names(subject_dataset))) == 0,
-        "Current subgroups cannot be in subject dataset by design. Are you passing the dataset with already added subgroups to the module? Check assumptions"
-      )
-
       name_errors <- validate_subgroup_name(r_subgroup_name, subject_dataset, subject_filter_dataset_name)
       notify_conditions_and_early_out(name_errors$get_errors())
 
       errors <- new_error_list()
       if (r_subgroup_cat_num == 2) {
         r_subgroup_filter <- subgroup_filter()
-        if (isTRUE(is.na(r_subgroup_filter[["raw"]]))) {
-          errors$push("Filter is not ready")
-          return(list(subgroup = NULL, errors = errors))
-        }
+        notify_and_early_out(is_filter_ready(r_subgroup_filter), "Filter is not ready")
 
         r_true_label <- if (checkmate::test_string(input[[get_cat_label_id(1)]], min.chars = 1)) {
           input[[get_cat_label_id(1)]]
@@ -606,11 +603,13 @@ mod_subgroup_server <- function(id, selected_dataset_list, subject_filter_datase
 
       new_subgroups <- current_subgroups
       new_subgroups[[r_subgroup_name]] <- new_subgroup
+      # Only the new subgroup: subgroups are applied independently of each other, and an existing one may not apply
+      # to the current data (e.g. it was created on another dataset list), which must not block adding this one
       apply_check <- apply_subgroups(
         selected_dataset_list(),
         subject_filter_dataset_name,
         filter_key_var,
-        new_subgroups
+        new_subgroups[r_subgroup_name]
       )
 
       notify_conditions_and_early_out(apply_check[["error_list"]]$get_errors())

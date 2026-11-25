@@ -51,4 +51,5 @@ format_odg_code <- function(text) {
 
 # TODO: An overkill but for the moment we depend on gt to print latex table
 # IN the future we can do our own implementation
-escape_latex <- gt::escape_latex
+# call instead of copy otherwhise error of missing imports appear
+escape_latex <- function(...) gt::escape_latex(...)

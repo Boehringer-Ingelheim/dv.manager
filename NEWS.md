@@ -1,10 +1,21 @@
+# dv.manager 3.2.2-9002
+
+ - UI and functionality:
+   - Introduces file name field for ODG
+   - The ODG dynamic data hash section highlights mismatching datasets
+   - The ODG PDF no longer shows the placeholder author "A user"
+   - The ODG button uses the same navbar style as the bookmark button
+   - ODG chunks added by dv.manager are labelled under the `odg-` namespace (e.g. `odg-setup`, `odg-data_source`).
+     `run_app` produces an error when a module id is `odg` or starts with `odg-`
+   - `filtered dataset list` is always included
+   - Adds `fvextra`, to the template
+   - ODG vignette describes the document contents and chunk labelling conventions 
+
 # dv.manager 3.2.2-9001
 
  - UI and functionality:
    - Includes first Output Document Generation version (ODG)
-   - App info module uses `sessioninfo` instead of `devtools` 
- - Depends on `dv.manager >= 3.3.0` (TBR), to be upgraded in DESCRIPTION before final release
- - Points on `dv.manager@test` (TBR), to be moved back to `main` in DESCRIPTION before final release
+   - App info module uses `sessioninfo` instead of `devtools`  
 
 # dv.manager 3.2.2-9000
 

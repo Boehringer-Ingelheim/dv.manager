@@ -46,6 +46,18 @@ local({
     expect_false(is_switch_checked("m2"))
   })
 
+  test_that("build_odg_modal_ui shows a file name field, prefilled or with the default as placeholder", {
+    html <- as.character(build_odg_modal_ui(fixture_elements, test_ns)[["modal_dialog"]])
+    expect_match(
+      html,
+      sprintf('id="%s" type="text" class="shiny-input-text form-control" value=""', test_ns(ODG$ID$FILE_NAME))
+    )
+    expect_match(html, sprintf('placeholder="%s"', ODG$FILE_NAME$DEFAULT), fixed = TRUE)
+
+    html <- as.character(build_odg_modal_ui(fixture_elements, test_ns, file_name = "my_report")[["modal_dialog"]])
+    expect_match(html, 'value="my_report"', fixed = TRUE)
+  })
+
   test_that("build_odg_modal_ui shows a fallback message and no download button when nothing is exportable", {
     res <- build_odg_modal_ui(list(), test_ns)
 
@@ -53,6 +65,7 @@ local({
     html <- as.character(res[["modal_dialog"]])
     expect_true(grepl(ODG$MSG$NOTHING_TO_GENERATE, html, fixed = TRUE))
     expect_false(grepl("output_format", html, fixed = TRUE))
+    expect_false(grepl(ODG$ID$FILE_NAME, html, fixed = TRUE))
     expect_false(grepl("shiny-download-link", html, fixed = TRUE))
   })
 
@@ -64,5 +77,22 @@ local({
     expect_true(grepl("Module 1", html, fixed = TRUE))
     expect_true(grepl("Module 2", html, fixed = TRUE))
     expect_true(grepl("output_format", html, fixed = TRUE))
+  })
+
+  test_that("build_odg_modal_ui switches escape the module id in their JS string", {
+    module_id <- "it's \"quoted\" \\ </script> mod"
+    elements <- list(x = make_element(paste0(module_id, "-a"), module_id, "Module", TRUE))
+    html <- as.character(build_odg_modal_ui(elements, test_ns)[["modal_dialog"]])
+
+    # The browser decodes the attribute's HTML entities before running it as JS
+    switch_tag <- regmatches(html, regexpr('<input[^>]*role="switch"[^>]*>', html))
+    onchange <- sub('.*onchange="([^"]*)".*', "\\1", switch_tag)
+    entities <- c(
+      "&quot;" = '"', "&#39;" = "'", "&lt;" = "<", "&gt;" = ">", "&#10;" = "\n", "&#13;" = "\r", "&amp;" = "&"
+    )
+    for (entity in names(entities)) onchange <- gsub(entity, entities[[entity]], onchange, fixed = TRUE)
+
+    # Unescaped, the `'` in the id closes the JS string and the handler does not parse
+    expect_match(onchange, r"[id: 'it\'s \"quoted\" \\ \u003c/script> mod'}]", fixed = TRUE)
   })
 })

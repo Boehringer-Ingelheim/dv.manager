@@ -166,4 +166,33 @@ local({
     )
     expect_snapshot(txt_tree_from_filter_info(udlwfi)[["txt"]] |> message())
   })
+
+  test_that("txt_tree_from_filter_info marks the range bounds it can only print rounded", {
+    range_txt <- function(min, max) {
+      udlwfi <- unfiltered_dataset_list_with_filter_info
+      udlwfi[["dataset_list_filter"]][["parsed"]][["filters"]] <- list(
+        subject_filter = list(
+          children = list(
+            list(kind = "filter", operation = "select_range", dataset = "df1", variable = "a", min = min, max = max)
+          )
+        )
+      )
+      txt_tree_from_filter_info(udlwfi)[["txt"]]
+    }
+
+    # Printed with 15 significant digits: 59.999999999999993 shows as 60, which the filter does not include
+    txt <- range_txt(min = 20L, max = 59.999999999999993)
+    expect_match(txt, "Min: 20\n", fixed = TRUE)
+    expect_match(txt, paste0("Max: 60 ", ODG$MSG$ROUNDED_BOUND, "\n"), fixed = TRUE)
+
+    # Bounds that read back as the same number are not marked, however many decimals they print
+    txt <- range_txt(min = 0.1, max = -1 / 4)
+    expect_match(txt, "Min: 0.1\n", fixed = TRUE)
+    expect_match(txt, "Max: -0.25\n", fixed = TRUE)
+    expect_no_match(txt, ODG$MSG$ROUNDED_BOUND, fixed = TRUE)
+
+    # Dates print as they are
+    txt <- range_txt(min = "2020-01-01", max = "2020-12-31")
+    expect_no_match(txt, ODG$MSG$ROUNDED_BOUND, fixed = TRUE)
+  })
 })

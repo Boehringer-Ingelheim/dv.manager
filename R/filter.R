@@ -686,15 +686,11 @@ create_subject_filter_info <- function(dataset_list, subject_filter, subj_var) {
   return(subject_filter_info)
 }
 
-#' Combine subject- and dataset-level filter results into one filter_info
-#'
-#' Can be expanded to combine arbitrary filters, not necessarily just these two.
-#'
+# Can be expanded to combine arbitrary filters, not necessarily just these two.
+#' @describeIn odg_exported_functions Combine subject- and dataset-level filter results into one filter_info.
+#'   Returns `list(result = list(subjects =, filter_info =), error_list =)`.
 #' @param filter_info `list(result = list(subject =, dataset =), error_list =)`, as returned by `get_filter_info()`.
-#' @return `list(result = list(subjects =, filter_info =), error_list =)`.
-#' @keywords internal
 #' @export
-#' @noRd
 combine_filter_info <- function(filter_info) {
   if (filter_info[["error_list"]]$any()) {
     return(
@@ -840,15 +836,11 @@ apply_filter_info_to_dataset_list <- (function(
 }) |>
   shiny::maskReactiveContext()
 
-#' Resolve subject- and dataset-level filter results for a dataset list
-#'
+#' @describeIn odg_exported_functions Resolve subject- and dataset-level filter results for a dataset list. Returns
+#'   `list(result = list(subject =, dataset =) or NULL, error_list =)`.
 #' @param unfiltered_dataset_list Named list of data.frames, carrying a `dataset_list_name` attribute.
-#' @param dataset_list_filter Parsed filter state (`parsed`, `raw`), as produced by the filter UI.
-#' @param filter_key_var Column identifying subjects.
-#' @return `list(result = list(subject =, dataset =) or NULL, error_list =)`.
-#' @keywords internal
+#' @param dataset_list_filter Parsed filter state (`parsed`, `raw`), as returned by `r_filter_from_json_filter()`.
 #' @export
-#' @noRd
 get_filter_info <- (function(unfiltered_dataset_list, dataset_list_filter, filter_key_var) {
   error_list <- new_error_list()
   fi <- NULL
@@ -1005,8 +997,7 @@ new_filter_server <- function(
   selected_dataset_list,
   subject_filter_dataset_name,
   after_filter_info,
-  skip_dataset_filters = FALSE,
-  strict = FALSE
+  skip_dataset_filters = FALSE
 ) {
   mod <- function(input, output, session) {
     shiny::setBookmarkExclude(
@@ -1091,27 +1082,6 @@ new_filter_server <- function(
       }
     })
 
-    res <- shiny::reactive({
-      log_inform(paste("Processing filter", ns(id)))
-      json_r <- input[[ID$FILTER_STATE_JSON_INPUT]]
-
-      if (checkmate::test_string(json_r, min.chars = 1)) {
-        if (strict) {
-          assert(from_filter_validate(json_r), "failed to validate message from filter")
-        }
-        parsed_json <- deserialize_filter_state_from_client(json_r)
-        log_inform("Received regular JSON filter")
-        res <- list(
-          parsed = parsed_json %||% NA_character_,
-          raw = json_r
-        )
-      } else {
-        log_inform("Received NA JSON filter")
-        res <- NA_character_
-      }
-      res
-    })
-
     output[[ID$EXPORT_FILTER_CODE_INPUT]] <- shiny::downloadHandler(
       filename = "filter.txt",
       content = function(file) {
@@ -1131,10 +1101,38 @@ new_filter_server <- function(
     shiny::outputOptions(output, ID$EXPORT_FILTER_CODE_INPUT, suspendWhenHidden = FALSE)
 
     return(
-      structure(res, raw = shiny::reactive(input[[ID$FILTER_STATE_JSON_INPUT]]))
+      structure(shiny::reactive(input[[ID$FILTER_STATE_JSON_INPUT]]))
     )
   }
   shiny::moduleServer(id, mod)
+}
+
+#' @describeIn odg_exported_functions Parse the filter state sent by the filter UI. Returns `list(parsed =, raw =)`,
+#'   or `NA_character_` if `json_filter` is not a non-empty string.
+#' @param json_filter Filter state as a JSON string, or `NULL` before the filter sends one.
+#' @param id Label for the log.
+#' @param strict Validate `json_filter` against the filter schema before parsing.
+#' @export
+r_filter_from_json_filter <- function(json_filter, id = NA, strict = FALSE) {
+  ({
+    log_inform(paste("Processing filter", id))
+
+    if (checkmate::test_string(json_filter, min.chars = 1)) {
+      if (strict) {
+        assert(from_filter_validate(json_filter), "failed to validate message from filter")
+      }
+      parsed_json <- deserialize_filter_state_from_client(json_filter)
+      log_inform("Received regular JSON filter")
+      res <- list(
+        parsed = parsed_json %||% NA_character_,
+        raw = json_filter
+      )
+    } else {
+      log_inform("Received NA JSON filter")
+      res <- NA_character_
+    }
+    res
+  })
 }
 
 binary_serialize_filter_data <- function(x) {
@@ -1436,17 +1434,12 @@ get_filtered_dataset_ <- function(
   fd
 }
 
-#' Apply the resolved filter info to a single dataset
-#'
-#' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =, ...)`,
-#'   as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
+#' @describeIn odg_exported_functions Apply the resolved filter info to a single dataset. Returns the filtered
+#'   data.frame, with levels and labels carried over from the unfiltered dataset.
 #' @param name Name of the dataset to filter.
 #' @param vars Columns to keep. Omit (do not pass `NULL`) to keep all of them.
 #' @param mask Logical vector ANDed with the filter mask. Omit (do not pass `NULL`) to apply the filter mask alone.
-#' @return The filtered data.frame, with levels and labels carried over from the unfiltered dataset.
-#' @keywords internal
 #' @export
-#' @noRd
 get_filtered_dataset <- function(unfiltered_dataset_list_with_filter_info, name, vars, mask) {
   get_filtered_dataset_(
     as_safe_list(unfiltered_dataset_list_with_filter_info[["unfiltered_dataset_list"]]),
@@ -1458,14 +1451,9 @@ get_filtered_dataset <- function(unfiltered_dataset_list_with_filter_info, name,
 }
 
 
-#' Apply the resolved filter info to every dataset in the list
-#'
-#' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =, ...)`,
-#'   as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
-#' @return Named list of filtered data.frames, one per entry of `unfiltered_dataset_list`.
-#' @keywords internal
+#' @describeIn odg_exported_functions Apply the resolved filter info to every dataset in the list. Returns a named
+#'   list of filtered data.frames, one per entry of `unfiltered_dataset_list`.
 #' @export
-#' @noRd
 get_filtered_dataset_list <- function(unfiltered_dataset_list_with_filter_info) {
   ufd <- unfiltered_dataset_list_with_filter_info[["unfiltered_dataset_list"]]
   res <- vector(mode = "list", length = length(ufd))
@@ -1510,16 +1498,11 @@ apply_lvls_info_to_ds <- function(unfiltered_dataset, filtered_dataset, ds_lvl) 
 # TODO: Add HTML spans with tooltip info
 # TODO: Add the state at each of the levels, it should be possible when we calculate the masks and the levels in the dataset
 
-#' Describe the active filter as a plain-text tree for the output document
-#'
-#' @param unfiltered_dataset_list_with_filter_info `list(unfiltered_dataset_list =, filter_info =,
-#'   dataset_list_filter =, ...)`, as produced by the `unfiltered_dataset_list_with_filter_info` reactive.
-#' @return `list(txt =, references =)`: the filter tree, as a single string, and the values of subsets too long to
-#'   print inline, as a list of character vectors (empty when none) numbered by the `See filter reference (n)` markers
-#'   left in `txt`.
-#' @keywords internal
+#' @describeIn odg_exported_functions Describe the active filter as a plain-text tree for the output document.
+#'   Returns `list(txt =, references =)`: the tree as a single string, and the values of subsets too long to print
+#'   inline, numbered by the `See filter reference (n)` markers left in `txt`. Range bounds print with 15 significant
+#'   digits; a bound that needs more is marked `(rounded)`, while the filter applies its exact value.
 #' @export
-#' @noRd
 txt_tree_from_filter_info <- function(unfiltered_dataset_list_with_filter_info) {
   TC <- c(
     h = "\u2500", # ─
@@ -1622,6 +1605,14 @@ txt_tree_from_filter_info <- function(unfiltered_dataset_list_with_filter_info) 
       ctt[[length(ctt) + 1]] <- ""
       ctt
     }
+    # Numbers print with 15 significant digits, so a bound needing more (e.g. 59.999999999999993 prints as 60) is
+    # marked: the filter applies its exact value
+    # TODO: Check if it is possible to replace the rounded warning by an heuristic than prints the correct precision
+    format_bound <- function(x) {
+      txt <- as.character(x)
+      is_rounded <- is.numeric(x) && length(x) == 1 && !is.na(x) && as.numeric(txt) != x
+      if (is_rounded) paste(txt, ODG$MSG$ROUNDED_BOUND) else txt
+    }
     actions[[FC$FE$OP$RANGE]] <- function(el) {
       ctt <- character(0)
       var_name <- el[[FC$FE$F$VARIABLE]]
@@ -1630,8 +1621,8 @@ txt_tree_from_filter_info <- function(unfiltered_dataset_list_with_filter_info) 
       dataset_label <- get_lbl_robust(udl, dataset_name)
       ctt[[length(ctt) + 1]] <- paste0(" ", "Variable: ", var_label, " [", var_name, "]")
       ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Dataset: ", dataset_label, " [", dataset_name, "]")
-      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Min: ", el[[FC$FE$F$MIN]])
-      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Max: ", el[[FC$FE$F$MAX]])
+      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Min: ", format_bound(el[[FC$FE$F$MIN]]))
+      ctt[[length(ctt) + 1]] <- paste0(" ", TC[["vr"]], " Max: ", format_bound(el[[FC$FE$F$MAX]]))
       ctt[[length(ctt) + 1]] <- paste0(" ", TC[["ur"]], " Include NA: ", el[[FC$FE$F$INCLUDE_NA]])
       ctt[[length(ctt) + 1]] <- ""
       ctt
