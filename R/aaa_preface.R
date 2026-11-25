@@ -130,10 +130,13 @@ safe_list_ns <- local({
 #' @keywords internal
 safe_list <- safe_list_ns[["safe_list"]]
 #' @keywords internal
+#' @exportS3Method NULL
 `$.safe_list` <- safe_list_ns[["$.safe_list"]]
 #' @keywords internal
+#' @exportS3Method NULL
 `[[.safe_list` <- safe_list_ns[["[[.safe_list"]]
 #' @keywords internal
+#' @exportS3Method NULL
 `[.safe_list` <- safe_list_ns[["[.safe_list"]]
 #' @keywords internal
 as_safe_list <- safe_list_ns[["as_safe_list"]]
@@ -189,15 +192,18 @@ pack_of_constants <- function(...) {
 #' This function differs from the base list extraction method in that it avoids partial matching of keys and throws
 #' an error if the looked-for constant is not contained within the pack.
 #' @keywords internal
+#' @exportS3Method NULL
 `$.pack_of_constants` <- function(pack, name) {
   checkmate::assert_true(name %in% names(pack), .var.name = paste0(deparse(substitute(pack)), "$", name))
   NextMethod()
 }
 
 #' @keywords internal
+#' @exportS3Method NULL
 `[[.pack_of_constants` <- `$.pack_of_constants`
 
 #' @keywords internal
+#' @exportS3Method NULL
 `[.pack_of_constants` <- function(pack, name) {
   stop("Invalid pack_of_constants method")
 }
